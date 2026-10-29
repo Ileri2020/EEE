@@ -1,5 +1,6 @@
 @echo off
 setlocal
+set "PATH=%SystemRoot%\System32;%PATH%"
 set "PROJECT_DIR=%~dp0.."
 for %%I in ("%PROJECT_DIR%") do set "PROJECT_DIR=%%~fI"
 set "PROJECT=%PROJECT_DIR%\EEE.csproj"

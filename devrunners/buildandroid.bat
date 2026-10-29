@@ -1,5 +1,6 @@
 @echo off
 setlocal
+set "PATH=%SystemRoot%\System32;%PATH%"
 set "PROJECT_DIR=%~dp0.."
 for %%I in ("%PROJECT_DIR%") do set "PROJECT_DIR=%%~fI"
 set "PROJECT=%PROJECT_DIR%\EEE.csproj"
@@ -32,6 +33,13 @@ if not exist "%ANDROID_HOME%\platforms\android-36\android.jar" (
 	echo ERROR: Android API 36 is missing from "%ANDROID_HOME%".
 	echo Install Android SDK Platform 36 and Build Tools 36.0.0 with Android SDK Manager, then retry.
 	exit /b 1
+)
+
+if exist "%OUTPUT_DIR%\publish\EEE\release_net10.0-android" (
+	rmdir /s /q "%OUTPUT_DIR%\publish\EEE\release_net10.0-android"
+)
+if exist "%OUTPUT_DIR%\*.apk" (
+	del /f /q "%OUTPUT_DIR%\*.apk"
 )
 
 pushd "%PROJECT_DIR%"

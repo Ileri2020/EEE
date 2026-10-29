@@ -1,10 +1,11 @@
+
 @echo off
 setlocal EnableExtensions
 set "PROJECT_DIR=%~dp0.."
 for %%I in ("%PROJECT_DIR%") do set "PROJECT_DIR=%%~fI"
 set "GITHUB_REMOTE=https://github.com/Ileri2020/EEE.git"
 
-set "COMMIT_MSG="
+set "COMMIT_MSG=c sharp full setup only for android and desktop"
 set "CONFIRM="
 
 :parse_args

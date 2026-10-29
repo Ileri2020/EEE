@@ -4,16 +4,16 @@ namespace EEE;
 
 public partial class App : Application
 {
-	public App(AppShell appShell)
+	private readonly IServiceProvider _services;
+
+	public App(IServiceProvider services)
 	{
 		InitializeComponent();
-		_appShell = appShell;
+		_services = services;
 	}
-
-	private readonly AppShell _appShell;
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(_appShell);
+		return new Window(_services.GetRequiredService<AppShell>());
 	}
 }
