@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)Platforms\dist</ArtifactsPath>
+  </PropertyGroup>
+</Project>
