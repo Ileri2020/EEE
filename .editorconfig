@@ -1,0 +1,26 @@
+root = true
+
+[*.cs]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+end_of_line = crlf
+insert_final_newline = true
+charset = utf-8
+dotnet_style_operator_placement_when_wrapping = beginning_of_line
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+csharp_new_line_before_open_brace = all
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+[*.xaml]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+insert_final_newline = true
+charset = utf-8

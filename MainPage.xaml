@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             x:Class="EEE.MainPage"
+             Title="Home"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28" Spacing="22" MaximumWidthRequest="640" HorizontalOptions="Center">
+            <Label Text="EEE" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Primary}" />
+            <Label Text="Your app, ready to grow." FontSize="32" FontAttributes="Bold" />
+            <Label Text="A shared Android and Windows foundation, built with .NET MAUI, UraniumUI, and MVVM."
+                   FontSize="16" TextColor="#404040" />
+
+            <Border Padding="20" StrokeThickness="0" BackgroundColor="#F4F4F4">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Personalize your welcome" FontSize="20" FontAttributes="Bold" />
+                    <material:TextField Title="Your name" Text="{Binding Name}" />
+                    <Label Text="{Binding WelcomeMessage}" FontSize="15" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="20" StrokeThickness="0" BackgroundColor="#F4F4F4">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="MVVM counter" FontSize="20" FontAttributes="Bold" />
+                    <Label Text="{Binding Count, StringFormat='Count: {0}'}" FontSize="28" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="12">
+                        <Button Text="Add one" Command="{Binding IncrementCounterCommand}" />
+                        <Button Text="Reset" Command="{Binding ResetCounterCommand}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

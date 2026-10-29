@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "EEE: Build Windows",
+      "type": "shell",
+      "command": "C:\\Program Files\\dotnet\\dotnet.exe",
+      "args": ["build", "EEE.csproj", "-f", "net10.0-windows10.0.19041.0", "--artifacts-path", "Platforms/dist"],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "EEE: Build Android",
+      "type": "shell",
+      "command": "C:\\Program Files\\dotnet\\dotnet.exe",
+      "args": ["build", "EEE.csproj", "-f", "net10.0-android", "--artifacts-path", "Platforms/dist"],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "EEE: Run Windows",
+      "type": "shell",
+      "command": "C:\\Program Files\\dotnet\\dotnet.exe",
+      "args": ["run", "--project", "EEE.csproj", "--framework", "net10.0-windows10.0.19041.0", "-p:ArtifactsPath=Platforms/dist"],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
