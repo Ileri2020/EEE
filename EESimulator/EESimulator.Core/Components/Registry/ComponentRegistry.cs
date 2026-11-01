@@ -164,6 +164,14 @@ public static class ComponentRegistry
             d.DefaultParameters["Coupling"] = 0.99;
         });
 
+        Register<BulbComponent>("electrical.bulb", "Bulb", "Electrical", "LAMP", d =>
+        {
+            d.Description = "Incandescent Light Bulb";
+            d.Icon = "bulb.svg";
+            d.DefaultParameters["Resistance"] = 50.0;
+            d.DefaultParameters["ThresholdVoltage"] = 1.0;
+        });
+
         // Controlled / Dependent Sources
         Register<VCVSComponent>("electrical.vcvs", "VCVS", "Electrical", "E", d =>
         {
@@ -352,6 +360,21 @@ public static class ComponentRegistry
             d.Description = "Integrated Circuit DIP package";
         });
 
+        Register<LogicInputComponent>("electronics.logicinput", "LogicInput", "Electronics", "IN", d =>
+        {
+            d.Description = "Digital Logic Toggle Input (0/1)";
+            d.Icon = "logicinput.svg";
+            d.DefaultParameters["HighVoltage"] = 5.0;
+            d.DefaultParameters["LowVoltage"] = 0.0;
+        });
+
+        Register<LogicOutputComponent>("electronics.logicoutput", "LogicOutput", "Electronics", "OUT", d =>
+        {
+            d.Description = "Digital Logic Output Probe (0/1)";
+            d.Icon = "logicoutput.svg";
+            d.DefaultParameters["Threshold"] = 2.5;
+        });
+
         // ── General (Structural & Schematic) ─────────────────────────────────
         Register<WireComponent>("general.wire", "Wire", "General", "W", d =>
         {
@@ -390,5 +413,9 @@ public static class ComponentRegistry
         RegisterAlias("pnp", "electronics.bjt.pnp");
         RegisterAlias("nmos", "electronics.mosfet.nmos");
         RegisterAlias("pmos", "electronics.mosfet.pmos");
+        RegisterAlias("lamp", "electrical.bulb");
+        RegisterAlias("lightbulb", "electrical.bulb");
+        RegisterAlias("logicin", "electronics.logicinput");
+        RegisterAlias("logicout", "electronics.logicoutput");
     }
 }

@@ -32,6 +32,16 @@ public class AddComponentCommand : ICommand
         ParameterValue = parameterValue;
     }
 
+    public AddComponentCommand(CircuitNode circuit, ComponentNode component)
+    {
+        Circuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
+        CreatedComponent = component ?? throw new ArgumentNullException(nameof(component));
+        ComponentType = component.ComponentType;
+        ComponentName = component.Name;
+        X = component.X;
+        Y = component.Y;
+    }
+
     public bool Execute()
     {
         if (CreatedComponent == null)

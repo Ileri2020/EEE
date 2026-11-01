@@ -8,7 +8,7 @@ namespace EESimulator.App.Views;
 /// </summary>
 public static class ComponentSymbolDrawer
 {
-    public static void DrawSymbol(ICanvas canvas, string componentType, string name = "")
+    public static void DrawSymbol(ICanvas canvas, string componentType, string name = "", bool isOn = false)
     {
         switch (componentType)
         {
@@ -19,7 +19,13 @@ public static class ComponentSymbolDrawer
             case "CurrentSource":  DrawCurrentSource(canvas); break;
             case "Ground":         DrawGround(canvas); break;
             case "Diode":          DrawDiode(canvas); break;
-            case "LED":            DrawLED(canvas); break;
+            case "LED":            DrawLED(canvas, isOn); break;
+            case "Bulb":
+            case "Lamp":           DrawBulb(canvas, isOn); break;
+            case "LogicInput":
+            case "DigitalInput":   DrawLogicInput(canvas, isOn); break;
+            case "LogicOutput":
+            case "DigitalOutput":  DrawLogicOutput(canvas, isOn); break;
             case "BJT":
             case "NPN":            DrawBJT(canvas, isPnp: false); break;
             case "PNP":            DrawBJT(canvas, isPnp: true); break;
@@ -47,6 +53,7 @@ public static class ComponentSymbolDrawer
             case "Junction":       DrawJunction(canvas); break;
             case "Label":          DrawLabel(canvas, name); break;
             case "Connector":        DrawConnector(canvas); break;
+            case "TextAnnotation":    DrawTextAnnotation(canvas); break;
             case "MutualInductance": DrawMutualInductance(canvas); break;
             case "TransmissionLine": DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     DrawVoltageDelay(canvas); break;
@@ -137,18 +144,195 @@ public static class ComponentSymbolDrawer
         canvas.DrawLine(8, -10, 8, 10);
     }
 
-    public static void DrawLED(ICanvas canvas)
+    public static void DrawLED(ICanvas canvas, bool isOn = false)
     {
-        DrawDiode(canvas);
-        canvas.StrokeColor = Color.FromArgb("#E3B341");
-        canvas.StrokeSize = 1.5f;
-        canvas.DrawLine(3, -12, 10, -18);
-        canvas.DrawLine(7, -18, 10, -18);
-        canvas.DrawLine(10, -15, 10, -18);
+        if (isOn)
+        {
+            // Glowing aura behind the diode
+            canvas.FillColor = Color.FromRgba(255, 215, 0, 70);
+            canvas.FillCircle(0, 0, 15);
+        }
 
-        canvas.DrawLine(8, -8, 15, -14);
-        canvas.DrawLine(12, -14, 15, -14);
-        canvas.DrawLine(15, -11, 15, -14);
+        DrawDiode(canvas);
+
+        if (isOn)
+        {
+            // Illuminated glowing diode triangle fill
+            var fillPath = new PathF();
+            fillPath.MoveTo(-8, -10);
+            fillPath.LineTo(8, 0);
+            fillPath.LineTo(-8, 10);
+            fillPath.Close();
+            canvas.FillColor = Color.FromArgb("#FFD700");
+            canvas.FillPath(fillPath);
+
+            // Radiant emission arrows (bright gold)
+            canvas.StrokeColor = Color.FromArgb("#FFF275");
+            canvas.StrokeSize = 2.0f;
+            canvas.DrawLine(3, -12, 11, -19);
+            canvas.DrawLine(7, -19, 11, -19);
+            canvas.DrawLine(11, -15, 11, -19);
+
+            canvas.DrawLine(8, -8, 16, -15);
+            canvas.DrawLine(12, -15, 16, -15);
+            canvas.DrawLine(16, -11, 16, -15);
+        }
+        else
+        {
+            // Normal / OFF emission arrows
+            canvas.StrokeColor = Color.FromArgb("#8B949E");
+            canvas.StrokeSize = 1.5f;
+            canvas.DrawLine(3, -12, 10, -18);
+            canvas.DrawLine(7, -18, 10, -18);
+            canvas.DrawLine(10, -15, 10, -18);
+
+            canvas.DrawLine(8, -8, 15, -14);
+            canvas.DrawLine(12, -14, 15, -14);
+            canvas.DrawLine(15, -11, 15, -14);
+        }
+    }
+
+    public static void DrawBulb(ICanvas canvas, bool isOn = false)
+    {
+        // Terminal connection leads
+        canvas.StrokeColor = isOn ? Color.FromArgb("#F59E0B") : Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -12, 0);
+        canvas.DrawLine(12, 0, 20, 0);
+
+        if (isOn)
+        {
+            // Radiant glow halo
+            canvas.FillColor = Color.FromRgba(245, 158, 11, 75);
+            canvas.FillCircle(0, 0, 18);
+
+            // Radiant light rays projecting outward around the glass bulb
+            canvas.StrokeColor = Color.FromArgb("#FBBF24");
+            canvas.StrokeSize = 1.5f;
+            canvas.DrawLine(0, -14, 0, -20);
+            canvas.DrawLine(0, 14, 0, 20);
+            canvas.DrawLine(-10, -10, -15, -15);
+            canvas.DrawLine(10, -10, 15, -15);
+            canvas.DrawLine(-10, 10, -15, 15);
+            canvas.DrawLine(10, 10, 15, 15);
+
+            // Inner bulb filled with golden light
+            canvas.FillColor = Color.FromRgba(255, 243, 199, 220);
+            canvas.FillCircle(0, 0, 12);
+
+            canvas.StrokeColor = Color.FromArgb("#F59E0B");
+            canvas.StrokeSize = 2f;
+            canvas.DrawCircle(0, 0, 12);
+
+            // Glowing tungsten filament cross/coils
+            canvas.StrokeColor = Color.FromArgb("#B45309");
+            canvas.StrokeSize = 2f;
+            canvas.DrawLine(-8, -8, 8, 8);
+            canvas.DrawLine(-8, 8, 8, -8);
+        }
+        else
+        {
+            // Glass bulb outline
+            canvas.StrokeColor = Color.FromArgb("#8B949E");
+            canvas.StrokeSize = 2f;
+            canvas.DrawCircle(0, 0, 12);
+
+            // Dim dark filament cross
+            canvas.StrokeColor = Color.FromArgb("#484F58");
+            canvas.StrokeSize = 1.5f;
+            canvas.DrawLine(-8, -8, 8, 8);
+            canvas.DrawLine(-8, 8, 8, -8);
+        }
+    }
+
+    public static void DrawLogicInput(ICanvas canvas, bool state = false)
+    {
+        // Output pin lead on the right
+        canvas.StrokeColor = state ? Color.FromArgb("#56D364") : Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(12, 0, 20, 0);
+
+        // Toggle badge rectangle
+        float bx = -16f, by = -12f, bw = 28f, bh = 24f;
+        if (state)
+        {
+            // Active Logic 1 state (emerald glow)
+            canvas.FillColor = Color.FromArgb("#163821");
+            canvas.FillRoundedRectangle(bx, by, bw, bh, 5);
+            canvas.StrokeColor = Color.FromArgb("#56D364");
+            canvas.StrokeSize = 2f;
+            canvas.DrawRoundedRectangle(bx, by, bw, bh, 5);
+
+            // Toggle switch thumb (right position)
+            canvas.FillColor = Color.FromArgb("#56D364");
+            canvas.FillCircle(6, 0, 4);
+
+            // Display bold '1'
+            canvas.FontColor = Color.FromArgb("#56D364");
+            canvas.FontSize = 13;
+            canvas.DrawString("1", bx + 2, by, 14, bh, HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
+        else
+        {
+            // Inactive Logic 0 state (dim slate)
+            canvas.FillColor = Color.FromArgb("#161B22");
+            canvas.FillRoundedRectangle(bx, by, bw, bh, 5);
+            canvas.StrokeColor = Color.FromArgb("#484F58");
+            canvas.StrokeSize = 1.8f;
+            canvas.DrawRoundedRectangle(bx, by, bw, bh, 5);
+
+            // Toggle switch thumb (left position)
+            canvas.FillColor = Color.FromArgb("#8B949E");
+            canvas.FillCircle(-10, 0, 4);
+
+            // Display '0'
+            canvas.FontColor = Color.FromArgb("#8B949E");
+            canvas.FontSize = 13;
+            canvas.DrawString("0", bx + 12, by, 14, bh, HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
+    }
+
+    public static void DrawLogicOutput(ICanvas canvas, bool isOn = false)
+    {
+        // Input pin lead on the left
+        canvas.StrokeColor = isOn ? Color.FromArgb("#79C0FF") : Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -12, 0);
+
+        // Indicator badge
+        float bx = -12f, by = -12f, bw = 26f, bh = 24f;
+        if (isOn)
+        {
+            // Logic 1 / High probe state
+            canvas.FillColor = Color.FromArgb("#0D2D44");
+            canvas.FillRoundedRectangle(bx, by, bw, bh, 6);
+            canvas.StrokeColor = Color.FromArgb("#79C0FF");
+            canvas.StrokeSize = 2f;
+            canvas.DrawRoundedRectangle(bx, by, bw, bh, 6);
+
+            // Beacon glow dot
+            canvas.FillColor = Color.FromArgb("#56D364");
+            canvas.FillCircle(bx + bw - 5, by + 5, 2.5f);
+
+            // Bold '1' indicator
+            canvas.FontColor = Color.FromArgb("#79C0FF");
+            canvas.FontSize = 13;
+            canvas.DrawString("1", bx, by, bw - 4, bh, HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
+        else
+        {
+            // Logic 0 / Low probe state
+            canvas.FillColor = Color.FromArgb("#161B22");
+            canvas.FillRoundedRectangle(bx, by, bw, bh, 6);
+            canvas.StrokeColor = Color.FromArgb("#30363D");
+            canvas.StrokeSize = 1.8f;
+            canvas.DrawRoundedRectangle(bx, by, bw, bh, 6);
+
+            // Dim '0' indicator
+            canvas.FontColor = Color.FromArgb("#8B949E");
+            canvas.FontSize = 13;
+            canvas.DrawString("0", bx, by, bw, bh, HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
     }
 
     public static void DrawBJT(ICanvas canvas, bool isPnp = false)

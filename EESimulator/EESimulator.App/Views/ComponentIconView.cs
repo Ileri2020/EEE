@@ -18,10 +18,24 @@ public class ComponentIconView : GraphicsView, IDrawable
             string.Empty,
             propertyChanged: (b, _, __) => ((ComponentIconView)b).Invalidate());
 
+    public static readonly BindableProperty IsOnProperty =
+        BindableProperty.Create(
+            nameof(IsOn),
+            typeof(bool),
+            typeof(ComponentIconView),
+            false,
+            propertyChanged: (b, _, __) => ((ComponentIconView)b).Invalidate());
+
     public string ComponentType
     {
         get => (string)GetValue(ComponentTypeProperty);
         set => SetValue(ComponentTypeProperty, value);
+    }
+
+    public bool IsOn
+    {
+        get => (bool)GetValue(IsOnProperty);
+        set => SetValue(IsOnProperty, value);
     }
 
     public ComponentIconView()
@@ -84,7 +98,7 @@ public class ComponentIconView : GraphicsView, IDrawable
         float scale  = Math.Min(scaleX, scaleY);
         canvas.Scale(scale, scale);
 
-        ComponentSymbolDrawer.DrawSymbol(canvas, ComponentType);
+        ComponentSymbolDrawer.DrawSymbol(canvas, ComponentType, "", IsOn);
 
         canvas.RestoreState();
     }

@@ -27,6 +27,14 @@ public partial class WorkspacePage : ContentPage
         SchematicCanvas.ComponentContextRequested += (_, comp) =>
             vm.OpenEditDialog(comp);
 
+        // Wire rotate handle click → rotate component and redraw
+        SchematicCanvas.ComponentRotateRequested += (_, comp) =>
+        {
+            vm.SelectedComponent = comp;
+            vm.RotateSelectedComponentCommand.Execute(null);
+        };
+
+
         // Wire completed wire connection → add ConnectionNode to circuit
         SchematicCanvas.WireConnected += (_, args) =>
         {
@@ -45,6 +53,13 @@ public partial class WorkspacePage : ContentPage
             }
         };
 
+        // Wire cut wire turning into node
+        SchematicCanvas.WireCutIntoNode += (_, junc) =>
+        {
+            vm.StatusText = $"Cut wire → Created node {junc.Reference}";
+            vm.SelectedComponent = junc;
+        };
+
         // Wire CircuitChanged so the canvas redraws immediately when
         // a component is added from the sidebar palette or animation ticks
         vm.CircuitChanged += () =>
@@ -54,6 +69,9 @@ public partial class WorkspacePage : ContentPage
                 SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
                 SchematicCanvas.Invalidate();
             });
+
+        // Initialize ActiveTool
+        SchematicCanvas.ActiveTool = vm.ActiveTool;
 
         // Sync IsMobilePanMode property from ViewModel to viewport
         vm.PropertyChanged += (_, e) =>
@@ -71,6 +89,10 @@ public partial class WorkspacePage : ContentPage
                     BtnMobileSelect.BackgroundColor = !vm.IsMobilePanMode
                         ? Color.FromArgb("#1C3060") : Colors.Transparent;
                 });
+            }
+            else if (e.PropertyName == nameof(EEWorkspaceViewModel.ActiveTool))
+            {
+                SchematicCanvas.ActiveTool = vm.ActiveTool;
             }
         };
 

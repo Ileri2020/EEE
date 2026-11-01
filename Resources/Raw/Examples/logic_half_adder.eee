@@ -1,0 +1,156 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.0.0",
+  "Application": "EESimulator",
+  "Title": "Digital Logic Half Adder",
+  "Description": "Digital combinational half adder circuit built with XOR gate for Sum output and AND gate for Carry output, accepting two single-bit binary inputs.",
+  "SavedAt": "2026-11-01T20:30:00Z",
+  "Components": [
+    {
+      "Id": "55555555-5555-5555-5555-555555550001",
+      "ComponentType": "LogicInput",
+      "Reference": "IN_A",
+      "Name": "IN_A",
+      "Description": "Binary Input A (Toggleable Logic 0/1)",
+      "X": 120.0,
+      "Y": 140.0,
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": { "IsHigh": 1.0 },
+      "CustomProperties": { "IsHigh": true }
+    },
+    {
+      "Id": "55555555-5555-5555-5555-555555550002",
+      "ComponentType": "LogicInput",
+      "Reference": "IN_B",
+      "Name": "IN_B",
+      "Description": "Binary Input B (Toggleable Logic 0/1)",
+      "X": 120.0,
+      "Y": 240.0,
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": { "IsHigh": 0.0 },
+      "CustomProperties": { "IsHigh": false }
+    },
+    {
+      "Id": "55555555-5555-5555-5555-555555550003",
+      "ComponentType": "LogicXOR",
+      "Reference": "U1_XOR",
+      "Name": "U1_XOR",
+      "Description": "2-Input XOR Gate for Bit Sum",
+      "X": 300.0,
+      "Y": 140.0,
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "55555555-5555-5555-5555-555555550004",
+      "ComponentType": "LogicAND",
+      "Reference": "U2_AND",
+      "Name": "U2_AND",
+      "Description": "2-Input AND Gate for Bit Carry",
+      "X": 300.0,
+      "Y": 260.0,
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "55555555-5555-5555-5555-555555550005",
+      "ComponentType": "LogicOutput",
+      "Reference": "OUT_SUM",
+      "Name": "OUT_SUM",
+      "Description": "Sum Output Bit (A ⊕ B)",
+      "X": 480.0,
+      "Y": 140.0,
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": { "IsOn": 1.0 },
+      "CustomProperties": { "IsOn": true }
+    },
+    {
+      "Id": "55555555-5555-5555-5555-555555550006",
+      "ComponentType": "LogicOutput",
+      "Reference": "OUT_CARRY",
+      "Name": "OUT_CARRY",
+      "Description": "Carry Output Bit (A · B)",
+      "X": 480.0,
+      "Y": 260.0,
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": { "IsOn": 0.0 },
+      "CustomProperties": { "IsOn": false }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "66666666-6666-6666-6666-666666660001",
+      "FromComponentId": "55555555-5555-5555-5555-555555550001",
+      "FromPin": "out",
+      "ToComponentId": "55555555-5555-5555-5555-555555550003",
+      "ToPin": "in1",
+      "NetName": "A_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "66666666-6666-6666-6666-666666660002",
+      "FromComponentId": "55555555-5555-5555-5555-555555550001",
+      "FromPin": "out",
+      "ToComponentId": "55555555-5555-5555-5555-555555550004",
+      "ToPin": "in1",
+      "NetName": "A_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "66666666-6666-6666-6666-666666660003",
+      "FromComponentId": "55555555-5555-5555-5555-555555550002",
+      "FromPin": "out",
+      "ToComponentId": "55555555-5555-5555-5555-555555550003",
+      "ToPin": "in2",
+      "NetName": "B_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "66666666-6666-6666-6666-666666660004",
+      "FromComponentId": "55555555-5555-5555-5555-555555550002",
+      "FromPin": "out",
+      "ToComponentId": "55555555-5555-5555-5555-555555550004",
+      "ToPin": "in2",
+      "NetName": "B_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "66666666-6666-6666-6666-666666660005",
+      "FromComponentId": "55555555-5555-5555-5555-555555550003",
+      "FromPin": "out",
+      "ToComponentId": "55555555-5555-5555-5555-555555550005",
+      "ToPin": "in",
+      "NetName": "SUM_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "66666666-6666-6666-6666-666666660006",
+      "FromComponentId": "55555555-5555-5555-5555-555555550004",
+      "FromPin": "out",
+      "ToComponentId": "55555555-5555-5555-5555-555555550006",
+      "ToPin": "in",
+      "NetName": "CARRY_NET",
+      "Resistance": 0.0
+    }
+  ]
+}

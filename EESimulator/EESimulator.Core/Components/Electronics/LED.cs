@@ -23,6 +23,30 @@ public class LEDComponent : ElectronicComponent
 
     public string ColorName { get; set; } = "Red";
 
+    /// <summary>
+    /// Indicates whether the LED is currently illuminated (emitting light).
+    /// </summary>
+    public bool IsOn
+    {
+        get
+        {
+            if (CustomProperties.TryGetValue("IsOn", out var val) && val is bool bVal)
+                return bVal;
+
+            if (ElectricalParameters.TryGetValue("IsOn", out var pVal))
+                return pVal > 0.5;
+
+            // Lights up when forward voltage drop is near or above forward voltage rating, or current flows forward
+            return LiveVoltage >= Math.Min(ForwardVoltage * 0.75, 1.5) || LiveCurrent >= 0.001;
+        }
+        set
+        {
+            CustomProperties["IsOn"] = value;
+            ElectricalParameters["IsOn"] = value ? 1.0 : 0.0;
+            NotifyModified(nameof(IsOn));
+        }
+    }
+
     public LEDComponent()
     {
         Pins.Add(new ComponentPin("anode", "A", -20, 0));

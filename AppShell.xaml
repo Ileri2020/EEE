@@ -19,4 +19,9 @@
     <ShellContent
         ContentTemplate="{DataTemplate local:HelpPage}"
         Route="help"/>
+
+    <ShellContent
+        ContentTemplate="{DataTemplate local:ExamplesPage}"
+        Route="examples"/>
 </Shell>
+

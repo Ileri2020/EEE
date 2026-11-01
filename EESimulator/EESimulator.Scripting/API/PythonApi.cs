@@ -27,6 +27,26 @@ public class PythonApi
     public event Action<string>? OnActiveViewportChanged;
     public event Action<string, string>? OnControlButtonRegistered;
     public event Action<string>? OnActiveToolChanged;
+    public event Action<bool?>? OnSidebarToggled;
+    public event Action<bool?>? OnControlSidebarToggled;
+    public event Action<string, bool>? OnSidebarVisibilityChanged;
+    public event Action? OnSimulationPlayRequested;
+    public event Action? OnSimulationPauseRequested;
+    public event Action? OnSimulationToggleRequested;
+    public event Action? OnSimulationStopRequested;
+    public event Action? OnUndoRequested;
+    public event Action? OnRedoRequested;
+    public event Action<string>? OnProjectNameChanged;
+    public event Action? OnWaveformDrawerToggleRequested;
+    public event Action? OnViewToggleRequested;
+    public event Action<string, double>? OnComponentRotateRequested;
+    public event Action<string, double, double>? OnComponentStretchRequested;
+    public event Action<string>? OnLogicToggled;
+    public event Action? OnDescriptionSidebarToggled;
+    public event Action<string>? OnComponentDeleted;
+    public event Action<string>? OnComponentCopied;
+    public event Action<string?>? OnSaveRequested;
+    public event Action<string, string>? OnSaveAsRequested;
 
     public PythonApi(CommandManager commandManager, CircuitNode circuit, SimulationManager? simulationManager = null, UIRootNode? uiRoot = null)
     {
@@ -423,4 +443,273 @@ public class PythonApi
     {
         OnActiveViewportChanged?.Invoke(viewportName);
     }
+
+    // Output & Logic Component Helpers
+    public void AddBulb(string name, double x, double y, double resistance = 50.0, double ratedVoltage = 6.0)
+    {
+        AddComponent("bulb", name, x, y, resistance);
+        if (ratedVoltage != 6.0) SetProperty(name, "RatedVoltage", ratedVoltage);
+    }
+
+    public void AddLED(string name, double x, double y, string color = "Red", double forwardVoltage = 2.0)
+    {
+        AddComponent("led", name, x, y, forwardVoltage);
+        if (!string.Equals(color, "Red", StringComparison.OrdinalIgnoreCase))
+            SetCustomProperty(name, "ColorName", color);
+    }
+
+    public void AddLogicInput(string name, double x, double y, bool initialState = false, double highVoltage = 5.0, double lowVoltage = 0.0)
+    {
+        AddComponent("logicinput", name, x, y, highVoltage);
+        if (initialState) SetCustomProperty(name, "State", true);
+        if (lowVoltage != 0.0) SetProperty(name, "LowVoltage", lowVoltage);
+    }
+
+    public void AddLogicOutput(string name, double x, double y, double threshold = 2.5)
+    {
+        AddComponent("logicoutput", name, x, y, threshold);
+    }
+
+    public void ToggleLogic(string componentName)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
+        {
+            lin.Toggle();
+        }
+        else if (comp != null)
+        {
+            bool cur = comp.CustomProperties.TryGetValue("State", out var v) && Convert.ToBoolean(v);
+            comp.CustomProperties["State"] = !cur;
+            comp.ElectricalParameters["State"] = !cur ? 1.0 : 0.0;
+            comp.NotifyModified("State");
+        }
+        OnLogicToggled?.Invoke(componentName);
+    }
+
+    public void SetLogic(string componentName, bool state)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
+        {
+            lin.State = state;
+        }
+        else if (comp != null)
+        {
+            comp.CustomProperties["State"] = state;
+            comp.ElectricalParameters["State"] = state ? 1.0 : 0.0;
+            comp.NotifyModified("State");
+        }
+        OnLogicToggled?.Invoke(componentName);
+    }
+
+    public void SetLogicLevels(string componentName, double highVoltage, double lowVoltage)
+    {
+        SetProperty(componentName, "HighVoltage", highVoltage);
+        SetProperty(componentName, "LowVoltage", lowVoltage);
+    }
+
+    public void SetOutputState(string componentName, bool isOn)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.CustomProperties["IsOn"] = isOn;
+            comp.ElectricalParameters["IsOn"] = isOn ? 1.0 : 0.0;
+            comp.NotifyModified("IsOn");
+        }
+    }
+
+    // Component Transformations: Rotate & Stretch
+    public void RotateComponent(string componentName, double angleDegrees)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.Rotation = (comp.Rotation + angleDegrees) % 360.0;
+            comp.NotifyModified(nameof(comp.Rotation));
+        }
+        OnComponentRotateRequested?.Invoke(componentName, angleDegrees);
+    }
+
+    public void SetRotation(string componentName, double angleDegrees)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.Rotation = angleDegrees % 360.0;
+            comp.NotifyModified(nameof(comp.Rotation));
+        }
+        OnComponentRotateRequested?.Invoke(componentName, angleDegrees);
+    }
+
+    public void StretchComponent(string componentName, double scaleX, double scaleY)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.ScaleX = Math.Clamp(scaleX, 0.2, 10.0);
+            comp.ScaleY = Math.Clamp(scaleY, 0.2, 10.0);
+            comp.NotifyModified(nameof(comp.ScaleX));
+            comp.NotifyModified(nameof(comp.ScaleY));
+        }
+        OnComponentStretchRequested?.Invoke(componentName, scaleX, scaleY);
+    }
+
+    public void SetScale(string componentName, double scaleX, double scaleY)
+    {
+        StretchComponent(componentName, scaleX, scaleY);
+    }
+
+    // Default Workspace & UI Controls
+    public void ToggleComponentSidebar(bool? visible = null)
+    {
+        var sb = UI.Sidebar("ComponentSidebar") ?? UI.Sidebar("ComponentPalette");
+        if (sb != null)
+        {
+            sb.Visible = visible ?? !sb.Visible;
+        }
+        OnSidebarToggled?.Invoke(visible);
+    }
+
+    public void ToggleControlSidebar(bool? visible = null)
+    {
+        var sb = UI.Sidebar("ControlSidebar");
+        if (sb != null)
+        {
+            sb.Visible = visible ?? !sb.Visible;
+        }
+        OnControlSidebarToggled?.Invoke(visible);
+    }
+
+    public void SetSidebarVisible(string sidebarName, bool visible)
+    {
+        var sb = UI.Sidebar(sidebarName);
+        if (sb != null)
+        {
+            sb.Visible = visible;
+        }
+        OnSidebarVisibilityChanged?.Invoke(sidebarName, visible);
+    }
+
+    public void PlaySimulation()
+    {
+        OnSimulationPlayRequested?.Invoke();
+    }
+
+    public void PauseSimulation()
+    {
+        OnSimulationPauseRequested?.Invoke();
+    }
+
+    public void ToggleSimulationPlayback()
+    {
+        OnSimulationToggleRequested?.Invoke();
+    }
+
+    public void StopSimulation()
+    {
+        OnSimulationStopRequested?.Invoke();
+    }
+
+    public void SetProjectName(string name)
+    {
+        OnProjectNameChanged?.Invoke(name);
+    }
+
+    public void Undo()
+    {
+        _commandManager.Undo();
+        OnUndoRequested?.Invoke();
+    }
+
+    public void Redo()
+    {
+        _commandManager.Redo();
+        OnRedoRequested?.Invoke();
+    }
+
+    public void CopyComponent(string componentName)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            var clone = comp.Clone();
+            clone.Name = $"{comp.Name}_copy";
+            clone.Position = (comp.Position.X + 40, comp.Position.Y + 40);
+            var cmd = new AddComponentCommand(_circuit, clone)
+            {
+                Origin = CommandOrigin.Python
+            };
+            _commandManager.ExecuteCommand(cmd);
+            OnComponentCopied?.Invoke(componentName);
+        }
+    }
+
+    public void DeleteComponent(string componentName)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            var cmd = new RemoveComponentCommand(_circuit, comp)
+            {
+                Origin = CommandOrigin.Python
+            };
+            _commandManager.ExecuteCommand(cmd);
+            OnComponentDeleted?.Invoke(componentName);
+        }
+    }
+
+    public void SetBreakingCurrent(string componentName, double breakingCurrent)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.BreakingCurrent = breakingCurrent;
+            comp.NotifyModified(nameof(comp.BreakingCurrent));
+        }
+    }
+
+    public void SetDescription(string componentName, string description)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.Description = description;
+            comp.NotifyModified(nameof(comp.Description));
+        }
+    }
+
+    public void ToggleDescriptionSidebar(bool? visible = null)
+    {
+        var sb = UI.Sidebar("DescriptionSidebar");
+        if (sb != null)
+        {
+            sb.Visible = visible ?? !sb.Visible;
+        }
+        OnDescriptionSidebarToggled?.Invoke();
+    }
+
+    public void SaveProject(string? filePath = null)
+    {
+        OnSaveRequested?.Invoke(filePath);
+    }
+
+    public void SaveProjectAs(string filePath, string format = "eee")
+    {
+        OnSaveAsRequested?.Invoke(filePath, format);
+    }
+
+    public void ToggleWaveformDrawer()
+    {
+        UI.Workspace.ToggleWaveform();
+        OnWaveformDrawerToggleRequested?.Invoke();
+    }
+
+    public void ToggleView()
+    {
+        OnViewToggleRequested?.Invoke();
+    }
 }
+
+

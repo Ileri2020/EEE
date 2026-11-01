@@ -162,6 +162,43 @@ public class SpiceSharpAdapter : ISimulationEngine
                         break;
                     }
 
+                    case BulbComponent bulb:
+                    {
+                        var res = new SpiceSharp.Components.Resistor(bulb.Name, nodeA, nodeB, Math.Max(bulb.Resistance, 1e-6));
+                        spiceCircuit.Add(res);
+                        break;
+                    }
+
+                    case LEDComponent led:
+                    {
+                        var dModel = new SpiceSharp.Components.DiodeModel($"{led.Name}_model");
+                        dModel.Parameters.SaturationCurrent = 1e-20;
+                        dModel.Parameters.EmissionCoefficient = 2.0;
+                        string anode = GetPinNode(led, "anode", 0);
+                        string cathode = GetPinNode(led, "cathode", 1);
+                        var diode = new SpiceSharp.Components.Diode(led.Name, anode, cathode, $"{led.Name}_model");
+                        spiceCircuit.Add(dModel);
+                        spiceCircuit.Add(diode);
+                        break;
+                    }
+
+                    case LogicInputComponent lin:
+                    {
+                        double vLevel = lin.State ? lin.HighVoltage : lin.LowVoltage;
+                        string outNode = GetPinNode(lin, "out", 0);
+                        var vsrc = new SpiceSharp.Components.VoltageSource(lin.Name, outNode, "0", vLevel);
+                        spiceCircuit.Add(vsrc);
+                        break;
+                    }
+
+                    case LogicOutputComponent lout:
+                    {
+                        string inNode = GetPinNode(lout, "in", 0);
+                        var senseRes = new SpiceSharp.Components.Resistor($"{lout.Name}_sense", inNode, "0", 10e6);
+                        spiceCircuit.Add(senseRes);
+                        break;
+                    }
+
                     case BJTComponent b:
                     {
                         var bModel = new SpiceSharp.Components.BipolarJunctionTransistorModel($"{b.Name}_model");
@@ -423,6 +460,21 @@ public class SpiceSharpAdapter : ISimulationEngine
                         comp.LiveCurrent = vDrop / r.Resistance;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
+                    else if (comp is BulbComponent b && b.Resistance > 0)
+                    {
+                        comp.LiveCurrent = vDrop / b.Resistance;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
+                    }
+                    else if (comp is LogicInputComponent lin)
+                    {
+                        comp.LiveVoltage = lin.State ? lin.HighVoltage : lin.LowVoltage;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = comp.LiveVoltage;
+                    }
+                    else if (comp is LogicOutputComponent lout)
+                    {
+                        comp.LiveVoltage = va;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = va;
+                    }
                     else if (comp is VoltageSourceComponent v)
                     {
                         comp.LiveVoltage = v.Voltage;
@@ -584,16 +636,34 @@ public class SpiceSharpAdapter : ISimulationEngine
     {
         double sourceVoltage = 0.0;
         double totalResistance = 0.0;
-        var resistors = new List<ResistorNode>();
+        var loads = new List<(ComponentNode comp, double resistance)>();
 
         foreach (var comp in circuit.Components)
         {
             if (comp is VoltageSourceComponent v)
+            {
                 sourceVoltage += v.Voltage;
-            else if (comp is ResistorNode r)
+            }
+            else if (comp is ResistorComponent r && r.Resistance > 0)
             {
                 totalResistance += r.Resistance;
-                resistors.Add(r);
+                loads.Add((r, r.Resistance));
+            }
+            else if (comp is BulbComponent b && b.Resistance > 0)
+            {
+                totalResistance += b.Resistance;
+                loads.Add((b, b.Resistance));
+            }
+            else if (comp is LEDComponent led)
+            {
+                // LED dynamic forward resistance approximation
+                totalResistance += 50.0;
+                loads.Add((led, 50.0));
+            }
+            else if (comp is LogicInputComponent lin)
+            {
+                if (lin.State && lin.HighVoltage > 0)
+                    sourceVoltage += lin.HighVoltage;
             }
         }
 
@@ -602,12 +672,12 @@ public class SpiceSharpAdapter : ISimulationEngine
             double current = sourceVoltage / totalResistance;
             results.OperatingPointCurrents["I_total"] = current;
 
-            foreach (var r in resistors)
+            foreach (var (comp, res) in loads)
             {
-                double vDrop = current * r.Resistance;
-                r.LiveVoltage = vDrop;
-                r.LiveCurrent = current;
-                results.OperatingPointVoltages[$"V({r.Name})"] = vDrop;
+                double vDrop = current * res;
+                comp.LiveVoltage = vDrop;
+                comp.LiveCurrent = current;
+                results.OperatingPointVoltages[$"V({comp.Name})"] = vDrop;
             }
         }
 

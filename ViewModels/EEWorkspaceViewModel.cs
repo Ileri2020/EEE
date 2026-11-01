@@ -58,7 +58,34 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial string ActiveComponentInfo { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string ProjectName { get; set; } = "Untitled.eesim";
+    public partial string ProjectName { get; set; } = "Untitled.eee";
+
+    [ObservableProperty]
+    public partial string? CurrentFilePath { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsSaveAsModalVisible { get; set; } = false;
+
+    [ObservableProperty]
+    public partial string SaveFileName { get; set; } = "Circuit1";
+
+    [ObservableProperty]
+    public partial string SaveDestinationFolder { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFormatEee))]
+    [NotifyPropertyChangedFor(nameof(IsFormatKiCad))]
+    [NotifyPropertyChangedFor(nameof(IsFormatSpice))]
+    [NotifyPropertyChangedFor(nameof(IsFormatEesim))]
+    [NotifyPropertyChangedFor(nameof(IsFormatPython))]
+    public partial string SelectedSaveFormat { get; set; } = "eee";
+
+    public bool IsFormatEee => SelectedSaveFormat == "eee";
+    public bool IsFormatKiCad => SelectedSaveFormat == "kicad";
+    public bool IsFormatSpice => SelectedSaveFormat == "spice";
+    public bool IsFormatEesim => SelectedSaveFormat == "eesim";
+    public bool IsFormatPython => SelectedSaveFormat == "python";
+
 
     [ObservableProperty]
     public partial bool CanUndo { get; set; }
@@ -77,9 +104,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PlayPauseButtonText))]
+    [NotifyPropertyChangedFor(nameof(PlayPauseFabText))]
     public partial bool IsSimulationPlaying { get; set; } = false;
 
+
     public string PlayPauseButtonText => IsSimulationPlaying ? "⏸ Pause" : "▶ Run Sim";
+    /// <summary>Icon-only text for the compact FAB button on the canvas.</summary>
+    public string PlayPauseFabText    => IsSimulationPlaying ? "⏸" : "▶";
+
 
     [ObservableProperty]
     public partial float ElectricityAnimPhase { get; set; } = 0f;
@@ -93,6 +125,23 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     public partial ComponentNode? EditingComponent { get; set; }
+
+    /// <summary>The most recently selected component on the canvas (for toolbar actions like Rotate, Copy, Delete).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedComponent))]
+    public partial ComponentNode? SelectedComponent { get; set; }
+
+    public bool HasSelectedComponent => SelectedComponent != null;
+
+    [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
+    [ObservableProperty] public partial double EditBreakingCurrent { get; set; } = 1.0;
+    [ObservableProperty] public partial bool IsDescriptionSidebarVisible { get; set; } = false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SimPlayBtnColor))]
+    public partial bool HasCircuitOverloadWarning { get; set; } = false;
+
+    public Color SimPlayBtnColor => HasCircuitOverloadWarning ? Color.FromArgb("#FF4444") : Color.FromArgb("#56D364");
 
     [ObservableProperty]
     public partial string EditName { get; set; } = string.Empty;
@@ -264,10 +313,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("CurrentSwitch",    "W",   "SW", "#E3B341", "Electrical",  "Current-Controlled Switch", "currentswitch.svg"),
         new ComponentPaletteItem("TransmissionLine", "T",   "Ω",  "#79C0FF", "Electrical",  "Lossless Transmission Line", "transmissionline.svg"),
         new ComponentPaletteItem("VoltageDelay",     "VD",  "s",  "#56D364", "Electrical",  "Voltage Delay Element",      "voltagedelay.svg"),
+        new ComponentPaletteItem("Bulb",             "💡",  "LAMP","#F59E0B", "Electrical",  "Incandescent Light Bulb",    "bulb.svg"),
 
         // ── Electronics (Semiconductors & Active) ────────────────────────────
-        new ComponentPaletteItem("LED",           "💡",  "LED","#E3B341", "Electronics", "Light Emitting Diode",  "led.svg"),
-        new ComponentPaletteItem("NPN",           "Q",   "NPN","#FFA657", "Electronics", "BJT NPN Transistor",    "bjt_npn.svg"),
+        new ComponentPaletteItem("LED",           "💡",  "LED","#E3B341", "Electronics", "Light Emitting Diode",       "led.svg"),
+        new ComponentPaletteItem("LogicInput",    "🔲",  "IN", "#56D364", "Electronics", "Toggle Logic Input (0/1)",   "logicinput.svg"),
+        new ComponentPaletteItem("LogicOutput",   "🎯",  "OUT","#79C0FF", "Electronics", "Digital Logic Probe (0/1)",  "logicoutput.svg"),
+        new ComponentPaletteItem("NPN",           "Q",   "NPN","#FFA657", "Electronics", "BJT NPN Transistor",         "bjt_npn.svg"),
         new ComponentPaletteItem("PNP",           "Q",   "PNP","#FFA657", "Electronics", "BJT PNP Transistor",    "bjt_pnp.svg"),
         new ComponentPaletteItem("JFET",          "J",   "FET","#FFA657", "Electronics", "Junction Field-Effect",  "jfet.svg"),
         new ComponentPaletteItem("NMOS",          "M",   "NMOS","#D2A8FF", "Electronics", "N-Channel MOSFET",     "nmos.svg"),
@@ -291,6 +343,81 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("Connector",     "⑉",   "HDR","#E3B341", "General", "Header connector",     "connector.svg")
     };
 
+    /// <summary>Palette grouped by category for the sidebar 2-per-row grid layout.</summary>
+    public IReadOnlyList<ComponentPaletteGroup> GroupedPalette { get; } = new List<ComponentPaletteGroup>
+    {
+        new ComponentPaletteGroup("⚡ Passives", new[]
+        {
+            new ComponentPaletteItem("Resistor",      "R",  "Ω",  "#F78166", "Passives",  "Linear resistor",          "resistor.svg"),
+            new ComponentPaletteItem("Capacitor",     "C",  "F",  "#79C0FF", "Passives",  "Capacitor",                "capacitor.svg"),
+            new ComponentPaletteItem("Inductor",      "L",  "H",  "#D2A8FF", "Passives",  "Inductor",                 "inductor.svg"),
+            new ComponentPaletteItem("MutualInductance","K","k",  "#D2A8FF", "Passives",  "Mutual coupled inductors", "mutualinductance.svg"),
+        }),
+        new ComponentPaletteGroup("🔋 Sources", new[]
+        {
+            new ComponentPaletteItem("VoltageSource", "V",  "V",  "#56D364", "Sources",   "Voltage source",           "voltagesource.svg"),
+            new ComponentPaletteItem("CurrentSource", "I",  "A",  "#56D364", "Sources",   "Current source",           "currentsource.svg"),
+            new ComponentPaletteItem("VoltageDelay",  "VD", "s",  "#56D364", "Sources",   "Voltage Delay Element",    "voltagedelay.svg"),
+            new ComponentPaletteItem("Ground",        "⏚",  "GND","#8B949E", "Sources",   "Circuit ground",           "ground.svg"),
+        }),
+        new ComponentPaletteGroup("🔀 Dependent Sources", new[]
+        {
+            new ComponentPaletteItem("VCVS",   "E",  "μ",  "#56D364", "Dep.Sources", "Voltage-Controlled Voltage Source", "vcvs.svg"),
+            new ComponentPaletteItem("VCCS",   "G",  "Gm", "#56D364", "Dep.Sources", "Voltage-Controlled Current Source", "vccs.svg"),
+            new ComponentPaletteItem("CCVS",   "H",  "Rm", "#79C0FF", "Dep.Sources", "Current-Controlled Voltage Source", "ccvs.svg"),
+            new ComponentPaletteItem("CCCS",   "F",  "β",  "#79C0FF", "Dep.Sources", "Current-Controlled Current Source", "cccs.svg"),
+        }),
+        new ComponentPaletteGroup("🔘 Diodes", new[]
+        {
+            new ComponentPaletteItem("Diode",  "D",  "▷|","#FF7B72", "Diodes",  "Semiconductor diode",   "diode.svg"),
+            new ComponentPaletteItem("LED",    "💡", "LED","#E3B341", "Diodes",  "Light Emitting Diode",  "led.svg"),
+        }),
+        new ComponentPaletteGroup("💡 Output & Logic I/O", new[]
+        {
+            new ComponentPaletteItem("Bulb",        "💡", "LAMP", "#F59E0B", "Output",  "Incandescent Light Bulb",   "bulb.svg"),
+            new ComponentPaletteItem("LED",         "💡", "LED",  "#E3B341", "Output",  "Light Emitting Diode",      "led.svg"),
+            new ComponentPaletteItem("LogicInput",  "🔲", "IN",   "#56D364", "Digital", "Toggle Logic Input (0/1)",  "logicinput.svg"),
+            new ComponentPaletteItem("LogicOutput", "🎯", "OUT",  "#79C0FF", "Digital", "Digital Logic Probe (0/1)", "logicoutput.svg"),
+        }),
+        new ComponentPaletteGroup("⚙ Switches", new[]
+        {
+            new ComponentPaletteItem("VoltageSwitch", "S", "SW", "#E3B341", "Switches", "Voltage-Controlled Switch", "voltageswitch.svg"),
+            new ComponentPaletteItem("CurrentSwitch", "W", "SW", "#E3B341", "Switches", "Current-Controlled Switch", "currentswitch.svg"),
+        }),
+        new ComponentPaletteGroup("📡 Transmission", new[]
+        {
+            new ComponentPaletteItem("TransmissionLine", "T",  "Ω", "#79C0FF", "Transmission", "Lossless Transmission Line", "transmissionline.svg"),
+        }),
+        new ComponentPaletteGroup("🔌 Semiconductors", new[]
+        {
+            new ComponentPaletteItem("NPN",   "Q",  "NPN", "#FFA657", "Semi", "BJT NPN Transistor",    "bjt_npn.svg"),
+            new ComponentPaletteItem("PNP",   "Q",  "PNP", "#FFA657", "Semi", "BJT PNP Transistor",    "bjt_pnp.svg"),
+            new ComponentPaletteItem("JFET",  "J",  "FET", "#FFA657", "Semi", "Junction Field-Effect", "jfet.svg"),
+            new ComponentPaletteItem("NMOS",  "M",  "NMOS","#D2A8FF", "Semi", "N-Channel MOSFET",     "nmos.svg"),
+            new ComponentPaletteItem("PMOS",  "M",  "PMOS","#D2A8FF", "Semi", "P-Channel MOSFET",     "pmos.svg"),
+            new ComponentPaletteItem("OpAmp", "▷",  "AMP", "#79C0FF", "Semi", "Operational Amplifier","opamp.svg"),
+        }),
+        new ComponentPaletteGroup("🧠 Logic Gates", new[]
+        {
+            new ComponentPaletteItem("AND",  "&",  "AND", "#58A6FF", "Logic", "2-Input AND Gate",  "and.svg"),
+            new ComponentPaletteItem("OR",   "≥1", "OR",  "#58A6FF", "Logic", "2-Input OR Gate",   "or.svg"),
+            new ComponentPaletteItem("NOT",  "¬",  "NOT", "#58A6FF", "Logic", "Inverter / NOT",    "not.svg"),
+            new ComponentPaletteItem("NAND", "⊼",  "NND", "#58A6FF", "Logic", "2-Input NAND Gate", "nand.svg"),
+            new ComponentPaletteItem("NOR",  "⊽",  "NOR", "#58A6FF", "Logic", "2-Input NOR Gate",  "nor.svg"),
+            new ComponentPaletteItem("XOR",  "=1", "XOR", "#58A6FF", "Logic", "2-Input XOR Gate",  "xor.svg"),
+            new ComponentPaletteItem("XNOR", "⊙",  "XNR", "#58A6FF", "Logic", "2-Input XNOR Gate", "xnor.svg"),
+            new ComponentPaletteItem("IC",   "⊞",  "IC",  "#8B949E", "Logic", "Integrated Circuit","ic.svg"),
+        }),
+        new ComponentPaletteGroup("🗂 Schematic", new[]
+        {
+            new ComponentPaletteItem("Wire",           "—",  "W",   "#58A6FF", "Schematic", "Wire segment",      "wire.svg"),
+            new ComponentPaletteItem("Junction",       "•",  "J",   "#58A6FF", "Schematic", "Wire junction",     "junction.svg"),
+            new ComponentPaletteItem("Label",          "🏷", "LBL", "#56D364", "Schematic", "Net label",         "label.svg"),
+            new ComponentPaletteItem("TextAnnotation", "🗎", "TXT", "#8B949E", "Schematic", "Text note",         "textannotation.svg"),
+            new ComponentPaletteItem("Connector",      "⑉",  "HDR", "#E3B341", "Schematic", "Header connector",  "connector.svg"),
+        }),
+    };
+
     /// <summary>Raised when the circuit changes so the canvas can Invalidate immediately.</summary>
     public event Action? CircuitChanged;
 
@@ -303,15 +430,56 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
         // Register default UI nodes under RootNode hierarchy
         UI.Workspace.Title = "Schematic Workspace";
-        var paletteSidebar = new SidebarNode("ComponentPalette", "Left");
+
+        // 1. Sidebars (Component Sidebar & Control Sidebar)
+        var componentSidebar = new SidebarNode("ComponentSidebar", "Left") { Title = "Component Palette" };
+        var paletteSidebar = new SidebarNode("ComponentPalette", "Left") { Title = "Component Palette" };
+        var controlSidebar = new SidebarNode("ControlSidebar", "Right") { Title = "Control Sidebar" };
         var editDialog = new DialogNode("ComponentEditDialog", "Edit Component");
+
+        // 2. Fixed Simulation Play / Pause / Stop Buttons
+        var playBtn = new ButtonNode("PlaySim", "Play Simulation", () => { if (!IsSimulationPlaying) ToggleSimulationPlayback(); });
+        var pauseBtn = new ButtonNode("PauseSim", "Pause Simulation", () => { if (IsSimulationPlaying) ToggleSimulationPlayback(); });
+        var togglePlayPauseBtn = new ButtonNode("TogglePlayPause", "Play/Pause Simulation", () => ToggleSimulationPlayback());
+        var stopBtn = new ButtonNode("StopSim", "Stop Simulation", () => { if (IsSimulationPlaying) ToggleSimulationPlayback(); });
         var runButton = new ButtonNode("RunSim", "Run Simulation", () => _ = SimulateAsync());
         var waveButton = new ButtonNode("ToggleWaveform", "Toggle Waveform", () => ToggleWaveformDrawer());
 
+        // 3. Top Page NavBar section
+        var navBar = new UINode { Name = "TopNavBar", Title = "Top Navigation Bar" };
+        var navTitle = new InputNode("ProjectTitle", ProjectName);
+        var navPlayPause = new ButtonNode("NavPlayPause", "Toggle Play/Pause", () => ToggleSimulationPlayback());
+        var navUndo = new ButtonNode("NavUndo", "Undo", () => Undo());
+        var navRedo = new ButtonNode("NavRedo", "Redo", () => Redo());
+        var navRotate = new ButtonNode("NavRotate", "Rotate Selected Component", () => RotateSelectedComponent());
+        var navViewToggle = new ButtonNode("NavViewToggle", "Toggle Script/Schematic View", () => ToggleViewport());
+        var navWaveform = new ButtonNode("NavWaveform", "Toggle Waveform", () => ToggleWaveformDrawer());
+        var navSimSettings = new ButtonNode("NavSimSettings", "Simulation Settings", () => _ = OpenSimSettings());
+        var navSettings = new ButtonNode("NavSettings", "Settings", () => _ = OpenSettings());
+        var navHelp = new ButtonNode("NavHelp", "Help", () => ToggleHelp());
+
+        navBar.AddChild(navTitle);
+        navBar.AddChild(navPlayPause);
+        navBar.AddChild(navUndo);
+        navBar.AddChild(navRedo);
+        navBar.AddChild(navRotate);
+        navBar.AddChild(navViewToggle);
+        navBar.AddChild(navWaveform);
+        navBar.AddChild(navSimSettings);
+        navBar.AddChild(navSettings);
+        navBar.AddChild(navHelp);
+
+        UI.Workspace.AddChild(componentSidebar);
         UI.Workspace.AddChild(paletteSidebar);
+        UI.Workspace.AddChild(controlSidebar);
         UI.Workspace.AddChild(editDialog);
+        UI.Workspace.AddChild(playBtn);
+        UI.Workspace.AddChild(pauseBtn);
+        UI.Workspace.AddChild(togglePlayPauseBtn);
+        UI.Workspace.AddChild(stopBtn);
         UI.Workspace.AddChild(runButton);
         UI.Workspace.AddChild(waveButton);
+        UI.Workspace.AddChild(navBar);
 
         // Sync script viewport when schematic commands run
         _sync.ScriptUpdated += script =>
@@ -345,7 +513,82 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi.OnActiveViewportChanged += name => StatusText = $"Viewport: {name}";
         PythonApi.OnControlButtonRegistered += (label, act) => EEE.Services.ControlSidebarService.AddButton(label, act);
         PythonApi.OnActiveToolChanged += tool => SelectTool(tool);
+
+        PythonApi.OnSidebarToggled += (visible) =>
+        {
+            if (visible.HasValue) IsSidebarVisible = visible.Value;
+            else ToggleSidebar();
+            componentSidebar.Visible = IsSidebarVisible;
+            paletteSidebar.Visible = IsSidebarVisible;
+        };
+
+        PythonApi.OnControlSidebarToggled += (visible) =>
+        {
+            if (visible.HasValue) IsControlSidebarVisible = visible.Value;
+            else ToggleControlSidebar();
+            controlSidebar.Visible = IsControlSidebarVisible;
+        };
+
+        PythonApi.OnSidebarVisibilityChanged += (name, visible) =>
+        {
+            if (name.Contains("Control", StringComparison.OrdinalIgnoreCase))
+            {
+                IsControlSidebarVisible = visible;
+                controlSidebar.Visible = visible;
+            }
+            else
+            {
+                IsSidebarVisible = visible;
+                componentSidebar.Visible = visible;
+                paletteSidebar.Visible = visible;
+            }
+        };
+
+        PythonApi.OnSimulationPlayRequested += () =>
+        {
+            if (!IsSimulationPlaying) ToggleSimulationPlayback();
+        };
+
+        PythonApi.OnSimulationPauseRequested += () =>
+        {
+            if (IsSimulationPlaying) ToggleSimulationPlayback();
+        };
+
+        PythonApi.OnSimulationToggleRequested += () => ToggleSimulationPlayback();
+
+        PythonApi.OnSimulationStopRequested += () =>
+        {
+            if (IsSimulationPlaying) ToggleSimulationPlayback();
+        };
+
+        PythonApi.OnUndoRequested += () => Undo();
+        PythonApi.OnRedoRequested += () => Redo();
+        PythonApi.OnProjectNameChanged += name => ProjectName = name;
+        PythonApi.OnWaveformDrawerToggleRequested += () => ToggleWaveformDrawer();
+        PythonApi.OnViewToggleRequested += () => ToggleViewport();
+        PythonApi.OnComponentRotateRequested += (name, deg) => CircuitChanged?.Invoke();
+        PythonApi.OnComponentStretchRequested += (name, sx, sy) => CircuitChanged?.Invoke();
+        PythonApi.OnLogicToggled += (name) => CircuitChanged?.Invoke();
+        PythonApi.OnDescriptionSidebarToggled += () => ToggleDescriptionSidebar();
+        PythonApi.OnComponentDeleted += (name) => CircuitChanged?.Invoke();
+        PythonApi.OnComponentCopied += (name) => CircuitChanged?.Invoke();
+
+        SaveDestinationFolder = GetDefaultSaveDirectory();
+        PythonApi.OnSaveRequested += (path) =>
+        {
+            if (string.IsNullOrEmpty(path)) SaveProject();
+            else { SaveToPath(path); CurrentFilePath = path; ProjectName = System.IO.Path.GetFileName(path); }
+        };
+        PythonApi.OnSaveAsRequested += (path, fmt) =>
+        {
+            SelectedSaveFormat = fmt;
+            SaveToPath(path);
+            CurrentFilePath = path;
+            ProjectName = System.IO.Path.GetFileName(path);
+        };
     }
+
+
 
     // ── Commands ─────────────────────────────────────────────────────────────
     [RelayCommand]
@@ -366,6 +609,49 @@ public partial class EEWorkspaceViewModel : ObservableObject
             StatusText = "Settings opened";
         }
     }
+
+    [RelayCommand]
+    public async Task OpenExamplesPage()
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("examples");
+        }
+        catch
+        {
+            StatusText = "Opening Examples";
+        }
+    }
+
+    public void LoadCircuit(CircuitNode newCircuit, string projectName, string? filePath = null)
+    {
+        if (newCircuit == null) return;
+
+        // Clear existing circuit nodes
+        while (Circuit.Children.Count > 0)
+        {
+            Circuit.RemoveChild(Circuit.Children[0]);
+        }
+
+        // Add children from loaded circuit
+        foreach (var child in newCircuit.Children.ToList())
+        {
+            Circuit.AddChild(child);
+        }
+
+        Circuit.Title = newCircuit.Title;
+        Circuit.Description = newCircuit.Description;
+        ProjectName = projectName;
+        CurrentFilePath = filePath;
+
+        // Notify the script synchronizer so the Python script view reflects the loaded circuit (§5.A)
+        _sync.OnCircuitReplaced(Circuit);
+        ScriptText = _sync.CurrentScript;
+
+        StatusText = $"Loaded circuit: {projectName}";
+        CircuitChanged?.Invoke();
+    }
+
 
     [RelayCommand]
     private void SetMobilePanMode()
@@ -398,13 +684,264 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void SaveProject()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentFilePath))
+        {
+            SaveProjectAs();
+            return;
+        }
+
+        try
+        {
+            SaveToPath(CurrentFilePath);
+            StatusText = $"Saved: {System.IO.Path.GetFileName(CurrentFilePath)}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Save error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public void SaveProjectAs()
+    {
+        if (string.IsNullOrWhiteSpace(SaveDestinationFolder))
+            SaveDestinationFolder = GetDefaultSaveDirectory();
+
+        string currentName = !string.IsNullOrWhiteSpace(CurrentFilePath)
+            ? System.IO.Path.GetFileNameWithoutExtension(CurrentFilePath)
+            : (!string.IsNullOrWhiteSpace(ProjectName) ? System.IO.Path.GetFileNameWithoutExtension(ProjectName) : "Circuit1");
+
+        SaveFileName = currentName;
+        IsSaveAsModalVisible = true;
+    }
+
+    [RelayCommand]
+    public void CloseSaveAsDialog()
+    {
+        IsSaveAsModalVisible = false;
+    }
+
+    [RelayCommand]
+    public void SelectSaveFormat(string format)
+    {
+        SelectedSaveFormat = format;
+    }
+
+    [RelayCommand]
+    public void ConfirmSaveAs()
+    {
+        if (string.IsNullOrWhiteSpace(SaveFileName))
+        {
+            StatusText = "Filename cannot be empty.";
+            return;
+        }
+
+        string cleanName = System.IO.Path.GetFileNameWithoutExtension(SaveFileName).Trim();
+        string ext = SelectedSaveFormat switch
+        {
+            "eee" => ".eee",
+            "eesim" => ".eesim",
+            "kicad" => ".kicad_sch",
+            "spice" => ".cir",
+            "python" => ".py",
+            _ => ".eee"
+        };
+
+        if (string.IsNullOrWhiteSpace(SaveDestinationFolder))
+            SaveDestinationFolder = GetDefaultSaveDirectory();
+
+        string fullPath = System.IO.Path.Combine(SaveDestinationFolder, cleanName + ext);
+
+        try
+        {
+            SaveToPath(fullPath);
+            CurrentFilePath = fullPath;
+            ProjectName = System.IO.Path.GetFileName(fullPath);
+            IsSaveAsModalVisible = false;
+            StatusText = $"Saved: {System.IO.Path.GetFileName(fullPath)} ({SelectedSaveFormat.ToUpperInvariant()})";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Save error: {ex.Message}";
+        }
+    }
+
+    private string GetDefaultSaveDirectory()
+    {
+        try
+        {
+            string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            if (string.IsNullOrWhiteSpace(docs) || !System.IO.Directory.Exists(docs))
+            {
+                docs = FileSystem.AppDataDirectory;
+            }
+            string path = System.IO.Path.Combine(docs, "EESimulator");
+            if (!System.IO.Directory.Exists(path))
+            {
+                System.IO.Directory.CreateDirectory(path);
+            }
+            return path;
+        }
+        catch
+        {
+            return FileSystem.AppDataDirectory;
+        }
+    }
+
+    private void SaveToPath(string filePath)
+    {
+        var dir = System.IO.Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+        {
+            System.IO.Directory.CreateDirectory(dir);
+        }
+
+        string ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+        switch (ext)
+        {
+            case ".eee":
+                EeePlatformSerializer.SaveToFile(Circuit, filePath);
+                break;
+            case ".eesim":
+            case ".json":
+                EesimSerializer.SaveToFile(Circuit, filePath);
+                break;
+            case ".kicad_sch":
+                KiCadExporter.SaveToFile(Circuit, filePath);
+                break;
+            case ".cir":
+            case ".sp":
+                System.IO.File.WriteAllText(filePath, SpiceNetlistExporter.ExportToSpice(Circuit, _simSettings));
+                break;
+            case ".py":
+                System.IO.File.WriteAllText(filePath, PythonCodeGenerator.GenerateFullScript(Circuit));
+                break;
+            default:
+                EeePlatformSerializer.SaveToFile(Circuit, filePath);
+                break;
+        }
+    }
+
+
+    [RelayCommand]
+    private void RotateSelectedComponent()
+    {
+        var comp = SelectedComponent;
+        if (comp == null)
+        {
+            StatusText = "No component selected — click a component first";
+            return;
+        }
+        comp.Rotation = (comp.Rotation + 90.0) % 360.0;
+        StatusText = $"Rotated {comp.Reference} → {comp.Rotation:F0}°";
+        CircuitChanged?.Invoke();
+    }
+
+    [RelayCommand]
+    public void CopySelectedComponent()
+    {
+        if (SelectedComponent == null)
+        {
+            StatusText = "No component selected to copy";
+            return;
+        }
+
+        var src = SelectedComponent;
+        var copy = EESimulator.Core.Components.Registry.ComponentRegistry.CreateInstance(
+            src.ComponentType,
+            GetNextReference(src.ComponentType),
+            src.X + 30,
+            src.Y + 30);
+
+        copy.Rotation = src.Rotation;
+        copy.ScaleX = src.ScaleX;
+        copy.ScaleY = src.ScaleY;
+        copy.BreakingCurrent = src.BreakingCurrent;
+        foreach (var kvp in src.ElectricalParameters)
+        {
+            copy.ElectricalParameters[kvp.Key] = kvp.Value;
+        }
+        foreach (var kvp in src.CustomProperties)
+        {
+            copy.CustomProperties[kvp.Key] = kvp.Value;
+        }
+
+        var cmd = new AddComponentCommand(Circuit, copy)
+        {
+            Origin = CommandOrigin.Schematic
+        };
+        CommandManager.ExecuteCommand(cmd);
+
+        SelectedComponent = copy;
+        OnComponentSelected(copy);
+        CircuitChanged?.Invoke();
+        StatusText = $"Copied {src.Reference} → {copy.Reference}";
+    }
+
+    [RelayCommand]
+    public void DeleteSelectedComponent()
+    {
+        if (SelectedComponent == null)
+        {
+            StatusText = "No component selected to delete";
+            return;
+        }
+
+        var comp = SelectedComponent;
+        var cmd = new RemoveComponentCommand(Circuit, comp)
+        {
+            Origin = CommandOrigin.Schematic
+        };
+        CommandManager.ExecuteCommand(cmd);
+
+        SelectedComponent = null;
+        CircuitChanged?.Invoke();
+        StatusText = $"Deleted {comp.Reference}";
+    }
+
+    [RelayCommand]
+    public void ToggleDescriptionSidebar()
+    {
+        IsDescriptionSidebarVisible = !IsDescriptionSidebarVisible;
+        if (IsDescriptionSidebarVisible && SelectedComponent != null)
+        {
+            OnComponentSelected(SelectedComponent);
+        }
+    }
+
+    [RelayCommand]
+    public void ApplyDescriptionSidebarChanges()
+    {
+        if (SelectedComponent == null) return;
+        if (!string.IsNullOrWhiteSpace(EditName))
+        {
+            SelectedComponent.Name = EditName.Trim();
+            SelectedComponent.Reference = EditName.Trim();
+        }
+        SelectedComponent.CustomProperties["Description"] = EditDescription;
+        SelectedComponent.BreakingCurrent = Math.Max(EditBreakingCurrent, 0.0);
+        if (!string.IsNullOrEmpty(EditParamName))
+        {
+            SelectedComponent.ElectricalParameters[EditParamName] = EditParamValue;
+        }
+        SelectedComponent.ShowLiveProbe = EditShowLiveProbe;
+        SelectedComponent.ShowWaveform = EditShowWaveform;
+        SelectedComponent.NotifyModified(SelectedComponent.Reference);
+        CircuitChanged?.Invoke();
+        StatusText = $"Updated description & properties for {SelectedComponent.Reference}";
+    }
+
+    [RelayCommand]
     private void ToggleViewport() => IsScriptViewActive = !IsScriptViewActive;
 
     [RelayCommand]
     private void ToggleSidebar()
     {
         IsSidebarVisible = !IsSidebarVisible;
-        if (IsSidebarVisible && DeviceInfo.Idiom == DeviceIdiom.Phone)
+        // When component sidebar opens, close control sidebar (all platforms)
+        if (IsSidebarVisible)
             IsControlSidebarVisible = false;
     }
 
@@ -412,7 +949,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private void ToggleControlSidebar()
     {
         IsControlSidebarVisible = !IsControlSidebarVisible;
-        if (IsControlSidebarVisible && DeviceInfo.Idiom == DeviceIdiom.Phone)
+        // When control sidebar opens, close component sidebar (all platforms)
+        if (IsControlSidebarVisible)
             IsSidebarVisible = false;
     }
 
@@ -442,7 +980,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
             }
             _animTimer?.Start();
             StatusText = "▶ Simulation Running: Electricity flowing along circuits";
+            _ = SimulateAsync();
         }
+
         else
         {
             _animTimer?.Stop();
@@ -700,7 +1240,18 @@ public partial class EEWorkspaceViewModel : ObservableObject
     // Called by the canvas when user clicks a component
     public void OnComponentSelected(ComponentNode comp)
     {
+        SelectedComponent = comp;
+        EditName = comp.Reference;
+        EditType = comp.ComponentType;
+        EditDescription = comp.CustomProperties.TryGetValue("Description", out var dVal) ? dVal?.ToString() ?? comp.Description : comp.Description;
+        EditBreakingCurrent = comp.BreakingCurrent;
+
         var param = comp.ElectricalParameters.FirstOrDefault();
+        EditParamName = param.Key ?? "Value";
+        EditParamValue = param.Value;
+        EditShowLiveProbe = comp.ShowLiveProbe;
+        EditShowWaveform = comp.ShowWaveform;
+
         string paramStr = param.Key != null ? $"{param.Key}={param.Value:G4}" : "";
         ActiveComponentInfo = $"{comp.Reference}  [{comp.ComponentType}]  ({comp.X:F0}, {comp.Y:F0})  {paramStr}";
         StatusText = $"Selected {comp.Reference} [{comp.ComponentType}]";
@@ -720,6 +1271,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
         EditType = comp.ComponentType;
         EditShowLiveProbe = comp.ShowLiveProbe;
         EditShowWaveform = comp.ShowWaveform;
+        EditDescription = comp.CustomProperties.TryGetValue("Description", out var dVal) ? dVal?.ToString() ?? comp.Description : comp.Description;
+        EditBreakingCurrent = comp.BreakingCurrent;
         SelectedEditTab = "General";
 
         // Reset component type flags
@@ -921,6 +1474,26 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditParamValue = w.Resistance;
             EditWireResistance = w.Resistance.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
+        else if (comp is EESimulator.Core.Components.Electrical.BulbComponent bulb)
+        {
+            EditParamName = "Filament Resistance (Ω)";
+            EditParamValue = bulb.Resistance;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.LEDComponent led)
+        {
+            EditParamName = "Forward Voltage Vf (V)";
+            EditParamValue = led.ForwardVoltage;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
+        {
+            EditParamName = "Logic 1 High Voltage (V)";
+            EditParamValue = lin.HighVoltage;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.LogicOutputComponent lout)
+        {
+            EditParamName = "Logic Switching Threshold (V)";
+            EditParamValue = lout.Threshold;
+        }
         else if (comp.ElectricalParameters.Count > 0)
         {
             var first = comp.ElectricalParameters.First();
@@ -987,6 +1560,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditingComponent.Name = EditName.Trim();
             EditingComponent.Reference = EditName.Trim();
         }
+
+        EditingComponent.CustomProperties["Description"] = EditDescription;
+        EditingComponent.BreakingCurrent = Math.Max(EditBreakingCurrent, 0.0);
 
         if (EditingComponent is ResistorComponent r)
         {
@@ -1147,6 +1723,22 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             w.Resistance = double.TryParse(EditWireResistance, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var wr) ? wr : Math.Max(EditParamValue, 0);
         }
+        else if (EditingComponent is EESimulator.Core.Components.Electrical.BulbComponent bulb)
+        {
+            bulb.Resistance = Math.Max(EditParamValue, 1e-6);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.LEDComponent led)
+        {
+            led.ForwardVoltage = Math.Max(EditParamValue, 0.1);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
+        {
+            lin.HighVoltage = EditParamValue;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.LogicOutputComponent lout)
+        {
+            lout.Threshold = EditParamValue;
+        }
         else if (!string.IsNullOrEmpty(EditParamName))
         {
             EditingComponent.ElectricalParameters[EditParamName] = EditParamValue;
@@ -1215,6 +1807,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
             "CurrentSource"  => "I",
             "Ground"         => "GND",
             "Diode"          => "D",
+            "LED"            => "LED",
+            "Bulb" or "Lamp" => "LAMP",
+            "LogicInput"     => "IN",
+            "LogicOutput"    => "OUT",
             "BJT" or "NPN" or "PNP" => "Q",
             "JFET"           => "J",
             "MOSFET" or "NMOS" or "PMOS" => "M",
@@ -1398,6 +1994,143 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     }
                     return $"[not found] button {Unquote(args[0])}";
 
+                case "add_bulb" when args.Length >= 3:
+                    PythonApi.AddBulb(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 50.0,
+                        args.Length > 4 ? ParseD(args[4]) : 6.0);
+                    return $"[ok] bulb {Unquote(args[0])} added";
+
+                case "add_led" when args.Length >= 3:
+                    PythonApi.AddLED(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? Unquote(args[3]) : "Red",
+                        args.Length > 4 ? ParseD(args[4]) : 2.0);
+                    return $"[ok] led {Unquote(args[0])} added";
+
+                case "add_logic_input" when args.Length >= 3:
+                    PythonApi.AddLogicInput(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 && (bool.TryParse(Unquote(args[3]), out var bIni) ? bIni : ParseD(args[3]) > 0.5),
+                        args.Length > 4 ? ParseD(args[4]) : 5.0,
+                        args.Length > 5 ? ParseD(args[5]) : 0.0);
+                    return $"[ok] logic input {Unquote(args[0])} added";
+
+                case "add_logic_output" when args.Length >= 3:
+                    PythonApi.AddLogicOutput(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 2.5);
+                    return $"[ok] logic output {Unquote(args[0])} added";
+
+                case "toggle_logic" when args.Length >= 1:
+                    PythonApi.ToggleLogic(Unquote(args[0]));
+                    return $"[ok] logic component {Unquote(args[0])} toggled";
+
+                case "set_logic" when args.Length >= 2:
+                    bool lState = bool.TryParse(Unquote(args[1]), out var bS) ? bS : ParseD(args[1]) > 0.5;
+                    PythonApi.SetLogic(Unquote(args[0]), lState);
+                    return $"[ok] logic component {Unquote(args[0])} set to {lState}";
+
+                case "set_logic_levels" when args.Length >= 3:
+                    PythonApi.SetLogicLevels(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
+                    return $"[ok] logic levels on {Unquote(args[0])} set to High={args[1]}V, Low={args[2]}V";
+
+                case "set_output_state" when args.Length >= 2:
+                    bool oState = bool.TryParse(Unquote(args[1]), out var bO) ? bO : ParseD(args[1]) > 0.5;
+                    PythonApi.SetOutputState(Unquote(args[0]), oState);
+                    CircuitChanged?.Invoke();
+                    return $"[ok] output component {Unquote(args[0])} state set to {oState}";
+
+                case "rotate_component" or "rotate" when args.Length >= 2:
+                    PythonApi.RotateComponent(Unquote(args[0]), ParseD(args[1]));
+                    return $"[ok] component {Unquote(args[0])} rotated by {args[1]}°";
+
+                case "stretch_component" or "stretch" or "set_scale" or "resize" when args.Length >= 3:
+                    PythonApi.StretchComponent(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
+                    return $"[ok] component {Unquote(args[0])} stretched to scale ({args[1]}, {args[2]})";
+
+                case "play" or "simulation_play":
+                    PythonApi.PlaySimulation();
+                    return "[ok] simulation playback started";
+
+                case "pause" or "simulation_pause":
+                    PythonApi.PauseSimulation();
+                    return "[ok] simulation playback paused";
+
+                case "play_pause" or "simulation_toggle":
+                    PythonApi.ToggleSimulationPlayback();
+                    return "[ok] simulation playback toggled";
+
+                case "stop" or "simulation_stop":
+                    PythonApi.StopSimulation();
+                    return "[ok] simulation playback stopped";
+
+                case "toggle_sidebar" or "toggle_component_sidebar":
+                    bool? reqVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var vb) ? vb : null) : null;
+                    PythonApi.ToggleComponentSidebar(reqVis);
+                    return $"[ok] component sidebar is now {(IsSidebarVisible ? "visible" : "hidden")}";
+
+                case "toggle_control_sidebar":
+                    bool? reqCtrlVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var cvb) ? cvb : null) : null;
+                    PythonApi.ToggleControlSidebar(reqCtrlVis);
+                    return $"[ok] control sidebar is now {(IsControlSidebarVisible ? "visible" : "hidden")}";
+
+                case "set_sidebar" when args.Length >= 2:
+                    bool sVis = bool.TryParse(Unquote(args[1]), out var sbv) && sbv;
+                    PythonApi.SetSidebarVisible(Unquote(args[0]), sVis);
+                    return $"[ok] sidebar '{Unquote(args[0])}' set to {sVis}";
+
+                case "undo":
+                    PythonApi.Undo();
+                    return "[ok] undo performed";
+
+                case "redo":
+                    PythonApi.Redo();
+                    return "[ok] redo performed";
+
+                case "copy_component" or "copy" when args.Length >= 1:
+                    PythonApi.CopyComponent(Unquote(args[0]));
+                    return $"[ok] copied component '{Unquote(args[0])}'";
+
+                case "delete_component" or "remove_component" or "delete" or "remove" when args.Length >= 1:
+                    PythonApi.DeleteComponent(Unquote(args[0]));
+                    return $"[ok] deleted component '{Unquote(args[0])}'";
+
+                case "set_breaking_current" when args.Length >= 2:
+                    PythonApi.SetBreakingCurrent(Unquote(args[0]), ParseD(args[1]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] breaking current for '{Unquote(args[0])}' set to {args[1]}A";
+
+                case "set_description" when args.Length >= 2:
+                    PythonApi.SetDescription(Unquote(args[0]), Unquote(args[1]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] description for '{Unquote(args[0])}' updated";
+
+                case "toggle_description_sidebar":
+                    bool? reqDescVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var dvb) ? dvb : null) : null;
+                    if (reqDescVis.HasValue)
+                        IsDescriptionSidebarVisible = reqDescVis.Value;
+                    else
+                        ToggleDescriptionSidebar();
+                    return $"[ok] description sidebar is now {(IsDescriptionSidebarVisible ? "visible" : "hidden")}";
+
+                case "set_project_name" when args.Length >= 1:
+                    PythonApi.SetProjectName(Unquote(args[0]));
+                    return $"[ok] project name set to '{Unquote(args[0])}'";
+
+                case "save" or "save_project":
+                    string? savePath = args.Length > 0 ? Unquote(args[0]) : null;
+                    if (string.IsNullOrEmpty(savePath)) SaveProject();
+                    else { SaveToPath(savePath); CurrentFilePath = savePath; ProjectName = System.IO.Path.GetFileName(savePath); }
+                    return $"[ok] saved project to {ProjectName}";
+
+                case "save_as" or "save_project_as" when args.Length >= 1:
+                    string asPath = Unquote(args[0]);
+                    string asFmt = args.Length >= 2 ? Unquote(args[1]) : "eee";
+                    SelectedSaveFormat = asFmt;
+                    SaveToPath(asPath);
+                    CurrentFilePath = asPath;
+                    ProjectName = System.IO.Path.GetFileName(asPath);
+                    return $"[ok] saved project as {ProjectName} ({asFmt})";
+
+
+
                 default:
                     return $"[unknown method] {method}";
             }
@@ -1489,6 +2222,18 @@ public class PinEditItem : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
     {
         Id = id;
         _name = name;
+    }
+}
+
+/// <summary>A named group of component palette items shown with a category header.</summary>
+public class ComponentPaletteGroup
+{
+    public string Header { get; }
+    public IReadOnlyList<ComponentPaletteItem> Items { get; }
+    public ComponentPaletteGroup(string header, IEnumerable<ComponentPaletteItem> items)
+    {
+        Header = header;
+        Items  = items.ToList();
     }
 }
 

@@ -36,6 +36,9 @@ public abstract class ComponentNode : RootNode
 
     public double Rotation { get; set; }
 
+    public double ScaleX { get; set; } = 1.0;
+    public double ScaleY { get; set; } = 1.0;
+
     public abstract string ComponentType { get; }
 
     public List<ComponentPin> Pins { get; } = new();
@@ -47,6 +50,42 @@ public abstract class ComponentNode : RootNode
     public bool ShowWaveform { get; set; } = false;
     public double LiveVoltage { get; set; } = 0.0;
     public double LiveCurrent { get; set; } = 0.0;
+
+    /// <summary>
+    /// Maximum safe breaking current (A) before device breakdown / overload occurs.
+    /// Default values are specialized per component category (e.g. 0.05A for logic gates, 0.03A for LEDs).
+    /// </summary>
+    public double BreakingCurrent
+    {
+        get => ElectricalParameters.TryGetValue("BreakingCurrent", out var val) ? val : GetDefaultBreakingCurrent();
+        set
+        {
+            ElectricalParameters["BreakingCurrent"] = value;
+            NotifyModified(nameof(BreakingCurrent));
+        }
+    }
+
+    /// <summary>
+    /// Indicates whether the component is currently exceeding its safe maximum breaking current.
+    /// </summary>
+    public bool IsBrokenDown => BreakingCurrent > 0 && LiveCurrent > BreakingCurrent;
+
+    private double GetDefaultBreakingCurrent()
+    {
+        return ComponentType switch
+        {
+            "LogicInput" or "LogicOutput" or "LogicGate" or "AND" or "OR" or "NOT" or "NAND" or "NOR" or "XOR" or "XNOR" => 0.05, // 50mA logic breaking current
+            "LED" => 0.03, // 30mA max LED current
+            "Bulb" or "Lamp" => 1.5, // 1.5A bulb rating
+            "Diode" => 1.0, // 1A standard diode
+            "NPN" or "PNP" or "BJT" => 0.5, // 500mA
+            "NMOS" or "PMOS" or "MOSFET" or "JFET" => 0.8,
+            "OpAmp" => 0.04, // 40mA max opamp output
+            "Resistor" => 0.5, // 0.5A
+            "Wire" => 15.0, // 15A wire fusing current
+            _ => 1.0
+        };
+    }
 
     public List<double> WaveformTime { get; } = new();
     public List<double> WaveformVoltage { get; } = new();
@@ -101,4 +140,23 @@ public class CurrentSourceNode : EESimulator.Core.Components.Electrical.CurrentS
     public CurrentSourceNode() : base() { }
     public CurrentSourceNode(string name, double current = 0.001) : base(name, current) { }
 }
+
+public class BulbNode : EESimulator.Core.Components.Electrical.BulbComponent
+{
+    public BulbNode() : base() { }
+    public BulbNode(string name, double resistance = 50.0) : base(name, resistance) { }
+}
+
+public class LogicInputNode : EESimulator.Core.Components.Electronics.LogicInputComponent
+{
+    public LogicInputNode() : base() { }
+    public LogicInputNode(string name, bool initialState = false) : base(name, initialState) { }
+}
+
+public class LogicOutputNode : EESimulator.Core.Components.Electronics.LogicOutputComponent
+{
+    public LogicOutputNode() : base() { }
+    public LogicOutputNode(string name, double threshold = 2.5) : base(name, threshold) { }
+}
+
 

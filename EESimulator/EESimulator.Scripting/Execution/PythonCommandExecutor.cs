@@ -96,6 +96,133 @@ public class PythonCommandExecutor
             return;
         }
 
+        // Undo / Redo: circuit.undo(), app.undo(), undo()
+        if (Regex.IsMatch(line, @"^(?:(?:circuit|app)\.)?undo\s*\(\s*\)$", RegexOptions.IgnoreCase))
+        {
+            _api.Undo();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"^(?:(?:circuit|app)\.)?redo\s*\(\s*\)$", RegexOptions.IgnoreCase))
+        {
+            _api.Redo();
+            return;
+        }
+
+        // Copy: circuit.copy_component("R1") or app.copy_component("R1")
+        var copyMatch = Regex.Match(line, @"(?:circuit|app)\.copy_component\s*\(\s*""([^""]+)""\s*\)", RegexOptions.IgnoreCase);
+        if (copyMatch.Success)
+        {
+            _api.CopyComponent(copyMatch.Groups[1].Value);
+            return;
+        }
+
+        // Remove / Delete: circuit.remove_component("R1") or circuit.delete_component("R1")
+        var removeMatch = Regex.Match(line, @"(?:circuit|app)\.(?:remove_component|delete_component)\s*\(\s*""([^""]+)""\s*\)", RegexOptions.IgnoreCase);
+        if (removeMatch.Success)
+        {
+            _api.DeleteComponent(removeMatch.Groups[1].Value);
+            return;
+        }
+
+        // Rotate: r1.rotate(90) or circuit.rotate_component("R1", 90)
+        var rotMatch = Regex.Match(line, @"(?:circuit\.)?rotate_component\s*\(\s*""([^""]+)""\s*,\s*([\d\.-]+)\s*\)", RegexOptions.IgnoreCase);
+        if (rotMatch.Success)
+        {
+            _api.RotateComponent(rotMatch.Groups[1].Value, double.Parse(rotMatch.Groups[2].Value));
+            return;
+        }
+        var compRotMatch = Regex.Match(line, @"(\w+)\.rotate\s*\(\s*([\d\.-]+)\s*\)", RegexOptions.IgnoreCase);
+        if (compRotMatch.Success)
+        {
+            _api.RotateComponent(compRotMatch.Groups[1].Value, double.Parse(compRotMatch.Groups[2].Value));
+            return;
+        }
+
+        // Stretch: r1.stretch(1.5, 2.0) or circuit.stretch_component("R1", 1.5, 2.0)
+        var stretchMatch = Regex.Match(line, @"(?:circuit\.)?stretch_component\s*\(\s*""([^""]+)""\s*,\s*([\d\.-]+)\s*,\s*([\d\.-]+)\s*\)", RegexOptions.IgnoreCase);
+        if (stretchMatch.Success)
+        {
+            _api.StretchComponent(stretchMatch.Groups[1].Value, double.Parse(stretchMatch.Groups[2].Value), double.Parse(stretchMatch.Groups[3].Value));
+            return;
+        }
+        var compStretchMatch = Regex.Match(line, @"(\w+)\.stretch\s*\(\s*([\d\.-]+)\s*,\s*([\d\.-]+)\s*\)", RegexOptions.IgnoreCase);
+        if (compStretchMatch.Success)
+        {
+            _api.StretchComponent(compStretchMatch.Groups[1].Value, double.Parse(compStretchMatch.Groups[2].Value), double.Parse(compStretchMatch.Groups[3].Value));
+            return;
+        }
+
+        // Sidebars & UI
+        if (Regex.IsMatch(line, @"app\.toggle_component_sidebar\s*\(\s*\)", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(line, @"app\.toggle_sidebar\s*\(\s*\)", RegexOptions.IgnoreCase))
+        {
+            _api.ToggleComponentSidebar();
+            return;
+        }
+        if (Regex.IsMatch(line, @"app\.toggle_control_sidebar\s*\(\s*\)", RegexOptions.IgnoreCase))
+        {
+            _api.ToggleControlSidebar();
+            return;
+        }
+        if (Regex.IsMatch(line, @"app\.toggle_description_sidebar\s*\(\s*\)", RegexOptions.IgnoreCase))
+        {
+            _api.ToggleDescriptionSidebar();
+            return;
+        }
+
+        // Simulation playback
+        if (Regex.IsMatch(line, @"(?:app|circuit)\.(?:play|start_simulation)\s*\(\s*\)", RegexOptions.IgnoreCase))
+        {
+            _api.PlaySimulation();
+            return;
+        }
+        if (Regex.IsMatch(line, @"(?:app|circuit)\.(?:pause|pause_simulation)\s*\(\s*\)", RegexOptions.IgnoreCase))
+        {
+            _api.PauseSimulation();
+            return;
+        }
+        if (Regex.IsMatch(line, @"(?:app|circuit)\.(?:stop|stop_simulation)\s*\(\s*\)", RegexOptions.IgnoreCase))
+        {
+            _api.StopSimulation();
+            return;
+        }
+
+        // Breaking current: r1.breaking_current = 0.05
+        var breakMatch = Regex.Match(line, @"(\w+)\.breaking_current\s*=\s*([\d\.-]+)", RegexOptions.IgnoreCase);
+        if (breakMatch.Success)
+        {
+            _api.SetBreakingCurrent(breakMatch.Groups[1].Value, double.Parse(breakMatch.Groups[2].Value));
+            return;
+        }
+
+        // Save / Save As
+        var saveAsMatch = Regex.Match(line, @"(?:app|circuit)\.save_as\s*\(\s*""([^""]+)""(?:\s*,\s*""([^""]+)""\s*)?\)", RegexOptions.IgnoreCase);
+        if (saveAsMatch.Success)
+        {
+            string path = saveAsMatch.Groups[1].Value;
+            string format = saveAsMatch.Groups[2].Success ? saveAsMatch.Groups[2].Value : "eee";
+            _api.SaveProjectAs(path, format);
+            return;
+        }
+
+        var saveMatch = Regex.Match(line, @"(?:app|circuit)\.save\s*\(\s*(?:""([^""]+)"")?\s*\)", RegexOptions.IgnoreCase);
+        if (saveMatch.Success)
+        {
+            string? path = saveMatch.Groups[1].Success ? saveMatch.Groups[1].Value : null;
+            _api.SaveProject(path);
+            return;
+        }
+
+        // Description: r1.description = "..."
+        var descMatch = Regex.Match(line, @"(\w+)\.description\s*=\s*""([^""]*)""", RegexOptions.IgnoreCase);
+        if (descMatch.Success)
+        {
+            _api.SetDescription(descMatch.Groups[1].Value, descMatch.Groups[2].Value);
+            return;
+        }
+
+
         // Example: r1.resistance = 2200
         var propMatch = Regex.Match(line, @"(\w+)\.(\w+)\s*=\s*([\d\.-]+)", RegexOptions.IgnoreCase);
         if (propMatch.Success)
@@ -109,3 +236,4 @@ public class PythonCommandExecutor
         }
     }
 }
+

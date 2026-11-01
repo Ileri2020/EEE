@@ -57,12 +57,30 @@ public class SchematicViewport : GraphicsView, IDrawable
     public event EventHandler<ComponentNode>? ComponentSelected;
     public event EventHandler<(ComponentNode Component, ComponentPin Pin)>? PinSelected;
     public event EventHandler<ComponentNode>? ComponentContextRequested;
+    public event EventHandler<ComponentNode>? ComponentRotateRequested;
     public event EventHandler<(ComponentNode From, ComponentPin FromPin,
                                ComponentNode To,   ComponentPin ToPin)>? WireConnected;
+    public event EventHandler<JunctionComponent>? WireCutIntoNode;
 
-    // ── Interaction state ────────────────────────────────────────────────────
+    /// <summary>Active tool selected in main sidebar (e.g. "Select", "Wire", "Cut", "Pan").</summary>
+    public string ActiveTool { get; set; } = "Select";
+
+    // Interaction state ────────────────────────────────────────────────────
     private ComponentNode? _selectedComponent;
     private (ComponentNode Component, ComponentPin Pin)? _selectedPin;
+
+    // Rotate handle: rendered at right edge of selection box
+    private const float RotateHandleOffsetX = 36f; // world units from component centre
+    private const float RotateHandleRadius   = 7f;
+    private bool _rotateHandleVisible;
+    private PointF _rotateHandleWorld; // world position of rotate handle centre
+
+    // Stretch handles
+    private bool   _isStretchingComponent;
+    private int    _stretchHandleIndex = -1;
+    private PointF _stretchStartWorld;
+    private double _initialScaleX = 1.0;
+    private double _initialScaleY = 1.0;
 
     // Long-press timer
     private System.Threading.Timer? _longPressTimer;
@@ -142,6 +160,74 @@ public class SchematicViewport : GraphicsView, IDrawable
     private void OnCircuitStructureChanged(object? sender, EventArgs e)
         => Dispatcher.Dispatch(Invalidate);
 
+    // ── Rotate handle helpers ─────────────────────────────────────────────────
+    /// <summary>
+    /// Recomputes the world-space position of the rotate handle based on the
+    /// currently selected component's position and rotation.
+    /// The handle is drawn at (half+14, 0) in component-local space where half=26f.
+    /// </summary>
+    private void UpdateRotateHandle()
+    {
+        if (_selectedComponent == null)
+        {
+            _rotateHandleVisible = false;
+            return;
+        }
+
+        float sx = (float)(_selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0);
+        float localX = (26f * sx) + 14f;
+        const float localY = 0f;
+
+        // Rotate the local offset by the component's rotation angle
+        float rad = (float)(_selectedComponent.Rotation * Math.PI / 180.0);
+        float cos = (float)Math.Cos(rad);
+        float sin = (float)Math.Sin(rad);
+        float worldX = (float)_selectedComponent.X + localX * cos - localY * sin;
+        float worldY = (float)_selectedComponent.Y + localX * sin + localY * cos;
+
+        _rotateHandleWorld   = new PointF(worldX, worldY);
+        _rotateHandleVisible = true;
+    }
+
+    private int HitTestStretchHandle(PointF worldPos)
+    {
+        if (_selectedComponent == null) return -1;
+
+        float dx = worldPos.X - (float)_selectedComponent.X;
+        float dy = worldPos.Y - (float)_selectedComponent.Y;
+        float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
+        float cos = (float)Math.Cos(rad);
+        float sin = (float)Math.Sin(rad);
+        float lx = dx * cos - dy * sin;
+        float ly = dx * sin + dy * cos;
+
+        float sx = (float)(_selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0);
+        float sy = (float)(_selectedComponent.ScaleY > 0 ? _selectedComponent.ScaleY : 1.0);
+        float halfX = 26f * sx;
+        float halfY = 26f * sy;
+
+        float[] hx = { -halfX, 0,     halfX,  -halfX, halfX,  -halfX, 0,     halfX };
+        float[] hy = { -halfY, -halfY, -halfY, 0,     0,      halfY,  halfY, halfY };
+
+        const float hitRadiusSq = 12f * 12f;
+        for (int i = 0; i < 8; i++)
+        {
+            float ddx = lx - hx[i];
+            float ddy = ly - hy[i];
+            if (ddx * ddx + ddy * ddy <= hitRadiusSq)
+                return i;
+        }
+        return -1;
+    }
+
+    private void ClearRotateHandle()
+    {
+        _rotateHandleVisible = false;
+        _selectedComponent   = null;
+    }
+
+
+
     // ── Windows native right-drag-to-pan + scroll-to-zoom ──────────────────
 #if WINDOWS
     private bool                     _isRightPanning;
@@ -206,6 +292,7 @@ public class SchematicViewport : GraphicsView, IDrawable
                 _isRightPanning     = false;
                 _rightClickedComp   = hitComp;
                 _selectedComponent  = hitComp;
+                UpdateRotateHandle();
                 _rightPanTotalDist  = 0;
                 _lastNativeRightPos = p.Position;
                 (sender as Microsoft.UI.Xaml.UIElement)?.CapturePointer(e.Pointer);
@@ -224,6 +311,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             }
         }
     }
+
 
     private void OnNativePtrMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
@@ -250,6 +338,34 @@ public class SchematicViewport : GraphicsView, IDrawable
             e.Handled = true;
         }
 
+        if (_isStretchingComponent && _selectedComponent != null)
+        {
+            var w = ToWorld((float)p.Position.X, (float)p.Position.Y);
+            float ddx = w.X - _stretchStartWorld.X;
+            float ddy = w.Y - _stretchStartWorld.Y;
+            float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+            float ldx = (ddx * cos - ddy * sin) / 26f;
+            float ldy = (ddx * sin + ddy * cos) / 26f;
+
+            double newSx = _initialScaleX;
+            double newSy = _initialScaleY;
+
+            if (_stretchHandleIndex is 2 or 4 or 7) newSx = Math.Clamp(_initialScaleX + ldx, 0.3, 5.0);
+            else if (_stretchHandleIndex is 0 or 3 or 5) newSx = Math.Clamp(_initialScaleX - ldx, 0.3, 5.0);
+
+            if (_stretchHandleIndex is 5 or 6 or 7) newSy = Math.Clamp(_initialScaleY + ldy, 0.3, 5.0);
+            else if (_stretchHandleIndex is 0 or 1 or 2) newSy = Math.Clamp(_initialScaleY - ldy, 0.3, 5.0);
+
+            _selectedComponent.ScaleX = newSx;
+            _selectedComponent.ScaleY = newSy;
+            UpdateRotateHandle();
+            Invalidate();
+            e.Handled = true;
+            return;
+        }
+
         if (_isDrawingWire)
         {
             _wireCursorWorld = ToWorld((float)p.Position.X, (float)p.Position.Y);
@@ -270,6 +386,8 @@ public class SchematicViewport : GraphicsView, IDrawable
     private void OnNativePtrReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
         var p = e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement);
+        _isStretchingComponent = false;
+        _stretchHandleIndex = -1;
         if (_isRightCompMove && _rightClickedComp != null)
         {
             (sender as Microsoft.UI.Xaml.UIElement)?.ReleasePointerCapture(e.Pointer);
@@ -359,13 +477,36 @@ public class SchematicViewport : GraphicsView, IDrawable
 
     private void OnTapped(object? sender, TappedEventArgs e)
     {
-        // Mobile pan-mode taps don't select (pan gesture handles movement)
-        if (IsMobilePanMode && DeviceInfo.Platform != DevicePlatform.WinUI) return;
-
         var pos = e.GetPosition(this);
         if (pos == null || Circuit == null) return;
 
         var w = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
+
+        // When cut wire tool is active in main sidebar, touching anywhere on a wire turns it into a node
+        if (ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase))
+        {
+            if (TryCutWireToNode(w))
+            {
+                Invalidate();
+                return;
+            }
+        }
+
+        // If rotate handle is visible and tapped, rotate immediately
+        if (_rotateHandleVisible)
+        {
+            float rdx = w.X - _rotateHandleWorld.X;
+            float rdy = w.Y - _rotateHandleWorld.Y;
+            if (rdx * rdx + rdy * rdy <= RotateHandleRadius * RotateHandleRadius * 4)
+            {
+                if (_selectedComponent != null)
+                {
+                    ComponentRotateRequested?.Invoke(this, _selectedComponent);
+                    Invalidate();
+                    return;
+                }
+            }
+        }
 
         // Prefer pin hit
         var pin = HitTestPin(w);
@@ -373,6 +514,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         {
             _selectedPin       = pin;
             _selectedComponent = pin.Value.Component;
+            UpdateRotateHandle();
             Invalidate();
             PinSelected?.Invoke(this, pin.Value);
             ComponentSelected?.Invoke(this, pin.Value.Component);
@@ -380,6 +522,11 @@ public class SchematicViewport : GraphicsView, IDrawable
         }
         _selectedPin       = null;
         _selectedComponent = HitTest(w);
+        UpdateRotateHandle();
+        if (_selectedComponent is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
+        {
+            lin.Toggle();
+        }
         Invalidate();
         if (_selectedComponent != null)
             ComponentSelected?.Invoke(this, _selectedComponent);
@@ -419,6 +566,48 @@ public class SchematicViewport : GraphicsView, IDrawable
         var w = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
         _pressWorldPos = w;
 
+        // Cut tool handling on pointer press
+        if (ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase))
+        {
+            if (TryCutWireToNode(w))
+            {
+                Invalidate();
+                return;
+            }
+        }
+
+        // Check rotate handle first
+        if (_rotateHandleVisible)
+        {
+            float rdx = w.X - _rotateHandleWorld.X;
+            float rdy = w.Y - _rotateHandleWorld.Y;
+            if (rdx * rdx + rdy * rdy <= RotateHandleRadius * RotateHandleRadius * 2.5f)
+            {
+                if (_selectedComponent != null)
+                {
+                    ComponentRotateRequested?.Invoke(this, _selectedComponent);
+                    Invalidate();
+                    return;
+                }
+            }
+        }
+
+        // Check stretch handles if a component is selected
+        if (_selectedComponent != null)
+        {
+            int stretchHandle = HitTestStretchHandle(w);
+            if (stretchHandle >= 0)
+            {
+                _isStretchingComponent = true;
+                _stretchHandleIndex = stretchHandle;
+                _stretchStartWorld = w;
+                _initialScaleX = _selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0;
+                _initialScaleY = _selectedComponent.ScaleY > 0 ? _selectedComponent.ScaleY : 1.0;
+                Invalidate();
+                return;
+            }
+        }
+
         // ── Pin long-press → wire draw ─────────────────────────────────
         var hitPin = HitTestPin(w);
         if (hitPin != null)
@@ -442,11 +631,17 @@ public class SchematicViewport : GraphicsView, IDrawable
             return;
         }
 
-        // ── Component long-press: move (pan mode) or dialog (select mode) ───
+        // ── Component long-press: always open edit dialog on mobile; move on desktop ─
         _pressedPin  = null;
         _pressedComp = HitTest(w);
         if (_pressedComp != null)
         {
+            // Immediate select on component touch (both pan and select modes)
+            _selectedComponent = _pressedComp;
+            UpdateRotateHandle();
+            ComponentSelected?.Invoke(this, _pressedComp);
+            Invalidate();
+
             var comp = _pressedComp;
             var sx   = (float)pos.Value.X;
             var sy   = (float)pos.Value.Y;
@@ -459,16 +654,23 @@ public class SchematicViewport : GraphicsView, IDrawable
                 Dispatcher.Dispatch(() =>
                 {
                     _selectedComponent = comp;
-                    if (IsMobilePanMode)
+                    UpdateRotateHandle();
+                    if (DeviceInfo.Platform == DevicePlatform.WinUI && !IsMobilePanMode)
                     {
-                        // Pan mode: long-press → move component
-                        _isMovingComponent = true;
+                        // Desktop select mode: long-press → open dialog
+                        _pressedComp = null;
+                        ComponentContextRequested?.Invoke(this, comp);
+                    }
+                    else if (DeviceInfo.Platform != DevicePlatform.WinUI)
+                    {
+                        // Mobile: long-press on component body → open edit dialog always
+                        _pressedComp = null;
+                        ComponentContextRequested?.Invoke(this, comp);
                     }
                     else
                     {
-                        // Select mode: long-press → open dialog
-                        _pressedComp = null;
-                        ComponentContextRequested?.Invoke(this, comp);
+                        // Desktop pan mode: long-press → move component
+                        _isMovingComponent = true;
                     }
                     Invalidate();
                 });
@@ -476,10 +678,39 @@ public class SchematicViewport : GraphicsView, IDrawable
         }
     }
 
+
+
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
         var pos = e.GetPosition(this);
         if (pos == null) return;
+
+        if (_isStretchingComponent && _selectedComponent != null)
+        {
+            var w = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
+            float ddx = w.X - _stretchStartWorld.X;
+            float ddy = w.Y - _stretchStartWorld.Y;
+            float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+            float ldx = (ddx * cos - ddy * sin) / 26f;
+            float ldy = (ddx * sin + ddy * cos) / 26f;
+
+            double newSx = _initialScaleX;
+            double newSy = _initialScaleY;
+
+            if (_stretchHandleIndex is 2 or 4 or 7) newSx = Math.Clamp(_initialScaleX + ldx, 0.3, 5.0);
+            else if (_stretchHandleIndex is 0 or 3 or 5) newSx = Math.Clamp(_initialScaleX - ldx, 0.3, 5.0);
+
+            if (_stretchHandleIndex is 5 or 6 or 7) newSy = Math.Clamp(_initialScaleY + ldy, 0.3, 5.0);
+            else if (_stretchHandleIndex is 0 or 1 or 2) newSy = Math.Clamp(_initialScaleY - ldy, 0.3, 5.0);
+
+            _selectedComponent.ScaleX = newSx;
+            _selectedComponent.ScaleY = newSy;
+            UpdateRotateHandle();
+            Invalidate();
+            return;
+        }
 
         if (_isDrawingWire)
         {
@@ -492,6 +723,8 @@ public class SchematicViewport : GraphicsView, IDrawable
     {
         _longPressTimer?.Dispose();
         _longPressTimer = null;
+        _isStretchingComponent = false;
+        _stretchHandleIndex = -1;
 
         if (_isDrawingWire)
         {
@@ -604,6 +837,137 @@ public class SchematicViewport : GraphicsView, IDrawable
         _wireSourcePin   = null;
         Invalidate();
     }
+
+    /// <summary>
+    /// Slices or turns touched wire component or connection into a JunctionComponent node.
+    /// Triggered when the main sidebar cut wire button is active.
+    /// </summary>
+    private bool TryCutWireToNode(PointF w)
+    {
+        if (Circuit == null) return false;
+        const float hitDist = 12.0f;
+
+        // 1. Check ConnectionNodes (elbow connection wires)
+        foreach (var conn in Circuit.FindChildren<ConnectionNode>().ToList())
+        {
+            var fromComp = Circuit.FindChildById<ComponentNode>(conn.FromComponentId);
+            var toComp   = Circuit.FindChildById<ComponentNode>(conn.ToComponentId);
+            if (fromComp == null || toComp == null) continue;
+
+            var fromPin = fromComp.GetPin(conn.FromPin);
+            var toPin   = toComp.GetPin(conn.ToPin);
+            if (fromPin == null || toPin == null) continue;
+
+            float x1 = (float)(fromComp.X + fromPin.RelativeX);
+            float y1 = (float)(fromComp.Y + fromPin.RelativeY);
+            float x2 = (float)(toComp.X + toPin.RelativeX);
+            float y2 = (float)(toComp.Y + toPin.RelativeY);
+            float midX = (x1 + x2) / 2f;
+
+            if (DistanceToSegment(w, new PointF(x1, y1), new PointF(midX, y1)) <= hitDist ||
+                DistanceToSegment(w, new PointF(midX, y1), new PointF(midX, y2)) <= hitDist ||
+                DistanceToSegment(w, new PointF(midX, y2), new PointF(x2, y2)) <= hitDist)
+            {
+                // Create a Junction node at touched position (snapped to 10px grid)
+                float jx = MathF.Round(w.X / 10f) * 10f;
+                float jy = MathF.Round(w.Y / 10f) * 10f;
+                var junc = new JunctionComponent
+                {
+                    Name = $"J_{Guid.NewGuid().ToString("N")[..4]}",
+                    Reference = $"J_{Guid.NewGuid().ToString("N")[..4]}",
+                    X = jx,
+                    Y = jy
+                };
+                Circuit.AddChild(junc);
+                var juncPin = junc.Pins.FirstOrDefault() ?? new ComponentPin("1", "1", 0, 0);
+
+                // Splice connection: remove old connection and link both sides through the new junction node
+                Circuit.RemoveChild(conn);
+                Circuit.AddChild(new ConnectionNode(conn.FromComponentId, conn.FromPin, junc.Id, juncPin.Id));
+                Circuit.AddChild(new ConnectionNode(junc.Id, juncPin.Id, conn.ToComponentId, conn.ToPin));
+
+                _selectedComponent = junc;
+                UpdateRotateHandle();
+                ComponentSelected?.Invoke(this, junc);
+                WireCutIntoNode?.Invoke(this, junc);
+                return true;
+            }
+        }
+
+        // 2. Check standalone WireComponents
+        foreach (var comp in Circuit.FindChildren<ComponentNode>().Where(c => c.ComponentType == "Wire").ToList())
+        {
+            float dx = w.X - (float)comp.X;
+            float dy = w.Y - (float)comp.Y;
+            if (MathF.Abs(dx) <= 24 && MathF.Abs(dy) <= 24)
+            {
+                var junc = new JunctionComponent
+                {
+                    Name = comp.Name,
+                    Reference = comp.Reference,
+                    X = comp.X,
+                    Y = comp.Y
+                };
+                Circuit.RemoveChild(comp);
+                Circuit.AddChild(junc);
+                _selectedComponent = junc;
+                UpdateRotateHandle();
+                ComponentSelected?.Invoke(this, junc);
+                WireCutIntoNode?.Invoke(this, junc);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static float DistanceToSegment(PointF p, PointF a, PointF b)
+    {
+        float l2 = (b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y);
+        if (l2 <= 0.0001f)
+            return MathF.Sqrt((p.X - a.X) * (p.X - a.X) + (p.Y - a.Y) * (p.Y - a.Y));
+        float t = Math.Clamp(((p.X - a.X) * (b.X - a.X) + (p.Y - a.Y) * (b.Y - a.Y)) / l2, 0f, 1f);
+        float projX = a.X + t * (b.X - a.X);
+        float projY = a.Y + t * (b.Y - a.Y);
+        return MathF.Sqrt((p.X - projX) * (p.X - projX) + (p.Y - projY) * (p.Y - projY));
+    }
+
+    private int GetPinConnectionCount(ComponentNode comp, ComponentPin pin)
+    {
+        if (Circuit == null) return 0;
+        int count = 0;
+        foreach (var conn in Circuit.FindChildren<ConnectionNode>())
+        {
+            if ((conn.FromComponentId == comp.Id && (conn.FromPin == pin.Id || conn.FromPin == pin.Name)) ||
+                (conn.ToComponentId == comp.Id && (conn.ToPin == pin.Id || conn.ToPin == pin.Name)))
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Returns a distinct color based on the number of wires connected to a component pin/node (0 through 10+).
+    /// </summary>
+    public static Color GetNodeConnectionColor(int count)
+    {
+        return count switch
+        {
+            0 => Color.FromArgb("#8B949E"), // 0: Slate Gray (no connection / open)
+            1 => Color.FromArgb("#58A6FF"), // 1: Electric Blue
+            2 => Color.FromArgb("#56D364"), // 2: Bright Emerald Green
+            3 => Color.FromArgb("#E3B341"), // 3: Golden Amber
+            4 => Color.FromArgb("#D2A8FF"), // 4: Royal Lavender Purple
+            5 => Color.FromArgb("#FFA657"), // 5: Vivid Tangerine Orange
+            6 => Color.FromArgb("#FF7B72"), // 6: Bright Coral Salmon
+            7 => Color.FromArgb("#39D353"), // 7: Neon Lime
+            8 => Color.FromArgb("#79C0FF"), // 8: Sky Cyan
+            9 => Color.FromArgb("#DB61A2"), // 9: Vibrant Magenta Pink
+            _ => Color.FromArgb("#F43F5E")  // 10+: Ruby Crimson
+        };
+    }
+
 
     // ── IDrawable ────────────────────────────────────────────────────────────
     public void Draw(ICanvas canvas, RectF dirtyRect)
@@ -792,13 +1156,78 @@ public class SchematicViewport : GraphicsView, IDrawable
         canvas.Translate(cx, cy);
         canvas.Rotate((float)comp.Rotation);
 
-        // Selection glow
+        float sx = (float)(comp.ScaleX > 0 ? comp.ScaleX : 1.0);
+        float sy = (float)(comp.ScaleY > 0 ? comp.ScaleY : 1.0);
+
+        // Selection outline with resize handles
         if (selected)
         {
+            float halfX = 26f * sx;
+            float halfY = 26f * sy;
+            const float hSz  = 5f;  // handle half-size
+
+            // Glow border
             canvas.StrokeColor = Color.FromArgb("#79C0FF");
-            canvas.StrokeSize = 3f;
-            canvas.DrawRoundedRectangle(-26, -26, 52, 52, 6);
+            canvas.StrokeSize = 1.5f;
+            canvas.StrokeDashPattern = new float[] { 4, 3 };
+            canvas.DrawRoundedRectangle(-halfX, -halfY, halfX * 2, halfY * 2, 4);
+            canvas.StrokeDashPattern = null;
+
+            // Resize handles at 4 corners and 4 edge midpoints
+            canvas.FillColor = Color.FromArgb("#161B22");
+            canvas.StrokeColor = Color.FromArgb("#79C0FF");
+            canvas.StrokeSize = 1.2f;
+            float[] hx = { -halfX, 0,     halfX,  -halfX, halfX,  -halfX, 0,     halfX };
+            float[] hy = { -halfY, -halfY, -halfY, 0,     0,      halfY,  halfY, halfY };
+            for (int i = 0; i < 8; i++)
+            {
+                canvas.FillRoundedRectangle(hx[i] - hSz, hy[i] - hSz, hSz * 2, hSz * 2, 2);
+                canvas.DrawRoundedRectangle(hx[i] - hSz, hy[i] - hSz, hSz * 2, hSz * 2, 2);
+            }
+
+            // Rotate handle: circle to the right of the selection box
+            float rHx = halfX + 14f;
+            float rHy = 0f;
+            canvas.FillColor = Color.FromArgb("#1C2128");
+            canvas.FillCircle(rHx, rHy, RotateHandleRadius);
+            canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+            canvas.StrokeSize = 1.5f;
+            canvas.DrawCircle(rHx, rHy, RotateHandleRadius);
+            // Curved arrow symbol inside rotate handle
+            canvas.FontColor = Color.FromArgb("#D2A8FF");
+            canvas.FontSize = 8f;
+            canvas.DrawString("⟳", rHx - 5, rHy - 5, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
+
+        bool isBroken = comp.IsBrokenDown;
+        if (isBroken)
+        {
+            // Glowing red breakdown / overload halo behind the component
+            canvas.FillColor = Color.FromRgba(248, 81, 73, 90);
+            canvas.FillCircle(0, 0, 26 * Math.Max(sx, sy));
+
+            // Breakdown warning indicator badge at top-right
+            canvas.FillColor = Color.FromArgb("#B3261E");
+            canvas.FillCircle(20 * sx, -20 * sy, 8.5f);
+            canvas.FontColor = Colors.White;
+            canvas.FontSize = 9f;
+            canvas.DrawString("⚡", 15 * sx, -25 * sy, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
+
+        bool isOn = comp switch
+        {
+            EESimulator.Core.Components.Electronics.LEDComponent led => led.IsOn,
+            EESimulator.Core.Components.Electrical.BulbComponent bulb => bulb.IsOn,
+            EESimulator.Core.Components.Electronics.LogicOutputComponent lout => lout.IsOn,
+            EESimulator.Core.Components.Electronics.LogicInputComponent lin => lin.State,
+            _ => (comp.CustomProperties.TryGetValue("IsOn", out var cVal) && Convert.ToBoolean(cVal))
+                 || (comp.ElectricalParameters.TryGetValue("IsOn", out var pVal) && pVal > 0.5)
+                 || (comp.ComponentType == "LED" && comp.LiveVoltage >= 1.5)
+                 || (comp.ComponentType == "Bulb" && comp.LiveVoltage >= 1.0)
+        };
+
+        canvas.SaveState();
+        canvas.Scale(sx, sy);
 
         switch (comp.ComponentType)
         {
@@ -809,7 +1238,13 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "CurrentSource": DrawCurrentSource(canvas); break;
             case "Ground":        DrawGround(canvas); break;
             case "Diode":         DrawDiode(canvas); break;
-            case "LED":           DrawLED(canvas); break;
+            case "LED":           ComponentSymbolDrawer.DrawLED(canvas, isOn); break;
+            case "Bulb":
+            case "Lamp":          ComponentSymbolDrawer.DrawBulb(canvas, isOn); break;
+            case "LogicInput":
+            case "DigitalInput":  ComponentSymbolDrawer.DrawLogicInput(canvas, isOn); break;
+            case "LogicOutput":
+            case "DigitalOutput": ComponentSymbolDrawer.DrawLogicOutput(canvas, isOn); break;
             case "BJT":
             case "NPN":
             case "PNP":
@@ -839,13 +1274,15 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "XOR":           DrawXorGate(canvas); break;
             case "XNOR":          DrawXnorGate(canvas); break;
             case "IC":            DrawIC(canvas); break;
-            case "Junction":      DrawJunction(canvas); break;
+            case "Junction":      DrawJunction(canvas, comp); break;
             case "Label":            DrawLabel(canvas, comp.Name); break;
             case "MutualInductance": ComponentSymbolDrawer.DrawMutualInductance(canvas); break;
             case "TransmissionLine": ComponentSymbolDrawer.DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     ComponentSymbolDrawer.DrawVoltageDelay(canvas); break;
             default:                 DrawGenericComponent(canvas, comp.ComponentType); break;
         }
+
+        canvas.RestoreState();
 
         // Label
         canvas.FontColor = Color.FromArgb("#8B949E");
@@ -884,7 +1321,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             canvas.DrawString("📈", -26, -24, 12, 12, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
 
-        // Draw small circle to nodes/pins on all components in viewport
+        // Draw small circle to nodes/pins on all components in viewport with connection degree coloring
         foreach (var pin in comp.Pins)
         {
             float px = (float)pin.RelativeX;
@@ -893,25 +1330,37 @@ public class SchematicViewport : GraphicsView, IDrawable
                                   _selectedPin.Value.Component == comp &&
                                   _selectedPin.Value.Pin == pin);
 
+            int connCount = GetPinConnectionCount(comp, pin);
+            Color nodeColor = isPinSelected ? Color.FromArgb("#FFFFFF") : GetNodeConnectionColor(connCount);
+
             // Small circle terminal for connection/selection
-            canvas.FillColor = isPinSelected ? Color.FromArgb("#58A6FF") : Color.FromArgb("#0D1117");
-            canvas.FillCircle(px, py, 3.5f);
+            canvas.FillColor = isPinSelected ? Color.FromArgb("#58A6FF") : Color.FromRgba(nodeColor.Red, nodeColor.Green, nodeColor.Blue, 0.35f);
+            canvas.FillCircle(px, py, 3.8f);
 
-            canvas.StrokeColor = isPinSelected ? Color.FromArgb("#79C0FF") : Color.FromArgb("#58A6FF");
-            canvas.StrokeSize = isPinSelected ? 2.0f : 1.2f;
-            canvas.DrawCircle(px, py, 3.5f);
+            canvas.StrokeColor = nodeColor;
+            canvas.StrokeSize = isPinSelected ? 2.2f : 1.5f;
+            canvas.DrawCircle(px, py, 3.8f);
 
-            // Outer selection halo if selected
+            // Outer selection halo or degree indicator for connected nodes
             if (isPinSelected)
             {
                 canvas.StrokeColor = Color.FromArgb("#58A6FF");
                 canvas.StrokeSize = 1.0f;
-                canvas.DrawCircle(px, py, 6.0f);
+                canvas.DrawCircle(px, py, 6.2f);
+            }
+            else if (connCount >= 2)
+            {
+                canvas.StrokeColor = Color.FromRgba(nodeColor.Red, nodeColor.Green, nodeColor.Blue, 0.45f);
+                canvas.StrokeSize = 0.8f;
+                canvas.DrawCircle(px, py, 5.5f);
             }
         }
 
         canvas.RestoreState();
     }
+
+
+
 
     private static void DrawResistor(ICanvas canvas)
     {
@@ -1188,10 +1637,16 @@ public class SchematicViewport : GraphicsView, IDrawable
         }
     }
 
-    private static void DrawJunction(ICanvas canvas)
+    private void DrawJunction(ICanvas canvas, ComponentNode comp)
     {
-        canvas.FillColor = Color.FromArgb("#58A6FF");
-        canvas.FillCircle(0, 0, 4);
+        var pin = comp.Pins.FirstOrDefault();
+        int connCount = pin != null ? GetPinConnectionCount(comp, pin) : 0;
+        Color c = GetNodeConnectionColor(connCount);
+        canvas.FillColor = c;
+        canvas.FillCircle(0, 0, 4.5f);
+        canvas.StrokeColor = Colors.White;
+        canvas.StrokeSize = 1.0f;
+        canvas.DrawCircle(0, 0, 4.5f);
     }
 
     private static void DrawLabel(ICanvas canvas, string netName)

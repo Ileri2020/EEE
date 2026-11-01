@@ -1,14 +1,25 @@
+using System.Linq;
 using System.Text;
 using EESimulator.Commands;
+using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Models;
+
 
 namespace EESimulator.Scripting;
 
 /// <summary>
 /// Generates idiomatic Python code from commands and circuit hierarchy.
+/// Supports all registered component types and maps each to the appropriate
+/// high-level PythonApi call signature so that generated scripts are round-trippable.
 /// </summary>
 public class PythonCodeGenerator
 {
+    /// <summary>
+    /// Generates a complete Python script reflecting the current state of <paramref name="circuit"/>.
+    /// Called after undo operations, project loads, and new-circuit operations so the script
+    /// viewport is never left blank or stale.
+    /// </summary>
     public static string GenerateFullScript(CircuitNode circuit)
     {
         var sb = new StringBuilder();
@@ -18,37 +29,112 @@ public class PythonCodeGenerator
         sb.AppendLine($"circuit = eesim.new_circuit(\"{circuit.Title}\")");
         sb.AppendLine();
 
-        // Components
+        // ── Components ────────────────────────────────────────────────────────
         sb.AppendLine("# Components");
         foreach (var comp in circuit.Components)
         {
-            var varName = comp.Name.ToLowerInvariant();
-            var paramStr = comp switch
-            {
-                ResistorNode r => $", resistance={r.Resistance}",
-                CapacitorNode c => $", capacitance={c.Capacitance}",
-                InductorNode l => $", inductance={l.Inductance}",
-                VoltageSourceNode v => $", voltage={v.Voltage}",
-                _ => ""
-            };
-            sb.AppendLine($"{varName} = circuit.add_component(\"{comp.ComponentType}\", name=\"{comp.Name}\", position=({comp.X}, {comp.Y}){paramStr})");
+            var varName = SanitizePythonName(comp.Name);
+            string statement = BuildAddStatement(varName, comp);
+            sb.AppendLine(statement);
         }
 
-        // Connections
+        // ── Connections ───────────────────────────────────────────────────────
         sb.AppendLine();
         sb.AppendLine("# Connections");
+        var allComponents = circuit.FindChildren<ComponentNode>().ToList();
         foreach (var conn in circuit.Connections)
         {
-            var fromComp = circuit.FindChildren<ComponentNode>().FirstOrDefault(c => c.Id == conn.FromComponentId);
-            var toComp = circuit.FindChildren<ComponentNode>().FirstOrDefault(c => c.Id == conn.ToComponentId);
+            var fromComp = allComponents.FirstOrDefault(c => c.Id == conn.FromComponentId);
+            var toComp = allComponents.FirstOrDefault(c => c.Id == conn.ToComponentId);
 
             if (fromComp != null && toComp != null)
             {
-                var fromVar = fromComp.Name.ToLowerInvariant();
-                var toVar = toComp.Name.ToLowerInvariant();
+                var fromVar = SanitizePythonName(fromComp.Name);
+                var toVar = SanitizePythonName(toComp.Name);
                 sb.AppendLine($"circuit.connect({fromVar}.{conn.FromPin}, {toVar}.{conn.ToPin})");
             }
         }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Builds a Python assignment statement for the given component,
+    /// mapping each type to the richest available PythonApi call.
+    /// </summary>
+    private static string BuildAddStatement(string varName, ComponentNode comp)
+    {
+        double x = comp.X, y = comp.Y;
+        return comp switch
+        {
+            // ── Passives ─────────────────────────────────────────────────────
+            ResistorNode r =>
+                $"{varName} = circuit.add_resistor(\"{comp.Name}\", position=({x}, {y}), resistance={r.Resistance})",
+
+            CapacitorNode c =>
+                $"{varName} = circuit.add_capacitor(\"{comp.Name}\", position=({x}, {y}), capacitance={c.Capacitance})",
+
+            InductorNode l =>
+                $"{varName} = circuit.add_inductor(\"{comp.Name}\", position=({x}, {y}), inductance={l.Inductance})",
+
+            // ── Sources ───────────────────────────────────────────────────────
+            VoltageSourceNode v =>
+                $"{varName} = circuit.add_voltage_source(\"{comp.Name}\", position=({x}, {y}), voltage={v.Voltage})",
+
+            CurrentSourceNode i =>
+                $"{varName} = circuit.add_current_source(\"{comp.Name}\", position=({x}, {y}), current={BuildCurrentParam(i)})",
+
+            GroundNode _ =>
+                $"{varName} = circuit.add_ground(\"{comp.Name}\", position=({x}, {y}))",
+
+            // ── Semiconductors ────────────────────────────────────────────────
+            BJTComponent bjt =>
+                $"{varName} = circuit.add_bjt(\"{comp.Name}\", position=({x}, {y}), polarity=\"{bjt.Polarity}\", bf={bjt.GainBeta}, is_={bjt.SaturationCurrent:G3}, vaf={bjt.EarlyVoltage})",
+
+            MOSFETComponent mos =>
+                $"{varName} = circuit.add_mosfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{mos.Channel}\", vto={mos.ThresholdVoltage}, kp={mos.Transconductance:G3}, w={mos.ChannelWidth:G3}, l={mos.ChannelLength:G3})",
+
+            JFETComponent jfet =>
+                $"{varName} = circuit.add_jfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{jfet.Channel}\", vto={jfet.ThresholdVoltage}, beta={jfet.Transconductance:G3})",
+
+            DiodeComponent d =>
+                $"{varName} = circuit.add_diode(\"{comp.Name}\", position=({x}, {y}), is_={d.SaturationCurrent:G3}, n={d.EmissionCoefficient})",
+
+            OpAmpComponent op =>
+                $"{varName} = circuit.add_opamp(\"{comp.Name}\", position=({x}, {y}), aol={op.OpenLoopGain:G3}, gbw={op.GainBandwidth:G3}, sr={op.SlewRate})",
+
+            // ── Structural / General ──────────────────────────────────────────
+            _ =>
+                $"{varName} = circuit.add_component(\"{comp.ComponentType}\", name=\"{comp.Name}\", position=({x}, {y}))"
+        };
+    }
+
+    /// <summary>Extracts the current value from a CurrentSourceComponent.</summary>
+    private static string BuildCurrentParam(CurrentSourceNode i)
+    {
+        if (i.ElectricalParameters.TryGetValue("Current", out var dc))
+            return dc.ToString("G6");
+        return "0.001";
+    }
+
+    /// <summary>
+    /// Converts a component name to a valid Python identifier
+    /// (lowercased, non-alphanumeric chars replaced with underscores).
+    /// </summary>
+    public static string SanitizePythonName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return "comp";
+
+        var sb = new StringBuilder();
+        foreach (char c in name.ToLowerInvariant())
+        {
+            sb.Append(char.IsLetterOrDigit(c) ? c : '_');
+        }
+
+        // Ensure it doesn't start with a digit
+        if (sb.Length > 0 && char.IsDigit(sb[0]))
+            sb.Insert(0, 'c');
 
         return sb.ToString();
     }

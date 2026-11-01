@@ -25,7 +25,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<SettingsViewModel>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<HelpPage>();
+        builder.Services.AddSingleton<ExamplesViewModel>();
+        builder.Services.AddTransient<ExamplesPage>();
         builder.Services.AddSingleton<AppShell>();
+
 
         // Keep legacy MainPage registered for now (can be removed later)
         builder.Services.AddSingleton<MainViewModel>();

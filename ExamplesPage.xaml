@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:EEE.ViewModels"
+             xmlns:models="clr-namespace:EEE.Services"
+             x:Class="EEE.ExamplesPage"
+             x:DataType="vm:ExamplesViewModel"
+             Title="Circuit Examples Library"
+             BackgroundColor="#0D1117"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <!-- Color tokens -->
+        <Color x:Key="BgPrimary">#0D1117</Color>
+        <Color x:Key="BgSurface">#161B22</Color>
+        <Color x:Key="BgCard">#1C2128</Color>
+        <Color x:Key="BorderColor">#30363D</Color>
+        <Color x:Key="AccentBlue">#58A6FF</Color>
+        <Color x:Key="AccentGreen">#56D364</Color>
+        <Color x:Key="AccentYellow">#E3B341</Color>
+        <Color x:Key="AccentPurple">#D2A8FF</Color>
+        <Color x:Key="TextPrimary">#C9D1D9</Color>
+        <Color x:Key="TextMuted">#8B949E</Color>
+
+        <!-- Base Tool Button -->
+        <Style x:Key="ToolBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#21262D"/>
+            <Setter Property="TextColor" Value="#C9D1D9"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontFamily" Value="OpenSansRegular"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="1"/>
+            <Setter Property="BorderColor" Value="#30363D"/>
+        </Style>
+
+        <!-- Accent Primary Button -->
+        <Style x:Key="AccentBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#238636"/>
+            <Setter Property="TextColor" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="0"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- TOP NAV BAR                                                      -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0"
+              BackgroundColor="#161B22"
+              HeightRequest="52"
+              Padding="12,0"
+              ColumnDefinitions="Auto,*,Auto">
+
+            <!-- Back Button -->
+            <Button Grid.Column="0"
+                    Text="← Back to Circuit"
+                    Style="{StaticResource ToolBtn}"
+                    VerticalOptions="Center"
+                    Command="{Binding BackToWorkspaceCommand}"/>
+
+            <!-- Title & Subtitle -->
+            <HorizontalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
+                <Label Text="📚" FontSize="18" VerticalOptions="Center"/>
+                <Label Text="Circuit Examples Library"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="#C9D1D9"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+
+            <!-- Status Indicator -->
+            <Label Grid.Column="2"
+                   Text="{Binding StatusMessage}"
+                   TextColor="#56D364"
+                   FontSize="11"
+                   VerticalOptions="Center"/>
+
+            <!-- Bottom border -->
+            <BoxView Grid.ColumnSpan="3"
+                     HeightRequest="1"
+                     BackgroundColor="#30363D"
+                     VerticalOptions="End"/>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- CATEGORY FILTER CHIPS                                            -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" BackgroundColor="#12161D" Padding="16,10">
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8">
+                    <!-- All -->
+                    <Border StrokeThickness="1" Padding="14,6">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20"/>
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsAllSelected}" Value="True">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsAllSelected}" Value="False">
+                                <Setter Property="Stroke" Value="#30363D"/>
+                                <Setter Property="BackgroundColor" Value="#161B22"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="All"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="All Circuits" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+
+                    <!-- Oscillators -->
+                    <Border StrokeThickness="1" Padding="14,6">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20"/>
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsOscillatorsSelected}" Value="True">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsOscillatorsSelected}" Value="False">
+                                <Setter Property="Stroke" Value="#30363D"/>
+                                <Setter Property="BackgroundColor" Value="#161B22"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Oscillators"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="∿ Oscillators" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+
+                    <!-- Amplifiers -->
+                    <Border StrokeThickness="1" Padding="14,6">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20"/>
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsAmplifiersSelected}" Value="True">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsAmplifiersSelected}" Value="False">
+                                <Setter Property="Stroke" Value="#30363D"/>
+                                <Setter Property="BackgroundColor" Value="#161B22"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Amplifiers"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="🔊 Amplifiers" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+
+                    <!-- Digital Logic -->
+                    <Border StrokeThickness="1" Padding="14,6">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20"/>
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsDigitalLogicSelected}" Value="True">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsDigitalLogicSelected}" Value="False">
+                                <Setter Property="Stroke" Value="#30363D"/>
+                                <Setter Property="BackgroundColor" Value="#161B22"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Digital Logic"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="⊕ Digital Logic" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                </HorizontalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- EXAMPLES CARDS LIST                                              -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <ScrollView Grid.Row="2" Padding="16,14">
+            <VerticalStackLayout Spacing="16" MaximumWidthRequest="920" HorizontalOptions="Center">
+
+                <CollectionView ItemsSource="{Binding FilteredExamples}" SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="16"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:CircuitExampleItem">
+                            <Border BackgroundColor="#161B22"
+                                    Stroke="#30363D"
+                                    StrokeThickness="1"
+                                    Padding="18,16">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadExampleCommand}"
+                                                          CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+
+
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="10">
+
+                                    <!-- Header Row: Icon, Title, Badge, Category -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <!-- Icon Avatar -->
+                                        <Border Grid.Column="0"
+                                                BackgroundColor="#21262D"
+                                                Stroke="#30363D"
+                                                StrokeThickness="1"
+                                                WidthRequest="42"
+                                                HeightRequest="42"
+                                                VerticalOptions="Center">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="{Binding Icon}"
+                                                   FontSize="20"
+                                                   TextColor="#58A6FF"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"/>
+                                        </Border>
+
+                                        <!-- Title & Category -->
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="{Binding Title}"
+                                                       FontSize="16"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#C9D1D9"/>
+                                                <!-- Badge -->
+                                                <Border BackgroundColor="#238636" StrokeThickness="0" Padding="7,2" VerticalOptions="Center">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="4"/>
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding Badge}" FontSize="9" FontAttributes="Bold" TextColor="#FFFFFF"/>
+                                                </Border>
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding Category}" FontSize="11" TextColor="#8B949E"/>
+                                        </VerticalStackLayout>
+
+                                        <!-- File type pill -->
+                                        <Border Grid.Column="2"
+                                                BackgroundColor="#0D1117"
+                                                Stroke="#30363D"
+                                                StrokeThickness="1"
+                                                Padding="8,4"
+                                                VerticalOptions="Center">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="6"/>
+                                            </Border.StrokeShape>
+                                            <Label Text=".EEE FORMAT" FontSize="10" FontAttributes="Bold" TextColor="#79C0FF"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Formula Box (if present) -->
+                                    <Border Grid.Row="1"
+                                            BackgroundColor="#0D1117"
+                                            Stroke="#21262D"
+                                            StrokeThickness="1"
+                                            Padding="10,6"
+                                            IsVisible="{Binding HasFormula}">
+
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <Label Text="{Binding Formula}"
+                                               FontFamily="Consolas, monospace"
+                                               FontSize="11"
+                                               FontAttributes="Bold"
+                                               TextColor="#56D364"/>
+                                    </Border>
+
+                                    <!-- Description -->
+                                    <Label Grid.Row="2"
+                                           Text="{Binding Description}"
+                                           FontSize="12"
+                                           TextColor="#8B949E"
+                                           LineBreakMode="WordWrap"/>
+
+                                    <!-- Components List Summary -->
+                                    <Border Grid.Row="3"
+                                            BackgroundColor="#12161D"
+                                            Stroke="#21262D"
+                                            StrokeThickness="1"
+                                            Padding="10,6">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="CIRCUIT COMPONENTS:" FontSize="9" FontAttributes="Bold" TextColor="#E3B341" CharacterSpacing="1"/>
+                                            <Label Text="{Binding ComponentSummary}" FontSize="11" TextColor="#C9D1D9"/>
+                                        </VerticalStackLayout>
+                                    </Border>
+
+                                    <!-- Action Buttons Row -->
+                                    <Grid Grid.Row="4" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8" Margin="0,4,0,0">
+                                        <!-- Load into Workspace -->
+                                        <Button Grid.Column="0"
+                                                Text="⚡ Load into Workspace"
+                                                Style="{StaticResource AccentBtn}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadExampleCommand}"
+                                                CommandParameter="{Binding .}"/>
+
+                                        <!-- Export .eee file -->
+                                        <Button Grid.Column="1"
+                                                Text="💾 Export .eee"
+                                                Style="{StaticResource ToolBtn}"
+                                                TextColor="#58A6FF"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=ExportExampleCommand}"
+                                                CommandParameter="{Binding .}"/>
+
+                                        <!-- Copy Python script -->
+                                        <Button Grid.Column="2"
+                                                Text="🐍 Copy Script"
+                                                Style="{StaticResource ToolBtn}"
+                                                TextColor="#E3B341"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=CopyPythonScriptCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                    </Grid>
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>
