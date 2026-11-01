@@ -43,7 +43,7 @@ jobs:
           -p:PublishTrimmed=false
           -p:RunAOTCompilation=false
           -p:AndroidPackageFormats=apk
-          -p:RuntimeIdentifiers="android-arm;android-arm64;android-x64;android-x86"
+          -p:RuntimeIdentifier=android-x64
 
       - name: Prepare single signed EEE.apk
         run: |
