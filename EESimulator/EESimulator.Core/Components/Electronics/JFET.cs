@@ -21,7 +21,6 @@ public class JFETComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "JFET";
-    public override string SpicePrefix => "J";
     public override string Description => "Junction Field-Effect Transistor (JFET)";
 
     public JfetChannel Channel { get; set; } = JfetChannel.NChannel;

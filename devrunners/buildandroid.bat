@@ -43,7 +43,7 @@ if exist "%OUTPUT_DIR%\*.apk" (
 )
 
 pushd "%PROJECT_DIR%"
-"%DOTNET%" publish "%PROJECT%" -f "%FRAMEWORK%" -c Release --artifacts-path "%OUTPUT_DIR%" -p:PublishReadyToRun=false -p:PublishTrimmed=false -p:RunAOTCompilation=false -p:AndroidPackageFormats=apk -p:RuntimeIdentifiers="android-arm;android-arm64;android-x64;android-x86" %*
+"%DOTNET%" publish "%PROJECT%" -f "%FRAMEWORK%" -c Release --artifacts-path "%OUTPUT_DIR%" -p:PublishReadyToRun=false -p:PublishTrimmed=false -p:RunAOTCompilation=false -p:AndroidPackageFormats=apk -p:RuntimeIdentifier=android-x64 %*
 set "RESULT=%ERRORLEVEL%"
 if %RESULT% equ 0 (
 	set "FOUND_SIGNED="
