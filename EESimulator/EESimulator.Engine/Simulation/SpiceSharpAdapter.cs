@@ -168,9 +168,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                         if (b.Polarity == BjtPolarity.PNP) bModel.Parameters.SetPnp(true);
                         else bModel.Parameters.SetNpn(true);
 
-                        if (b.GainBeta > 0) bModel.Parameters.ForwardCurrentGain = b.GainBeta;
-                        if (b.ReverseGainBeta > 0) bModel.Parameters.ReverseCurrentGain = b.ReverseGainBeta;
-                        if (b.SaturationCurrent > 0) bModel.Parameters.SaturationCurrent = b.SaturationCurrent;
+                        if (b.GainBeta > 0) bModel.Parameters.BetaF = b.GainBeta;
+                        if (b.ReverseGainBeta > 0) bModel.Parameters.BetaR = b.ReverseGainBeta;
+                        if (b.SaturationCurrent > 0) bModel.Parameters.SatCur = b.SaturationCurrent;
                         if (b.EarlyVoltage > 0) bModel.Parameters.EarlyVoltageForward = b.EarlyVoltage;
 
                         string cNode = GetPinNode(b, "collector", 1);
@@ -213,9 +213,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                         if (m.Channel == MosfetChannel.PChannel) mModel.Parameters.SetPmos(true);
                         else mModel.Parameters.SetNmos(true);
 
-                        mModel.Parameters.BaseThresholdVoltage = m.ThresholdVoltage;
+                        mModel.Parameters.Vt0 = m.ThresholdVoltage;
                         if (m.Transconductance > 0) mModel.Parameters.Transconductance = m.Transconductance;
-                        if (m.Lambda > 0) mModel.Parameters.ChannelLengthModulation = m.Lambda;
+                        if (m.Lambda > 0) mModel.Parameters.Lambda = m.Lambda;
                         if (m.ChannelWidth > 0) mModel.Parameters.Width = m.ChannelWidth;
                         if (m.ChannelLength > 0) mModel.Parameters.Length = m.ChannelLength;
 
@@ -288,8 +288,8 @@ public class SpiceSharpAdapter : ISimulationEngine
                     case VoltageSwitchComponent vsw:
                     {
                         var swModel = new SpiceSharp.Components.VoltageSwitchModel($"{vsw.Name}_model");
-                        swModel.Parameters.ResistanceOn = Math.Max(vsw.ResistanceOn, 1e-9);
-                        swModel.Parameters.ResistanceOff = Math.Max(vsw.ResistanceOff, 1e-3);
+                        swModel.SetParameter("ron", Math.Max(vsw.ResistanceOn, 1e-9));
+                        swModel.SetParameter("roff", Math.Max(vsw.ResistanceOff, 1e-3));
                         swModel.Parameters.Threshold = vsw.Threshold;
                         swModel.Parameters.Hysteresis = vsw.Hysteresis;
 
@@ -307,8 +307,8 @@ public class SpiceSharpAdapter : ISimulationEngine
                     case CurrentSwitchComponent csw:
                     {
                         var swModel = new SpiceSharp.Components.CurrentSwitchModel($"{csw.Name}_model");
-                        swModel.Parameters.ResistanceOn = Math.Max(csw.ResistanceOn, 1e-9);
-                        swModel.Parameters.ResistanceOff = Math.Max(csw.ResistanceOff, 1e-3);
+                        swModel.SetParameter("ron", Math.Max(csw.ResistanceOn, 1e-9));
+                        swModel.SetParameter("roff", Math.Max(csw.ResistanceOff, 1e-3));
                         swModel.Parameters.Threshold = csw.Threshold;
                         swModel.Parameters.Hysteresis = csw.Hysteresis;
 
