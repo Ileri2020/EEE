@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:EEE.ViewModels"
+             xmlns:models="clr-namespace:EEE.Services"
+             xmlns:views="clr-namespace:EESimulator.App.Views"
+             x:Class="EEE.WorkspacePage"
+             x:DataType="vm:EEWorkspaceViewModel"
+             Title="EESimulator"
+             BackgroundColor="#0D1117"
+             Shell.NavBarIsVisible="False"
+             x:Name="RootPage">
+
+    <ContentPage.Resources>
+        <!-- Color tokens -->
+        <Color x:Key="BgPrimary">#0D1117</Color>
+        <Color x:Key="BgSurface">#161B22</Color>
+        <Color x:Key="BgPanel">#1C2128</Color>
+        <Color x:Key="BgHover">#21262D</Color>
+        <Color x:Key="BorderColor">#30363D</Color>
+        <Color x:Key="AccentBlue">#58A6FF</Color>
+        <Color x:Key="AccentGreen">#56D364</Color>
+        <Color x:Key="AccentRed">#F78166</Color>
+        <Color x:Key="AccentPurple">#D2A8FF</Color>
+        <Color x:Key="TextPrimary">#C9D1D9</Color>
+        <Color x:Key="TextMuted">#8B949E</Color>
+        <Color x:Key="TextDim">#484F58</Color>
+
+        <!-- Toolbar button style -->
+        <Style x:Key="ToolBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent"/>
+            <Setter Property="TextColor" Value="#8B949E"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontFamily" Value="OpenSansRegular"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="0"/>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal"/>
+                        <VisualState x:Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#21262D"/>
+                                <Setter Property="TextColor" Value="#C9D1D9"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#30363D"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+
+        <!-- Icon toolbar button -->
+        <Style x:Key="IconBtn" TargetType="Button" BasedOn="{StaticResource ToolBtn}">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="MinimumWidthRequest" Value="36"/>
+        </Style>
+
+        <!-- Accent button -->
+        <Style x:Key="AccentBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#238636"/>
+            <Setter Property="TextColor" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="0"/>
+        </Style>
+
+        <!-- Palette item button -->
+        <Style x:Key="PaletteBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#1C2128"/>
+            <Setter Property="TextColor" Value="#C9D1D9"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderWidth" Value="1"/>
+            <Setter Property="BorderColor" Value="#30363D"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- TOP MENUBAR                                                      -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0"
+              BackgroundColor="#161B22"
+              HeightRequest="44"
+              ColumnDefinitions="Auto,*,Auto">
+
+            <!-- Left: App branding + file menu -->
+            <HorizontalStackLayout Grid.Column="0" Spacing="2" Padding="8,0" VerticalOptions="Center">
+                <!-- Logo -->
+                <Label Text="⚡"
+                       FontSize="18"
+                       TextColor="#58A6FF"
+                       VerticalOptions="Center"
+                       Margin="0,0,4,0"/>
+                <Label Text="EESimulator"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="#C9D1D9"
+                       VerticalOptions="Center"
+                       Margin="0,0,16,0"/>
+
+                <Button Text="File"    Style="{StaticResource ToolBtn}"/>
+                <Button Text="Edit"    Style="{StaticResource ToolBtn}"/>
+                <Button Text="View"    Style="{StaticResource ToolBtn}"/>
+                <Button Text="Simulate" Style="{StaticResource ToolBtn}"
+                        Command="{Binding SimulateCommand}"/>
+                <Button Text="Help"    Style="{StaticResource ToolBtn}"/>
+            </HorizontalStackLayout>
+
+            <!-- Center: Project name -->
+            <Label Grid.Column="1"
+                   Text="{Binding ProjectName}"
+                   TextColor="#8B949E"
+                   FontSize="12"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+
+            <!-- Right: simulation playback + viewport toggle + sidebars + undo/redo -->
+            <HorizontalStackLayout Grid.Column="2" Spacing="4" Padding="8,0" VerticalOptions="Center">
+                <!-- Simulation Play / Pause Button with dynamic text -->
+                <Button Text="{Binding PlayPauseButtonText}"
+                        Style="{StaticResource AccentBtn}"
+                        Command="{Binding ToggleSimulationPlaybackCommand}"
+                        ToolTipProperties.Text="Toggle Live Electricity Flow Simulation Playback"/>
+
+                <Button Text="↩"  Style="{StaticResource IconBtn}"
+                        Command="{Binding UndoCommand}"
+                        IsEnabled="{Binding CanUndo}"
+                        ToolTipProperties.Text="Undo"/>
+                <Button Text="↪"  Style="{StaticResource IconBtn}"
+                        Command="{Binding RedoCommand}"
+                        IsEnabled="{Binding CanRedo}"
+                        ToolTipProperties.Text="Redo"/>
+                <BoxView WidthRequest="1" HeightRequest="24" Color="#30363D" VerticalOptions="Center" Margin="4,0"/>
+                <Button Text="⇄ Script / Schematic"
+                        Style="{StaticResource ToolBtn}"
+                        Command="{Binding ToggleViewportCommand}"/>
+                <Button Text="🎛 Controls"
+                        Style="{StaticResource ToolBtn}"
+                        Command="{Binding ToggleControlSidebarCommand}"
+                        ToolTipProperties.Text="Toggle Control Sidebar"/>
+                <Button Text="🧩 Components"
+                        Style="{StaticResource ToolBtn}"
+                        Command="{Binding ToggleSidebarCommand}"
+                        ToolTipProperties.Text="Toggle Component Sidebar"/>
+                <Button Text="📈 Waveforms"
+                        Style="{StaticResource ToolBtn}"
+                        Command="{Binding ToggleWaveformDrawerCommand}"
+                        ToolTipProperties.Text="Toggle Waveform Viewer"/>
+                <Button Text="⚙ Settings"
+                        Style="{StaticResource ToolBtn}"
+                        Command="{Binding OpenSettingsCommand}"
+                        ToolTipProperties.Text="Application &amp; Controls Settings"/>
+                <Button Text="❓ Help"
+                        Style="{StaticResource ToolBtn}"
+                        Command="{Binding ToggleHelpCommand}"
+                        ToolTipProperties.Text="Controls &amp; Help Guide"/>
+            </HorizontalStackLayout>
+
+            <!-- Bottom border line -->
+            <BoxView Grid.Row="0" Grid.ColumnSpan="3"
+                     HeightRequest="1"
+                     BackgroundColor="#30363D"
+                     VerticalOptions="End"/>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- MAIN WORKSPACE                                                   -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="52,Auto,*,Auto">
+
+            <!-- ─── Left toolbar ─────────────────────────────────────────── -->
+            <Grid Grid.Column="0"
+                  BackgroundColor="#161B22"
+                  RowDefinitions="*,Auto">
+
+                <VerticalStackLayout Grid.Row="0" Spacing="4" Padding="6,8">
+                    <!-- Simulation Play / Pause Button for Mobile & Desktop Toolbar -->
+                    <Button Text="▶"
+                            Style="{StaticResource IconBtn}"
+                            TextColor="#56D364"
+                            Command="{Binding ToggleSimulationPlaybackCommand}"
+                            ToolTipProperties.Text="Play / Pause electricity flow simulation"/>
+                    <Button Text="🎛"
+                            Style="{StaticResource IconBtn}"
+                            TextColor="#58A6FF"
+                            Command="{Binding ToggleControlSidebarCommand}"
+                            ToolTipProperties.Text="Toggle Control Sidebar"/>
+                    <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
+
+                    <Button Text="↖" Style="{StaticResource IconBtn}" CommandParameter="Select"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Select (left-click)"/>
+                    <Button Text="✏" Style="{StaticResource IconBtn}" CommandParameter="Wire"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Wire (long-press pin)"/>
+                    <Button Text="✂" Style="{StaticResource IconBtn}" CommandParameter="Cut"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Cut wire"/>
+                    <Button Text="⊕" Style="{StaticResource IconBtn}" CommandParameter="Label"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Net label"/>
+                    <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
+                    <Button Text="🔍" Style="{StaticResource IconBtn}" CommandParameter="ZoomIn"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Zoom in"/>
+                    <Button Text="⊖" Style="{StaticResource IconBtn}" CommandParameter="ZoomOut"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Zoom out"/>
+                    <Button Text="⊡" Style="{StaticResource IconBtn}" CommandParameter="FitAll"
+                            Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Fit all"/>
+                    <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
+
+                    <!-- Mobile: Pan / Select mode toggle buttons -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="2">
+                        <Button Grid.Column="0" Text="✋"
+                                x:Name="BtnMobilePan"
+                                Style="{StaticResource IconBtn}"
+                                Command="{Binding SetMobilePanModeCommand}"
+                                ToolTipProperties.Text="Pan mode (touch to pan)"/>
+                        <Button Grid.Column="1" Text="↖"
+                                x:Name="BtnMobileSelect"
+                                Style="{StaticResource IconBtn}"
+                                Command="{Binding SetMobileSelectModeCommand}"
+                                ToolTipProperties.Text="Select mode (tap to select)"/>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
+                    <Button Text="🧩" Style="{StaticResource IconBtn}"
+                            Command="{Binding ToggleSidebarCommand}" ToolTipProperties.Text="Toggle Sidebar"/>
+                    <!-- Help button -->
+                    <Button Text="❓" Style="{StaticResource IconBtn}"
+                            Command="{Binding ToggleHelpCommand}" ToolTipProperties.Text="Controls Help"/>
+                </VerticalStackLayout>
+
+                <!-- Right border -->
+                <BoxView Grid.Row="0" Grid.RowSpan="2"
+                         WidthRequest="1" BackgroundColor="#30363D"
+                         HorizontalOptions="End"/>
+            </Grid>
+
+            <!-- ─── Column 1: Control Sidebar (Custom 3-letter action buttons) ───────── -->
+            <Border Grid.Column="1"
+                    WidthRequest="220"
+                    IsVisible="{Binding IsControlSidebarVisible}"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Sidebar Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#0D1117" Padding="12,10" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                            <Label Text="🎛" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="CONTROLS"
+                                   TextColor="#E6EDF3"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   CharacterSpacing="1"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="11"
+                                Padding="4"
+                                Command="{Binding ToggleControlSidebarCommand}"
+                                ToolTipProperties.Text="Close control sidebar"/>
+                    </Grid>
+
+                    <!-- Buttons list with 3-letter label badge and connected action dropdown -->
+                    <ScrollView Grid.Row="1" Padding="8,6">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="CUSTOM CONTROL BUTTONS"
+                                   TextColor="#8B949E"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="1"
+                                   Margin="4,2,0,2"/>
+
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding CustomControlButtons}" Spacing="6">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:CustomControlButton">
+                                        <Border BackgroundColor="#1C2128"
+                                                Stroke="#30363D"
+                                                StrokeThickness="1"
+                                                Padding="8,6">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="6"/>
+                                            </Border.StrokeShape>
+
+                                            <Grid RowDefinitions="Auto,Auto" RowSpacing="4">
+                                                <!-- Row 0: 3-letter Action Button + Delete Button -->
+                                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <!-- 3-letter Action Button -->
+                                                    <Button Grid.Column="0"
+                                                            Text="{Binding Label}"
+                                                            Style="{StaticResource AccentBtn}"
+                                                            HeightRequest="34"
+                                                            FontSize="12"
+                                                            FontAttributes="Bold"
+                                                            Padding="6,2"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=ExecuteCustomActionCommand}"
+                                                            CommandParameter="{Binding .}"
+                                                            ToolTipProperties.Text="{Binding Description}"/>
+
+                                                    <!-- Delete Button -->
+                                                    <Button Grid.Column="1"
+                                                            Text="✕"
+                                                            Style="{StaticResource IconBtn}"
+                                                            FontSize="11"
+                                                            TextColor="#F78166"
+                                                            Padding="4,2"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=DeleteCustomButtonCommand}"
+                                                            CommandParameter="{Binding .}"
+                                                            ToolTipProperties.Text="Delete / disconnect button"/>
+                                                </Grid>
+
+                                                <!-- Row 1: Dropdown UI showing connected action -->
+                                                <Picker Grid.Row="1"
+                                                        ItemsSource="{Binding AvailableActions}"
+                                                        SelectedItem="{Binding ActionName}"
+                                                        BackgroundColor="#0D1117"
+                                                        TextColor="#58A6FF"
+                                                        FontSize="10"
+                                                        HeightRequest="30"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Footer link to Settings -->
+                    <Border Grid.Row="2" BackgroundColor="#0D1117" Padding="8,8" StrokeThickness="0">
+                        <Button Text="⚙ Customize in Settings"
+                                Style="{StaticResource ToolBtn}"
+                                FontSize="11"
+                                HorizontalOptions="Fill"
+                                Command="{Binding OpenSettingsCommand}"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ─── Center: Schematic OR Script viewport ──────────────────── -->
+            <Grid Grid.Column="2">
+                <!-- Schematic Viewport -->
+                <views:SchematicViewport
+                    x:Name="SchematicCanvas"
+                    Circuit="{Binding Circuit}"
+                    IsVisible="{Binding IsScriptViewActive, Converter={StaticResource InvertedBoolConverter}}"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill"/>
+
+                <!-- Script Viewport -->
+                <Grid IsVisible="{Binding IsScriptViewActive}"
+                      BackgroundColor="#0D1117"
+                      RowDefinitions="Auto,*,8,200">
+
+                    <!-- Script editor header -->
+                    <Grid Grid.Row="0"
+                          BackgroundColor="#161B22"
+                          HeightRequest="36"
+                          ColumnDefinitions="*,Auto,Auto"
+                          Padding="12,0">
+                        <Label Grid.Column="0"
+                               Text="● script.py"
+                               TextColor="#58A6FF"
+                               FontSize="12"
+                               VerticalOptions="Center"/>
+                        <Button Grid.Column="1"
+                                Text="▶  Run"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding RunScriptCommand}"
+                                Margin="0,4,8,4"/>
+                        <Button Grid.Column="2"
+                                Text="Clear"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding ClearConsoleCommand}"/>
+                    </Grid>
+
+                    <!-- Code editor -->
+                    <Border Grid.Row="1"
+                            BackgroundColor="#0D1117"
+                            Padding="0"
+                            Stroke="#30363D"
+                            StrokeThickness="1"
+                            Margin="0">
+                        <Editor x:Name="ScriptEditor"
+                                Text="{Binding ScriptText}"
+                                BackgroundColor="#0D1117"
+                                TextColor="#C9D1D9"
+                                FontFamily="Courier New"
+                                FontSize="13"
+                                Placeholder="# Python script…"
+                                PlaceholderColor="#484F58"
+                                AutoSize="TextChanges"
+                                Keyboard="Text"/>
+                    </Border>
+
+                    <!-- Splitter -->
+                    <BoxView Grid.Row="2" BackgroundColor="#21262D"/>
+
+                    <!-- Console output -->
+                    <Grid Grid.Row="3" BackgroundColor="#0D1117" RowDefinitions="Auto,*">
+                        <Label Grid.Row="0"
+                               Text="Console Output"
+                               TextColor="#8B949E"
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               Padding="12,4"/>
+                        <ScrollView Grid.Row="1">
+                            <Label Text="{Binding ConsoleOutput}"
+                                   TextColor="#56D364"
+                                   FontFamily="Courier New"
+                                   FontSize="12"
+                                   Padding="12,4"
+                                   LineBreakMode="WordWrap"/>
+                        </ScrollView>
+                    </Grid>
+                </Grid>
+
+                <!-- ─── Waveform Drawer Overlay ─────────────────────────────── -->
+                <Grid IsVisible="{Binding IsWaveformDrawerOpen}"
+                      VerticalOptions="End"
+                      HeightRequest="230"
+                      BackgroundColor="#0A0E14"
+                      RowDefinitions="36,*">
+
+                    <!-- Drawer Header -->
+                    <Grid Grid.Row="0"
+                          BackgroundColor="#161B22"
+                          ColumnDefinitions="Auto,*,Auto"
+                          Padding="12,0">
+
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="📈 Oscilloscope / Waveforms"
+                                   TextColor="#58A6FF"
+                                   FontAttributes="Bold"
+                                   FontSize="12"
+                                   VerticalOptions="Center"/>
+                            <Label Text="{Binding WaveformComponent.Reference, StringFormat='[{0}]'}"
+                                   TextColor="#56D364"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Grid.Column="2" Spacing="4" VerticalOptions="Center">
+                            <Button Text="Simulate"
+                                    Style="{StaticResource ToolBtn}"
+                                    FontSize="11"
+                                    Padding="8,4"
+                                    Command="{Binding SimulateCommand}"/>
+                            <Button Text="✕"
+                                    Style="{StaticResource IconBtn}"
+                                    FontSize="12"
+                                    Padding="6"
+                                    Command="{Binding CloseWaveformDrawerCommand}"
+                                    ToolTipProperties.Text="Close Waveform Drawer"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+
+                    <!-- Waveform Oscilloscope Viewport -->
+                    <views:WaveformViewport Grid.Row="1"
+                                            MonitoredComponent="{Binding WaveformComponent}"
+                                            HorizontalOptions="Fill"
+                                            VerticalOptions="Fill"/>
+                </Grid>
+            </Grid>
+
+            <!-- ─── Right panel: Component palette + Properties ────────────── -->
+            <Grid Grid.Column="3"
+                  WidthRequest="300"
+                  IsVisible="{Binding IsSidebarVisible}"
+                  BackgroundColor="#161B22"
+                  RowDefinitions="Auto,*,Auto,Auto">
+
+                <!-- Left border -->
+                <BoxView Grid.Row="0" Grid.RowSpan="4"
+                         WidthRequest="1" BackgroundColor="#30363D"
+                         HorizontalOptions="Start"/>
+
+                <!-- Panel header with close toggle -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="14,10,10,6">
+                    <Label Grid.Column="0"
+                           Text="COMPONENT LIBRARY"
+                           TextColor="#8B949E"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           CharacterSpacing="1"/>
+                    <Button Grid.Column="1"
+                            Text="✕"
+                            Style="{StaticResource IconBtn}"
+                            Padding="4"
+                            FontSize="12"
+                            Command="{Binding ToggleSidebarCommand}"
+                            ToolTipProperties.Text="Close sidebar"/>
+                </Grid>
+
+                <!-- Palette with SVG icon grid -->
+                <ScrollView Grid.Row="1" Padding="8,2">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="MODULAR COMPONENTS"
+                               TextColor="#484F58"
+                               FontSize="10"
+                               FontAttributes="Bold"
+                               CharacterSpacing="1"
+                               Margin="4,2,0,2"/>
+
+                        <!-- Grid of component icon tiles (uses ComponentIconView for crisp vector icons) -->
+                        <FlexLayout BindableLayout.ItemsSource="{Binding ComponentPalette}"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ComponentPaletteItem">
+                                    <Border WidthRequest="56"
+                                            HeightRequest="56"
+                                            Margin="2"
+                                            BackgroundColor="#1C2128"
+                                            Stroke="{Binding Color}"
+                                            StrokeThickness="1"
+                                            ToolTipProperties.Text="{Binding TooltipText}">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8"/>
+                                        </Border.StrokeShape>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                        </Border.GestureRecognizers>
+
+                                        <!-- Context dropdown menu on right-click / long-press -->
+                                        <FlyoutBase.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Text="{Binding Type, StringFormat='Component: {0}'}" IsEnabled="False"/>
+                                                <MenuFlyoutItem Text="{Binding Category, StringFormat='Category: {0}'}" IsEnabled="False"/>
+                                                <MenuFlyoutItem Text="{Binding Description}" IsEnabled="False"/>
+                                                <MenuFlyoutItem Text="{Binding Unit, StringFormat='Unit: {0}'}" IsEnabled="False"/>
+                                                <MenuFlyoutSeparator/>
+                                                <MenuFlyoutItem Text="➕ Insert into Viewport"
+                                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand}"
+                                                                CommandParameter="{Binding .}"/>
+                                            </MenuFlyout>
+                                        </FlyoutBase.ContextFlyout>
+
+                                        <!-- SVG Vector Icon Tile (crisp vector schematic symbol, no text letter!) -->
+                                        <Grid Padding="4" HorizontalOptions="Fill" VerticalOptions="Fill">
+                                            <!-- SVG Vector Image (MAUI Image from Resources/ComponentSymbols/*.svg) -->
+                                            <Image Source="{Binding ImageSource}"
+                                                   WidthRequest="42"
+                                                   HeightRequest="42"
+                                                   Aspect="AspectFit"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"
+                                                   InputTransparent="True"/>
+                                            <!-- Vector Canvas renderer fallback -->
+                                            <views:ComponentIconView
+                                                ComponentType="{Binding Type}"
+                                                WidthRequest="42"
+                                                HeightRequest="42"
+                                                HorizontalOptions="Center"
+                                                VerticalOptions="Center"
+                                                InputTransparent="True"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+
+                        <!-- Divider -->
+                        <BoxView HeightRequest="1" Color="#30363D" Margin="0,8"/>
+
+                        <!-- Simulate button -->
+                        <Button Text="▶  Run Simulation"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding SimulateCommand}"/>
+
+                        <ActivityIndicator IsRunning="{Binding IsSimulating}"
+                                          IsVisible="{Binding IsSimulating}"
+                                          Color="#58A6FF"
+                                          HorizontalOptions="Center"
+                                          Margin="0,4"/>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Splitter -->
+                <BoxView Grid.Row="2" HeightRequest="1" BackgroundColor="#30363D"/>
+
+                <!-- Properties panel -->
+                <Grid Grid.Row="3" RowDefinitions="Auto,*" Padding="0" MaximumHeightRequest="150">
+                    <Label Grid.Row="0"
+                           Text="PROPERTIES"
+                           TextColor="#8B949E"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           Padding="14,8,14,4"
+                           CharacterSpacing="1"/>
+
+                    <ScrollView Grid.Row="1" Padding="12,0,12,6">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding ActiveComponentInfo}"
+                                   TextColor="#C9D1D9"
+                                   FontSize="12"
+                                   LineBreakMode="WordWrap"/>
+
+                            <Label Text="{Binding StatusText}"
+                                   TextColor="#8B949E"
+                                   FontSize="11"
+                                   Margin="0,4,0,0"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- STATUS BAR                                                       -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="2"
+              BackgroundColor="#161B22"
+              HeightRequest="26"
+              Padding="12,0"
+              ColumnDefinitions="*,Auto">
+
+            <BoxView Grid.ColumnSpan="2"
+                     HeightRequest="1"
+                     BackgroundColor="#30363D"
+                     VerticalOptions="Start"/>
+
+            <Label Grid.Column="0"
+                   Text="{Binding StatusText}"
+                   TextColor="#8B949E"
+                   FontSize="11"
+                   VerticalOptions="Center"/>
+
+            <Label Grid.Column="1"
+                   Text="{Binding ActiveTool, StringFormat='Tool: {0}'}"
+                   TextColor="#484F58"
+                   FontSize="11"
+                   VerticalOptions="Center"/>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- COMPONENT EDIT DIALOG MODAL OVERLAY                              -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsEditDialogVisible}"
+              BackgroundColor="#99000000"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+
+            <Border WidthRequest="380"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Dialog Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="16,12" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="⚙" FontSize="16" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="{Binding EditType, StringFormat='Edit {0}'}"
+                                   TextColor="#C9D1D9"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1" Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="12"
+                                Padding="4"
+                                Command="{Binding CloseEditDialogCommand}"
+                                ToolTipProperties.Text="Close Dialog"/>
+                    </Grid>
+
+                    <!-- Dialog Form -->
+                    <ScrollView Grid.Row="1" MaximumHeightRequest="380" Padding="16,12">
+                        <VerticalStackLayout Spacing="12">
+
+                            <!-- Eye (Probe) and Graph (Waveform) Icon Toggles -->
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,2,0,6">
+                                <!-- Eye Icon Toggle -->
+                                <Button Grid.Column="0"
+                                        Text="👁 Live Probe"
+                                        Style="{StaticResource PaletteBtn}"
+                                        TextColor="#56D364"
+                                        BorderColor="#56D364"
+                                        Command="{Binding ToggleEditLiveProbeCommand}"
+                                        ToolTipProperties.Text="Toggle Realtime Voltage &amp; Current Display"/>
+
+                                <!-- Graph Icon Toggle -->
+                                <Button Grid.Column="1"
+                                        Text="📈 Waveform"
+                                        Style="{StaticResource PaletteBtn}"
+                                        TextColor="#79C0FF"
+                                        BorderColor="#79C0FF"
+                                        Command="{Binding ToggleEditWaveformCommand}"
+                                        ToolTipProperties.Text="Toggle Oscilloscope Waveform Drawer"/>
+                            </Grid>
+
+                            <!-- Name / Reference -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="COMPONENT NAME / REFERENCE"
+                                       TextColor="#8B949E"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       CharacterSpacing="1"/>
+                                <Entry Text="{Binding EditName}"
+                                       BackgroundColor="#0D1117"
+                                       TextColor="#C9D1D9"
+                                       FontSize="13"/>
+                            </VerticalStackLayout>
+
+                            <!-- Primary Parameter (Resistance, Capacitance, Voltage, etc.) -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding EditParamName}"
+                                       TextColor="#8B949E"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       CharacterSpacing="1"/>
+                                <Entry Text="{Binding EditParamValue}"
+                                       Keyboard="Numeric"
+                                       BackgroundColor="#0D1117"
+                                       TextColor="#C9D1D9"
+                                       FontSize="13"/>
+                            </VerticalStackLayout>
+
+                            <!-- Wire Parasitic Resistance (if non-negligible) -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="WIRE RESISTANCE (Ω) [0 = Ideal]"
+                                       TextColor="#8B949E"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       CharacterSpacing="1"/>
+                                <Entry Text="{Binding EditWireResistance}"
+                                       Keyboard="Numeric"
+                                       BackgroundColor="#0D1117"
+                                       TextColor="#C9D1D9"
+                                       FontSize="13"/>
+                            </VerticalStackLayout>
+
+                            <!-- Component Terminals / Nodes -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="COMPONENT NODES / PINS"
+                                       TextColor="#8B949E"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       CharacterSpacing="1"/>
+
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding EditPins}" Spacing="6">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:PinEditItem">
+                                            <Grid ColumnDefinitions="60,*" ColumnSpacing="8">
+                                                <Label Grid.Column="0"
+                                                       Text="{Binding Id, StringFormat='Pin: {0}'}"
+                                                       TextColor="#8B949E"
+                                                       FontSize="11"
+                                                       VerticalOptions="Center"/>
+                                                <Entry Grid.Column="1"
+                                                       Text="{Binding Name}"
+                                                       BackgroundColor="#0D1117"
+                                                       TextColor="#C9D1D9"
+                                                       FontSize="12"
+                                                       HeightRequest="36"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Dialog Actions Footer -->
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="14,10" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Button Grid.Column="0"
+                                Text="Delete"
+                                Style="{StaticResource ToolBtn}"
+                                TextColor="#F78166"
+                                Command="{Binding DeleteEditingComponentCommand}"/>
+
+                        <Button Grid.Column="2"
+                                Text="Cancel"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding CloseEditDialogCommand}"
+                                Margin="0,0,6,0"/>
+
+                        <Button Grid.Column="3"
+                                Text="Apply"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding ApplyEditDialogCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- HELP MODAL OVERLAY                                               -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsHelpVisible}"
+              BackgroundColor="#BB000000"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+
+            <Border MaximumWidthRequest="520"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14"/>
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto">
+
+                    <!-- Help Dialog Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="18,14" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="10" VerticalOptions="Center">
+                            <Label Text="❓" FontSize="18" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="Controls &amp; Help"
+                                   TextColor="#C9D1D9"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1" Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="13"
+                                Padding="5"
+                                Command="{Binding ToggleHelpCommand}"
+                                ToolTipProperties.Text="Close Help"/>
+                    </Grid>
+
+                    <!-- Help Content -->
+                    <ScrollView Grid.Row="1" MaximumHeightRequest="500" Padding="18,14">
+                        <VerticalStackLayout Spacing="14">
+
+                            <!-- Desktop Controls -->
+                            <Label Text="🖥  DESKTOP CONTROLS"
+                                   TextColor="#58A6FF"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="0.5"/>
+
+                            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="6" ColumnSpacing="12">
+                                <!-- Row 0 -->
+                                <Label Grid.Row="0" Grid.Column="0" Text="Left-click" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="Select component or pin node" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 1 -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="Right-click + drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="Pan the viewport" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 2 -->
+                                <Label Grid.Row="2" Grid.Column="0" Text="Right-click (no drag)" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="2" Grid.Column="1" Text="Open component edit dialog" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 3 -->
+                                <Label Grid.Row="3" Grid.Column="0" Text="Scroll wheel" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="3" Grid.Column="1" Text="Zoom in / out" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 4 -->
+                                <Label Grid.Row="4" Grid.Column="0" Text="Pin long-press + drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="4" Grid.Column="1" Text="Draw a wire from that pin to another pin" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 5 -->
+                                <Label Grid.Row="5" Grid.Column="0" Text="Right long-press + drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="5" Grid.Column="1" Text="Move (drag) the component" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 6 -->
+                                <Label Grid.Row="6" Grid.Column="0" Text="Double-click" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="6" Grid.Column="1" Text="Open component edit dialog" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 7 -->
+                                <Label Grid.Row="7" Grid.Column="0" Text="Ctrl+Z / Ctrl+Y" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="7" Grid.Column="1" Text="Undo / Redo" TextColor="#C9D1D9" FontSize="12"/>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" Color="#30363D" Margin="0,4"/>
+
+                            <!-- Mobile Controls -->
+                            <Label Text="📱  MOBILE CONTROLS"
+                                   TextColor="#56D364"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="0.5"/>
+
+                            <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="6" ColumnSpacing="12">
+                                <!-- Row 0 -->
+                                <Label Grid.Row="0" Grid.Column="0" Text="✋ Pan mode + touch" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="Pan / scroll the viewport" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 1 -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="↖ Select mode + tap" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="Select a component or pin" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 2 -->
+                                <Label Grid.Row="2" Grid.Column="0" Text="Pan mode + long-press component" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="2" Grid.Column="1" Text="Move / drag the component" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 3 -->
+                                <Label Grid.Row="3" Grid.Column="0" Text="Long-press pin + drag" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="3" Grid.Column="1" Text="Draw a wire from pin to another pin" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 4 -->
+                                <Label Grid.Row="4" Grid.Column="0" Text="Long-press component (select mode)" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="4" Grid.Column="1" Text="Open component edit dialog" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 5 -->
+                                <Label Grid.Row="5" Grid.Column="0" Text="Pinch" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="5" Grid.Column="1" Text="Zoom in / out" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 6 -->
+                                <Label Grid.Row="6" Grid.Column="0" Text="Toolbar ↩ / ↪" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="6" Grid.Column="1" Text="Undo / Redo" TextColor="#C9D1D9" FontSize="12"/>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" Color="#30363D" Margin="0,4"/>
+
+                            <!-- Tips -->
+                            <Label Text="💡  TIPS"
+                                   TextColor="#D2A8FF"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="0.5"/>
+                            <Label Text="• Small blue circles on components are pin terminals — click or tap them to select or start a wire."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                            <Label Text="• Right-click any sidebar component tile to see its details before inserting."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                            <Label Text="• Use the 👁 Live Probe toggle in the edit dialog to display real-time voltage &amp; current on a component."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                            <Label Text="• Use the 📈 Waveform toggle to open the oscilloscope drawer for a component."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Close Footer -->
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="14,10" HorizontalOptions="Fill">
+                        <Button Text="Got it!"
+                                Style="{StaticResource AccentBtn}"
+                                HorizontalOptions="End"
+                                Command="{Binding ToggleHelpCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+    </Grid>
+</ContentPage>

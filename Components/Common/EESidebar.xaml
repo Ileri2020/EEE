@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EEE.Components.Common.EESidebar">
+    <Border x:Name="SidebarBorder"
+            StrokeThickness="1"
+            Stroke="#30363D"
+            BackgroundColor="#161B22"
+            WidthRequest="260">
+        <Grid RowDefinitions="Auto,*">
+            <!-- Sidebar Header with Collapse Toggle -->
+            <Border Grid.Row="0"
+                    StrokeThickness="0"
+                    BackgroundColor="#0D1117"
+                    Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label x:Name="TitleLabel"
+                           Grid.Column="0"
+                           Text="Sidebar"
+                           TextColor="#E6EDF3"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                    <Label x:Name="ToggleIcon"
+                           Grid.Column="1"
+                           Text="◀"
+                           TextColor="#8B949E"
+                           FontSize="12"
+                           VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnToggleTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+            </Border>
+
+            <!-- Main Content Area -->
+            <ContentView x:Name="ContentHost"
+                         Grid.Row="1" />
+        </Grid>
+    </Border>
+</ContentView>

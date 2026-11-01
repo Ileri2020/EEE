@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -15 60 30" width="60" height="30">
+  <!-- Wire: Blue routing line with terminal dots -->
+  <line x1="-25" y1="0" x2="25" y2="0" stroke="#58A6FF" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="-25" cy="0" r="3" fill="#58A6FF"/>
+  <circle cx="25" cy="0" r="3" fill="#58A6FF"/>
+</svg>

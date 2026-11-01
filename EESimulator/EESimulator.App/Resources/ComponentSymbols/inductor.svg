@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -20 60 40" width="60" height="40">
+  <!-- Inductor: Coil loops and leads -->
+  <line x1="-25" y1="0" x2="-18" y2="0" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="18" y1="0" x2="25" y2="0" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M -18,0 A 4.5,4.5 0 0,1 -9,0 A 4.5,4.5 0 0,1 0,0 A 4.5,4.5 0 0,1 9,0 A 4.5,4.5 0 0,1 18,0" fill="none" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <!-- Terminals -->
+  <circle cx="-25" cy="0" r="2.5" fill="#58A6FF"/>
+  <circle cx="25" cy="0" r="2.5" fill="#58A6FF"/>
+</svg>

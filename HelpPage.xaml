@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EEE.HelpPage"
+             Title="Help &amp; Controls Guide"
+             BackgroundColor="#0D1117">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="20" MaximumWidthRequest="950" HorizontalOptions="Center">
+
+            <!-- ── Top Header ─────────────────────────────────────────────── -->
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                <Button Grid.Column="0"
+                        Text="← Back to Circuit"
+                        Style="{StaticResource ToolBtn}"
+                        Clicked="OnBackClicked"/>
+                <Label Grid.Column="1"
+                       Text="❓  Controls &amp; Gestures Guide"
+                       TextColor="#C9D1D9"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+                <Button Grid.Column="2"
+                        Text="⚙ Settings"
+                        Style="{StaticResource AccentBtn}"
+                        Clicked="OnSettingsClicked"/>
+            </Grid>
+
+            <!-- Overview Card -->
+            <Border BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Welcome to EESimulator" TextColor="#58A6FF" FontSize="15" FontAttributes="Bold"/>
+                    <Label Text="EESimulator provides unified, responsive controls designed specifically for both Desktop (mouse + keyboard precision) and Mobile (touch &amp; gestures). Below is the comprehensive guide for navigating, selecting, wiring, and manipulating components."
+                           TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── 1. Desktop Controls ────────────────────────────────────── -->
+            <Border BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1"
+                    Padding="18">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="14">
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Label Text="🖥" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="DESKTOP CONTROLS (MOUSE &amp; KEYBOARD)"
+                               TextColor="#58A6FF"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               CharacterSpacing="0.5"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <Grid ColumnDefinitions="200,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="10" ColumnSpacing="12">
+                        <!-- Header -->
+                        <Label Grid.Row="0" Grid.Column="0" Text="ACTION / GESTURE" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Grid.Column="1" Text="EFFECT / DESCRIPTION" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Grid.Column="2" Text="TRIGGER" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+
+                        <!-- Left Click -->
+                        <Label Grid.Row="1" Grid.Column="0" Text="Left-Click" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="1" Grid.Column="1" Text="Select a component or individual pin node on the viewport." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="1" Grid.Column="2" Text="Left Mouse Button" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Right Click (No Drag) -->
+                        <Label Grid.Row="2" Grid.Column="0" Text="Right-Click Component" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="2" Grid.Column="1" Text="Opens component dialog to edit reference, parameters, probes, and waveforms." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="2" Grid.Column="2" Text="Right Mouse Button (Single)" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Right Long-Click + Drag Component -->
+                        <Label Grid.Row="3" Grid.Column="0" Text="Right Long-Click + Move" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="3" Grid.Column="1" Text="Moves components around the schematic canvas seamlessly." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="3" Grid.Column="2" Text="Right Button Pressed + Move" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Workspace Right Drag -->
+                        <Label Grid.Row="4" Grid.Column="0" Text="Right-Click Workspace + Drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="4" Grid.Column="1" Text="Pans the viewport smoothly in any direction." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="4" Grid.Column="2" Text="Right Drag on Empty Canvas" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Pin Node Long Click + Drag (Wire Mode) -->
+                        <Label Grid.Row="5" Grid.Column="0" Text="Pin Node Long-Click + Move" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="5" Grid.Column="1" Text="Triggers wire mode: a live dashed wire is drawn dynamically. Releasing on another pin connects them; releasing on empty workspace creates a junction and ends there." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="5" Grid.Column="2" Text="Press Pin + Move" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Scroll Wheel -->
+                        <Label Grid.Row="6" Grid.Column="0" Text="Scroll Wheel" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="6" Grid.Column="1" Text="Zooms in / out centered on the cursor position." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="6" Grid.Column="2" Text="Wheel Up / Down" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Double Click -->
+                        <Label Grid.Row="7" Grid.Column="0" Text="Double-Click Component" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="7" Grid.Column="1" Text="Shortcut to open component parameter edit dialog." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="7" Grid.Column="2" Text="Double Left Click" TextColor="#8B949E" FontSize="11"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── 2. Mobile Controls ─────────────────────────────────────── -->
+            <Border BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1"
+                    Padding="18">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="14">
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Label Text="📱" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="MOBILE CONTROLS (TOUCH &amp; GESTURES)"
+                               TextColor="#56D364"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               CharacterSpacing="0.5"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <Grid ColumnDefinitions="220,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="10" ColumnSpacing="12">
+                        <!-- Header -->
+                        <Label Grid.Row="0" Grid.Column="0" Text="ACTION / GESTURE" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Grid.Column="1" Text="EFFECT / DESCRIPTION" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Grid.Column="2" Text="MODE" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+
+                        <!-- Pan Mode: Swipe -->
+                        <Label Grid.Row="1" Grid.Column="0" Text="✋ Touch Swipe on Canvas" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="1" Grid.Column="1" Text="Scrolls / pans the viewport freely." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="1" Grid.Column="2" Text="Pan Mode Active" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Pan Mode: Long-press Component + Move -->
+                        <Label Grid.Row="2" Grid.Column="0" Text="✋ Long-Press Component + Drag" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="2" Grid.Column="1" Text="When a component is long-pressed (not workspace) and moved, user can move the component freely." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="2" Grid.Column="2" Text="Pan Mode Active" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Select Mode: Tap -->
+                        <Label Grid.Row="3" Grid.Column="0" Text="↖ Single Tap" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="3" Grid.Column="1" Text="Selects component or pin node." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="3" Grid.Column="2" Text="Select Mode Active" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Select Mode: Long-press Component -->
+                        <Label Grid.Row="4" Grid.Column="0" Text="↖ Long-Press Component" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="4" Grid.Column="1" Text="Opens component dialog to edit values and live probes." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="4" Grid.Column="2" Text="Select Mode Active" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Pin Node Long-Press + Drag (Wire Mode) -->
+                        <Label Grid.Row="5" Grid.Column="0" Text="Pin Long-Press + Drag" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="5" Grid.Column="1" Text="Draws a wire from pin. Drag to another pin to connect or release on empty canvas to place junction." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="5" Grid.Column="2" Text="Any Mode" TextColor="#8B949E" FontSize="11"/>
+
+                        <!-- Pinch Zoom -->
+                        <Label Grid.Row="6" Grid.Column="0" Text="Two-Finger Pinch" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                        <Label Grid.Row="6" Grid.Column="1" Text="Pinch in to zoom out, pinch out to zoom in smoothly." TextColor="#C9D1D9" FontSize="12"/>
+                        <Label Grid.Row="6" Grid.Column="2" Text="Any Mode" TextColor="#8B949E" FontSize="11"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── 3. Pro Tips & Features ─────────────────────────────────── -->
+            <Border BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1"
+                    Padding="18">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="💡  PRO TIPS &amp; SHORTCUTS"
+                           TextColor="#D2A8FF"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           CharacterSpacing="0.5"/>
+
+                    <Label Text="• Pin Nodes (Small Circles): Every component has small circular terminals at its connection points. Touching or clicking these terminals lets you connect wires directly."
+                           TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                    <Label Text="• Sidebar SVG Icons: The sidebar displays vector schematic symbols matching canvas drawings. Hover on desktop or long-press on mobile to view details and dropdown options."
+                           TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                    <Label Text="• Instant Viewport Addition: Clicking any component in the sidebar places it immediately on the canvas."
+                           TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                    <Label Text="• Custom Controls: Open the Settings Page to configure custom controls and keybindings for any action using the interactive Control Table."
+                           TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Back Button -->
+            <Button Text="← Back to Circuit Workspace"
+                    Style="{StaticResource AccentBtn}"
+                    HorizontalOptions="Center"
+                    Padding="24,10"
+                    Margin="0,10,0,20"
+                    Clicked="OnBackClicked"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

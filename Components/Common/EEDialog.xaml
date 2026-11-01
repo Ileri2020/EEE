@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:common="clr-namespace:EEE.Components.Common"
+             x:Class="EEE.Components.Common.EEDialog"
+             IsVisible="False">
+    <!-- Modal Backdrop -->
+    <Grid BackgroundColor="#99000000">
+        <Border x:Name="DialogCard"
+                StrokeThickness="1"
+                Stroke="#30363D"
+                BackgroundColor="#161B22"
+                WidthRequest="380"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                Padding="0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="0">
+                <!-- Header -->
+                <Border StrokeThickness="0"
+                        BackgroundColor="#21262D"
+                        Padding="16,12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label x:Name="TitleLabel"
+                               Grid.Column="0"
+                               Text="Dialog"
+                               TextColor="#E6EDF3"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="✕"
+                               TextColor="#8B949E"
+                               FontSize="14"
+                               VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCloseTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+                </Border>
+
+                <!-- Body Content -->
+                <ContentView x:Name="DialogBodyHost"
+                             Padding="16,14" />
+
+                <!-- Footer Buttons -->
+                <Border StrokeThickness="0"
+                        BackgroundColor="#1C2128"
+                        Padding="16,10">
+                    <HorizontalStackLayout HorizontalOptions="End" Spacing="8">
+                        <common:EEButton x:Name="CancelBtn"
+                                         Text="Cancel"
+                                         Variant="Secondary"
+                                         Clicked="OnCancelClicked" />
+                        <common:EEButton x:Name="ConfirmBtn"
+                                         Text="Confirm"
+                                         Variant="Primary"
+                                         Clicked="OnConfirmClicked" />
+                    </HorizontalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

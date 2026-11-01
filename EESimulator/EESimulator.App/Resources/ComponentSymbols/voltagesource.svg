@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-25 -30 50 60" width="50" height="60">
+  <!-- Voltage Source: Circle with + and - and vertical leads -->
+  <line x1="0" y1="-26" x2="0" y2="-15" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <line x1="0" y1="15" x2="0" y2="26" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="0" cy="0" r="15" fill="#161B22" stroke="#56D364" stroke-width="2"/>
+  <!-- + sign -->
+  <line x1="-4" y1="-7" x2="4" y2="-7" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <line x1="0" y1="-11" x2="0" y2="-3" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <!-- - sign -->
+  <line x1="-4" y1="7" x2="4" y2="7" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <!-- Terminals -->
+  <circle cx="0" cy="-26" r="2.5" fill="#58A6FF"/>
+  <circle cx="0" cy="26" r="2.5" fill="#58A6FF"/>
+</svg>

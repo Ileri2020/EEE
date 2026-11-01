@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -30 60 60" width="60" height="60">
+  <!-- IC: DIP-8 package with notch and 8 pins -->
+  <rect x="-18" y="-22" width="36" height="44" rx="4" fill="#161B22" stroke="#8B949E" stroke-width="2"/>
+  <path d="M -5,-22 A 5,5 0 0,0 5,-22" fill="none" stroke="#8B949E" stroke-width="2"/>
+  <!-- Left pins -->
+  <line x1="-25" y1="-15" x2="-18" y2="-15" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-25" y1="-5" x2="-18" y2="-5" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-25" y1="5" x2="-18" y2="5" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-25" y1="15" x2="-18" y2="15" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <!-- Right pins -->
+  <line x1="18" y1="-15" x2="25" y2="-15" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="18" y1="-5" x2="25" y2="-5" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="18" y1="5" x2="25" y2="5" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="18" y1="15" x2="25" y2="15" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <!-- Terminals -->
+  <circle cx="-25" cy="-15" r="2" fill="#58A6FF"/>
+  <circle cx="-25" cy="-5" r="2" fill="#58A6FF"/>
+  <circle cx="-25" cy="5" r="2" fill="#58A6FF"/>
+  <circle cx="-25" cy="15" r="2" fill="#58A6FF"/>
+  <circle cx="25" cy="-15" r="2" fill="#58A6FF"/>
+  <circle cx="25" cy="-5" r="2" fill="#58A6FF"/>
+  <circle cx="25" cy="5" r="2" fill="#58A6FF"/>
+  <circle cx="25" cy="15" r="2" fill="#58A6FF"/>
+</svg>

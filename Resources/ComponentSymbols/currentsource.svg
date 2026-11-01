@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-25 -30 50 60" width="50" height="60">
+  <!-- Current Source: Circle with arrow and vertical leads -->
+  <line x1="0" y1="-26" x2="0" y2="-15" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <line x1="0" y1="15" x2="0" y2="26" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="0" cy="0" r="15" fill="#161B22" stroke="#56D364" stroke-width="2"/>
+  <!-- Arrow downwards -->
+  <line x1="0" y1="-8" x2="0" y2="8" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="-4,3 0,8 4,3" fill="none" stroke="#56D364" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Terminals -->
+  <circle cx="0" cy="-26" r="2.5" fill="#58A6FF"/>
+  <circle cx="0" cy="26" r="2.5" fill="#58A6FF"/>
+</svg>

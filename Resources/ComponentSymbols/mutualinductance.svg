@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -20 60 40" width="60" height="40">
+  <!-- Mutual Inductance: Two Coupled Coils with Core Bars -->
+  <!-- Primary Coil (Left) -->
+  <path d="M-15,-12 A5,5 0 0,0 -15,-2 A5,5 0 0,0 -15,8" fill="none" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-24" y1="-12" x2="-15" y2="-12" stroke="#D2A8FF" stroke-width="2"/>
+  <line x1="-24" y1="8" x2="-15" y2="8" stroke="#D2A8FF" stroke-width="2"/>
+  <!-- Secondary Coil (Right) -->
+  <path d="M15,-12 A5,5 0 0,1 15,-2 A5,5 0 0,1 15,8" fill="none" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="15" y1="-12" x2="24" y2="-12" stroke="#D2A8FF" stroke-width="2"/>
+  <line x1="15" y1="8" x2="24" y2="8" stroke="#D2A8FF" stroke-width="2"/>
+  <!-- Core Bars -->
+  <line x1="-2" y1="-14" x2="-2" y2="10" stroke="#8B949E" stroke-width="1.5"/>
+  <line x1="2" y1="-14" x2="2" y2="10" stroke="#8B949E" stroke-width="1.5"/>
+  <!-- Terminals -->
+  <circle cx="-24" cy="-12" r="2" fill="#58A6FF"/>
+  <circle cx="-24" cy="8" r="2" fill="#58A6FF"/>
+  <circle cx="24" cy="-12" r="2" fill="#58A6FF"/>
+  <circle cx="24" cy="8" r="2" fill="#58A6FF"/>
+</svg>

@@ -1,8 +1,9 @@
-﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<?xml version = "1.0" encoding = "UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:EEE"
              xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:converters="clr-namespace:EEE.Converters"
              x:Class="EEE.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -11,6 +12,9 @@
                 <ResourceDictionary x:Name="appStyles" Source="Resources/Styles/Styles.xaml" />
                 <material:StyleResource ColorsOverride="{x:Reference appColors}" BasedOn="{x:Reference appStyles}" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Shared converters -->
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

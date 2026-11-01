@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -25 40 50" width="40" height="50">
+  <!-- Connector: 4-pin Header Block -->
+  <rect x="-12" y="-20" width="24" height="40" rx="3" fill="#161B22" stroke="#E3B341" stroke-width="2"/>
+  <circle cx="0" cy="-12" r="3" fill="#E3B341"/>
+  <circle cx="0" cy="-4" r="3" fill="#E3B341"/>
+  <circle cx="0" cy="4" r="3" fill="#E3B341"/>
+  <circle cx="0" cy="12" r="3" fill="#E3B341"/>
+  <line x1="-18" y1="-12" x2="-12" y2="-12" stroke="#E3B341" stroke-width="2"/>
+  <line x1="-18" y1="-4" x2="-12" y2="-4" stroke="#E3B341" stroke-width="2"/>
+  <line x1="-18" y1="4" x2="-12" y2="4" stroke="#E3B341" stroke-width="2"/>
+  <line x1="-18" y1="12" x2="-12" y2="12" stroke="#E3B341" stroke-width="2"/>
+</svg>

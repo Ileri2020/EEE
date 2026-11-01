@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -20 60 40" width="60" height="40">
+  <!-- Resistor: Leads and Zigzag -->
+  <line x1="-25" y1="0" x2="-15" y2="0" stroke="#F78166" stroke-width="2" stroke-linecap="round"/>
+  <line x1="15" y1="0" x2="25" y2="0" stroke="#F78166" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="-15,0 -12,-8 -6,8 0,-8 6,8 12,-8 15,0" fill="none" stroke="#F78166" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Terminals -->
+  <circle cx="-25" cy="0" r="2.5" fill="#58A6FF"/>
+  <circle cx="25" cy="0" r="2.5" fill="#58A6FF"/>
+</svg>

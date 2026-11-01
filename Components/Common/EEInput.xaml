@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EEE.Components.Common.EEInput">
+    <VerticalStackLayout Spacing="4">
+        <Label x:Name="FieldLabel"
+               Text=""
+               IsVisible="False"
+               FontSize="11"
+               TextColor="#8B949E" />
+        <Border StrokeThickness="1"
+                Stroke="#30363D"
+                BackgroundColor="#0D1117"
+                Padding="8,4">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="6" />
+            </Border.StrokeShape>
+            <Grid ColumnDefinitions="*,Auto">
+                <Entry x:Name="InnerEntry"
+                       Grid.Column="0"
+                       TextColor="#E6EDF3"
+                       PlaceholderColor="#484F58"
+                       FontSize="12"
+                       BackgroundColor="Transparent"
+                       TextChanged="OnTextChanged" />
+                <Label x:Name="ClearButton"
+                       Grid.Column="1"
+                       Text="✕"
+                       TextColor="#8B949E"
+                       FontSize="10"
+                       VerticalOptions="Center"
+                       IsVisible="False">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnClearTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </Grid>
+        </Border>
+    </VerticalStackLayout>
+</ContentView>

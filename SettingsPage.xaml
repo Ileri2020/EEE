@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:EEE.ViewModels"
+             xmlns:models="clr-namespace:EEE.Services"
+             x:Class="EEE.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings"
+             BackgroundColor="#0D1117"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <!-- Tokens -->
+        <Color x:Key="BgPrimary">#0D1117</Color>
+        <Color x:Key="BgSurface">#161B22</Color>
+        <Color x:Key="BgPanel">#1C2128</Color>
+        <Color x:Key="BorderColor">#30363D</Color>
+        <Color x:Key="AccentBlue">#58A6FF</Color>
+        <Color x:Key="AccentGreen">#56D364</Color>
+        <Color x:Key="AccentRed">#F78166</Color>
+        <Color x:Key="AccentPurple">#D2A8FF</Color>
+        <Color x:Key="TextPrimary">#C9D1D9</Color>
+        <Color x:Key="TextMuted">#8B949E</Color>
+
+        <!-- Standard Button Style -->
+        <Style x:Key="StandardBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#21262D"/>
+            <Setter Property="TextColor" Value="#C9D1D9"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="1"/>
+            <Setter Property="BorderColor" Value="#30363D"/>
+        </Style>
+
+        <Style x:Key="AccentBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#238636"/>
+            <Setter Property="TextColor" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="0"/>
+        </Style>
+
+        <Style x:Key="DangerBtn" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#21262D"/>
+            <Setter Property="TextColor" Value="#F78166"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderWidth" Value="1"/>
+            <Setter Property="BorderColor" Value="#F78166"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- TOP HEADER BAR                                                   -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0"
+              BackgroundColor="#161B22"
+              HeightRequest="56"
+              Padding="16,0"
+              ColumnDefinitions="Auto,*,Auto">
+
+            <HorizontalStackLayout Grid.Column="0" Spacing="12" VerticalOptions="Center">
+                <Button Text="← Back to Workspace"
+                        Style="{StaticResource StandardBtn}"
+                        Command="{Binding GoBackCommand}"/>
+                <Label Text="⚙ Application &amp; Controls Settings"
+                       TextColor="#E6EDF3"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+
+            <Label Grid.Column="1"
+                   Text="{Binding StatusMessage}"
+                   TextColor="#56D364"
+                   FontSize="12"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+
+            <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                <Button Text="Reset to Defaults"
+                        Style="{StaticResource StandardBtn}"
+                        Command="{Binding ResetToDefaultsCommand}"/>
+                <Button Text="Save Settings"
+                        Style="{StaticResource AccentBtn}"
+                        Command="{Binding SaveSettingsCommand}"/>
+            </HorizontalStackLayout>
+
+            <BoxView Grid.Row="0" Grid.ColumnSpan="3"
+                     HeightRequest="1"
+                     BackgroundColor="#30363D"
+                     VerticalOptions="End"/>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SCROLLABLE SETTINGS CONTENT                                      -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <ScrollView Grid.Row="1" Padding="20">
+            <VerticalStackLayout Spacing="24" MaximumWidthRequest="960" HorizontalOptions="Center">
+
+                <!-- ─────────────────────────────────────────────────────────── -->
+                <!-- SECTION 1: CONTROL SIDEBAR MANAGER                          -->
+                <!-- ─────────────────────────────────────────────────────────── -->
+                <Border BackgroundColor="#161B22"
+                        Stroke="#30363D"
+                        StrokeThickness="1"
+                        Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="16">
+                        <!-- Header -->
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="🎛" FontSize="20" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="CONTROL SIDEBAR BUTTONS MANAGER"
+                                       TextColor="#E6EDF3"
+                                       FontSize="15"
+                                       FontAttributes="Bold"/>
+                                <Label Text="Create custom quick-action buttons with max 3-letter labels. Newly created buttons are instantly added to the Control Sidebar in both desktop and mobile modes."
+                                       TextColor="#8B949E"
+                                       FontSize="12"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#21262D"/>
+
+                        <!-- Button Creator Form -->
+                        <Border BackgroundColor="#0D1117"
+                                Stroke="#30363D"
+                                StrokeThickness="1"
+                                Padding="14">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*,Auto" ColumnSpacing="12" RowSpacing="8">
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                                    <Label Text="BUTTON LABEL (MAX 3 LETTERS)"
+                                           TextColor="#8B949E"
+                                           FontSize="10"
+                                           FontAttributes="Bold"/>
+                                    <Entry Text="{Binding NewButtonLabel}"
+                                           Placeholder="e.g. SIM, PAN, WIR"
+                                           MaxLength="3"
+                                           BackgroundColor="#161B22"
+                                           TextColor="#58A6FF"
+                                           FontAttributes="Bold"
+                                           FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                                    <Label Text="LINKED CIRCUIT ACTION"
+                                           TextColor="#8B949E"
+                                           FontSize="10"
+                                           FontAttributes="Bold"/>
+                                    <Picker ItemsSource="{Binding AvailableActions}"
+                                            SelectedItem="{Binding SelectedAction}"
+                                            BackgroundColor="#161B22"
+                                            TextColor="#C9D1D9"
+                                            FontSize="12"/>
+                                </VerticalStackLayout>
+
+                                <Button Grid.Row="0" Grid.Column="2"
+                                        Text="➕ Create Button"
+                                        Style="{StaticResource AccentBtn}"
+                                        VerticalOptions="End"
+                                        Command="{Binding CreateControlButtonCommand}"/>
+
+                                <Label Grid.Row="1" Grid.ColumnSpan="3"
+                                       Text="Note: User can give each created button max 3 letters. The connected action will be accessible via dropdown in the Control Sidebar."
+                                       TextColor="#8B949E"
+                                       FontSize="11"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Active Control Sidebar Buttons Table -->
+                        <Label Text="ACTIVE CONTROL SIDEBAR BUTTONS"
+                               TextColor="#8B949E"
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               CharacterSpacing="1"
+                               Margin="0,6,0,0"/>
+
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CustomButtons}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CustomControlButton">
+                                    <Border BackgroundColor="#1C2128"
+                                            Stroke="#30363D"
+                                            StrokeThickness="1"
+                                            Padding="12,10">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+
+                                        <Grid ColumnDefinitions="60,*,Auto,Auto" ColumnSpacing="12" VerticalOptions="Center">
+                                            <!-- 3-letter button preview badge -->
+                                            <Border Grid.Column="0"
+                                                    BackgroundColor="#21262D"
+                                                    Stroke="#58A6FF"
+                                                    StrokeThickness="1"
+                                                    Padding="8,4"
+                                                    HorizontalOptions="Center"
+                                                    VerticalOptions="Center">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="4"/>
+                                                </Border.StrokeShape>
+                                                <Label Text="{Binding Label}"
+                                                       TextColor="#58A6FF"
+                                                       FontAttributes="Bold"
+                                                       FontSize="13"
+                                                       HorizontalOptions="Center"/>
+                                            </Border>
+
+                                            <!-- Linked Action Dropdown UI -->
+                                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                                <Label Text="Connected Action:" TextColor="#8B949E" FontSize="10"/>
+                                                <Picker ItemsSource="{Binding AvailableActions}"
+                                                        SelectedItem="{Binding ActionName}"
+                                                        BackgroundColor="#0D1117"
+                                                        TextColor="#C9D1D9"
+                                                        FontSize="12"
+                                                        HeightRequest="36"/>
+                                            </VerticalStackLayout>
+
+                                            <!-- Category badge -->
+                                            <Label Grid.Column="2"
+                                                   Text="{Binding Category}"
+                                                   TextColor="#56D364"
+                                                   FontSize="11"
+                                                   VerticalOptions="Center"/>
+
+                                            <!-- Delete / Disconnect button -->
+                                            <Button Grid.Column="3"
+                                                    Text="✕ Delete"
+                                                    Style="{StaticResource DangerBtn}"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SettingsViewModel}}, Path=DeleteControlButtonCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    VerticalOptions="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ─────────────────────────────────────────────────────────── -->
+                <!-- SECTION 2: VIEWPORT SETTINGS                                -->
+                <!-- ─────────────────────────────────────────────────────────── -->
+                <Border BackgroundColor="#161B22"
+                        Stroke="#30363D"
+                        StrokeThickness="1"
+                        Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="VIEWPORT &amp; CANVAS DISPLAY"
+                               TextColor="#E6EDF3"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                            <!-- Show Grid -->
+                            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Show Schematic Grid" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
+                                <Switch Grid.Column="1" IsToggled="{Binding ShowGrid}"/>
+                            </Grid>
+
+                            <!-- Show Origin Cross -->
+                            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Show Origin Axis Cross" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
+                                <Switch Grid.Column="1" IsToggled="{Binding ShowOriginCross}"/>
+                            </Grid>
+
+                            <!-- Show Live Probes -->
+                            <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Display Live Component Probes" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
+                                <Switch Grid.Column="1" IsToggled="{Binding ShowLiveProbes}"/>
+                            </Grid>
+
+                            <!-- Show Waveform Badges -->
+                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Show Waveform Status Badges" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
+                                <Switch Grid.Column="1" IsToggled="{Binding ShowWaveformBadges}"/>
+                            </Grid>
+
+                            <!-- Canvas Theme Picker -->
+                            <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                                <Label Text="CANVAS BACKGROUND THEME" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                <Picker ItemsSource="{Binding CanvasThemes}"
+                                        SelectedItem="{Binding SelectedCanvasTheme}"
+                                        BackgroundColor="#0D1117"
+                                        TextColor="#C9D1D9"/>
+                            </VerticalStackLayout>
+
+                            <!-- Grid Size Slider -->
+                            <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0" Text="GRID CELL SIZE" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                    <Label Grid.Column="1" Text="{Binding GridSize, StringFormat='{0:F0} px'}" TextColor="#58A6FF" FontSize="11"/>
+                                </Grid>
+                                <Slider Minimum="10" Maximum="50" Value="{Binding GridSize}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ─────────────────────────────────────────────────────────── -->
+                <!-- SECTION 3: WORKSPACE & BEHAVIOR                             -->
+                <!-- ─────────────────────────────────────────────────────────── -->
+                <Border BackgroundColor="#161B22"
+                        Stroke="#30363D"
+                        StrokeThickness="1"
+                        Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="WORKSPACE &amp; WORKFLOW"
+                               TextColor="#E6EDF3"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                            <!-- Mobile Pan Mode On Startup -->
+                            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Default to Pan Mode on Mobile" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
+                                <Switch Grid.Column="1" IsToggled="{Binding MobilePanModeOnStartup}"/>
+                            </Grid>
+
+                            <!-- Auto Run Simulation -->
+                            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Auto-Run Simulation on Edit" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
+                                <Switch Grid.Column="1" IsToggled="{Binding AutoRunSimulation}"/>
+                            </Grid>
+
+                            <!-- Component Category Filter -->
+                            <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                                <Label Text="DEFAULT PALETTE CATEGORY" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                <Picker ItemsSource="{Binding AvailableCategories}"
+                                        SelectedItem="{Binding DefaultCategory}"
+                                        BackgroundColor="#0D1117"
+                                        TextColor="#C9D1D9"/>
+                            </VerticalStackLayout>
+
+                            <!-- Mobile Toolbar Position -->
+                            <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                                <Label Text="MOBILE TOOLBAR DOCK" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                <Picker ItemsSource="{Binding ToolbarPositions}"
+                                        SelectedItem="{Binding MobileToolbarPosition}"
+                                        BackgroundColor="#0D1117"
+                                        TextColor="#C9D1D9"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- BOTTOM STATUS BAR                                                -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="2"
+              BackgroundColor="#161B22"
+              HeightRequest="36"
+              Padding="16,0"
+              ColumnDefinitions="*,Auto">
+
+            <BoxView Grid.ColumnSpan="2" HeightRequest="1" BackgroundColor="#30363D" VerticalOptions="Start"/>
+
+            <Label Grid.Column="0"
+                   Text="{Binding StatusMessage}"
+                   TextColor="#8B949E"
+                   FontSize="11"
+                   VerticalOptions="Center"/>
+
+            <Label Grid.Column="1"
+                   Text="EESimulator Settings v2.0"
+                   TextColor="#484F58"
+                   FontSize="11"
+                   VerticalOptions="Center"/>
+        </Grid>
+
+    </Grid>
+</ContentPage>
