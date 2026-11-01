@@ -1319,7 +1319,7 @@
                         <Button Grid.Column="3"
                                 Text="▶ Run Simulation"
                                 Style="{StaticResource AccentBtn}"
-                                Command="{Binding RunConfiguredSimulationAsyncCommand}"/>
+                                Command="{Binding RunConfiguredSimulationCommand}"/>
                     </Grid>
                 </Grid>
             </Border>
@@ -1377,7 +1377,7 @@
                         <Button Grid.Column="1"
                                 Text="📋 Copy to Clipboard"
                                 Style="{StaticResource AccentBtn}"
-                                Command="{Binding CopySpiceNetlistAsyncCommand}"
+                                Command="{Binding CopySpiceNetlistCommand}"
                                 Margin="0,0,6,0"/>
                         <Button Grid.Column="2"
                                 Text="Close"
