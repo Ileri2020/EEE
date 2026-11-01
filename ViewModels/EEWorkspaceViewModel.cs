@@ -142,6 +142,20 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty] public partial bool IsCapacitorComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsInductorComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsWireComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsJfetComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsSwitchComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsControlledSourceComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsTransmissionLineComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsVoltageDelayComponent { get; set; } = false;
+    [ObservableProperty] public partial string EditJfetChannel { get; set; } = "NChannel";
+    [ObservableProperty] public partial double EditResistanceOff { get; set; } = 1e6;
+    [ObservableProperty] public partial double EditThreshold { get; set; } = 1.0;
+    [ObservableProperty] public partial double EditHysteresis { get; set; } = 0.1;
+    [ObservableProperty] public partial string EditControllingSource { get; set; } = "";
+    [ObservableProperty] public partial double EditCharacteristicImpedance { get; set; } = 50.0;
+    [ObservableProperty] public partial double EditDelayTime { get; set; } = 1e-9;
+    [ObservableProperty] public partial double EditLineFrequency { get; set; } = 1e9;
+    [ObservableProperty] public partial double EditNormalizedLength { get; set; } = 0.25;
 
     // AC & Waveform properties
     [ObservableProperty] public partial string EditWaveformType { get; set; } = "DC";
@@ -242,11 +256,22 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("Ground",        "⏚",   "GND","#8B949E", "Electrical",  "Circuit ground",        "ground.svg"),
         new ComponentPaletteItem("Diode",            "D",   "▷|", "#FF7B72", "Electrical",  "Semiconductor diode",      "diode.svg"),
         new ComponentPaletteItem("MutualInductance", "K",   "k",  "#D2A8FF", "Electrical",  "Mutual coupled inductors", "mutualinductance.svg"),
+        new ComponentPaletteItem("VCVS",             "E",   "μ",  "#56D364", "Electrical",  "Voltage-Controlled Voltage Source", "vcvs.svg"),
+        new ComponentPaletteItem("VCCS",             "G",   "Gm", "#56D364", "Electrical",  "Voltage-Controlled Current Source", "vccs.svg"),
+        new ComponentPaletteItem("CCVS",             "H",   "Rm", "#79C0FF", "Electrical",  "Current-Controlled Voltage Source", "ccvs.svg"),
+        new ComponentPaletteItem("CCCS",             "F",   "β",  "#79C0FF", "Electrical",  "Current-Controlled Current Source", "cccs.svg"),
+        new ComponentPaletteItem("VoltageSwitch",    "S",   "SW", "#E3B341", "Electrical",  "Voltage-Controlled Switch", "voltageswitch.svg"),
+        new ComponentPaletteItem("CurrentSwitch",    "W",   "SW", "#E3B341", "Electrical",  "Current-Controlled Switch", "currentswitch.svg"),
+        new ComponentPaletteItem("TransmissionLine", "T",   "Ω",  "#79C0FF", "Electrical",  "Lossless Transmission Line", "transmissionline.svg"),
+        new ComponentPaletteItem("VoltageDelay",     "VD",  "s",  "#56D364", "Electrical",  "Voltage Delay Element",      "voltagedelay.svg"),
 
         // ── Electronics (Semiconductors & Active) ────────────────────────────
         new ComponentPaletteItem("LED",           "💡",  "LED","#E3B341", "Electronics", "Light Emitting Diode",  "led.svg"),
-        new ComponentPaletteItem("BJT",           "Q",   "BJT","#FFA657", "Electronics", "BJT NPN/PNP",           "bjt.svg"),
-        new ComponentPaletteItem("MOSFET",        "M",   "MOS","#D2A8FF", "Electronics", "MOSFET Field-Effect",   "mosfet.svg"),
+        new ComponentPaletteItem("NPN",           "Q",   "NPN","#FFA657", "Electronics", "BJT NPN Transistor",    "bjt_npn.svg"),
+        new ComponentPaletteItem("PNP",           "Q",   "PNP","#FFA657", "Electronics", "BJT PNP Transistor",    "bjt_pnp.svg"),
+        new ComponentPaletteItem("JFET",          "J",   "FET","#FFA657", "Electronics", "Junction Field-Effect",  "jfet.svg"),
+        new ComponentPaletteItem("NMOS",          "M",   "NMOS","#D2A8FF", "Electronics", "N-Channel MOSFET",     "nmos.svg"),
+        new ComponentPaletteItem("PMOS",          "M",   "PMOS","#D2A8FF", "Electronics", "P-Channel MOSFET",     "pmos.svg"),
         new ComponentPaletteItem("OpAmp",         "▷",   "AMP","#79C0FF", "Electronics", "Operational Amplifier", "opamp.svg"),
         new ComponentPaletteItem("AND",           "&",   "AND","#58A6FF", "Electronics", "2-Input AND Gate",      "and.svg"),
         new ComponentPaletteItem("OR",            "≥1",  "OR", "#58A6FF", "Electronics", "2-Input OR Gate",       "or.svg"),
@@ -700,6 +725,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         // Reset component type flags
         IsSourceComponent = comp is VoltageSourceComponent || comp is CurrentSourceComponent;
         IsBjtComponent = comp is EESimulator.Core.Components.Electronics.BJTComponent;
+        IsJfetComponent = comp is EESimulator.Core.Components.Electronics.JFETComponent;
         IsMosfetComponent = comp is EESimulator.Core.Components.Electronics.MOSFETComponent;
         IsDiodeComponent = comp is DiodeComponent;
         IsOpAmpComponent = comp is EESimulator.Core.Components.Electronics.OpAmpComponent;
@@ -708,6 +734,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
         IsCapacitorComponent = comp is CapacitorComponent;
         IsInductorComponent = comp is InductorComponent;
         IsWireComponent = comp is WireComponent;
+        IsSwitchComponent = comp is VoltageSwitchComponent || comp is CurrentSwitchComponent;
+        IsControlledSourceComponent = comp is VCVSComponent || comp is VCCSComponent || comp is CCVSComponent || comp is CCCSComponent;
+        IsTransmissionLineComponent = comp is TransmissionLineComponent;
+        IsVoltageDelayComponent = comp is VoltageDelayComponent;
 
         if (comp is ResistorComponent r)
         {
@@ -821,6 +851,69 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditCoupling = m.Coupling;
             EditInductor1 = m.Inductor1;
             EditInductor2 = m.Inductor2;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.JFETComponent jfet)
+        {
+            EditParamName = "Pinch-off Voltage Vto (V)";
+            EditParamValue = jfet.ThresholdVoltage;
+            EditThresholdVoltage = jfet.ThresholdVoltage;
+            EditTransconductance = jfet.Transconductance;
+            EditLambda = jfet.Lambda;
+            EditJfetChannel = jfet.Channel == EESimulator.Core.Components.Electronics.JfetChannel.PChannel ? "PChannel" : "NChannel";
+        }
+        else if (comp is VCVSComponent vcvs)
+        {
+            EditParamName = "Voltage Gain (μ)";
+            EditParamValue = vcvs.VoltageGain;
+        }
+        else if (comp is VCCSComponent vccs)
+        {
+            EditParamName = "Transconductance Gm (A/V)";
+            EditParamValue = vccs.Transconductance;
+        }
+        else if (comp is CCVSComponent ccvs)
+        {
+            EditParamName = "Transresistance Rm (V/A)";
+            EditParamValue = ccvs.Transresistance;
+            EditControllingSource = ccvs.ControllingSource;
+        }
+        else if (comp is CCCSComponent cccs)
+        {
+            EditParamName = "Current Gain (β)";
+            EditParamValue = cccs.CurrentGain;
+            EditControllingSource = cccs.ControllingSource;
+        }
+        else if (comp is VoltageSwitchComponent vsw)
+        {
+            EditParamName = "ON Resistance Ron (Ω)";
+            EditParamValue = vsw.ResistanceOn;
+            EditResistanceOff = vsw.ResistanceOff;
+            EditThreshold = vsw.Threshold;
+            EditHysteresis = vsw.Hysteresis;
+        }
+        else if (comp is CurrentSwitchComponent csw)
+        {
+            EditParamName = "ON Resistance Ron (Ω)";
+            EditParamValue = csw.ResistanceOn;
+            EditResistanceOff = csw.ResistanceOff;
+            EditThreshold = csw.Threshold;
+            EditHysteresis = csw.Hysteresis;
+            EditControllingSource = csw.ControllingSource;
+        }
+        else if (comp is TransmissionLineComponent tline)
+        {
+            EditParamName = "Impedance Z0 (Ω)";
+            EditParamValue = tline.CharacteristicImpedance;
+            EditCharacteristicImpedance = tline.CharacteristicImpedance;
+            EditDelayTime = tline.Delay;
+            EditLineFrequency = tline.Frequency;
+            EditNormalizedLength = tline.NormalizedLength;
+        }
+        else if (comp is VoltageDelayComponent vdelay)
+        {
+            EditParamName = "Delay Time (s)";
+            EditParamValue = vdelay.Delay;
+            EditDelayTime = vdelay.Delay;
         }
         else if (comp is WireComponent w)
         {
@@ -997,6 +1090,59 @@ public partial class EEWorkspaceViewModel : ObservableObject
             if (!string.IsNullOrWhiteSpace(EditInductor1)) m.Inductor1 = EditInductor1.Trim();
             if (!string.IsNullOrWhiteSpace(EditInductor2)) m.Inductor2 = EditInductor2.Trim();
         }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.JFETComponent jfet)
+        {
+            jfet.ThresholdVoltage = EditThresholdVoltage != 0 ? EditThresholdVoltage : EditParamValue;
+            jfet.Transconductance = Math.Max(EditTransconductance, 1e-9);
+            jfet.Lambda = EditLambda;
+            jfet.Channel = EditJfetChannel.Equals("PChannel", StringComparison.OrdinalIgnoreCase)
+                ? EESimulator.Core.Components.Electronics.JfetChannel.PChannel
+                : EESimulator.Core.Components.Electronics.JfetChannel.NChannel;
+        }
+        else if (EditingComponent is VCVSComponent vcvs)
+        {
+            vcvs.VoltageGain = EditParamValue;
+        }
+        else if (EditingComponent is VCCSComponent vccs)
+        {
+            vccs.Transconductance = EditParamValue;
+        }
+        else if (EditingComponent is CCVSComponent ccvs)
+        {
+            ccvs.Transresistance = EditParamValue;
+            ccvs.ControllingSource = EditControllingSource;
+        }
+        else if (EditingComponent is CCCSComponent cccs)
+        {
+            cccs.CurrentGain = EditParamValue;
+            cccs.ControllingSource = EditControllingSource;
+        }
+        else if (EditingComponent is VoltageSwitchComponent vsw)
+        {
+            vsw.ResistanceOn = Math.Max(EditParamValue, 1e-9);
+            vsw.ResistanceOff = Math.Max(EditResistanceOff, 1e-3);
+            vsw.Threshold = EditThreshold;
+            vsw.Hysteresis = EditHysteresis;
+        }
+        else if (EditingComponent is CurrentSwitchComponent csw)
+        {
+            csw.ResistanceOn = Math.Max(EditParamValue, 1e-9);
+            csw.ResistanceOff = Math.Max(EditResistanceOff, 1e-3);
+            csw.Threshold = EditThreshold;
+            csw.Hysteresis = EditHysteresis;
+            csw.ControllingSource = EditControllingSource;
+        }
+        else if (EditingComponent is TransmissionLineComponent tline)
+        {
+            tline.CharacteristicImpedance = EditCharacteristicImpedance > 0 ? EditCharacteristicImpedance : Math.Max(EditParamValue, 1e-3);
+            tline.Delay = Math.Max(EditDelayTime, 1e-15);
+            tline.Frequency = Math.Max(EditLineFrequency, 1.0);
+            tline.NormalizedLength = Math.Max(EditNormalizedLength, 0.0);
+        }
+        else if (EditingComponent is VoltageDelayComponent vdelay)
+        {
+            vdelay.Delay = Math.Max(EditParamValue > 0 ? EditParamValue : EditDelayTime, 1e-15);
+        }
         else if (EditingComponent is WireComponent w)
         {
             w.Resistance = double.TryParse(EditWireResistance, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var wr) ? wr : Math.Max(EditParamValue, 0);
@@ -1069,10 +1215,18 @@ public partial class EEWorkspaceViewModel : ObservableObject
             "CurrentSource"  => "I",
             "Ground"         => "GND",
             "Diode"          => "D",
-            "LED"            => "LED",
-            "BJT"            => "Q",
-            "MOSFET"         => "M",
+            "BJT" or "NPN" or "PNP" => "Q",
+            "JFET"           => "J",
+            "MOSFET" or "NMOS" or "PMOS" => "M",
             "OpAmp"          => "U",
+            "VCVS"           => "E",
+            "VCCS"           => "G",
+            "CCVS"           => "H",
+            "CCCS"           => "F",
+            "VoltageSwitch"  => "S",
+            "CurrentSwitch"  => "W",
+            "TransmissionLine" => "T",
+            "VoltageDelay"   => "VD",
             "LogicGate"      => "U",
             "AND"            => "U",
             "OR"             => "U",

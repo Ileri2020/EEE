@@ -46,6 +46,18 @@ public class DiodeComponent : ElectricalComponent
         set => ElectricalParameters["Cj0"] = value;
     }
 
+    public double TransitTime
+    {
+        get => ElectricalParameters.TryGetValue("Tt", out var val) ? val : 0.0;
+        set => ElectricalParameters["Tt"] = value;
+    }
+
+    public double BreakdownCurrent
+    {
+        get => ElectricalParameters.TryGetValue("Ibv", out var val) ? val : 1e-3;
+        set => ElectricalParameters["Ibv"] = value;
+    }
+
     public DiodeComponent()
     {
         Pins.Add(new ComponentPin("anode", "A", -20, 0));
@@ -55,6 +67,8 @@ public class DiodeComponent : ElectricalComponent
         BreakdownVoltage = 0.0;
         SeriesResistance = 0.0;
         JunctionCapacitance = 0.0;
+        TransitTime = 0.0;
+        BreakdownCurrent = 1e-3;
     }
 
     public DiodeComponent(string name) : this()

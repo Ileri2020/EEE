@@ -97,6 +97,23 @@ public class AddComponentCommand : ICommand
                     ? EESimulator.Core.Components.Registry.ComponentRegistry.CreateInstance(ComponentType, ComponentName, X, Y)
                     : throw new ArgumentException($"Unknown component type: {ComponentType}")
             };
+
+            if (ParameterValue != 0)
+            {
+                if (CreatedComponent is EESimulator.Core.Components.Electrical.VCVSComponent vcvs) vcvs.VoltageGain = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.VCCSComponent vccs) vccs.Transconductance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.CCVSComponent ccvs) ccvs.Transresistance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.CCCSComponent cccs) cccs.CurrentGain = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.VoltageSwitchComponent vsw) vsw.ResistanceOn = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.CurrentSwitchComponent csw) csw.ResistanceOn = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.JFETComponent jfet) jfet.ThresholdVoltage = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.DiodeComponent diode && ParameterValue > 0) diode.SaturationCurrent = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.BJTComponent bjt && ParameterValue > 0) bjt.GainBeta = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.MOSFETComponent mos) mos.ThresholdVoltage = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.OpAmpComponent op && ParameterValue > 0) op.OpenLoopGain = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.TransmissionLineComponent tline && ParameterValue > 0) tline.CharacteristicImpedance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.VoltageDelayComponent vdelay && ParameterValue > 0) vdelay.Delay = ParameterValue;
+            }
         }
 
         Circuit.AddChild(CreatedComponent);
@@ -123,7 +140,20 @@ public class AddComponentCommand : ICommand
             "voltagesource" or "vsource" => $", voltage={ParameterValue.ToString(invCulture)}",
             "currentsource" or "isource" => $", current={ParameterValue.ToString(invCulture)}",
             "mutualinductance" or "mutual" or "k" => $", coupling={ParameterValue.ToString(invCulture)}",
-            _ => ""
+            "vcvs" or "electrical.vcvs" => $", gain={ParameterValue.ToString(invCulture)}",
+            "vccs" or "electrical.vccs" => $", gm={ParameterValue.ToString(invCulture)}",
+            "ccvs" or "electrical.ccvs" => $", rm={ParameterValue.ToString(invCulture)}",
+            "cccs" or "electrical.cccs" => $", gain={ParameterValue.ToString(invCulture)}",
+            "voltageswitch" or "electrical.voltageswitch" => $", ron={ParameterValue.ToString(invCulture)}",
+            "currentswitch" or "electrical.currentswitch" => $", ron={ParameterValue.ToString(invCulture)}",
+            "transmissionline" or "tline" or "electrical.transmissionline" => $", z0={ParameterValue.ToString(invCulture)}",
+            "voltagedelay" or "vdelay" or "electrical.voltagedelay" => $", delay={ParameterValue.ToString(invCulture)}",
+            "jfet" or "electronics.jfet" => $", vto={ParameterValue.ToString(invCulture)}",
+            "bjt" or "electronics.bjt" or "npn" or "pnp" => $", bf={ParameterValue.ToString(invCulture)}",
+            "mosfet" or "electronics.mosfet" or "nmos" or "pmos" => $", vto={ParameterValue.ToString(invCulture)}",
+            "diode" or "electrical.diode" => $", isat={ParameterValue.ToString(invCulture)}",
+            "opamp" or "electronics.opamp" => $", aol={ParameterValue.ToString(invCulture)}",
+            _ => ParameterValue != 0 ? $", param={ParameterValue.ToString(invCulture)}" : ""
         };
 
         var varName = ComponentName.ToLowerInvariant();

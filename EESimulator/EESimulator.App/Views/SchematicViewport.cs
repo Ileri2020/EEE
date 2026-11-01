@@ -810,9 +810,26 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "Ground":        DrawGround(canvas); break;
             case "Diode":         DrawDiode(canvas); break;
             case "LED":           DrawLED(canvas); break;
-            case "BJT":           DrawBJT(canvas); break;
-            case "MOSFET":        DrawMOSFET(canvas); break;
+            case "BJT":
+            case "NPN":
+            case "PNP":
+                bool isPnp = (comp is EESimulator.Core.Components.Electronics.BJTComponent bjt && bjt.Polarity == EESimulator.Core.Components.Electronics.BjtPolarity.PNP) || comp.ComponentType.Equals("PNP", StringComparison.OrdinalIgnoreCase);
+                ComponentSymbolDrawer.DrawBJT(canvas, isPnp);
+                break;
+            case "JFET":          ComponentSymbolDrawer.DrawJFET(canvas); break;
+            case "MOSFET":
+            case "NMOS":
+            case "PMOS":
+                bool isPmos = (comp is EESimulator.Core.Components.Electronics.MOSFETComponent mos && mos.Channel == EESimulator.Core.Components.Electronics.MosfetChannel.PChannel) || comp.ComponentType.Equals("PMOS", StringComparison.OrdinalIgnoreCase);
+                ComponentSymbolDrawer.DrawMOSFET(canvas, isPmos);
+                break;
             case "OpAmp":         DrawOpAmp(canvas); break;
+            case "VCVS":          ComponentSymbolDrawer.DrawVCVS(canvas); break;
+            case "VCCS":          ComponentSymbolDrawer.DrawVCCS(canvas); break;
+            case "CCVS":          ComponentSymbolDrawer.DrawCCVS(canvas); break;
+            case "CCCS":          ComponentSymbolDrawer.DrawCCCS(canvas); break;
+            case "VoltageSwitch": ComponentSymbolDrawer.DrawVoltageSwitch(canvas); break;
+            case "CurrentSwitch": ComponentSymbolDrawer.DrawCurrentSwitch(canvas); break;
             case "LogicGate":
             case "AND":           DrawAndGate(canvas); break;
             case "OR":            DrawOrGate(canvas); break;
@@ -825,6 +842,8 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "Junction":      DrawJunction(canvas); break;
             case "Label":            DrawLabel(canvas, comp.Name); break;
             case "MutualInductance": ComponentSymbolDrawer.DrawMutualInductance(canvas); break;
+            case "TransmissionLine": ComponentSymbolDrawer.DrawTransmissionLine(canvas); break;
+            case "VoltageDelay":     ComponentSymbolDrawer.DrawVoltageDelay(canvas); break;
             default:                 DrawGenericComponent(canvas, comp.ComponentType); break;
         }
 

@@ -20,9 +20,20 @@ public static class ComponentSymbolDrawer
             case "Ground":         DrawGround(canvas); break;
             case "Diode":          DrawDiode(canvas); break;
             case "LED":            DrawLED(canvas); break;
-            case "BJT":            DrawBJT(canvas); break;
-            case "MOSFET":         DrawMOSFET(canvas); break;
+            case "BJT":
+            case "NPN":            DrawBJT(canvas, isPnp: false); break;
+            case "PNP":            DrawBJT(canvas, isPnp: true); break;
+            case "JFET":           DrawJFET(canvas); break;
+            case "MOSFET":
+            case "NMOS":           DrawMOSFET(canvas, isPmos: false); break;
+            case "PMOS":           DrawMOSFET(canvas, isPmos: true); break;
             case "OpAmp":          DrawOpAmp(canvas); break;
+            case "VCVS":           DrawVCVS(canvas); break;
+            case "VCCS":           DrawVCCS(canvas); break;
+            case "CCVS":           DrawCCVS(canvas); break;
+            case "CCCS":           DrawCCCS(canvas); break;
+            case "VoltageSwitch":  DrawVoltageSwitch(canvas); break;
+            case "CurrentSwitch":  DrawCurrentSwitch(canvas); break;
             case "LogicGate":
             case "AND":            DrawAndGate(canvas); break;
             case "OR":             DrawOrGate(canvas); break;
@@ -37,6 +48,8 @@ public static class ComponentSymbolDrawer
             case "Label":          DrawLabel(canvas, name); break;
             case "Connector":        DrawConnector(canvas); break;
             case "MutualInductance": DrawMutualInductance(canvas); break;
+            case "TransmissionLine": DrawTransmissionLine(canvas); break;
+            case "VoltageDelay":     DrawVoltageDelay(canvas); break;
             default:                 DrawGenericComponent(canvas, componentType); break;
         }
     }
@@ -138,7 +151,7 @@ public static class ComponentSymbolDrawer
         canvas.DrawLine(15, -11, 15, -14);
     }
 
-    public static void DrawBJT(ICanvas canvas)
+    public static void DrawBJT(ICanvas canvas, bool isPnp = false)
     {
         canvas.StrokeColor = Color.FromArgb("#FFA657");
         canvas.StrokeSize = 2f;
@@ -146,21 +159,61 @@ public static class ComponentSymbolDrawer
         canvas.DrawLine(-6, -14, -6, 14);
         canvas.DrawLine(-6, -7, 15, -20);
         canvas.DrawLine(-6, 7, 15, 20);
-        canvas.DrawLine(7, 16, 15, 20);
-        canvas.DrawLine(11, 10, 15, 20);
+        if (!isPnp)
+        {
+            // NPN: Arrow points outward away from base
+            canvas.DrawLine(7, 16, 15, 20);
+            canvas.DrawLine(11, 10, 15, 20);
+        }
+        else
+        {
+            // PNP: Arrow points inward towards base
+            canvas.DrawLine(2, 6, -6, 7);
+            canvas.DrawLine(-2, 14, -6, 7);
+        }
     }
 
-    public static void DrawMOSFET(ICanvas canvas)
+    public static void DrawMOSFET(ICanvas canvas, bool isPmos = false)
     {
         canvas.StrokeColor = Color.FromArgb("#D2A8FF");
         canvas.StrokeSize = 2f;
-        canvas.DrawLine(-20, 0, -8, 0);
-        canvas.DrawLine(-8, -14, -8, 14);
-        canvas.DrawLine(-3, -14, -3, -6);
-        canvas.DrawLine(-3, -4, -3, 4);
-        canvas.DrawLine(-3, 6, -3, 14);
-        canvas.DrawLine(-3, -10, 15, -20);
-        canvas.DrawLine(-3, 10, 15, 20);
+        if (isPmos)
+        {
+            // Gate lead with inversion bubble
+            canvas.DrawLine(-20, 0, -11, 0);
+            canvas.DrawCircle(-8.5f, 0, 2.5f);
+            canvas.DrawLine(-6, -14, -6, 14);
+            // Channel plate segments
+            canvas.DrawLine(-1, -14, -1, -6);
+            canvas.DrawLine(-1, -4, -1, 4);
+            canvas.DrawLine(-1, 6, -1, 14);
+            // Drain and Source
+            canvas.DrawLine(-1, -10, 15, -20);
+            canvas.DrawLine(-1, 10, 15, 20);
+            // Substrate lead with outward arrow (away from channel towards source)
+            canvas.DrawLine(-1, 0, 15, 0);
+            canvas.DrawLine(15, 0, 15, 20);
+            canvas.DrawLine(6, -4, 11, 0);
+            canvas.DrawLine(6, 4, 11, 0);
+        }
+        else
+        {
+            // Gate lead & bar
+            canvas.DrawLine(-20, 0, -8, 0);
+            canvas.DrawLine(-8, -14, -8, 14);
+            // Channel plate segments
+            canvas.DrawLine(-3, -14, -3, -6);
+            canvas.DrawLine(-3, -4, -3, 4);
+            canvas.DrawLine(-3, 6, -3, 14);
+            // Drain and Source
+            canvas.DrawLine(-3, -10, 15, -20);
+            canvas.DrawLine(-3, 10, 15, 20);
+            // Substrate lead with inward arrow (towards channel)
+            canvas.DrawLine(15, 0, -3, 0);
+            canvas.DrawLine(15, 0, 15, 20);
+            canvas.DrawLine(3, -4, -3, 0);
+            canvas.DrawLine(3, 4, -3, 0);
+        }
     }
 
     public static void DrawOpAmp(ICanvas canvas)
@@ -367,5 +420,148 @@ public static class ComponentSymbolDrawer
         canvas.StrokeSize = 1.2f;
         canvas.DrawLine(-2, -14, -2, 16);
         canvas.DrawLine(2, -14, 2, 16);
+    }
+
+    public static void DrawDiamond(ICanvas canvas, Color color)
+    {
+        canvas.StrokeColor = color;
+        canvas.StrokeSize = 2f;
+        var path = new PathF();
+        path.MoveTo(0, -14);
+        path.LineTo(14, 0);
+        path.LineTo(0, 14);
+        path.LineTo(-14, 0);
+        path.Close();
+        canvas.DrawPath(path);
+    }
+
+    public static void DrawVCVS(ICanvas canvas)
+    {
+        DrawDiamond(canvas, Color.FromArgb("#56D364"));
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1.5f;
+        canvas.DrawLine(-20, -10, -10, -10);
+        canvas.DrawLine(-20, 10, -10, 10);
+        canvas.DrawLine(10, -10, 20, -10);
+        canvas.DrawLine(10, 10, 20, 10);
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 9;
+        canvas.DrawString("+", -4, -10, 8, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.DrawString("−", -4, 0, 8, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawVCCS(ICanvas canvas)
+    {
+        DrawDiamond(canvas, Color.FromArgb("#56D364"));
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1.5f;
+        canvas.DrawLine(-20, -10, -10, -10);
+        canvas.DrawLine(-20, 10, -10, 10);
+        canvas.DrawLine(10, -10, 20, -10);
+        canvas.DrawLine(10, 10, 20, 10);
+        canvas.DrawLine(0, -7, 0, 7);
+        canvas.DrawLine(-3, 2, 0, 7);
+        canvas.DrawLine(3, 2, 0, 7);
+    }
+
+    public static void DrawCCVS(ICanvas canvas)
+    {
+        DrawDiamond(canvas, Color.FromArgb("#79C0FF"));
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.5f;
+        canvas.DrawLine(-20, -10, -10, -10);
+        canvas.DrawLine(-20, 10, -10, 10);
+        canvas.DrawLine(10, -10, 20, -10);
+        canvas.DrawLine(10, 10, 20, 10);
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.FontSize = 9;
+        canvas.DrawString("+", -4, -10, 8, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.DrawString("−", -4, 0, 8, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawCCCS(ICanvas canvas)
+    {
+        DrawDiamond(canvas, Color.FromArgb("#79C0FF"));
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.5f;
+        canvas.DrawLine(-20, -10, -10, -10);
+        canvas.DrawLine(-20, 10, -10, 10);
+        canvas.DrawLine(10, -10, 20, -10);
+        canvas.DrawLine(10, 10, 20, 10);
+        canvas.DrawLine(0, -7, 0, 7);
+        canvas.DrawLine(-3, 2, 0, 7);
+        canvas.DrawLine(3, 2, 0, 7);
+    }
+
+    public static void DrawJFET(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#FFA657");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-4, -14, -4, 14);
+        canvas.DrawLine(-20, 0, -4, 0);
+        canvas.DrawLine(-11, -4, -4, 0);
+        canvas.DrawLine(-11, 4, -4, 0);
+        canvas.DrawLine(-4, -10, 15, -20);
+        canvas.DrawLine(-4, 10, 15, 20);
+    }
+
+    public static void DrawVoltageSwitch(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -8, 0);
+        canvas.DrawLine(8, 0, 20, 0);
+        canvas.DrawCircle(-7, 0, 2);
+        canvas.DrawCircle(7, 0, 2);
+        canvas.DrawLine(-6, -2, 6, -11);
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawLine(0, -20, 0, -14);
+        canvas.DrawLine(0, 14, 0, 20);
+    }
+
+    public static void DrawCurrentSwitch(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -8, 0);
+        canvas.DrawLine(8, 0, 20, 0);
+        canvas.DrawCircle(-7, 0, 2);
+        canvas.DrawCircle(7, 0, 2);
+        canvas.DrawLine(-6, -2, 6, -11);
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawLine(0, -20, 0, -14);
+        canvas.DrawLine(0, 14, 0, 20);
+    }
+
+    public static void DrawTransmissionLine(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, -10, -12, -10);
+        canvas.DrawLine(-20, 10, -12, 10);
+        canvas.DrawLine(12, -10, 20, -10);
+        canvas.DrawLine(12, 10, 20, 10);
+        canvas.DrawRoundedRectangle(-12, -12, 24, 24, 4);
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawLine(-10, -5, 10, -5);
+        canvas.DrawLine(-10, 5, 10, 5);
+        canvas.DrawEllipse(-4, -7, 8, 14);
+    }
+
+    public static void DrawVoltageDelay(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, -10, -12, -10);
+        canvas.DrawLine(-20, 10, -12, 10);
+        canvas.DrawLine(12, -10, 20, -10);
+        canvas.DrawLine(12, 10, 20, 10);
+        canvas.DrawRoundedRectangle(-12, -14, 24, 28, 4);
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawCircle(0, 0, 6);
+        canvas.DrawLine(0, 0, 0, -4);
+        canvas.DrawLine(0, 0, 3, 0);
     }
 }

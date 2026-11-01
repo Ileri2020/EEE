@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -25 60 50" width="60" height="50">
+  <!-- CCVS: Current-Controlled Voltage Source (Diamond with + / -) -->
+  <!-- Control sensing leads with loop indicator -->
+  <line x1="-24" y1="-10" x2="-10" y2="-10" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="-24" y1="10" x2="-10" y2="10" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Output leads -->
+  <line x1="10" y1="-10" x2="24" y2="-10" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="10" y1="10" x2="24" y2="10" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Central Diamond Body -->
+  <polygon points="0,-14 14,0 0,14 -14,0" fill="#161B22" stroke="#79C0FF" stroke-width="2" stroke-linejoin="round"/>
+  <!-- + sign inside -->
+  <line x1="-3.5" y1="-6" x2="3.5" y2="-6" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="0" y1="-9.5" x2="0" y2="-2.5" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- - sign inside -->
+  <line x1="-3.5" y1="6" x2="3.5" y2="6" stroke="#79C0FF" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Terminals -->
+  <circle cx="-24" cy="-10" r="2" fill="#58A6FF"/>
+  <circle cx="-24" cy="10" r="2" fill="#58A6FF"/>
+  <circle cx="24" cy="-10" r="2" fill="#58A6FF"/>
+  <circle cx="24" cy="10" r="2" fill="#58A6FF"/>
+</svg>

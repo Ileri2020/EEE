@@ -43,11 +43,23 @@ jobs:
           -p:PublishTrimmed=false
           -p:RunAOTCompilation=false
           -p:AndroidPackageFormats=apk
-          -p:RuntimeIdentifiers=android-x64
+          -p:RuntimeIdentifiers="android-arm;android-arm64;android-x64;android-x86"
+
+      - name: Prepare single signed EEE.apk
+        run: |
+          mkdir -p Platforms/dist
+          SIGNED_APK=$(find Platforms/dist/publish -name "*-Signed.apk" | head -n 1)
+          if [ -n "$SIGNED_APK" ] && [ -f "$SIGNED_APK" ]; then
+            cp "$SIGNED_APK" Platforms/dist/EEE.apk
+            echo "Successfully prepared Platforms/dist/EEE.apk from $SIGNED_APK"
+          else
+            echo "Error: Signed APK not found in publish output"
+            exit 1
+          fi
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: eee-android-apk
-          path: Platforms/dist/publish/EEE/release_net10.0-android/*.apk
+          name: EEE
+          path: Platforms/dist/EEE.apk
           if-no-files-found: error

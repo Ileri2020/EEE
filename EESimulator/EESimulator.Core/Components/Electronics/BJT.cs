@@ -41,6 +41,12 @@ public class BJTComponent : ElectronicComponent
         set => ElectricalParameters["Vaf"] = value;
     }
 
+    public double ReverseGainBeta
+    {
+        get => ElectricalParameters.TryGetValue("Br", out var val) ? val : 1.0;
+        set => ElectricalParameters["Br"] = value;
+    }
+
     public BJTComponent()
     {
         // Pin layout: Base (left), Collector (top-right), Emitter (bottom-right)
@@ -48,6 +54,7 @@ public class BJTComponent : ElectronicComponent
         Pins.Add(new ComponentPin("collector", "C", 15, -20));
         Pins.Add(new ComponentPin("emitter", "E", 15, 20));
         GainBeta = 100.0;
+        ReverseGainBeta = 1.0;
         SaturationCurrent = 1e-14;
         EarlyVoltage = 0.0;
         PartNumber = "2N2222";

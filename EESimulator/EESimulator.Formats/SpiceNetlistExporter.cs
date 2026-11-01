@@ -105,11 +105,47 @@ public class SpiceNetlistExporter
                     sb.AppendLine($"M_{m.Name} {GetNode(m, "drain")} {GetNode(m, "gate")} {GetNode(m, "source")} {GetNode(m, "source")} {mModel} W={m.ChannelWidth.ToString(inv)} L={m.ChannelLength.ToString(inv)}");
                     models.Add($".model {mModel} {(m.Channel == EESimulator.Core.Components.Electronics.MosfetChannel.NChannel ? "NMOS" : "PMOS")} (VTO={m.ThresholdVoltage.ToString(inv)} KP={m.Transconductance.ToString(inv)} LAMBDA={m.Lambda.ToString(inv)})");
                     break;
+                case EESimulator.Core.Components.Electronics.JFETComponent j:
+                    string jModel = $"J_{j.Name}_mod";
+                    sb.AppendLine($"J_{j.Name} {GetNode(j, "drain")} {GetNode(j, "gate")} {GetNode(j, "source")} {jModel}");
+                    models.Add($".model {jModel} {(j.Channel == EESimulator.Core.Components.Electronics.JfetChannel.NChannel ? "NJF" : "PJF")} (VTO={j.ThresholdVoltage.ToString(inv)} BETA={j.Transconductance.ToString(inv)} LAMBDA={j.Lambda.ToString(inv)})");
+                    break;
+                case EESimulator.Core.Components.Electrical.VCVSComponent vcvs:
+                    sb.AppendLine($"E_{vcvs.Name} {GetPinOrFirst(vcvs, 0, "out_pos")} {GetPinOrFirst(vcvs, 1, "out_neg")} {GetPinOrFirst(vcvs, 2, "ctrl_pos")} {GetPinOrFirst(vcvs, 3, "ctrl_neg")} {vcvs.VoltageGain.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.VCCSComponent vccs:
+                    sb.AppendLine($"G_{vccs.Name} {GetPinOrFirst(vccs, 0, "out_pos")} {GetPinOrFirst(vccs, 1, "out_neg")} {GetPinOrFirst(vccs, 2, "ctrl_pos")} {GetPinOrFirst(vccs, 3, "ctrl_neg")} {vccs.Transconductance.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.CCVSComponent ccvs:
+                    string hSense = string.IsNullOrEmpty(ccvs.ControllingSource) ? $"V_sense_{ccvs.Name}" : ccvs.ControllingSource;
+                    sb.AppendLine($"H_{ccvs.Name} {GetPinOrFirst(ccvs, 0, "out_pos")} {GetPinOrFirst(ccvs, 1, "out_neg")} {hSense} {ccvs.Transresistance.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.CCCSComponent cccs:
+                    string fSense = string.IsNullOrEmpty(cccs.ControllingSource) ? $"V_sense_{cccs.Name}" : cccs.ControllingSource;
+                    sb.AppendLine($"F_{cccs.Name} {GetPinOrFirst(cccs, 0, "out_pos")} {GetPinOrFirst(cccs, 1, "out_neg")} {fSense} {cccs.CurrentGain.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.VoltageSwitchComponent vsw:
+                    string swMod = $"S_{vsw.Name}_mod";
+                    sb.AppendLine($"S_{vsw.Name} {GetPinOrFirst(vsw, 0, "sw_pos")} {GetPinOrFirst(vsw, 1, "sw_neg")} {GetPinOrFirst(vsw, 2, "ctrl_pos")} {GetPinOrFirst(vsw, 3, "ctrl_neg")} {swMod}");
+                    models.Add($".model {swMod} VSWITCH (RON={vsw.ResistanceOn.ToString(inv)} ROFF={vsw.ResistanceOff.ToString(inv)} VON={vsw.Threshold.ToString(inv)} VOFF={(vsw.Threshold - vsw.Hysteresis).ToString(inv)})");
+                    break;
+                case EESimulator.Core.Components.Electrical.CurrentSwitchComponent csw:
+                    string cswMod = $"W_{csw.Name}_mod";
+                    string wSense = string.IsNullOrEmpty(csw.ControllingSource) ? $"V_sense_{csw.Name}" : csw.ControllingSource;
+                    sb.AppendLine($"W_{csw.Name} {GetPinOrFirst(csw, 0, "sw_pos")} {GetPinOrFirst(csw, 1, "sw_neg")} {wSense} {cswMod}");
+                    models.Add($".model {cswMod} ISWITCH (RON={csw.ResistanceOn.ToString(inv)} ROFF={csw.ResistanceOff.ToString(inv)} ION={csw.Threshold.ToString(inv)} IOFF={(csw.Threshold - csw.Hysteresis).ToString(inv)})");
+                    break;
                 case EESimulator.Core.Components.Electronics.OpAmpComponent op:
                     sb.AppendLine($"E_{op.Name} {GetNode(op, "out")} 0 {GetNode(op, "in_pos")} {GetNode(op, "in_neg")} {op.OpenLoopGain.ToString(inv)}");
                     break;
                 case EESimulator.Core.Components.Electrical.MutualInductanceComponent k:
                     sb.AppendLine($"K_{k.Name} {k.Inductor1} {k.Inductor2} {k.Coupling.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.TransmissionLineComponent tline:
+                    sb.AppendLine($"T_{tline.Name} {GetPinOrFirst(tline, 0, "pos1")} {GetPinOrFirst(tline, 1, "neg1")} {GetPinOrFirst(tline, 2, "pos2")} {GetPinOrFirst(tline, 3, "neg2")} Z0={tline.CharacteristicImpedance.ToString(inv)} TD={tline.Delay.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.VoltageDelayComponent vdelay:
+                    sb.AppendLine($"U_{vdelay.Name} {GetPinOrFirst(vdelay, 0, "out_pos")} {GetPinOrFirst(vdelay, 1, "out_neg")} {GetPinOrFirst(vdelay, 2, "in_pos")} {GetPinOrFirst(vdelay, 3, "in_neg")} VoltageDelay TD={vdelay.Delay.ToString(inv)}");
                     break;
                 case EESimulator.Core.Components.General.WireComponent w when w.Resistance > 0:
                     sb.AppendLine($"R_wire_{w.Name} {GetPinOrFirst(w, 0, "start")} {GetPinOrFirst(w, 1, "end")} {w.Resistance.ToString(inv)}");

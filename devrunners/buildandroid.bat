@@ -43,11 +43,23 @@ if exist "%OUTPUT_DIR%\*.apk" (
 )
 
 pushd "%PROJECT_DIR%"
-"%DOTNET%" publish "%PROJECT%" -f "%FRAMEWORK%" -c Release --artifacts-path "%OUTPUT_DIR%" -p:PublishReadyToRun=false -p:PublishTrimmed=false -p:RunAOTCompilation=false -p:AndroidPackageFormats=apk -p:RuntimeIdentifiers=android-x64 %*
+"%DOTNET%" publish "%PROJECT%" -f "%FRAMEWORK%" -c Release --artifacts-path "%OUTPUT_DIR%" -p:PublishReadyToRun=false -p:PublishTrimmed=false -p:RunAOTCompilation=false -p:AndroidPackageFormats=apk -p:RuntimeIdentifiers="android-arm;android-arm64;android-x64;android-x86" %*
 set "RESULT=%ERRORLEVEL%"
 if %RESULT% equ 0 (
+	set "FOUND_SIGNED="
 	if exist "%OUTPUT_DIR%\publish\EEE\release_net10.0-android\com.companyname.eee-Signed.apk" (
-		copy /y "%OUTPUT_DIR%\publish\EEE\release_net10.0-android\*.apk" "%OUTPUT_DIR%\" >nul
+		copy /y "%OUTPUT_DIR%\publish\EEE\release_net10.0-android\com.companyname.eee-Signed.apk" "%OUTPUT_DIR%\EEE.apk" >nul
+		set "FOUND_SIGNED=1"
+	) else (
+		for %%F in ("%OUTPUT_DIR%\publish\EEE\release_net10.0-android\*-Signed.apk") do (
+			copy /y "%%~fF" "%OUTPUT_DIR%\EEE.apk" >nul
+			set "FOUND_SIGNED=1"
+		)
+	)
+	if defined FOUND_SIGNED (
+		echo Created single signed APK: "%OUTPUT_DIR%\EEE.apk"
+	) else (
+		echo WARNING: Signed APK not found in publish output.
 	)
 )
 popd

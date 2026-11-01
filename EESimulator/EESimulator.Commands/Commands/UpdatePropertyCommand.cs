@@ -34,6 +34,7 @@ public class UpdatePropertyCommand : ICommand
 
         OldValue = comp.ElectricalParameters.TryGetValue(PropertyName, out var val) ? val : 0;
         comp.ElectricalParameters[PropertyName] = NewValue;
+        comp.NotifyModified(PropertyName);
         return true;
     }
 
@@ -43,6 +44,7 @@ public class UpdatePropertyCommand : ICommand
         if (comp == null) return false;
 
         comp.ElectricalParameters[PropertyName] = OldValue;
+        comp.NotifyModified(PropertyName);
         return true;
     }
 

@@ -55,6 +55,17 @@ public static class ComponentRegistry
         }
     }
 
+    public static void RegisterAlias(string alias, string targetTypeId)
+    {
+        lock (_syncLock)
+        {
+            if (_registry.TryGetValue(targetTypeId, out var def))
+            {
+                _registry[alias] = def;
+            }
+        }
+    }
+
     public static bool TryGetDefinition(string typeIdOrName, out ComponentDefinition definition)
     {
         return _registry.TryGetValue(typeIdOrName, out definition!);
@@ -153,22 +164,133 @@ public static class ComponentRegistry
             d.DefaultParameters["Coupling"] = 0.99;
         });
 
+        // Controlled / Dependent Sources
+        Register<VCVSComponent>("electrical.vcvs", "VCVS", "Electrical", "E", d =>
+        {
+            d.Description = "Voltage-Controlled Voltage Source (E)";
+            d.Icon = "vcvs.svg";
+            d.DefaultParameters["Gain"] = 1.0;
+        });
+
+        Register<VCCSComponent>("electrical.vccs", "VCCS", "Electrical", "G", d =>
+        {
+            d.Description = "Voltage-Controlled Current Source (G)";
+            d.Icon = "vccs.svg";
+            d.DefaultParameters["Transconductance"] = 0.001;
+        });
+
+        Register<CCVSComponent>("electrical.ccvs", "CCVS", "Electrical", "H", d =>
+        {
+            d.Description = "Current-Controlled Voltage Source (H)";
+            d.Icon = "ccvs.svg";
+            d.DefaultParameters["Transresistance"] = 1000.0;
+        });
+
+        Register<CCCSComponent>("electrical.cccs", "CCCS", "Electrical", "F", d =>
+        {
+            d.Description = "Current-Controlled Current Source (F)";
+            d.Icon = "cccs.svg";
+            d.DefaultParameters["CurrentGain"] = 1.0;
+        });
+
+        // Switches
+        Register<VoltageSwitchComponent>("electrical.voltageswitch", "VoltageSwitch", "Electrical", "S", d =>
+        {
+            d.Description = "Voltage-Controlled Switch (S)";
+            d.Icon = "voltageswitch.svg";
+            d.DefaultParameters["Ron"] = 1.0;
+            d.DefaultParameters["Roff"] = 1e6;
+            d.DefaultParameters["Threshold"] = 1.0;
+            d.DefaultParameters["Hysteresis"] = 0.1;
+        });
+
+        Register<CurrentSwitchComponent>("electrical.currentswitch", "CurrentSwitch", "Electrical", "W", d =>
+        {
+            d.Description = "Current-Controlled Switch (W)";
+            d.Icon = "currentswitch.svg";
+            d.DefaultParameters["Ron"] = 1.0;
+            d.DefaultParameters["Roff"] = 1e6;
+            d.DefaultParameters["Threshold"] = 0.001;
+            d.DefaultParameters["Hysteresis"] = 0.0;
+        });
+
+        // ── Distributed & Transmission Line Elements ─────────────────────────
+        Register<TransmissionLineComponent>("electrical.transmissionline", "TransmissionLine", "Electrical", "T", d =>
+        {
+            d.Description = "Lossless Transmission Line (T)";
+            d.Icon = "transmissionline.svg";
+            d.DefaultParameters["Z0"] = 50.0;
+            d.DefaultParameters["TD"] = 1e-9;
+            d.DefaultParameters["F"] = 1e9;
+            d.DefaultParameters["NL"] = 0.25;
+        });
+
+        Register<VoltageDelayComponent>("electrical.voltagedelay", "VoltageDelay", "Electrical", "VD", d =>
+        {
+            d.Description = "Voltage Delay Element (Delay)";
+            d.Icon = "voltagedelay.svg";
+            d.DefaultParameters["Delay"] = 1e-6;
+        });
+
         // ── Electronics (Active & Semiconductors) ────────────────────────────
         Register<LEDComponent>("electronics.led", "LED", "Electronics", "LED", d =>
         {
             d.Description = "Light Emitting Diode";
+            d.Icon = "led.svg";
             d.DefaultParameters["Vf"] = 2.0;
+        });
+
+        Register<BJTComponent>("electronics.bjt.npn", "NPN", "Electronics", "Q", d =>
+        {
+            d.Description = "BJT NPN Bipolar Junction Transistor";
+            d.Icon = "bjt_npn.svg";
+            d.DefaultParameters["Bf"] = 100.0;
+            d.FactoryMethod = () => new BJTComponent { Polarity = BjtPolarity.NPN };
+        });
+
+        Register<BJTComponent>("electronics.bjt.pnp", "PNP", "Electronics", "Q", d =>
+        {
+            d.Description = "BJT PNP Bipolar Junction Transistor";
+            d.Icon = "bjt_pnp.svg";
+            d.DefaultParameters["Bf"] = 100.0;
+            d.FactoryMethod = () => new BJTComponent { Polarity = BjtPolarity.PNP };
         });
 
         Register<BJTComponent>("electronics.bjt", "BJT", "Electronics", "Q", d =>
         {
             d.Description = "Bipolar Junction Transistor (NPN/PNP)";
+            d.Icon = "bjt_npn.svg";
             d.DefaultParameters["Bf"] = 100.0;
+        });
+
+        Register<JFETComponent>("electronics.jfet", "JFET", "Electronics", "J", d =>
+        {
+            d.Description = "Junction Field-Effect Transistor (JFET N-Ch/P-Ch)";
+            d.Icon = "jfet.svg";
+            d.DefaultParameters["Vto"] = -2.0;
+            d.DefaultParameters["Beta"] = 1e-4;
+        });
+
+        Register<MOSFETComponent>("electronics.mosfet.nmos", "NMOS", "Electronics", "M", d =>
+        {
+            d.Description = "N-Channel Enhancement MOSFET";
+            d.Icon = "nmos.svg";
+            d.DefaultParameters["Vto"] = 2.0;
+            d.FactoryMethod = () => new MOSFETComponent { Channel = MosfetChannel.NChannel };
+        });
+
+        Register<MOSFETComponent>("electronics.mosfet.pmos", "PMOS", "Electronics", "M", d =>
+        {
+            d.Description = "P-Channel Enhancement MOSFET";
+            d.Icon = "pmos.svg";
+            d.DefaultParameters["Vto"] = -2.0;
+            d.FactoryMethod = () => new MOSFETComponent { Channel = MosfetChannel.PChannel };
         });
 
         Register<MOSFETComponent>("electronics.mosfet", "MOSFET", "Electronics", "M", d =>
         {
             d.Description = "MOSFET Field-Effect Transistor (N-Ch/P-Ch)";
+            d.Icon = "nmos.svg";
             d.DefaultParameters["Vto"] = 2.0;
         });
 
@@ -260,5 +382,13 @@ public static class ComponentRegistry
             d.Description = "Multi-pin external header connector";
             d.IsSimulatable = false;
         });
+
+        // ── Aliases ──────────────────────────────────────────────────────────
+        RegisterAlias("tline", "electrical.transmissionline");
+        RegisterAlias("vdelay", "electrical.voltagedelay");
+        RegisterAlias("npn", "electronics.bjt.npn");
+        RegisterAlias("pnp", "electronics.bjt.pnp");
+        RegisterAlias("nmos", "electronics.mosfet.nmos");
+        RegisterAlias("pmos", "electronics.mosfet.pmos");
     }
 }

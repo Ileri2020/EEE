@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EESimulator.Core.Components.Base;
 using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Electrical;
 using EESimulator.Core.Models;
@@ -42,6 +43,15 @@ public class SpiceSharpAdapter : ISimulationEngine
                     n.ConnectedPins.Any(p => p.ComponentId == compId && p.PinId == pinId));
                 if (net == null || net.IsGround) return "0";
                 return net.NetName;
+            }
+
+            string GetPinNode(ComponentNode comp, string pinIdOrName, int fallbackIndex = 0)
+            {
+                var p = comp.Pins.FirstOrDefault(x => x.Id.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase) ||
+                                                      x.Name.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase));
+                if (p != null) return GetNetForPin(comp.Id, p.Id);
+                if (comp.Pins.Count > fallbackIndex) return GetNetForPin(comp.Id, comp.Pins[fallbackIndex].Id);
+                return "0";
             }
 
             // 2. Instantiate SpiceSharp Circuit
@@ -136,9 +146,216 @@ public class SpiceSharpAdapter : ISimulationEngine
                     case DiodeComponent d:
                     {
                         var dModel = new SpiceSharp.Components.DiodeModel($"{d.Name}_model");
-                        var diode = new SpiceSharp.Components.Diode(d.Name, nodeA, nodeB, $"{d.Name}_model");
+                        dModel.Parameters.SaturationCurrent = Math.Max(d.SaturationCurrent, 1e-25);
+                        if (d.EmissionCoefficient > 0) dModel.Parameters.EmissionCoefficient = d.EmissionCoefficient;
+                        if (d.BreakdownVoltage > 0) dModel.Parameters.BreakdownVoltage = d.BreakdownVoltage;
+                        if (d.SeriesResistance > 0) dModel.Parameters.Resistance = d.SeriesResistance;
+                        if (d.JunctionCapacitance > 0) dModel.Parameters.JunctionCap = d.JunctionCapacitance;
+                        if (d.TransitTime > 0) dModel.Parameters.TransitTime = d.TransitTime;
+                        if (d.BreakdownCurrent > 0) dModel.Parameters.BreakdownCurrent = d.BreakdownCurrent;
+
+                        string anode = GetPinNode(d, "anode", 0);
+                        string cathode = GetPinNode(d, "cathode", 1);
+                        var diode = new SpiceSharp.Components.Diode(d.Name, anode, cathode, $"{d.Name}_model");
                         spiceCircuit.Add(dModel);
                         spiceCircuit.Add(diode);
+                        break;
+                    }
+
+                    case BJTComponent b:
+                    {
+                        var bModel = new SpiceSharp.Components.BipolarJunctionTransistorModel($"{b.Name}_model");
+                        if (b.Polarity == BjtPolarity.PNP) bModel.Parameters.SetPnp(true);
+                        else bModel.Parameters.SetNpn(true);
+
+                        if (b.GainBeta > 0) bModel.Parameters.ForwardCurrentGain = b.GainBeta;
+                        if (b.ReverseGainBeta > 0) bModel.Parameters.ReverseCurrentGain = b.ReverseGainBeta;
+                        if (b.SaturationCurrent > 0) bModel.Parameters.SaturationCurrent = b.SaturationCurrent;
+                        if (b.EarlyVoltage > 0) bModel.Parameters.EarlyVoltageForward = b.EarlyVoltage;
+
+                        string cNode = GetPinNode(b, "collector", 1);
+                        string bNode = GetPinNode(b, "base", 0);
+                        string eNode = GetPinNode(b, "emitter", 2);
+
+                        var bjt = new SpiceSharp.Components.BipolarJunctionTransistor(b.Name, cNode, bNode, eNode, eNode, $"{b.Name}_model");
+                        spiceCircuit.Add(bModel);
+                        spiceCircuit.Add(bjt);
+                        break;
+                    }
+
+                    case JFETComponent j:
+                    {
+                        var jModel = new SpiceSharp.Components.JFETModel($"{j.Name}_model");
+                        if (j.Channel == JfetChannel.PChannel) jModel.Parameters.SetPjf(true);
+                        else jModel.Parameters.SetNjf(true);
+
+                        jModel.Parameters.Threshold = j.ThresholdVoltage;
+                        if (j.Transconductance > 0) jModel.Parameters.Beta = j.Transconductance;
+                        if (j.Lambda > 0) jModel.Parameters.LModulation = j.Lambda;
+                        if (j.DrainResistance > 0) jModel.Parameters.DrainResistance = j.DrainResistance;
+                        if (j.SourceResistance > 0) jModel.Parameters.SourceResistance = j.SourceResistance;
+                        if (j.CapGs > 0) jModel.Parameters.CapGs = j.CapGs;
+                        if (j.CapGd > 0) jModel.Parameters.CapGd = j.CapGd;
+
+                        string dNode = GetPinNode(j, "drain", 1);
+                        string gNode = GetPinNode(j, "gate", 0);
+                        string sNode = GetPinNode(j, "source", 2);
+
+                        var jfet = new SpiceSharp.Components.JFET(j.Name, dNode, gNode, sNode, $"{j.Name}_model");
+                        spiceCircuit.Add(jModel);
+                        spiceCircuit.Add(jfet);
+                        break;
+                    }
+
+                    case MOSFETComponent m:
+                    {
+                        var mModel = new SpiceSharp.Components.Mosfet1Model($"{m.Name}_model");
+                        if (m.Channel == MosfetChannel.PChannel) mModel.Parameters.SetPmos(true);
+                        else mModel.Parameters.SetNmos(true);
+
+                        mModel.Parameters.BaseThresholdVoltage = m.ThresholdVoltage;
+                        if (m.Transconductance > 0) mModel.Parameters.Transconductance = m.Transconductance;
+                        if (m.Lambda > 0) mModel.Parameters.ChannelLengthModulation = m.Lambda;
+                        if (m.ChannelWidth > 0) mModel.Parameters.Width = m.ChannelWidth;
+                        if (m.ChannelLength > 0) mModel.Parameters.Length = m.ChannelLength;
+
+                        string dNode = GetPinNode(m, "drain", 1);
+                        string gNode = GetPinNode(m, "gate", 0);
+                        string sNode = GetPinNode(m, "source", 2);
+
+                        var mosfet = new SpiceSharp.Components.Mosfet1(m.Name, dNode, gNode, sNode, sNode, $"{m.Name}_model");
+                        spiceCircuit.Add(mModel);
+                        spiceCircuit.Add(mosfet);
+                        break;
+                    }
+
+                    case VCVSComponent vcvs:
+                    {
+                        string outPos = GetPinNode(vcvs, "out_pos", 0);
+                        string outNeg = GetPinNode(vcvs, "out_neg", 1);
+                        string ctrlPos = GetPinNode(vcvs, "ctrl_pos", 2);
+                        string ctrlNeg = GetPinNode(vcvs, "ctrl_neg", 3);
+                        var vsrc = new SpiceSharp.Components.VoltageControlledVoltageSource(vcvs.Name, outPos, outNeg, ctrlPos, ctrlNeg, vcvs.VoltageGain);
+                        spiceCircuit.Add(vsrc);
+                        break;
+                    }
+
+                    case VCCSComponent vccs:
+                    {
+                        string outPos = GetPinNode(vccs, "out_pos", 0);
+                        string outNeg = GetPinNode(vccs, "out_neg", 1);
+                        string ctrlPos = GetPinNode(vccs, "ctrl_pos", 2);
+                        string ctrlNeg = GetPinNode(vccs, "ctrl_neg", 3);
+                        var isrc = new SpiceSharp.Components.VoltageControlledCurrentSource(vccs.Name, outPos, outNeg, ctrlPos, ctrlNeg, vccs.Transconductance);
+                        spiceCircuit.Add(isrc);
+                        break;
+                    }
+
+                    case CCVSComponent ccvs:
+                    {
+                        string outPos = GetPinNode(ccvs, "out_pos", 0);
+                        string outNeg = GetPinNode(ccvs, "out_neg", 1);
+                        string ctrlSource = ccvs.ControllingSource;
+                        string ctrlPos = GetPinNode(ccvs, "ctrl_pos", 2);
+                        string ctrlNeg = GetPinNode(ccvs, "ctrl_neg", 3);
+                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" && ctrlNeg != "0"))
+                        {
+                            ctrlSource = $"V_sense_{ccvs.Name}";
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(ctrlSource, ctrlPos, ctrlNeg, 0.0));
+                        }
+                        var hsrc = new SpiceSharp.Components.CurrentControlledVoltageSource(ccvs.Name, outPos, outNeg, ctrlSource, ccvs.Transresistance);
+                        spiceCircuit.Add(hsrc);
+                        break;
+                    }
+
+                    case CCCSComponent cccs:
+                    {
+                        string outPos = GetPinNode(cccs, "out_pos", 0);
+                        string outNeg = GetPinNode(cccs, "out_neg", 1);
+                        string ctrlSource = cccs.ControllingSource;
+                        string ctrlPos = GetPinNode(cccs, "ctrl_pos", 2);
+                        string ctrlNeg = GetPinNode(cccs, "ctrl_neg", 3);
+                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" && ctrlNeg != "0"))
+                        {
+                            ctrlSource = $"V_sense_{cccs.Name}";
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(ctrlSource, ctrlPos, ctrlNeg, 0.0));
+                        }
+                        var fsrc = new SpiceSharp.Components.CurrentControlledCurrentSource(cccs.Name, outPos, outNeg, ctrlSource, cccs.CurrentGain);
+                        spiceCircuit.Add(fsrc);
+                        break;
+                    }
+
+                    case VoltageSwitchComponent vsw:
+                    {
+                        var swModel = new SpiceSharp.Components.VoltageSwitchModel($"{vsw.Name}_model");
+                        swModel.Parameters.ResistanceOn = Math.Max(vsw.ResistanceOn, 1e-9);
+                        swModel.Parameters.ResistanceOff = Math.Max(vsw.ResistanceOff, 1e-3);
+                        swModel.Parameters.Threshold = vsw.Threshold;
+                        swModel.Parameters.Hysteresis = vsw.Hysteresis;
+
+                        string swPos = GetPinNode(vsw, "sw_pos", 0);
+                        string swNeg = GetPinNode(vsw, "sw_neg", 1);
+                        string ctrlPos = GetPinNode(vsw, "ctrl_pos", 2);
+                        string ctrlNeg = GetPinNode(vsw, "ctrl_neg", 3);
+
+                        var sw = new SpiceSharp.Components.VoltageSwitch(vsw.Name, swPos, swNeg, ctrlPos, ctrlNeg, $"{vsw.Name}_model");
+                        spiceCircuit.Add(swModel);
+                        spiceCircuit.Add(sw);
+                        break;
+                    }
+
+                    case CurrentSwitchComponent csw:
+                    {
+                        var swModel = new SpiceSharp.Components.CurrentSwitchModel($"{csw.Name}_model");
+                        swModel.Parameters.ResistanceOn = Math.Max(csw.ResistanceOn, 1e-9);
+                        swModel.Parameters.ResistanceOff = Math.Max(csw.ResistanceOff, 1e-3);
+                        swModel.Parameters.Threshold = csw.Threshold;
+                        swModel.Parameters.Hysteresis = csw.Hysteresis;
+
+                        string swPos = GetPinNode(csw, "sw_pos", 0);
+                        string swNeg = GetPinNode(csw, "sw_neg", 1);
+                        string ctrlSource = csw.ControllingSource;
+                        string ctrlPos = GetPinNode(csw, "ctrl_pos", 2);
+                        string ctrlNeg = GetPinNode(csw, "ctrl_neg", 3);
+                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" && ctrlNeg != "0"))
+                        {
+                            ctrlSource = $"V_sense_{csw.Name}";
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(ctrlSource, ctrlPos, ctrlNeg, 0.0));
+                        }
+
+                        var sw = new SpiceSharp.Components.CurrentSwitch(csw.Name, swPos, swNeg, ctrlSource);
+                        sw.Model = $"{csw.Name}_model";
+                        spiceCircuit.Add(swModel);
+                        spiceCircuit.Add(sw);
+                        break;
+                    }
+
+                    case TransmissionLineComponent tline:
+                    {
+                        string p1Pos = GetPinNode(tline, "pos1", 0);
+                        string p1Neg = GetPinNode(tline, "neg1", 1);
+                        string p2Pos = GetPinNode(tline, "pos2", 2);
+                        string p2Neg = GetPinNode(tline, "neg2", 3);
+                        double z0 = Math.Max(tline.CharacteristicImpedance, 1e-3);
+                        double td = Math.Max(tline.Delay, 1e-15);
+
+                        var t = new SpiceSharp.Components.LosslessTransmissionLine(tline.Name, p1Pos, p1Neg, p2Pos, p2Neg, z0, td);
+                        if (tline.Frequency > 0) t.Parameters.Frequency = tline.Frequency;
+                        if (tline.NormalizedLength > 0) t.Parameters.NormalizedLength = tline.NormalizedLength;
+                        spiceCircuit.Add(t);
+                        break;
+                    }
+
+                    case VoltageDelayComponent vdelay:
+                    {
+                        string outPos = GetPinNode(vdelay, "out_pos", 0);
+                        string outNeg = GetPinNode(vdelay, "out_neg", 1);
+                        string inPos = GetPinNode(vdelay, "in_pos", 2);
+                        string inNeg = GetPinNode(vdelay, "in_neg", 3);
+                        double dly = Math.Max(vdelay.Delay, 1e-15);
+
+                        var vd = new SpiceSharp.Components.VoltageDelay(vdelay.Name, outPos, outNeg, inPos, inNeg, dly);
+                        spiceCircuit.Add(vd);
                         break;
                     }
 

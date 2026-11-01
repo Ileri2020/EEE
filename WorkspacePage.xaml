@@ -778,6 +778,39 @@
                                     <Entry Text="{Binding EditMosfetChannel}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
                                 </VerticalStackLayout>
 
+                                <!-- JFET Channel -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsJfetComponent}">
+                                    <Label Text="JFET CHANNEL (NChannel / PChannel)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditJfetChannel}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Controlling Source (for CCVS, CCCS, CurrentSwitch) -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsControlledSourceComponent}">
+                                    <Label Text="CONTROLLING SOURCE (Optional if sensing pins wired)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditControllingSource}" Placeholder="e.g. V1" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Switch Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsSwitchComponent}">
+                                    <Label Text="SWITCH PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="OFF Resistance (Roff, Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditResistanceOff}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Threshold (V or A)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditThreshold}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Hysteresis (V or A)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditHysteresis}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
                                 <!-- Mutual Inductance Coupled Pair -->
                                 <VerticalStackLayout Spacing="6" IsVisible="{Binding IsMutualInductanceComponent}">
                                     <Label Text="COUPLED INDUCTORS"
@@ -786,6 +819,37 @@
                                         <Entry Grid.Column="0" Text="{Binding EditInductor1}" Placeholder="Inductor 1 (L1)" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
                                         <Entry Grid.Column="1" Text="{Binding EditInductor2}" Placeholder="Inductor 2 (L2)" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
                                     </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Transmission Line Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsTransmissionLineComponent}">
+                                    <Label Text="TRANSMISSION LINE PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Impedance Z0 (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditCharacteristicImpedance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Delay TD (s)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditDelayTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Frequency F (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLineFrequency}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Normalized Length NL" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditNormalizedLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Voltage Delay Element -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsVoltageDelayComponent}">
+                                    <Label Text="PROPAGATION DELAY (s)" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditDelayTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
                                 </VerticalStackLayout>
                             </VerticalStackLayout>
 
@@ -913,6 +977,25 @@
                                             <Entry Text="{Binding EditChannelLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
                                         </VerticalStackLayout>
                                     </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- JFET Model Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsJfetComponent}">
+                                    <Label Text="JFET SHICHMAN-HODGES MODEL" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Pinch-off V (Vto, V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditThresholdVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Transconductance (Beta, A/V²)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransconductance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Channel Mod (Lambda, 1/V)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditLambda}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
                                 </VerticalStackLayout>
 
                                 <!-- OpAmp Model Parameters -->

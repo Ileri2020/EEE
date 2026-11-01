@@ -96,6 +96,146 @@ public class PythonApi
             SetCustomProperty(name, "WaveformType", waveform);
     }
 
+    public void AddDiode(string name, double x, double y, double isat = 1e-14, double n = 1.0, double bv = 0.0, double rs = 0.0, double cj0 = 0.0, double tt = 0.0, double ibv = 1e-3)
+    {
+        AddComponent("diode", name, x, y, isat);
+        if (n != 1.0) SetProperty(name, "N", n);
+        if (bv != 0.0) SetProperty(name, "Bv", bv);
+        if (rs != 0.0) SetProperty(name, "Rs", rs);
+        if (cj0 != 0.0) SetProperty(name, "Cj0", cj0);
+        if (tt != 0.0) SetProperty(name, "Tt", tt);
+        if (ibv != 1e-3) SetProperty(name, "Ibv", ibv);
+    }
+
+    public void AddBJT(string name, double x, double y, string polarity = "NPN", double bf = 100.0, double br = 1.0, double isat = 1e-14, double vaf = 0.0)
+    {
+        AddComponent("bjt", name, x, y, bf);
+        var comp = _circuit.FindChild<EESimulator.Core.Components.Electronics.BJTComponent>(name);
+        if (comp != null)
+        {
+            comp.Polarity = polarity.Equals("PNP", StringComparison.OrdinalIgnoreCase)
+                ? EESimulator.Core.Components.Electronics.BjtPolarity.PNP
+                : EESimulator.Core.Components.Electronics.BjtPolarity.NPN;
+        }
+        if (br != 1.0) SetProperty(name, "Br", br);
+        if (isat != 1e-14) SetProperty(name, "Is", isat);
+        if (vaf != 0.0) SetProperty(name, "Vaf", vaf);
+    }
+
+    public void AddNPN(string name, double x, double y, double bf = 100.0, double br = 1.0, double isat = 1e-14, double vaf = 0.0)
+    {
+        AddBJT(name, x, y, "NPN", bf, br, isat, vaf);
+    }
+
+    public void AddPNP(string name, double x, double y, double bf = 100.0, double br = 1.0, double isat = 1e-14, double vaf = 0.0)
+    {
+        AddBJT(name, x, y, "PNP", bf, br, isat, vaf);
+    }
+
+    public void AddMOSFET(string name, double x, double y, string channel = "NChannel", double vto = 2.0, double kp = 2e-5, double w = 1e-4, double l = 1e-6, double lambda = 0.0)
+    {
+        AddComponent("mosfet", name, x, y, vto);
+        var comp = _circuit.FindChild<EESimulator.Core.Components.Electronics.MOSFETComponent>(name);
+        if (comp != null)
+        {
+            comp.Channel = channel.Equals("PChannel", StringComparison.OrdinalIgnoreCase)
+                ? EESimulator.Core.Components.Electronics.MosfetChannel.PChannel
+                : EESimulator.Core.Components.Electronics.MosfetChannel.NChannel;
+        }
+        if (kp != 2e-5) SetProperty(name, "Kp", kp);
+        if (w != 1e-4) SetProperty(name, "W", w);
+        if (l != 1e-6) SetProperty(name, "L", l);
+        if (lambda != 0.0) SetProperty(name, "Lambda", lambda);
+    }
+
+    public void AddNMOS(string name, double x, double y, double vto = 2.0, double kp = 2e-5, double w = 1e-4, double l = 1e-6, double lambda = 0.0)
+    {
+        AddMOSFET(name, x, y, "NChannel", vto, kp, w, l, lambda);
+    }
+
+    public void AddPMOS(string name, double x, double y, double vto = -2.0, double kp = 2e-5, double w = 1e-4, double l = 1e-6, double lambda = 0.0)
+    {
+        AddMOSFET(name, x, y, "PChannel", vto, kp, w, l, lambda);
+    }
+
+    public void AddJFET(string name, double x, double y, string channel = "NChannel", double vto = -2.0, double beta = 1e-4, double lambda = 0.0)
+    {
+        AddComponent("jfet", name, x, y, vto);
+        var comp = _circuit.FindChild<EESimulator.Core.Components.Electronics.JFETComponent>(name);
+        if (comp != null)
+        {
+            comp.Channel = channel.Equals("PChannel", StringComparison.OrdinalIgnoreCase)
+                ? EESimulator.Core.Components.Electronics.JfetChannel.PChannel
+                : EESimulator.Core.Components.Electronics.JfetChannel.NChannel;
+        }
+        if (beta != 1e-4) SetProperty(name, "Beta", beta);
+        if (lambda != 0.0) SetProperty(name, "Lambda", lambda);
+    }
+
+    public void AddOpAmp(string name, double x, double y, double aol = 100000.0, double gbw = 1e6, double slewRate = 0.5, double vcc = 15.0, double vee = -15.0)
+    {
+        AddComponent("opamp", name, x, y, aol);
+        if (gbw != 1e6) SetProperty(name, "GBW", gbw);
+        if (slewRate != 0.5) SetProperty(name, "SlewRate", slewRate);
+        if (vcc != 15.0) SetProperty(name, "Vcc", vcc);
+        if (vee != -15.0) SetProperty(name, "Vee", vee);
+    }
+
+    public void AddVCVS(string name, double x, double y, double voltageGain = 1.0)
+    {
+        AddComponent("vcvs", name, x, y, voltageGain);
+    }
+
+    public void AddVCCS(string name, double x, double y, double transconductance = 0.001)
+    {
+        AddComponent("vccs", name, x, y, transconductance);
+    }
+
+    public void AddCCVS(string name, double x, double y, double transresistance = 1000.0, string controllingSource = "")
+    {
+        AddComponent("ccvs", name, x, y, transresistance);
+        if (!string.IsNullOrWhiteSpace(controllingSource))
+            SetCustomProperty(name, "ControllingSource", controllingSource);
+    }
+
+    public void AddCCCS(string name, double x, double y, double currentGain = 1.0, string controllingSource = "")
+    {
+        AddComponent("cccs", name, x, y, currentGain);
+        if (!string.IsNullOrWhiteSpace(controllingSource))
+            SetCustomProperty(name, "ControllingSource", controllingSource);
+    }
+
+    public void AddVoltageSwitch(string name, double x, double y, double ron = 1.0, double roff = 1e6, double threshold = 1.0, double hysteresis = 0.1)
+    {
+        AddComponent("voltageswitch", name, x, y, ron);
+        if (roff != 1e6) SetProperty(name, "Roff", roff);
+        if (threshold != 1.0) SetProperty(name, "Threshold", threshold);
+        if (hysteresis != 0.1) SetProperty(name, "Hysteresis", hysteresis);
+    }
+
+    public void AddCurrentSwitch(string name, double x, double y, double ron = 1.0, double roff = 1e6, double threshold = 0.001, double hysteresis = 0.0, string controllingSource = "")
+    {
+        AddComponent("currentswitch", name, x, y, ron);
+        if (roff != 1e6) SetProperty(name, "Roff", roff);
+        if (threshold != 0.001) SetProperty(name, "Threshold", threshold);
+        if (hysteresis != 0.0) SetProperty(name, "Hysteresis", hysteresis);
+        if (!string.IsNullOrWhiteSpace(controllingSource))
+            SetCustomProperty(name, "ControllingSource", controllingSource);
+    }
+
+    public void AddTransmissionLine(string name, double x, double y, double z0 = 50.0, double td = 1e-9, double f = 1e9, double nl = 0.25)
+    {
+        AddComponent("transmissionline", name, x, y, z0);
+        if (td != 1e-9) SetProperty(name, "TD", td);
+        if (f != 1e9) SetProperty(name, "F", f);
+        if (nl != 0.25) SetProperty(name, "NL", nl);
+    }
+
+    public void AddVoltageDelay(string name, double x, double y, double delay = 1e-6)
+    {
+        AddComponent("voltagedelay", name, x, y, delay);
+    }
+
     // Waveform Configuration Methods
     public void ConfigureSineWaveform(string sourceName, double offset, double amplitude, double frequency, double delay = 0.0, double theta = 0.0, double phase = 0.0)
     {
