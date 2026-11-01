@@ -46,6 +46,12 @@ public class CapacitorComponent : ElectricalComponent
         set => ElectricalParameters["TC2"] = value;
     }
 
+    public double EquivalentSeriesResistance
+    {
+        get => ElectricalParameters.TryGetValue("ESR", out var val) ? val : 0.0;
+        set => ElectricalParameters["ESR"] = value;
+    }
+
     public CapacitorComponent()
     {
         Pins.Add(new ComponentPin("pin1", "+", -15, 0));
@@ -55,6 +61,7 @@ public class CapacitorComponent : ElectricalComponent
         Temperature = 27.0;
         TemperatureCoefficient1 = 0.0;
         TemperatureCoefficient2 = 0.0;
+        EquivalentSeriesResistance = 0.0;
     }
 
     public CapacitorComponent(string name, double capacitance = 1e-6) : this()

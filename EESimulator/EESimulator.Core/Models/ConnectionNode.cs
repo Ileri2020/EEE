@@ -33,6 +33,8 @@ public class ConnectionNode : RootNode
 
     public List<Point2D> RoutingPoints { get; } = new();
 
+    public double Resistance { get; set; } = 0.0;
+
     public ConnectionNode()
     {
         Name = "Wire";

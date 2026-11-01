@@ -25,6 +25,8 @@ public class PythonApi
 
     public event Action<string>? OnWindowOpenRequested;
     public event Action<string>? OnActiveViewportChanged;
+    public event Action<string, string>? OnControlButtonRegistered;
+    public event Action<string>? OnActiveToolChanged;
 
     public PythonApi(CommandManager commandManager, CircuitNode circuit, SimulationManager? simulationManager = null, UIRootNode? uiRoot = null)
     {
@@ -143,13 +145,17 @@ public class PythonApi
         SetProperty(sourceName, "SffmSignalFreq", signalFreq);
     }
 
-    public void Connect(string fromComponent, string fromPin, string toComponent, string toPin)
+    public void Connect(string fromComponent, string fromPin, string toComponent, string toPin, double resistance = 0.0)
     {
         var cmd = new ConnectNodesCommand(_circuit, fromComponent, fromPin, toComponent, toPin)
         {
             Origin = CommandOrigin.Python
         };
         _commandManager.ExecuteCommand(cmd);
+        if (resistance > 0 && cmd.CreatedConnection != null)
+        {
+            cmd.CreatedConnection.Resistance = resistance;
+        }
     }
 
     public void SetPosition(string componentName, double x, double y)
@@ -178,6 +184,76 @@ public class PythonApi
             comp.CustomProperties[propertyName] = value;
             comp.NotifyModified(propertyName);
         }
+    }
+
+    // Live Probe & Waveform State Automation
+    public void SetLiveProbe(string componentName, bool enabled)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.ShowLiveProbe = enabled;
+            comp.NotifyModified(nameof(comp.ShowLiveProbe));
+        }
+    }
+
+    public void SetWaveform(string componentName, bool enabled)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            comp.ShowWaveform = enabled;
+            comp.NotifyModified(nameof(comp.ShowWaveform));
+        }
+    }
+
+    // Terminal Pin Renaming Automation
+    public void RenamePin(string componentName, string pinIdOrName, string newName)
+    {
+        var comp = _circuit.FindChild<ComponentNode>(componentName);
+        if (comp != null)
+        {
+            var pin = comp.GetPin(pinIdOrName);
+            if (pin != null)
+            {
+                pin.Name = newName;
+                comp.NotifyModified(nameof(comp.Pins));
+            }
+        }
+    }
+
+    // Wire Parasitic Resistance Automation
+    public void SetWireResistance(string wireIdOrName, double resistance)
+    {
+        var conn = _circuit.FindChildren<ConnectionNode>().FirstOrDefault(c =>
+            c.Name.Equals(wireIdOrName, StringComparison.OrdinalIgnoreCase) ||
+            c.Id.ToString().Equals(wireIdOrName, StringComparison.OrdinalIgnoreCase) ||
+            c.NetName.Equals(wireIdOrName, StringComparison.OrdinalIgnoreCase));
+        if (conn != null)
+        {
+            conn.Resistance = resistance;
+            conn.NotifyModified(nameof(conn.Resistance));
+            return;
+        }
+
+        var wireComp = _circuit.FindChild<EESimulator.Core.Components.General.WireComponent>(wireIdOrName);
+        if (wireComp != null)
+        {
+            wireComp.Resistance = resistance;
+            wireComp.NotifyModified("Resistance");
+        }
+    }
+
+    // Control Sidebar Quick Button Registration Automation
+    public void RegisterControlButton(string label, string actionName)
+    {
+        OnControlButtonRegistered?.Invoke(label, actionName);
+    }
+
+    // Interactive Viewport Active Tool Selection Automation
+    public void SetActiveTool(string toolName)
+    {
+        OnActiveToolChanged?.Invoke(toolName);
     }
 
     // Simulation Operations

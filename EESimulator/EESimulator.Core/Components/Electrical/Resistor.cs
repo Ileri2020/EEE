@@ -40,6 +40,18 @@ public class ResistorComponent : ElectricalComponent
         set => ElectricalParameters["TC2"] = value;
     }
 
+    public double PowerRating
+    {
+        get => ElectricalParameters.TryGetValue("PowerRating", out var val) ? val : 0.25;
+        set => ElectricalParameters["PowerRating"] = value;
+    }
+
+    public double Tolerance
+    {
+        get => ElectricalParameters.TryGetValue("Tolerance", out var val) ? val : 5.0;
+        set => ElectricalParameters["Tolerance"] = value;
+    }
+
     public ResistorComponent()
     {
         Pins.Add(new ComponentPin("pin1", "1", -20, 0));
@@ -48,6 +60,8 @@ public class ResistorComponent : ElectricalComponent
         Temperature = 27.0;
         TemperatureCoefficient1 = 0.0;
         TemperatureCoefficient2 = 0.0;
+        PowerRating = 0.25;
+        Tolerance = 5.0;
     }
 
     public ResistorComponent(string name, double resistance = 1000.0) : this()

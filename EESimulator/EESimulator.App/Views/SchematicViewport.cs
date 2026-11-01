@@ -350,7 +350,7 @@ public class SchematicViewport : GraphicsView, IDrawable
 
     private void OnPinch(object? sender, PinchGestureUpdatedEventArgs e)
     {
-        if (e.Status == GestureStatus.Running)
+        if (e.Status == GestureStatus.Running && e.Scale > 0.05 && e.Scale < 20.0)
         {
             _zoom = Math.Clamp(_zoom * (float)e.Scale, MinZoom, MaxZoom);
             Invalidate();
@@ -514,7 +514,7 @@ public class SchematicViewport : GraphicsView, IDrawable
     private (ComponentNode Component, ComponentPin Pin)? HitTestPin(float wx, float wy)
     {
         if (Circuit == null) return null;
-        const float pinHitRadius = 10.0f;
+        float pinHitRadius = DeviceInfo.Idiom == DeviceIdiom.Phone ? 24.0f : 16.0f;
 
         foreach (var comp in Circuit.FindChildren<ComponentNode>())
         {

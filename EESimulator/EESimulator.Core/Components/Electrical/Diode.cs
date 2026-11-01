@@ -22,11 +22,39 @@ public class DiodeComponent : ElectricalComponent
         set => ElectricalParameters["Is"] = value;
     }
 
+    public double EmissionCoefficient
+    {
+        get => ElectricalParameters.TryGetValue("N", out var val) ? val : 1.0;
+        set => ElectricalParameters["N"] = value;
+    }
+
+    public double BreakdownVoltage
+    {
+        get => ElectricalParameters.TryGetValue("Bv", out var val) ? val : 0.0;
+        set => ElectricalParameters["Bv"] = value;
+    }
+
+    public double SeriesResistance
+    {
+        get => ElectricalParameters.TryGetValue("Rs", out var val) ? val : 0.0;
+        set => ElectricalParameters["Rs"] = value;
+    }
+
+    public double JunctionCapacitance
+    {
+        get => ElectricalParameters.TryGetValue("Cj0", out var val) ? val : 0.0;
+        set => ElectricalParameters["Cj0"] = value;
+    }
+
     public DiodeComponent()
     {
         Pins.Add(new ComponentPin("anode", "A", -20, 0));
         Pins.Add(new ComponentPin("cathode", "K", 20, 0));
         SaturationCurrent = 1e-14;
+        EmissionCoefficient = 1.0;
+        BreakdownVoltage = 0.0;
+        SeriesResistance = 0.0;
+        JunctionCapacitance = 0.0;
     }
 
     public DiodeComponent(string name) : this()

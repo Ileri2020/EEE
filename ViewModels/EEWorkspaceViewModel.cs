@@ -10,6 +10,7 @@ using EESimulator.Scripting;
 using EESimulator.Scripting.API;
 using EESimulator.Engine;
 using EESimulator.Engine.Simulation;
+using EESimulator.Formats;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -114,7 +115,105 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool EditShowWaveform { get; set; } = false;
 
+    // Tabs for Component Edit Dialog: "General", "Waveform", "Advanced", "Pins"
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditTabGeneral))]
+    [NotifyPropertyChangedFor(nameof(IsEditTabWaveform))]
+    [NotifyPropertyChangedFor(nameof(IsEditTabAdvanced))]
+    [NotifyPropertyChangedFor(nameof(IsEditTabPins))]
+    public partial string SelectedEditTab { get; set; } = "General";
+
+    public bool IsEditTabGeneral => SelectedEditTab == "General";
+    public bool IsEditTabWaveform => SelectedEditTab == "Waveform";
+    public bool IsEditTabAdvanced => SelectedEditTab == "Advanced";
+    public bool IsEditTabPins => SelectedEditTab == "Pins";
+
+    [RelayCommand]
+    public void SelectEditTab(string tab) => SelectedEditTab = tab;
+
+    // Classification flags for conditional UI in Edit Dialog
+    [ObservableProperty] public partial bool IsSourceComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsBjtComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsMosfetComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsDiodeComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsOpAmpComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsMutualInductanceComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsResistorComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsCapacitorComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsInductorComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsWireComponent { get; set; } = false;
+
+    // AC & Waveform properties
+    [ObservableProperty] public partial string EditWaveformType { get; set; } = "DC";
+    [ObservableProperty] public partial double EditAcMagnitude { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditAcPhase { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditSineOffset { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditSineAmplitude { get; set; } = 5.0;
+    [ObservableProperty] public partial double EditSineFrequency { get; set; } = 1000.0;
+    [ObservableProperty] public partial double EditSineDelay { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditSineTheta { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditSinePhase { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditPulseInitial { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditPulsePulsed { get; set; } = 5.0;
+    [ObservableProperty] public partial double EditPulseDelay { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditPulseRiseTime { get; set; } = 1e-6;
+    [ObservableProperty] public partial double EditPulseFallTime { get; set; } = 1e-6;
+    [ObservableProperty] public partial double EditPulseWidth { get; set; } = 0.5e-3;
+    [ObservableProperty] public partial double EditPulsePeriod { get; set; } = 1e-3;
+
+    // Model & Parasitic properties
+    [ObservableProperty] public partial double EditTemperature { get; set; } = 27.0;
+    [ObservableProperty] public partial double EditTempCoeff1 { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditTempCoeff2 { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditInitialCondition { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditEquivalentSeriesResistance { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditDcResistance { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditSaturationCurrent { get; set; } = 1e-14;
+    [ObservableProperty] public partial double EditEmissionCoefficient { get; set; } = 1.0;
+    [ObservableProperty] public partial double EditBreakdownVoltage { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditSeriesResistance { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditJunctionCapacitance { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditGainBeta { get; set; } = 100.0;
+    [ObservableProperty] public partial double EditEarlyVoltage { get; set; } = 0.0;
+    [ObservableProperty] public partial string EditBjtPolarity { get; set; } = "NPN";
+    [ObservableProperty] public partial string EditMosfetChannel { get; set; } = "NChannel";
+    [ObservableProperty] public partial double EditThresholdVoltage { get; set; } = 2.0;
+    [ObservableProperty] public partial double EditTransconductance { get; set; } = 2e-5;
+    [ObservableProperty] public partial double EditChannelWidth { get; set; } = 1e-4;
+    [ObservableProperty] public partial double EditChannelLength { get; set; } = 1e-6;
+    [ObservableProperty] public partial double EditLambda { get; set; } = 0.0;
+    [ObservableProperty] public partial double EditOpenLoopGain { get; set; } = 100000.0;
+    [ObservableProperty] public partial double EditGainBandwidth { get; set; } = 1e6;
+    [ObservableProperty] public partial double EditSlewRate { get; set; } = 0.5;
+    [ObservableProperty] public partial double EditSupplyPositive { get; set; } = 15.0;
+    [ObservableProperty] public partial double EditSupplyNegative { get; set; } = -15.0;
+    [ObservableProperty] public partial string EditInductor1 { get; set; } = "L1";
+    [ObservableProperty] public partial string EditInductor2 { get; set; } = "L2";
+    [ObservableProperty] public partial double EditCoupling { get; set; } = 0.99;
+
     public ObservableCollection<PinEditItem> EditPins { get; } = new();
+
+    // Simulation Setup modal state
+    [ObservableProperty] public partial bool IsSimSettingsVisible { get; set; } = false;
+    [ObservableProperty] public partial string SelectedAnalysisType { get; set; } = "OperatingPoint";
+    [ObservableProperty] public partial double SimTransientStartTime { get; set; } = 0.0;
+    [ObservableProperty] public partial double SimTransientStopTime { get; set; } = 0.01;
+    [ObservableProperty] public partial double SimTransientStepTime { get; set; } = 1e-5;
+    [ObservableProperty] public partial string SimAcSweepType { get; set; } = "Decade";
+    [ObservableProperty] public partial int SimAcPoints { get; set; } = 10;
+    [ObservableProperty] public partial double SimAcStartFrequency { get; set; } = 1.0;
+    [ObservableProperty] public partial double SimAcStopFrequency { get; set; } = 1e5;
+    [ObservableProperty] public partial string SimDcSweepSource { get; set; } = "V1";
+    [ObservableProperty] public partial double SimDcStart { get; set; } = 0.0;
+    [ObservableProperty] public partial double SimDcStop { get; set; } = 5.0;
+    [ObservableProperty] public partial double SimDcStep { get; set; } = 0.1;
+
+    [RelayCommand]
+    public void SetSelectedAnalysisType(string type) => SelectedAnalysisType = type;
+
+    // SPICE Netlist export preview
+    [ObservableProperty] public partial string GeneratedSpiceNetlist { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsNetlistModalVisible { get; set; } = false;
 
     // Waveform Drawer state
     [ObservableProperty]
@@ -219,6 +318,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
         // Python API events
         PythonApi.OnWindowOpenRequested   += name => StatusText = $"Open: {name}";
         PythonApi.OnActiveViewportChanged += name => StatusText = $"Viewport: {name}";
+        PythonApi.OnControlButtonRegistered += (label, act) => EEE.Services.ControlSidebarService.AddButton(label, act);
+        PythonApi.OnActiveToolChanged += tool => SelectTool(tool);
     }
 
     // ── Commands ─────────────────────────────────────────────────────────────
@@ -275,10 +376,20 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private void ToggleViewport() => IsScriptViewActive = !IsScriptViewActive;
 
     [RelayCommand]
-    private void ToggleSidebar() => IsSidebarVisible = !IsSidebarVisible;
+    private void ToggleSidebar()
+    {
+        IsSidebarVisible = !IsSidebarVisible;
+        if (IsSidebarVisible && DeviceInfo.Idiom == DeviceIdiom.Phone)
+            IsControlSidebarVisible = false;
+    }
 
     [RelayCommand]
-    private void ToggleControlSidebar() => IsControlSidebarVisible = !IsControlSidebarVisible;
+    private void ToggleControlSidebar()
+    {
+        IsControlSidebarVisible = !IsControlSidebarVisible;
+        if (IsControlSidebarVisible && DeviceInfo.Idiom == DeviceIdiom.Phone)
+            IsSidebarVisible = false;
+    }
 
     private Microsoft.Maui.Dispatching.IDispatcherTimer? _animTimer;
 
@@ -434,21 +545,82 @@ public partial class EEWorkspaceViewModel : ObservableObject
         await Task.CompletedTask;
     }
 
+    public SimulationSettings BuildSimulationSettings()
+    {
+        var analysis = SelectedAnalysisType?.ToLowerInvariant() switch
+        {
+            "transient" => AnalysisType.Transient,
+            "ac" => AnalysisType.AC,
+            "dcsweep" or "dc sweep" => AnalysisType.DCSweep,
+            _ => AnalysisType.OperatingPoint
+        };
+
+        return new SimulationSettings
+        {
+            Analysis = analysis,
+            StartTime = SimTransientStartTime,
+            StopTime = SimTransientStopTime > SimTransientStartTime ? SimTransientStopTime : SimTransientStartTime + 0.01,
+            StepTime = SimTransientStepTime > 0 ? SimTransientStepTime : 1e-5,
+            AcSweepType = SimAcSweepType ?? "Decade",
+            AcPoints = SimAcPoints > 0 ? SimAcPoints : 10,
+            AcStartFrequency = SimAcStartFrequency > 0 ? SimAcStartFrequency : 1.0,
+            AcStopFrequency = SimAcStopFrequency > SimAcStartFrequency ? SimAcStopFrequency : 1e5,
+            DcSweepSource = string.IsNullOrWhiteSpace(SimDcSweepSource) ? "V1" : SimDcSweepSource.Trim(),
+            DcStart = SimDcStart,
+            DcStop = SimDcStop,
+            DcStep = SimDcStep != 0 ? SimDcStep : 0.1
+        };
+    }
+
+    [RelayCommand]
+    public void OpenSimSettings() => IsSimSettingsVisible = true;
+
+    [RelayCommand]
+    public void CloseSimSettings() => IsSimSettingsVisible = false;
+
+    [RelayCommand]
+    public async Task RunConfiguredSimulationAsync()
+    {
+        IsSimSettingsVisible = false;
+        await SimulateAsync();
+    }
+
+    [RelayCommand]
+    public void ViewSpiceNetlist()
+    {
+        var settings = BuildSimulationSettings();
+        GeneratedSpiceNetlist = SpiceNetlistExporter.ExportToSpice(Circuit, settings);
+        IsNetlistModalVisible = true;
+    }
+
+    [RelayCommand]
+    public void CloseSpiceNetlist() => IsNetlistModalVisible = false;
+
+    [RelayCommand]
+    public async Task CopySpiceNetlistAsync()
+    {
+        if (!string.IsNullOrEmpty(GeneratedSpiceNetlist))
+        {
+            await Clipboard.Default.SetTextAsync(GeneratedSpiceNetlist);
+            StatusText = "SPICE Netlist copied to clipboard ✓";
+        }
+    }
+
     [RelayCommand]
     private async Task SimulateAsync()
     {
         try
         {
             IsSimulating  = true;
-            StatusText    = "Simulating…";
+            StatusText    = $"Simulating ({SelectedAnalysisType})…";
             ConsoleOutput = "";
 
-            var settings = new SimulationSettings { Analysis = AnalysisType.OperatingPoint };
+            var settings = BuildSimulationSettings();
             var results  = await Task.Run(() => _simManager.Run(Circuit, settings));
 
             ConsoleOutput = FormatResults(results);
             StatusText    = results.Success
-                ? "Simulation complete ✓"
+                ? $"{settings.Analysis} simulation complete ✓"
                 : $"Sim error: {results.Message}";
         }
         catch (Exception ex)
@@ -523,31 +695,132 @@ public partial class EEWorkspaceViewModel : ObservableObject
         EditType = comp.ComponentType;
         EditShowLiveProbe = comp.ShowLiveProbe;
         EditShowWaveform = comp.ShowWaveform;
+        SelectedEditTab = "General";
 
-        if (comp is ResistorNode r)
+        // Reset component type flags
+        IsSourceComponent = comp is VoltageSourceComponent || comp is CurrentSourceComponent;
+        IsBjtComponent = comp is EESimulator.Core.Components.Electronics.BJTComponent;
+        IsMosfetComponent = comp is EESimulator.Core.Components.Electronics.MOSFETComponent;
+        IsDiodeComponent = comp is DiodeComponent;
+        IsOpAmpComponent = comp is EESimulator.Core.Components.Electronics.OpAmpComponent;
+        IsMutualInductanceComponent = comp is MutualInductanceComponent;
+        IsResistorComponent = comp is ResistorComponent;
+        IsCapacitorComponent = comp is CapacitorComponent;
+        IsInductorComponent = comp is InductorComponent;
+        IsWireComponent = comp is WireComponent;
+
+        if (comp is ResistorComponent r)
         {
             EditParamName = "Resistance (Ω)";
             EditParamValue = r.Resistance;
+            EditTemperature = r.Temperature;
+            EditTempCoeff1 = r.TemperatureCoefficient1;
+            EditTempCoeff2 = r.TemperatureCoefficient2;
         }
-        else if (comp is CapacitorNode c)
+        else if (comp is CapacitorComponent c)
         {
             EditParamName = "Capacitance (F)";
             EditParamValue = c.Capacitance;
+            EditInitialCondition = c.InitialCondition;
+            EditEquivalentSeriesResistance = c.EquivalentSeriesResistance;
+            EditTemperature = c.Temperature;
+            EditTempCoeff1 = c.TemperatureCoefficient1;
+            EditTempCoeff2 = c.TemperatureCoefficient2;
         }
-        else if (comp is InductorNode l)
+        else if (comp is InductorComponent l)
         {
             EditParamName = "Inductance (H)";
             EditParamValue = l.Inductance;
+            EditInitialCondition = l.InitialCondition;
+            EditDcResistance = l.DcResistance;
         }
-        else if (comp is VoltageSourceNode v)
+        else if (comp is VoltageSourceComponent v)
         {
-            EditParamName = "Voltage (V)";
+            EditParamName = "DC Voltage (V)";
             EditParamValue = v.Voltage;
+            EditAcMagnitude = v.AcMagnitude;
+            EditAcPhase = v.AcPhase;
+            EditWaveformType = string.IsNullOrWhiteSpace(v.WaveformType) ? "DC" : v.WaveformType;
+            EditSineOffset = v.SineOffset;
+            EditSineAmplitude = v.SineAmplitude;
+            EditSineFrequency = v.SineFrequency;
+            EditSineDelay = v.SineDelay;
+            EditSineTheta = v.SineTheta;
+            EditSinePhase = v.SinePhase;
+            EditPulseInitial = v.PulseInitial;
+            EditPulsePulsed = v.PulsePulsed;
+            EditPulseDelay = v.PulseDelay;
+            EditPulseRiseTime = v.PulseRiseTime;
+            EditPulseFallTime = v.PulseFallTime;
+            EditPulseWidth = v.PulseWidth;
+            EditPulsePeriod = v.PulsePeriod;
         }
         else if (comp is CurrentSourceComponent i)
         {
-            EditParamName = "Current (A)";
+            EditParamName = "DC Current (A)";
             EditParamValue = i.Current;
+            EditAcMagnitude = i.AcMagnitude;
+            EditAcPhase = i.AcPhase;
+            EditWaveformType = string.IsNullOrWhiteSpace(i.WaveformType) ? "DC" : i.WaveformType;
+            EditSineOffset = i.SineOffset;
+            EditSineAmplitude = i.SineAmplitude;
+            EditSineFrequency = i.SineFrequency;
+            EditSineDelay = i.SineDelay;
+            EditPulseInitial = i.PulseInitial;
+            EditPulsePulsed = i.PulsePulsed;
+            EditPulseDelay = i.PulseDelay;
+            EditPulseRiseTime = i.PulseRiseTime;
+            EditPulseFallTime = i.PulseFallTime;
+            EditPulseWidth = i.PulseWidth;
+            EditPulsePeriod = i.PulsePeriod;
+        }
+        else if (comp is DiodeComponent d)
+        {
+            EditParamName = "Saturation Current Is (A)";
+            EditParamValue = d.SaturationCurrent;
+            EditSaturationCurrent = d.SaturationCurrent;
+            EditEmissionCoefficient = d.EmissionCoefficient;
+            EditBreakdownVoltage = d.BreakdownVoltage;
+            EditSeriesResistance = d.SeriesResistance;
+            EditJunctionCapacitance = d.JunctionCapacitance;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.BJTComponent bjt)
+        {
+            EditParamName = "Gain Beta (Bf)";
+            EditParamValue = bjt.GainBeta;
+            EditGainBeta = bjt.GainBeta;
+            EditSaturationCurrent = bjt.SaturationCurrent;
+            EditEarlyVoltage = bjt.EarlyVoltage;
+            EditBjtPolarity = bjt.Polarity == EESimulator.Core.Components.Electronics.BjtPolarity.PNP ? "PNP" : "NPN";
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.MOSFETComponent mos)
+        {
+            EditParamName = "Threshold Voltage Vto (V)";
+            EditParamValue = mos.ThresholdVoltage;
+            EditThresholdVoltage = mos.ThresholdVoltage;
+            EditTransconductance = mos.Transconductance;
+            EditChannelWidth = mos.ChannelWidth;
+            EditChannelLength = mos.ChannelLength;
+            EditLambda = mos.Lambda;
+            EditMosfetChannel = mos.Channel == EESimulator.Core.Components.Electronics.MosfetChannel.PChannel ? "PChannel" : "NChannel";
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.OpAmpComponent op)
+        {
+            EditParamName = "Open-Loop Gain Aol";
+            EditParamValue = op.OpenLoopGain;
+            EditOpenLoopGain = op.OpenLoopGain;
+            EditGainBandwidth = op.GainBandwidth;
+            EditSlewRate = op.SlewRate;
+            EditSupplyPositive = op.SupplyPositive;
+            EditSupplyNegative = op.SupplyNegative;
+        }
+        else if (comp is MutualInductanceComponent m)
+        {
+            EditParamName = "Coupling Factor k";
+            EditParamValue = m.Coupling;
+            EditCoupling = m.Coupling;
+            EditInductor1 = m.Inductor1;
+            EditInductor2 = m.Inductor2;
         }
         else if (comp is WireComponent w)
         {
@@ -622,20 +895,116 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditingComponent.Reference = EditName.Trim();
         }
 
-        if (EditingComponent is ResistorNode r)
+        if (EditingComponent is ResistorComponent r)
+        {
             r.Resistance = Math.Max(EditParamValue, 1e-6);
-        else if (EditingComponent is CapacitorNode c)
+            r.Temperature = EditTemperature;
+            r.TemperatureCoefficient1 = EditTempCoeff1;
+            r.TemperatureCoefficient2 = EditTempCoeff2;
+        }
+        else if (EditingComponent is CapacitorComponent c)
+        {
             c.Capacitance = Math.Max(EditParamValue, 1e-15);
-        else if (EditingComponent is InductorNode l)
+            c.InitialCondition = EditInitialCondition;
+            c.EquivalentSeriesResistance = Math.Max(EditEquivalentSeriesResistance, 0.0);
+            c.Temperature = EditTemperature;
+            c.TemperatureCoefficient1 = EditTempCoeff1;
+            c.TemperatureCoefficient2 = EditTempCoeff2;
+        }
+        else if (EditingComponent is InductorComponent l)
+        {
             l.Inductance = Math.Max(EditParamValue, 1e-15);
-        else if (EditingComponent is VoltageSourceNode v)
+            l.InitialCondition = EditInitialCondition;
+            l.DcResistance = Math.Max(EditDcResistance, 0.0);
+        }
+        else if (EditingComponent is VoltageSourceComponent v)
+        {
             v.Voltage = EditParamValue;
+            v.AcMagnitude = EditAcMagnitude;
+            v.AcPhase = EditAcPhase;
+            v.WaveformType = string.IsNullOrWhiteSpace(EditWaveformType) ? "DC" : EditWaveformType;
+            v.SineOffset = EditSineOffset;
+            v.SineAmplitude = EditSineAmplitude;
+            v.SineFrequency = Math.Max(EditSineFrequency, 0.1);
+            v.SineDelay = EditSineDelay;
+            v.SineTheta = EditSineTheta;
+            v.SinePhase = EditSinePhase;
+            v.PulseInitial = EditPulseInitial;
+            v.PulsePulsed = EditPulsePulsed;
+            v.PulseDelay = EditPulseDelay;
+            v.PulseRiseTime = Math.Max(EditPulseRiseTime, 1e-12);
+            v.PulseFallTime = Math.Max(EditPulseFallTime, 1e-12);
+            v.PulseWidth = Math.Max(EditPulseWidth, 1e-12);
+            v.PulsePeriod = Math.Max(EditPulsePeriod, 1e-12);
+        }
         else if (EditingComponent is CurrentSourceComponent i)
+        {
             i.Current = EditParamValue;
+            i.AcMagnitude = EditAcMagnitude;
+            i.AcPhase = EditAcPhase;
+            i.WaveformType = string.IsNullOrWhiteSpace(EditWaveformType) ? "DC" : EditWaveformType;
+            i.SineOffset = EditSineOffset;
+            i.SineAmplitude = EditSineAmplitude;
+            i.SineFrequency = Math.Max(EditSineFrequency, 0.1);
+            i.SineDelay = EditSineDelay;
+            i.PulseInitial = EditPulseInitial;
+            i.PulsePulsed = EditPulsePulsed;
+            i.PulseDelay = EditPulseDelay;
+            i.PulseRiseTime = Math.Max(EditPulseRiseTime, 1e-12);
+            i.PulseFallTime = Math.Max(EditPulseFallTime, 1e-12);
+            i.PulseWidth = Math.Max(EditPulseWidth, 1e-12);
+            i.PulsePeriod = Math.Max(EditPulsePeriod, 1e-12);
+        }
+        else if (EditingComponent is DiodeComponent d)
+        {
+            d.SaturationCurrent = EditSaturationCurrent > 0 ? EditSaturationCurrent : Math.Max(EditParamValue, 1e-16);
+            d.EmissionCoefficient = Math.Max(EditEmissionCoefficient, 0.1);
+            d.BreakdownVoltage = EditBreakdownVoltage;
+            d.SeriesResistance = Math.Max(EditSeriesResistance, 0.0);
+            d.JunctionCapacitance = Math.Max(EditJunctionCapacitance, 0.0);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.BJTComponent bjt)
+        {
+            bjt.GainBeta = EditGainBeta > 0 ? EditGainBeta : Math.Max(EditParamValue, 1.0);
+            bjt.SaturationCurrent = Math.Max(EditSaturationCurrent, 1e-16);
+            bjt.EarlyVoltage = EditEarlyVoltage;
+            bjt.Polarity = EditBjtPolarity.Equals("PNP", StringComparison.OrdinalIgnoreCase)
+                ? EESimulator.Core.Components.Electronics.BjtPolarity.PNP
+                : EESimulator.Core.Components.Electronics.BjtPolarity.NPN;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.MOSFETComponent mos)
+        {
+            mos.ThresholdVoltage = EditThresholdVoltage != 0 ? EditThresholdVoltage : EditParamValue;
+            mos.Transconductance = Math.Max(EditTransconductance, 1e-9);
+            mos.ChannelWidth = Math.Max(EditChannelWidth, 1e-9);
+            mos.ChannelLength = Math.Max(EditChannelLength, 1e-9);
+            mos.Lambda = EditLambda;
+            mos.Channel = EditMosfetChannel.Equals("PChannel", StringComparison.OrdinalIgnoreCase)
+                ? EESimulator.Core.Components.Electronics.MosfetChannel.PChannel
+                : EESimulator.Core.Components.Electronics.MosfetChannel.NChannel;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.OpAmpComponent op)
+        {
+            op.OpenLoopGain = EditOpenLoopGain > 0 ? EditOpenLoopGain : Math.Max(EditParamValue, 1.0);
+            op.GainBandwidth = Math.Max(EditGainBandwidth, 1.0);
+            op.SlewRate = Math.Max(EditSlewRate, 0.001);
+            op.SupplyPositive = EditSupplyPositive;
+            op.SupplyNegative = EditSupplyNegative;
+        }
+        else if (EditingComponent is MutualInductanceComponent m)
+        {
+            m.Coupling = Math.Clamp(EditCoupling > 0 ? EditCoupling : EditParamValue, 0.0, 1.0);
+            if (!string.IsNullOrWhiteSpace(EditInductor1)) m.Inductor1 = EditInductor1.Trim();
+            if (!string.IsNullOrWhiteSpace(EditInductor2)) m.Inductor2 = EditInductor2.Trim();
+        }
         else if (EditingComponent is WireComponent w)
+        {
             w.Resistance = double.TryParse(EditWireResistance, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var wr) ? wr : Math.Max(EditParamValue, 0);
+        }
         else if (!string.IsNullOrEmpty(EditParamName))
+        {
             EditingComponent.ElectricalParameters[EditParamName] = EditParamValue;
+        }
 
         // Apply node / pin name changes
         foreach (var pItem in EditPins)
@@ -656,8 +1025,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
             IsWaveformDrawerOpen = true;
         }
 
+        EditingComponent.NotifyModified(EditingComponent.Reference);
         IsEditDialogVisible = false;
         StatusText = $"Updated {EditingComponent.Reference}";
+        CircuitChanged?.Invoke();
 
         // Trigger simulation to update live probe values
         _ = SimulateAsync();
@@ -808,6 +1179,34 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 case "set_property" when args.Length >= 3:
                     PythonApi.SetProperty(Unquote(args[0]), Unquote(args[1]), ParseD(args[2]));
                     return "[ok] property set";
+
+                case "set_live_probe" or "set_probe" when args.Length >= 2:
+                    PythonApi.SetLiveProbe(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var lp) && lp);
+                    CircuitChanged?.Invoke();
+                    return $"[ok] live probe on {Unquote(args[0])} set to {args[1]}";
+
+                case "set_waveform" when args.Length >= 2:
+                    PythonApi.SetWaveform(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var sw) && sw);
+                    CircuitChanged?.Invoke();
+                    return $"[ok] waveform on {Unquote(args[0])} set to {args[1]}";
+
+                case "rename_pin" when args.Length >= 3:
+                    PythonApi.RenamePin(Unquote(args[0]), Unquote(args[1]), Unquote(args[2]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] pin {Unquote(args[1])} on {Unquote(args[0])} renamed to {Unquote(args[2])}";
+
+                case "set_wire_resistance" when args.Length >= 2:
+                    PythonApi.SetWireResistance(Unquote(args[0]), ParseD(args[1]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] wire resistance on {Unquote(args[0])} set to {args[1]} Ω";
+
+                case "register_control_button" when args.Length >= 2:
+                    PythonApi.RegisterControlButton(Unquote(args[0]), Unquote(args[1]));
+                    return $"[ok] registered control button [{Unquote(args[0])}] -> {Unquote(args[1])}";
+
+                case "set_active_tool" when args.Length >= 1:
+                    PythonApi.SetActiveTool(Unquote(args[0]));
+                    return $"[ok] active tool set to {Unquote(args[0])}";
 
                 case "simulate":
                     var r = PythonApi.Simulate(args.Length > 0 ? Unquote(args[0]) : "OperatingPoint");

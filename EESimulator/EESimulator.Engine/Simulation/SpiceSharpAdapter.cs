@@ -223,11 +223,11 @@ public class SpiceSharpAdapter : ISimulationEngine
             var waveComps = circuit.Components.Where(c => c.ShowWaveform).ToList();
             if (waveComps.Count > 0)
             {
-                GenerateWaveforms(waveComps);
+                GenerateWaveforms(waveComps, settings);
             }
 
             results.Success = true;
-            results.Message = $"Spice# simulation completed: {topology.Nets.Count} nets, {spiceCircuit.Count} Spice elements.";
+            results.Message = $"Spice# {settings.Analysis} simulation completed: {topology.Nets.Count} nets, {spiceCircuit.Count} Spice elements.";
         }
         catch (Exception ex)
         {
@@ -295,10 +295,14 @@ public class SpiceSharpAdapter : ISimulationEngine
         }
     }
 
-    private static void GenerateWaveforms(List<ComponentNode> components)
+    private static void GenerateWaveforms(List<ComponentNode> components, SimulationSettings? settings = null)
     {
-        const int steps = 120;
-        const double duration = 0.02; // 20 ms
+        double duration = (settings != null && settings.StopTime > settings.StartTime) ? (settings.StopTime - settings.StartTime) : 0.02;
+        int steps = 120;
+        if (settings != null && settings.StepTime > 0)
+        {
+            steps = (int)Math.Clamp(duration / settings.StepTime, 50, 500);
+        }
         double dt = duration / steps;
 
         foreach (var comp in components)

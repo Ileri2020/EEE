@@ -14,7 +14,7 @@ namespace EESimulator.Formats;
 /// </summary>
 public class SpiceNetlistExporter
 {
-    public static string ExportToSpice(CircuitNode circuit)
+    public static string ExportToSpice(CircuitNode circuit, EESimulator.Engine.Simulation.SimulationSettings? settings = null)
     {
         var sb = new StringBuilder();
         var inv = CultureInfo.InvariantCulture;
@@ -55,33 +55,103 @@ public class SpiceNetlistExporter
         {
             if (comp is GroundNode) return "0";
             if (pinNodeMap.TryGetValue((comp.Id, pin), out var n)) return n;
+            var pObj = comp.GetPin(pin);
+            if (pObj != null && pinNodeMap.TryGetValue((comp.Id, pObj.Id), out var n2)) return n2;
             return "0";
         }
+
+        string GetPinOrFirst(ComponentNode comp, int index, string fallbackPin)
+        {
+            if (comp.Pins.Count > index) return GetNode(comp, comp.Pins[index].Id);
+            return GetNode(comp, fallbackPin);
+        }
+
+        var models = new List<string>();
 
         // Write SPICE component lines
         foreach (var comp in circuit.Components)
         {
             switch (comp)
             {
-                case ResistorNode r:
-                    sb.AppendLine($"R_{r.Name} {GetNode(r, "pin1")} {GetNode(r, "pin2")} {r.Resistance.ToString(inv)}");
+                case EESimulator.Core.Components.Electrical.ResistorComponent r:
+                    sb.AppendLine($"R_{r.Name} {GetPinOrFirst(r, 0, "pin1")} {GetPinOrFirst(r, 1, "pin2")} {r.Resistance.ToString(inv)}");
                     break;
-                case CapacitorNode c:
-                    sb.AppendLine($"C_{c.Name} {GetNode(c, "pin1")} {GetNode(c, "pin2")} {c.Capacitance.ToString(inv)}");
+                case EESimulator.Core.Components.Electrical.CapacitorComponent c:
+                    string icStr = c.InitialCondition != 0 ? $" IC={c.InitialCondition.ToString(inv)}" : "";
+                    sb.AppendLine($"C_{c.Name} {GetPinOrFirst(c, 0, "pin1")} {GetPinOrFirst(c, 1, "pin2")} {c.Capacitance.ToString(inv)}{icStr}");
                     break;
-                case InductorNode l:
-                    sb.AppendLine($"L_{l.Name} {GetNode(l, "pin1")} {GetNode(l, "pin2")} {l.Inductance.ToString(inv)}");
+                case EESimulator.Core.Components.Electrical.InductorComponent l:
+                    string icL = l.InitialCondition != 0 ? $" IC={l.InitialCondition.ToString(inv)}" : "";
+                    sb.AppendLine($"L_{l.Name} {GetPinOrFirst(l, 0, "pin1")} {GetPinOrFirst(l, 1, "pin2")} {l.Inductance.ToString(inv)}{icL}");
                     break;
-                case VoltageSourceNode v:
-                    sb.AppendLine($"V_{v.Name} {GetNode(v, "positive")} {GetNode(v, "negative")} DC {v.Voltage.ToString(inv)}");
+                case EESimulator.Core.Components.Electrical.VoltageSourceComponent v:
+                    sb.AppendLine($"V_{v.Name} {GetPinOrFirst(v, 0, "positive")} {GetPinOrFirst(v, 1, "negative")} DC {v.Voltage.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.CurrentSourceComponent i:
+                    sb.AppendLine($"I_{i.Name} {GetPinOrFirst(i, 0, "positive")} {GetPinOrFirst(i, 1, "negative")} DC {i.Current.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.DiodeComponent d:
+                    string dModel = $"D_{d.Name}_mod";
+                    sb.AppendLine($"D_{d.Name} {GetPinOrFirst(d, 0, "anode")} {GetPinOrFirst(d, 1, "cathode")} {dModel}");
+                    models.Add($".model {dModel} D (IS={d.SaturationCurrent.ToString(inv)} N={d.EmissionCoefficient.ToString(inv)} BV={d.BreakdownVoltage.ToString(inv)} RS={d.SeriesResistance.ToString(inv)})");
+                    break;
+                case EESimulator.Core.Components.Electronics.BJTComponent b:
+                    string bModel = $"Q_{b.Name}_mod";
+                    sb.AppendLine($"Q_{b.Name} {GetNode(b, "collector")} {GetNode(b, "base")} {GetNode(b, "emitter")} {bModel}");
+                    models.Add($".model {bModel} {(b.Polarity == EESimulator.Core.Components.Electronics.BjtPolarity.NPN ? "NPN" : "PNP")} (BF={b.GainBeta.ToString(inv)} IS={b.SaturationCurrent.ToString(inv)} VAF={b.EarlyVoltage.ToString(inv)})");
+                    break;
+                case EESimulator.Core.Components.Electronics.MOSFETComponent m:
+                    string mModel = $"M_{m.Name}_mod";
+                    sb.AppendLine($"M_{m.Name} {GetNode(m, "drain")} {GetNode(m, "gate")} {GetNode(m, "source")} {GetNode(m, "source")} {mModel} W={m.ChannelWidth.ToString(inv)} L={m.ChannelLength.ToString(inv)}");
+                    models.Add($".model {mModel} {(m.Channel == EESimulator.Core.Components.Electronics.MosfetChannel.NChannel ? "NMOS" : "PMOS")} (VTO={m.ThresholdVoltage.ToString(inv)} KP={m.Transconductance.ToString(inv)} LAMBDA={m.Lambda.ToString(inv)})");
+                    break;
+                case EESimulator.Core.Components.Electronics.OpAmpComponent op:
+                    sb.AppendLine($"E_{op.Name} {GetNode(op, "out")} 0 {GetNode(op, "in_pos")} {GetNode(op, "in_neg")} {op.OpenLoopGain.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.MutualInductanceComponent k:
+                    sb.AppendLine($"K_{k.Name} {k.Inductor1} {k.Inductor2} {k.Coupling.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.General.WireComponent w when w.Resistance > 0:
+                    sb.AppendLine($"R_wire_{w.Name} {GetPinOrFirst(w, 0, "start")} {GetPinOrFirst(w, 1, "end")} {w.Resistance.ToString(inv)}");
                     break;
             }
         }
 
-        sb.AppendLine();
-        sb.AppendLine(".op");
-        sb.AppendLine(".end");
+        // Include SPICE models
+        if (models.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (var mod in models)
+            {
+                sb.AppendLine(mod);
+            }
+        }
 
+        sb.AppendLine();
+        if (settings != null)
+        {
+            switch (settings.Analysis)
+            {
+                case EESimulator.Engine.Simulation.AnalysisType.Transient:
+                    sb.AppendLine($".tran {settings.StepTime.ToString(inv)} {settings.StopTime.ToString(inv)} {settings.StartTime.ToString(inv)}");
+                    break;
+                case EESimulator.Engine.Simulation.AnalysisType.AC:
+                    sb.AppendLine($".ac dec {settings.AcPoints} {settings.AcStartFrequency.ToString(inv)} {settings.AcStopFrequency.ToString(inv)}");
+                    break;
+                case EESimulator.Engine.Simulation.AnalysisType.DCSweep:
+                    sb.AppendLine($".dc {settings.DcSweepSource} {settings.DcStart.ToString(inv)} {settings.DcStop.ToString(inv)} {settings.DcStep.ToString(inv)}");
+                    break;
+                default:
+                    sb.AppendLine(".op");
+                    break;
+            }
+        }
+        else
+        {
+            sb.AppendLine(".op");
+        }
+
+        sb.AppendLine(".end");
         return sb.ToString();
     }
 

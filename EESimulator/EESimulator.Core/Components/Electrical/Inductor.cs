@@ -40,6 +40,12 @@ public class InductorComponent : ElectricalComponent
         set => ElectricalParameters["ParallelMultiplier"] = value;
     }
 
+    public double DcResistance
+    {
+        get => ElectricalParameters.TryGetValue("Rdc", out var val) ? val : 0.0;
+        set => ElectricalParameters["Rdc"] = value;
+    }
+
     public InductorComponent()
     {
         Pins.Add(new ComponentPin("pin1", "1", -20, 0));
@@ -48,6 +54,7 @@ public class InductorComponent : ElectricalComponent
         InitialCondition = 0.0;
         SeriesMultiplier = 1.0;
         ParallelMultiplier = 1.0;
+        DcResistance = 0.0;
     }
 
     public InductorComponent(string name, double inductance = 1e-3) : this()

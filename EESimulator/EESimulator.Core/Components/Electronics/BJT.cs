@@ -29,6 +29,18 @@ public class BJTComponent : ElectronicComponent
         set => ElectricalParameters["Bf"] = value;
     }
 
+    public double SaturationCurrent
+    {
+        get => ElectricalParameters.TryGetValue("Is", out var val) ? val : 1e-14;
+        set => ElectricalParameters["Is"] = value;
+    }
+
+    public double EarlyVoltage
+    {
+        get => ElectricalParameters.TryGetValue("Vaf", out var val) ? val : 0.0;
+        set => ElectricalParameters["Vaf"] = value;
+    }
+
     public BJTComponent()
     {
         // Pin layout: Base (left), Collector (top-right), Emitter (bottom-right)
@@ -36,6 +48,8 @@ public class BJTComponent : ElectronicComponent
         Pins.Add(new ComponentPin("collector", "C", 15, -20));
         Pins.Add(new ComponentPin("emitter", "E", 15, 20));
         GainBeta = 100.0;
+        SaturationCurrent = 1e-14;
+        EarlyVoltage = 0.0;
         PartNumber = "2N2222";
     }
 

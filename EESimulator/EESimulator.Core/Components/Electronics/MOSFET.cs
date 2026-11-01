@@ -29,6 +29,30 @@ public class MOSFETComponent : ElectronicComponent
         set => ElectricalParameters["Vto"] = value;
     }
 
+    public double Transconductance
+    {
+        get => ElectricalParameters.TryGetValue("Kp", out var val) ? val : 2e-5;
+        set => ElectricalParameters["Kp"] = value;
+    }
+
+    public double ChannelWidth
+    {
+        get => ElectricalParameters.TryGetValue("W", out var val) ? val : 1e-4;
+        set => ElectricalParameters["W"] = value;
+    }
+
+    public double ChannelLength
+    {
+        get => ElectricalParameters.TryGetValue("L", out var val) ? val : 1e-6;
+        set => ElectricalParameters["L"] = value;
+    }
+
+    public double Lambda
+    {
+        get => ElectricalParameters.TryGetValue("Lambda", out var val) ? val : 0.0;
+        set => ElectricalParameters["Lambda"] = value;
+    }
+
     public MOSFETComponent()
     {
         // Pin layout: Gate (left), Drain (top-right), Source (bottom-right)
@@ -36,6 +60,10 @@ public class MOSFETComponent : ElectronicComponent
         Pins.Add(new ComponentPin("drain", "D", 15, -20));
         Pins.Add(new ComponentPin("source", "S", 15, 20));
         ThresholdVoltage = 2.0;
+        Transconductance = 2e-5;
+        ChannelWidth = 1e-4;
+        ChannelLength = 1e-6;
+        Lambda = 0.0;
         PartNumber = "IRF540N";
     }
 

@@ -15,9 +15,23 @@ public enum AnalysisType
 public class SimulationSettings
 {
     public AnalysisType Analysis { get; set; } = AnalysisType.OperatingPoint;
+
+    // Transient parameters
     public double StartTime { get; set; } = 0.0;
     public double StopTime { get; set; } = 0.01;
     public double StepTime { get; set; } = 1e-5;
+
+    // AC Sweep parameters
+    public string AcSweepType { get; set; } = "Decade"; // Decade, Octave, Linear
+    public int AcPoints { get; set; } = 10;
+    public double AcStartFrequency { get; set; } = 1.0;
+    public double AcStopFrequency { get; set; } = 1e5;
+
+    // DC Sweep parameters
+    public string DcSweepSource { get; set; } = "V1";
+    public double DcStart { get; set; } = 0.0;
+    public double DcStop { get; set; } = 5.0;
+    public double DcStep { get; set; } = 0.1;
 }
 
 public class SimulationResultsData

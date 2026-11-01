@@ -21,6 +21,30 @@ public class OpAmpComponent : ElectronicComponent
         set => ElectricalParameters["Aol"] = value;
     }
 
+    public double GainBandwidth
+    {
+        get => ElectricalParameters.TryGetValue("GBW", out var val) ? val : 1e6;
+        set => ElectricalParameters["GBW"] = value;
+    }
+
+    public double SlewRate
+    {
+        get => ElectricalParameters.TryGetValue("SR", out var val) ? val : 0.5;
+        set => ElectricalParameters["SR"] = value;
+    }
+
+    public double SupplyPositive
+    {
+        get => ElectricalParameters.TryGetValue("VccPlus", out var val) ? val : 15.0;
+        set => ElectricalParameters["VccPlus"] = value;
+    }
+
+    public double SupplyNegative
+    {
+        get => ElectricalParameters.TryGetValue("VccMinus", out var val) ? val : -15.0;
+        set => ElectricalParameters["VccMinus"] = value;
+    }
+
     public OpAmpComponent()
     {
         // 5 pins: Inverting (-), Non-inverting (+), Output, V+, V-
@@ -30,6 +54,10 @@ public class OpAmpComponent : ElectronicComponent
         Pins.Add(new ComponentPin("v_pos", "V+", 0, -25));
         Pins.Add(new ComponentPin("v_neg", "V-", 0, 25));
         OpenLoopGain = 100000.0;
+        GainBandwidth = 1e6;
+        SlewRate = 0.5;
+        SupplyPositive = 15.0;
+        SupplyNegative = -15.0;
         PartNumber = "LM741";
     }
 
