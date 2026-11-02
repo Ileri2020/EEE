@@ -1211,14 +1211,10 @@
                                 <!-- Power Rail (+VCC) -->
                                 <VerticalStackLayout Spacing="6" IsVisible="{Binding IsPowerComponent}">
                                     <Label Text="POWER SUPPLY RAIL PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Grid ColumnDefinitions="*" ColumnSpacing="8">
                                         <VerticalStackLayout Grid.Column="0" Spacing="2">
                                             <Label Text="Supply Voltage (V)" TextColor="#8B949E" FontSize="10"/>
                                             <Entry Text="{Binding EditPowerVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
-                                        </VerticalStackLayout>
-                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                            <Label Text="Bit Width (1 - 32)" TextColor="#8B949E" FontSize="10"/>
-                                            <Entry Text="{Binding EditPowerBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
                                         </VerticalStackLayout>
                                     </Grid>
                                 </VerticalStackLayout>

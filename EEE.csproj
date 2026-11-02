@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+		<MauiVersion>10.0.120</MauiVersion>
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -73,7 +74,7 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<DefaultItemExcludes>$(DefaultItemExcludes);libraries\**</DefaultItemExcludes>
+		<DefaultItemExcludes>$(DefaultItemExcludes);libraries\**;Platforms\dist\**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<ItemGroup>

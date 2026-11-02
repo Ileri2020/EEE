@@ -83,7 +83,7 @@ public partial class ExamplesViewModel : ObservableObject
             StatusMessage = $"Load error: {ex.Message}";
             if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
             {
-                await page.DisplayAlert("Error Loading Example", ex.Message, "OK");
+                await page.DisplayAlertAsync("Error Loading Example", ex.Message, "OK");
             }
         }
     }
@@ -107,7 +107,7 @@ public partial class ExamplesViewModel : ObservableObject
 
             if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
             {
-                await page.DisplayAlert("Example Exported", $"Exported {example.Title} to:\n{destPath}", "OK");
+                await page.DisplayAlertAsync("Example Exported", $"Exported {example.Title} to:\n{destPath}", "OK");
             }
         }
         catch (Exception ex)
@@ -115,7 +115,7 @@ public partial class ExamplesViewModel : ObservableObject
             StatusMessage = $"Export error: {ex.Message}";
             if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
             {
-                await page.DisplayAlert("Export Error", ex.Message, "OK");
+                await page.DisplayAlertAsync("Export Error", ex.Message, "OK");
             }
         }
     }
@@ -134,7 +134,7 @@ public partial class ExamplesViewModel : ObservableObject
 
             if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
             {
-                await page.DisplayAlert("Python Script Copied", $"Script for '{example.Title}' copied to clipboard!\nPaste it into the Script Viewport to execute.", "OK");
+                await page.DisplayAlertAsync("Python Script Copied", $"Script for '{example.Title}' copied to clipboard!\nPaste it into the Script Viewport to execute.", "OK");
             }
         }
         catch (Exception ex)

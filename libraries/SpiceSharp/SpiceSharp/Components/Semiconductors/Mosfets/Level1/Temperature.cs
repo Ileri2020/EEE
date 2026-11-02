@@ -38,27 +38,27 @@ namespace SpiceSharp.Components.Mosfets.Level1
         /// </summary>
         protected readonly ModelTemperature ModelTemperature;
 
-        /// <include file='../common/docs.xml' path='docs/members/SourceConductance/*'/>
+        /// <summary>Gets the source diffusion conductance.</summary>
         [ParameterName("sourceconductance"), ParameterInfo("Conductance at the source")]
         public double SourceConductance => Properties.SourceConductance.Equals(0.0) ? double.PositiveInfinity : Properties.SourceConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainConductance/*'/>
+        /// <summary>Gets the drain diffusion conductance.</summary>
         [ParameterName("drainconductance"), ParameterInfo("Conductance at the drain")]
         public double DrainConductance => Properties.DrainConductance.Equals(0.0) ? double.PositiveInfinity : Properties.DrainConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/SourceResistance/*'/>
+        /// <summary>Gets the source diffusion resistance.</summary>
         [ParameterName("rs"), ParameterInfo("Source resistance")]
         public double SourceResistance => Properties.SourceConductance.Equals(0.0) ? 0 : 1.0 / Properties.SourceConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainResistance/*'/>
+        /// <summary>Gets the drain diffusion resistance.</summary>
         [ParameterName("rd"), ParameterInfo("Drain conductance")]
         public double DrainResistance => Properties.DrainConductance.Equals(0.0) ? 0 : 1.0 / Properties.DrainConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/CriticalSourceVoltage/*'/>
+        /// <summary>Gets the critical source junction voltage.</summary>
         [ParameterName("sourcevcrit"), ParameterInfo("Critical source voltage")]
         public double SourceVCritical => Properties.SourceVCritical;
 
-        /// <include file='../common/docs.xml' path='docs/members/CriticalDrainVoltage/*'/>
+        /// <summary>Gets the critical drain junction voltage.</summary>
         [ParameterName("drainvcrit"), ParameterInfo("Critical drain voltage")]
         public double DrainVCritical => Properties.DrainVCritical;
 

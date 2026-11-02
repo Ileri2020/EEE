@@ -46,19 +46,19 @@ namespace SpiceSharp.Components.Mosfets.Level2
         /// <inheritdoc/>
         public event EventHandler<MosfetContributionEventArgs> UpdateContributions;
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainCurrent/*'/>
+        /// <summary>Gets the drain current.</summary>
         [ParameterName("id"), ParameterName("cd"), ParameterInfo("Drain current")]
         public double Id { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceCurrent/*'/>
+        /// <summary>Gets the bulk-source current.</summary>
         [ParameterName("ibs"), ParameterInfo("B-S junction current")]
         public double Ibs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainCurrent/*'/>
+        /// <summary>Gets the bulk-drain current.</summary>
         [ParameterName("ibd"), ParameterInfo("B-D junction current")]
         public double Ibd { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/Transconductance/*'/>
+        /// <summary>Gets the small-signal transconductance.</summary>
         [ParameterName("gm"), ParameterInfo("Transconductance")]
         public double Gm { get; private set; }
 

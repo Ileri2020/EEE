@@ -344,7 +344,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task ResetToDefaults()
     {
-        bool confirmed = await Shell.Current.DisplayAlert(
+        bool confirmed = await Shell.Current.DisplayAlertAsync(
             "Reset to Defaults",
             "This will delete all custom buttons and reset all settings to factory defaults. Continue?",
             "Reset",

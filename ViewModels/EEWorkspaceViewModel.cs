@@ -231,7 +231,6 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     // Power
     [ObservableProperty] public partial double EditPowerVoltage { get; set; } = 5.0;
-    [ObservableProperty] public partial int EditPowerBitWidth { get; set; } = 1;
 
     // PullResistor
     [ObservableProperty] public partial string EditPullMode { get; set; } = "PullUp";
@@ -1686,7 +1685,6 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditParamName = "Rail Voltage (V)";
             EditParamValue = pw.Voltage;
             EditPowerVoltage = pw.Voltage;
-            EditPowerBitWidth = pw.BitWidth;
         }
         else if (comp is EESimulator.Core.Components.Electrical.PullResistorComponent pr)
         {
@@ -2078,7 +2076,6 @@ public partial class EEWorkspaceViewModel : ObservableObject
         else if (EditingComponent is EESimulator.Core.Components.Electrical.PowerComponent pw)
         {
             pw.Voltage = EditPowerVoltage != 0 ? EditPowerVoltage : EditParamValue;
-            pw.BitWidth = Math.Clamp(EditPowerBitWidth, 1, 32);
         }
         else if (EditingComponent is EESimulator.Core.Components.Electrical.PullResistorComponent pr)
         {
@@ -2449,7 +2446,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     PythonApi.AddPin(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
                         args.Length > 3 ? Unquote(args[3]) : "Input",
                         args.Length > 4 ? (int)ParseD(args[4]) : 1,
-                        args.Length > 5 ? ParseD(args[5]) : 0.0);
+                        args.Length > 5 ? (long)ParseD(args[5]) : 0L);
                     return $"[ok] pin {Unquote(args[0])} added";
 
                 case "add_power" when args.Length >= 3:
@@ -2471,7 +2468,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
                 case "add_probe" when args.Length >= 3:
                     PythonApi.AddProbe(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
-                        args.Length > 3 ? Unquote(args[3]) : "PRB");
+                        args.Length > 3 ? ParseD(args[3]) : 10e6);
                     return $"[ok] probe {Unquote(args[0])} added";
 
                 case "add_digital_transistor" or "add_transistor" when args.Length >= 3:
@@ -2497,7 +2494,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
                 case "add_constant" when args.Length >= 3:
                     PythonApi.AddConstant(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
-                        args.Length > 3 ? ParseD(args[3]) : 1.0,
+                        args.Length > 3 ? (long)ParseD(args[3]) : 1L,
                         args.Length > 4 ? ParseD(args[4]) : 5.0,
                         args.Length > 5 ? ParseD(args[5]) : 0.0);
                     return $"[ok] constant {Unquote(args[0])} added";

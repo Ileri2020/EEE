@@ -83,10 +83,12 @@ public class SpiceSharpAdapter : ISimulationEngine
                 {
                     case ResistorComponent r:
                     {
-                        var res = new SpiceSharp.Components.Resistor(r.Name, nodeA, nodeB, Math.Max(r.Resistance, 1e-6));
+                        double temperatureDelta = r.Temperature - 27.0;
+                        double resistanceScale = 1.0 + r.TemperatureCoefficient1 * temperatureDelta +
+                            r.TemperatureCoefficient2 * temperatureDelta * temperatureDelta;
+                        double effectiveResistance = Math.Max(r.Resistance * Math.Max(resistanceScale, 1e-6), 1e-6);
+                        var res = new SpiceSharp.Components.Resistor(r.Name, nodeA, nodeB, effectiveResistance);
                         res.Parameters.TemperatureCelsius = r.Temperature;
-                        if (r.TemperatureCoefficient1 != 0) res.Parameters.TemperatureCoefficient1 = r.TemperatureCoefficient1;
-                        if (r.TemperatureCoefficient2 != 0) res.Parameters.TemperatureCoefficient2 = r.TemperatureCoefficient2;
                         spiceCircuit.Add(res);
                         break;
                     }
@@ -100,13 +102,13 @@ public class SpiceSharpAdapter : ISimulationEngine
                             spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{c.Name}_esr", nodeA, capNodeA, c.EquivalentSeriesResistance));
                         }
 
-                        var cap = new SpiceSharp.Components.Capacitor(c.Name, capNodeA, nodeB, Math.Max(c.Capacitance, 1e-15));
+                        double temperatureDelta = c.Temperature - 27.0;
+                        double capacitanceScale = 1.0 + c.TemperatureCoefficient1 * temperatureDelta +
+                            c.TemperatureCoefficient2 * temperatureDelta * temperatureDelta;
+                        double effectiveCapacitance = Math.Max(c.Capacitance * Math.Max(capacitanceScale, 1e-12), 1e-15);
+                        var cap = new SpiceSharp.Components.Capacitor(c.Name, capNodeA, nodeB, effectiveCapacitance);
                         if (c.InitialCondition != 0)
                             cap.Parameters.InitialCondition = c.InitialCondition;
-                        if (c.TemperatureCoefficient1 != 0)
-                            cap.Parameters.TemperatureCoefficient1 = c.TemperatureCoefficient1;
-                        if (c.TemperatureCoefficient2 != 0)
-                            cap.Parameters.TemperatureCoefficient2 = c.TemperatureCoefficient2;
                         spiceCircuit.Add(cap);
                         break;
                     }
