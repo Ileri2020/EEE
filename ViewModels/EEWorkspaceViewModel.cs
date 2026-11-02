@@ -1382,6 +1382,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             var draft = await _remoteApi.GenerateSchemaScriptAsync(
                 AiSchemaPrompt,
                 ScriptText,
+                ConsoleOutput,
                 Circuit,
                 _simManager.LastResults);
             if (draft.Questions.Count > 0 && string.IsNullOrWhiteSpace(draft.Script))
@@ -1415,6 +1416,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             StatusText    = "Running script…";
             ConsoleOutput = "";
+            bool scriptHadErrors = false;
 
             foreach (var rawLine in ScriptText.Split('\n'))
             {
@@ -1427,19 +1429,30 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 // Parse "eesim.xxx(...)" calls and dispatch to PythonApi
                 var result = DispatchApiCall(line);
                 if (result != null)
+                {
                     ConsoleOutput += result + "\n";
+                    if (result.StartsWith("[error]", StringComparison.OrdinalIgnoreCase) ||
+                        result.StartsWith("[unknown", StringComparison.OrdinalIgnoreCase))
+                        scriptHadErrors = true;
+                }
             }
 
             var commandOutput = ConsoleOutput;
             IsSimulating = true;
-            StatusText = "Changes applied. Running operating-point simulation for AI feedback…";
+            StatusText = scriptHadErrors
+                ? "Script had errors. Simulating the resulting circuit state for AI feedback…"
+                : "Changes applied. Running operating-point simulation for AI feedback…";
             var feedback = await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = commandOutput + "\n" + FormatResults(feedback);
             AiSchemaStatus = feedback.Success
-                ? "Simulation feedback refreshed. The next AI request includes per-component measurements."
-                : $"Changes applied, but simulation failed: {feedback.Message}";
-            StatusText = feedback.Success ? "Script applied and simulated ✓" : "Script applied; simulation failed";
+                ? scriptHadErrors
+                    ? "Some script commands failed. Simulation feedback reflects the resulting partial state; the next AI request includes the errors and measurements."
+                    : "Simulation feedback refreshed. The next AI request includes per-component measurements."
+                : $"Simulation feedback unavailable: {feedback.Message}";
+            StatusText = feedback.Success
+                ? scriptHadErrors ? "Script partially applied; simulation complete" : "Script applied and simulated ✓"
+                : scriptHadErrors ? "Script had errors; simulation failed" : "Script applied; simulation failed";
             CircuitChanged?.Invoke();
         }
         catch (Exception ex)
