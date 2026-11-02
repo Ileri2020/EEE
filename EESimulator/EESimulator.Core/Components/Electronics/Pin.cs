@@ -38,7 +38,6 @@ public class PinComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Pin";
-    public override string SpicePrefix => "PIN";
     public override string Description => "Named I/O Port Terminal (Input / Output)";
 
     public PinDirection Direction

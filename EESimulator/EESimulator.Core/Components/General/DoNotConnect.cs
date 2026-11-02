@@ -15,7 +15,6 @@ public class DoNotConnectComponent : GeneralComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "DoNotConnect";
-    public override string SpicePrefix => "DNC";
     public override string Description => "Do Not Connect (DNC) Marker";
 
     public override bool IsSimulatable => true;

@@ -15,7 +15,6 @@ public class ProbeComponent : GeneralComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Probe";
-    public override string SpicePrefix => "PRB";
     public override string Description => "Voltage / Current Probe Point";
 
     public override bool IsSimulatable => true;

@@ -29,7 +29,6 @@ public class DigitalTransistorComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Transistor";
-    public override string SpicePrefix => "SWT";
     public override string Description => "Digital-Mode Switch Transistor (N-Type / P-Type)";
 
     public DigitalTransistorType TransistorType

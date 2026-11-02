@@ -23,7 +23,6 @@ public class BitExtenderComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "BitExtender";
-    public override string SpicePrefix => "EXT";
     public override string Description => "Bus Bit Extender (Sign / Zero / One Extend)";
 
     public int InputBitWidth

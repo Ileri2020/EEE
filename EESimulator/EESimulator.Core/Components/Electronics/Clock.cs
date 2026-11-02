@@ -15,7 +15,6 @@ public class ClockComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Clock";
-    public override string SpicePrefix => "CLK";
     public override string Description => "Digital Clock Pulse Generator";
 
     /// <summary>Clock frequency in Hertz (Hz). Default is 1000 Hz (1 kHz).</summary>

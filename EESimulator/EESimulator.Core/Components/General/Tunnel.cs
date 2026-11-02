@@ -15,7 +15,6 @@ public class TunnelComponent : GeneralComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Tunnel";
-    public override string SpicePrefix => "TUN";
     public override string Description => "Named Net Tunnel / Label Junction";
 
     public override bool IsSimulatable => true;

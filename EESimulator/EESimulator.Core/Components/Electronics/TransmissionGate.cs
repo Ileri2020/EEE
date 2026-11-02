@@ -16,7 +16,6 @@ public class TransmissionGateComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "TransmissionGate";
-    public override string SpicePrefix => "TG";
     public override string Description => "CMOS Transmission Gate (Bilateral Switch)";
 
     /// <summary>On-state resistance (Ω). Default 0.2 Ω.</summary>

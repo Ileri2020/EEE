@@ -614,31 +614,6 @@ public class PythonApi
     }
 
     // Output & Logic Component Helpers
-    public void AddBulb(string name, double x, double y, double resistance = 50.0, double ratedVoltage = 6.0)
-    {
-        AddComponent("bulb", name, x, y, resistance);
-        if (ratedVoltage != 6.0) SetProperty(name, "RatedVoltage", ratedVoltage);
-    }
-
-    public void AddLED(string name, double x, double y, string color = "Red", double forwardVoltage = 2.0)
-    {
-        AddComponent("led", name, x, y, forwardVoltage);
-        if (!string.Equals(color, "Red", StringComparison.OrdinalIgnoreCase))
-            SetCustomProperty(name, "ColorName", color);
-    }
-
-    public void AddLogicInput(string name, double x, double y, bool initialState = false, double highVoltage = 5.0, double lowVoltage = 0.0)
-    {
-        AddComponent("logicinput", name, x, y, highVoltage);
-        if (initialState) SetCustomProperty(name, "State", true);
-        if (lowVoltage != 0.0) SetProperty(name, "LowVoltage", lowVoltage);
-    }
-
-    public void AddLogicOutput(string name, double x, double y, double threshold = 2.5)
-    {
-        AddComponent("logicoutput", name, x, y, threshold);
-    }
-
     public void ToggleLogic(string componentName)
     {
         var comp = _circuit.FindChild<ComponentNode>(componentName);
