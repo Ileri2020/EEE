@@ -911,7 +911,7 @@ public static class DigitalLogicSimulator
                     EvaluateTtlTransceiver245(ttl);
                     break;
                 case "7454":
-                    SetTtl(ttl, 8, !((TtlRead(ttl, 1) && TtlRead(ttl, 11)) || (TtlRead(ttl, 2) && TtlRead(ttl, 3)) || (TtlRead(ttl, 4) && TtlRead(ttl, 5)) || (TtlRead(ttl, 9) && TtlRead(ttl, 10))));
+                    SetTtl(ttl, 8, !((TtlRead(ttl, 1) && TtlRead(ttl, 13)) || (TtlRead(ttl, 2) && TtlRead(ttl, 3)) || (TtlRead(ttl, 4) && TtlRead(ttl, 5)) || (TtlRead(ttl, 9) && TtlRead(ttl, 10))));
                     break;
                 case "7464":
                     SetTtl(ttl, 8, !((TtlRead(ttl, 2) && TtlRead(ttl, 3)) || (TtlRead(ttl, 4) && TtlRead(ttl, 5) && TtlRead(ttl, 6)) || (TtlRead(ttl, 9) && TtlRead(ttl, 10)) || (TtlRead(ttl, 11) && TtlRead(ttl, 12) && TtlRead(ttl, 13) && TtlRead(ttl, 1))));

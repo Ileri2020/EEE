@@ -1365,7 +1365,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;
             default:
                 if (comp is EESimulator.Core.Components.Electronics.TtlPackageComponent ttl)
-                    ComponentSymbolDrawer.DrawTtlPackage(canvas, ttl.PartNumber);
+                    ComponentSymbolDrawer.DrawTtlPackage(canvas, ttl.PartNumber, ttl.ShowInternalStructure);
                 else
                     DrawGenericComponent(canvas, comp.ComponentType);
                 break;

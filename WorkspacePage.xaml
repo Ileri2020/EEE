@@ -1366,6 +1366,19 @@
                                     </Grid>
                                 </VerticalStackLayout>
 
+                                <!-- 74-Series TTL package options -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsTtlPackageComponent}">
+                                    <Label Text="74-SERIES TTL PACKAGE" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0" Text="Expose VCC and GND pins" TextColor="#C9D1D9" FontSize="11" VerticalOptions="Center"/>
+                                        <Switch Grid.Column="1" IsToggled="{Binding EditTtlExposeSupplyPins}"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0" Text="Show internal structure" TextColor="#C9D1D9" FontSize="11" VerticalOptions="Center"/>
+                                        <Switch Grid.Column="1" IsToggled="{Binding EditTtlShowInternalStructure}"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+
                                 <!-- Do Not Connect Marker -->
                                 <VerticalStackLayout Spacing="6" IsVisible="{Binding IsDoNotConnectComponent}">
                                     <Label Text="DO NOT CONNECT (DNC) MARKER" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>

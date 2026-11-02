@@ -120,42 +120,8 @@ public static class ComponentSymbolDrawer
             case "LossyTransmissionLine": DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   DrawMicrostripLine(canvas); break;
-            default:
-                if (componentType.StartsWith("74", StringComparison.Ordinal) && componentType.Length >= 4)
-                    DrawTtlPackage(canvas, componentType);
-                else
-                    DrawGenericComponent(canvas, componentType);
-                break;
+            default:                 DrawGenericComponent(canvas, componentType); break;
         }
-    }
-
-    public static void DrawTtlPackage(ICanvas canvas, string partNumber)
-    {
-        int pinCount = EESimulator.Core.Components.Electronics.TtlPackageComponent.IsSupported(partNumber)
-            ? EESimulator.Core.Components.Electronics.TtlPackageComponent.GetPackagePinCount(partNumber)
-            : 14;
-        int perSide = pinCount / 2;
-        canvas.StrokeColor = Color.FromArgb("#58A6FF");
-        canvas.StrokeSize = 2f;
-        canvas.FillColor = Color.FromArgb("#161B22");
-        const float bodyHeight = 40f;
-        canvas.FillRoundedRectangle(-17, -bodyHeight / 2, 34, bodyHeight, 4);
-        canvas.DrawRoundedRectangle(-17, -bodyHeight / 2, 34, bodyHeight, 4);
-        canvas.DrawArc(-4, -bodyHeight / 2 - 1, 8, 8, 0, 180, false, false);
-        for (int i = 0; i < perSide; i++)
-        {
-            float pinY = -18f + 36f * i / Math.Max(1, perSide - 1);
-            canvas.DrawLine(-30, pinY, -17, pinY);
-            canvas.DrawLine(17, pinY, 30, pinY);
-            canvas.FillColor = Color.FromArgb("#79C0FF");
-            canvas.FillCircle(-30, pinY, 1.4f);
-            canvas.FillCircle(30, pinY, 1.4f);
-        }
-        canvas.FontColor = Color.FromArgb("#79C0FF");
-        canvas.FontSize = partNumber.Length > 4 ? 8 : 10;
-        canvas.DrawString(partNumber, -15, -6, 30, 13, HorizontalAlignment.Center, VerticalAlignment.Center);
-        canvas.FontSize = 6;
-        canvas.DrawString("TTL", -15, 6, 30, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
     }
 
     public static void DrawDigitalBlock(ICanvas canvas, string label, string color)
@@ -743,6 +709,71 @@ public static class ComponentSymbolDrawer
         {
             canvas.DrawLine(-25, y, -20, y);
             canvas.DrawLine(20, y, 25, y);
+        }
+    }
+
+    public static void DrawTtlPackage(ICanvas canvas, string partNumber, bool showInternalStructure)
+    {
+        int pinCount = EESimulator.Core.Components.Electronics.TtlPackageComponent.GetPackagePinCount(partNumber);
+        int pinsPerSide = pinCount / 2;
+        const float bodyLeft = -18f;
+        const float bodyRight = 18f;
+        const float bodyTop = -22f;
+        const float bodyHeight = 44f;
+
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.6f;
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(bodyLeft, bodyTop, bodyRight - bodyLeft, bodyHeight, 3f);
+        canvas.DrawRoundedRectangle(bodyLeft, bodyTop, bodyRight - bodyLeft, bodyHeight, 3f);
+
+        // DIP notch marks pin 1 at the upper-left corner.
+        canvas.FillColor = Color.FromArgb("#0D1117");
+        canvas.FillRectangle(-4f, bodyTop - 1f, 8f, 3f);
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawArc(-4f, bodyTop - 2f, 8f, 8f, 0f, 180f, false, false);
+
+        float pinStep = 36f / Math.Max(1, pinsPerSide - 1);
+        canvas.StrokeSize = 1.2f;
+        canvas.FontColor = Color.FromArgb("#8B949E");
+        canvas.FontSize = pinsPerSide > 8 ? 4.5f : 5.5f;
+        for (int index = 0; index < pinsPerSide; index++)
+        {
+            float y = -18f + index * pinStep;
+            int leftPin = index + 1;
+            int rightPin = pinCount - index;
+            canvas.DrawLine(-30f, y, bodyLeft, y);
+            canvas.DrawLine(bodyRight, y, 30f, y);
+            canvas.DrawString(leftPin.ToString(), bodyLeft + 1f, y - 3f, 8f, 6f,
+                HorizontalAlignment.Left, VerticalAlignment.Center);
+            canvas.DrawString(rightPin.ToString(), bodyRight - 9f, y - 3f, 8f, 6f,
+                HorizontalAlignment.Right, VerticalAlignment.Center);
+        }
+
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.FontSize = showInternalStructure ? 6.5f : 9f;
+        canvas.DrawString(partNumber, -15f, showInternalStructure ? -19f : -7f, 30f, showInternalStructure ? 8f : 14f,
+            HorizontalAlignment.Center, VerticalAlignment.Center);
+
+        if (!showInternalStructure)
+            return;
+
+        var gates = EESimulator.Core.Components.Electronics.TtlPinCatalog.GetGates(partNumber);
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 4.5f;
+        if (gates.Count == 0)
+        {
+            canvas.DrawString("74 SERIES", -14f, 4f, 28f, 8f,
+                HorizontalAlignment.Center, VerticalAlignment.Center);
+            return;
+        }
+
+        int visibleGateCount = Math.Min(gates.Count, 4);
+        for (int i = 0; i < visibleGateCount; i++)
+        {
+            string operation = gates[i].Operation;
+            canvas.DrawString(operation, -14f, -10f + i * 7f, 28f, 6f,
+                HorizontalAlignment.Center, VerticalAlignment.Center);
         }
     }
 

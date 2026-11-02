@@ -208,6 +208,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty] public partial bool IsBitExtenderComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsConstantComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsDoNotConnectComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsTtlPackageComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsLossyTransmissionLineComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsCoaxialCableComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsMicrostripLineComponent { get; set; } = false;
@@ -270,6 +271,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty] public partial int EditConstantBitWidth { get; set; } = 1;
     [ObservableProperty] public partial double EditConstantVoltageHigh { get; set; } = 5.0;
     [ObservableProperty] public partial double EditConstantVoltageLow { get; set; } = 0.0;
+
+    // TTL package options (Logisim Vcc/Gnd ports and internal structure)
+    [ObservableProperty] public partial bool EditTtlExposeSupplyPins { get; set; } = true;
+    [ObservableProperty] public partial bool EditTtlShowInternalStructure { get; set; } = false;
 
     // DoNotConnect
     [ObservableProperty] public partial int EditDncBitWidth { get; set; } = 1;
@@ -1562,6 +1567,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         IsBitExtenderComponent = comp is EESimulator.Core.Components.Electronics.BitExtenderComponent;
         IsConstantComponent = comp is EESimulator.Core.Components.Electronics.ConstantComponent;
         IsDoNotConnectComponent = comp is EESimulator.Core.Components.General.DoNotConnectComponent;
+        IsTtlPackageComponent = comp is TtlPackageComponent;
         IsLossyTransmissionLineComponent = comp is EESimulator.Core.Components.Electrical.LossyTransmissionLineComponent;
         IsCoaxialCableComponent = comp is EESimulator.Core.Components.Electrical.CoaxialCableComponent;
         IsMicrostripLineComponent = comp is EESimulator.Core.Components.Electrical.MicrostripLineComponent;
@@ -1829,6 +1835,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditConstantBitWidth = cst.BitWidth;
             EditConstantVoltageHigh = cst.VoltageHigh;
             EditConstantVoltageLow = cst.VoltageLow;
+        }
+        else if (comp is TtlPackageComponent ttl)
+        {
+            EditParamName = "DIP Pin Count";
+            EditParamValue = ttl.PackagePinCount;
+            EditTtlExposeSupplyPins = ttl.ExposeSupplyPins;
+            EditTtlShowInternalStructure = ttl.ShowInternalStructure;
         }
         else if (comp is EESimulator.Core.Components.General.DoNotConnectComponent dnc)
         {
@@ -2214,6 +2227,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
             cst.BitWidth = Math.Clamp(EditConstantBitWidth, 1, 32);
             cst.VoltageHigh = EditConstantVoltageHigh;
             cst.VoltageLow = EditConstantVoltageLow;
+        }
+        else if (EditingComponent is TtlPackageComponent ttl)
+        {
+            ttl.ExposeSupplyPins = EditTtlExposeSupplyPins;
+            ttl.ShowInternalStructure = EditTtlShowInternalStructure;
         }
         else if (EditingComponent is EESimulator.Core.Components.General.DoNotConnectComponent dnc)
         {
