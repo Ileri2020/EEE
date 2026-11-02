@@ -79,22 +79,22 @@ namespace SpiceSharp.Components.Mosfets.Level1
         [ParameterName("vdsat"), ParameterInfo("Saturation drain-source voltage")]
         public double Vdsat { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/Mode/*'/>
+        /// <summary>Gets the current mode of operation; -1 indicates that source and drain have switched.</summary>
         public double Mode { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/GateSourceVoltage/*'/>
+        /// <summary>Gets the gate-source voltage.</summary>
         [ParameterName("vgs"), ParameterInfo("Gate-Source voltage")]
         public double Vgs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainSourceVoltage/*'/>
+        /// <summary>Gets the drain-source voltage.</summary>
         [ParameterName("vds"), ParameterInfo("Drain-Source voltage")]
         public double Vds { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceVoltage/*'/>
+        /// <summary>Gets the bulk-source voltage.</summary>
         [ParameterName("vbs"), ParameterInfo("Bulk-Source voltage")]
         public double Vbs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainVoltage/*'/>
+        /// <summary>Gets the bulk-drain voltage.</summary>
         [ParameterName("vbd"), ParameterInfo("Bulk-Drain voltage")]
         public double Vbd { get; private set; }
 
@@ -328,7 +328,11 @@ namespace SpiceSharp.Components.Mosfets.Level1
                 );
         }
 
-        /// <include file='../common/docs.xml' path='docs/methods/Initialize/*'/>
+        /// <summary>Initializes the voltages used to calculate the current iteration.</summary>
+        /// <param name="vgs">The gate-source voltage.</param>
+        /// <param name="vds">The drain-source voltage.</param>
+        /// <param name="vbs">The bulk-source voltage.</param>
+        /// <param name="check">True if the voltages were limited to aid convergence.</param>
         protected void Initialize(out double vgs, out double vds, out double vbs, out bool check)
         {
             check = true;

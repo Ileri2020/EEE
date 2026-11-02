@@ -33,19 +33,19 @@ namespace SpiceSharp.Components.Mosfets.Level1
         [ParameterName("inoise"), ParameterInfo("The total integrated input noise")]
         public double TotalInputNoise => _rd.TotalInputNoise + _rs.TotalInputNoise + _id.TotalInputNoise + _flicker.TotalInputNoise;
 
-        /// <include file='../common/docs.xml' path='docs/members/ThermalDrain/*'/>
+        /// <summary>Gets the noise source representing thermal noise from the drain resistance.</summary>
         [ParameterName("rd"), ParameterInfo("The thermal noise of the drain resistor")]
         public INoiseSource ThermalDrain => _rd;
 
-        /// <include file='../common/docs.xml' path='docs/members/ThermalSource/*'/>
+        /// <summary>Gets the noise source representing thermal noise from the source resistance.</summary>
         [ParameterName("rs"), ParameterInfo("The thermal noise of the source resistor")]
         public INoiseSource ThermalSource => _rs;
 
-        /// <include file='../common/docs.xml' path='docs/members/ShotNoise/*'/>
+        /// <summary>Gets the noise source representing shot noise from the drain-source current.</summary>
         [ParameterName("id"), ParameterInfo("The shot noise of the drain current")]
         public INoiseSource ShotDrainCurrent => _id;
 
-        /// <include file='../common/docs.xml' path='docs/members/FlickerNoise/*'/>
+        /// <summary>Gets the noise source representing flicker noise from the drain-source current.</summary>
         [ParameterName("flicker"), ParameterInfo("The flicker noise")]
         public INoiseSource Flicker => _flicker;
 

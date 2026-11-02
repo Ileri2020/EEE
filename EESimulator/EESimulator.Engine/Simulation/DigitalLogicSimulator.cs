@@ -58,6 +58,12 @@ public static class DigitalLogicSimulator
         {
             if (!IsOutputPin(component, pin.Id)) continue;
             if (component is ControlledBufferComponent && !Bool(component, "_triStateEnabled", true)) continue;
+            if (component.CustomProperties.TryGetValue($"OutputVoltage:{pin.Id}", out var outputVoltage) &&
+                double.TryParse(outputVoltage?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var storedVoltage))
+            {
+                yield return (pin.Id, storedVoltage);
+                continue;
+            }
             double high = component switch
             {
                 LogicInputComponent li => li.HighVoltage,
@@ -456,6 +462,11 @@ public static class DigitalLogicSimulator
     }
 
     private static long Mask(int width) => width >= 63 ? long.MaxValue : (1L << Math.Clamp(width, 1, 62)) - 1;
+    private static void Set(ComponentNode component, string pinId, bool value, double highVoltage, double lowVoltage)
+    {
+        component.CustomProperties[$"Output:{pinId}"] = value;
+        component.CustomProperties[$"OutputVoltage:{pinId}"] = value ? highVoltage : lowVoltage;
+    }
     private static bool Bool(ComponentNode component, string key, bool fallback) => component.CustomProperties.TryGetValue(key, out var value) && bool.TryParse(value?.ToString(), out var parsed) ? parsed : fallback;
     private static double Number(ComponentNode component, string key, double fallback) => component.CustomProperties.TryGetValue(key, out var value) && double.TryParse(value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed) ? parsed : fallback;
     private static void SetBool(ComponentNode component, string key, bool value) => component.CustomProperties[key] = value;
