@@ -5,6 +5,7 @@ using EESimulator.Commands.Commands;
 using EESimulator.Core.Models;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.General;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.UI;
 using EESimulator.Scripting;
 using EESimulator.Scripting.API;
@@ -606,6 +607,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
             new ComponentPaletteItem("ROM",           "ROM", "ROM", "#D2A8FF", "Memory", "Read-only memory", "rom.svg"),
             new ComponentPaletteItem("Random",        "RND", "RND", "#D2A8FF", "Memory", "Pseudo-random generator", "random.svg"),
         }),
+        new ComponentPaletteGroup("📦 74-Series TTL", TtlPackageComponent.SupportedPackages.Keys
+            .OrderBy(part => part, StringComparer.Ordinal)
+            .Select(part => new ComponentPaletteItem(part, part, "TTL", "#58A6FF", "TTL", $"74-series {part}, {TtlPackageComponent.GetPackagePinCount(part)}-pin DIP package", $"ttl_{part}.svg"))
+            .ToArray()),
         new ComponentPaletteGroup("∑ Arithmetic", new[]
         {
             new ComponentPaletteItem("Adder", "＋", "ADD", "#FFB86C", "Arithmetic", "N-bit binary adder", "adder.svg"),
@@ -2367,6 +2372,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
                         args.Length > 4 ? ParseD(args[4]) : 0);
                     return $"[ok] component {Unquote(args[1])} added";
 
+                case "add_ttl" when args.Length >= 4:
+                    PythonApi.AddTtlPackage(Unquote(args[0]), Unquote(args[1]), ParseD(args[2]), ParseD(args[3]));
+                    return $"[ok] TTL {Unquote(args[0])} package {Unquote(args[1])} added";
+
                 case "add_resistor" when args.Length >= 3:
                     PythonApi.AddResistor(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
                         args.Length > 3 ? ParseD(args[3]) : 1000.0,
@@ -2436,27 +2445,6 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     PythonApi.SetMemoryWord(Unquote(args[0]), (int)ParseD(args[1]), (long)ParseD(args[2]));
                     CircuitChanged?.Invoke();
                     return "[ok] memory word set";
-
-                case "press_button" or "release_button" when args.Length >= 1:
-                    PythonApi.PressButton(Unquote(args[0]), method == "press_button");
-                    CircuitChanged?.Invoke();
-                    return "[ok] button state set";
-
-                case "set_dip_switch" when args.Length >= 2:
-                    PythonApi.SetDipSwitch(Unquote(args[0]), (long)ParseD(args[1]));
-                    CircuitChanged?.Invoke();
-                    return "[ok] DIP switch value set";
-
-                case "set_joystick" when args.Length >= 3:
-                    PythonApi.SetJoystick(Unquote(args[0]), (int)ParseD(args[1]), (int)ParseD(args[2]), args.Length > 3 && bool.TryParse(Unquote(args[3]), out var pressed) && pressed);
-                    CircuitChanged?.Invoke();
-                    return "[ok] joystick state set";
-
-                case "keyboard_key" when args.Length >= 2:
-                    string keyText = Unquote(args[1]);
-                    PythonApi.SendKeyboardKey(Unquote(args[0]), keyText.Length == 1 ? keyText[0] : (int)ParseD(args[1]));
-                    CircuitChanged?.Invoke();
-                    return "[ok] keyboard byte queued";
 
                 case "set_live_probe" or "set_probe" when args.Length >= 2:
                     PythonApi.SetLiveProbe(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var lp) && lp);

@@ -707,6 +707,20 @@ public static class ComponentRegistry
         Register<VideoComponent>("io.video", "Video", "I/O", "VID", d => { d.Description = "Pixel framebuffer display"; d.Icon = "video.svg"; });
         Register<RealTimeClockComponent>("io.realtimeclock", "RealTimeClock", "I/O", "RTC", d => { d.Description = "Wall-clock time source"; d.Icon = "realtimeclock.svg"; });
 
+        // ── 74-series TTL packages ─────────────────────────────────────────
+        string[] ttlPackages = { "7400", "7402", "7404", "7408", "7410", "7411", "7420", "7421", "7427", "7430", "7432", "7434", "7436", "7442", "7443", "7444", "7447", "7451", "7454", "7458", "7464", "7474", "7476", "7485", "7486", "7487", "74138", "74139", "74151", "74153", "74157", "74161", "74163", "74165", "74166", "74175", "74191", "74194", "74195", "74240", "74241", "74244", "74245", "74266", "74273", "74283", "74299", "74377", "74381", "74541", "74670", "747266" };
+        foreach (string partNumber in ttlPackages)
+        {
+            string package = partNumber;
+            Register<TtlPackageComponent>($"ttl.{package}", package, "TTL", package, d =>
+            {
+                d.Description = $"74-series TTL IC {package} ({TtlPackageComponent.GetPackagePinCount(package)}-pin DIP)";
+                d.Icon = $"ttl_{package}.svg";
+                d.FactoryMethod = () => new TtlPackageComponent(package);
+                d.DefaultParameters["PackagePinCount"] = TtlPackageComponent.GetPackagePinCount(package);
+            });
+        }
+
         // ── Aliases ──────────────────────────────────────────────────────────
         RegisterAlias("tline", "electrical.transmissionline");
         RegisterAlias("lossytline", "electrical.lossytransmissionline");

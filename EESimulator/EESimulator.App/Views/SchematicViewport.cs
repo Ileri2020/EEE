@@ -1363,7 +1363,12 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "LossyTransmissionLine": ComponentSymbolDrawer.DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     ComponentSymbolDrawer.DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;
-            default:                 DrawGenericComponent(canvas, comp.ComponentType); break;
+            default:
+                if (comp is EESimulator.Core.Components.Electronics.TtlPackageComponent ttl)
+                    ComponentSymbolDrawer.DrawTtlPackage(canvas, ttl.PartNumber);
+                else
+                    DrawGenericComponent(canvas, comp.ComponentType);
+                break;
         }
 
         canvas.RestoreState();

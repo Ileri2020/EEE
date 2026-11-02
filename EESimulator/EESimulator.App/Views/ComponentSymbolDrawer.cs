@@ -120,8 +120,42 @@ public static class ComponentSymbolDrawer
             case "LossyTransmissionLine": DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   DrawMicrostripLine(canvas); break;
-            default:                 DrawGenericComponent(canvas, componentType); break;
+            default:
+                if (componentType.StartsWith("74", StringComparison.Ordinal) && componentType.Length >= 4)
+                    DrawTtlPackage(canvas, componentType);
+                else
+                    DrawGenericComponent(canvas, componentType);
+                break;
         }
+    }
+
+    public static void DrawTtlPackage(ICanvas canvas, string partNumber)
+    {
+        int pinCount = EESimulator.Core.Components.Electronics.TtlPackageComponent.IsSupported(partNumber)
+            ? EESimulator.Core.Components.Electronics.TtlPackageComponent.GetPackagePinCount(partNumber)
+            : 14;
+        int perSide = pinCount / 2;
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.FillColor = Color.FromArgb("#161B22");
+        const float bodyHeight = 40f;
+        canvas.FillRoundedRectangle(-17, -bodyHeight / 2, 34, bodyHeight, 4);
+        canvas.DrawRoundedRectangle(-17, -bodyHeight / 2, 34, bodyHeight, 4);
+        canvas.DrawArc(-4, -bodyHeight / 2 - 1, 8, 8, 0, 180, false, false);
+        for (int i = 0; i < perSide; i++)
+        {
+            float pinY = -18f + 36f * i / Math.Max(1, perSide - 1);
+            canvas.DrawLine(-30, pinY, -17, pinY);
+            canvas.DrawLine(17, pinY, 30, pinY);
+            canvas.FillColor = Color.FromArgb("#79C0FF");
+            canvas.FillCircle(-30, pinY, 1.4f);
+            canvas.FillCircle(30, pinY, 1.4f);
+        }
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.FontSize = partNumber.Length > 4 ? 8 : 10;
+        canvas.DrawString(partNumber, -15, -6, 30, 13, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.FontSize = 6;
+        canvas.DrawString("TTL", -15, 6, 30, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
     }
 
     public static void DrawDigitalBlock(ICanvas canvas, string label, string color)
@@ -165,8 +199,9 @@ public static class ComponentSymbolDrawer
             canvas.StrokeColor = (segments & (1 << i)) != 0 ? Color.FromArgb(colorOn) : Color.FromArgb(colorOff);
             canvas.DrawLine(lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2);
         }
-        canvas.StrokeColor = (segments & 0x80) != 0 ? Color.FromArgb(colorOn) : Color.FromArgb(colorOff);
-        canvas.FillColor = canvas.StrokeColor;
+        var decimalPointColor = (segments & 0x80) != 0 ? Color.FromArgb(colorOn) : Color.FromArgb(colorOff);
+        canvas.StrokeColor = decimalPointColor;
+        canvas.FillColor = decimalPointColor;
         canvas.FillCircle(12, 10, 2);
     }
 

@@ -19,8 +19,8 @@ public enum GateLocation
 /// <summary>
 /// Digital-Mode Switch Transistor.
 /// Operates as an ideal voltage-controlled bilateral switch between Source and Drain:
-/// - N-Type: Conducts (Ron) when Gate is HIGH (> Threshold); High-Z (Roff) when LOW.
-/// - P-Type: Conducts (Ron) when Gate is LOW (< Threshold); High-Z (Roff) when HIGH.
+/// - N-Type: Conducts (Ron) when Gate is HIGH (above the threshold); High-Z (Roff) when LOW.
+/// - P-Type: Conducts (Ron) when Gate is LOW (below the threshold); High-Z (Roff) when HIGH.
 /// Simpler and faster to simulate in digital circuits than analog MOSFETs/BJTs.
 /// </summary>
 public class DigitalTransistorComponent : ElectronicComponent

@@ -68,6 +68,13 @@ public class PythonApi
         _commandManager.ExecuteCommand(cmd);
     }
 
+    public void AddTtlPackage(string partNumber, string name, double x, double y)
+    {
+        if (!EESimulator.Core.Components.Electronics.TtlPackageComponent.IsSupported(partNumber))
+            throw new ArgumentException($"Unsupported 74-series part number '{partNumber}'.", nameof(partNumber));
+        AddComponent(partNumber, name, x, y);
+    }
+
     public void AddResistor(string name, double x, double y, double resistance = 1000.0, double tc1 = 0.0, double tc2 = 0.0, double temp = 27.0)
     {
         AddComponent("resistor", name, x, y, resistance);

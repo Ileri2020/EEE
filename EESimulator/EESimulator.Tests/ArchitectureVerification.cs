@@ -16,7 +16,7 @@ namespace EESimulator.Tests;
 
 /// <summary>
 /// End-to-end integration test validating the foundational vertical slice of EESimulator:
-/// 1. Hierarchy & RootNode integrity (no circular parenting, reparenting).
+/// 1. Hierarchy and RootNode integrity (no circular parenting, reparenting).
 /// 2. ComponentRegistry dynamic instantiation.
 /// 3. Command execution through CommandManager (undo/redo).
 /// 4. Electrical topology resolution and netlist generation via NetlistBuilder.
