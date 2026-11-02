@@ -9,7 +9,7 @@ namespace EESimulator.Core.UI;
 /// Inherits from RootNode so that the complete user interface is part of the Blender-like
 /// scene/node graph and fully scriptable via the Python interface.
 /// </summary>
-public abstract class UINode : RootNode
+public class UINode : RootNode
 {
     private string _title = string.Empty;
     private double _width = double.NaN;

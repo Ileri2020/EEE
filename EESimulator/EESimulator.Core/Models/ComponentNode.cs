@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace EESimulator.Core.Models;
 
@@ -31,8 +33,29 @@ public abstract class ComponentNode : RootNode
 {
     public string Reference { get; set; } = string.Empty;
 
+    [JsonIgnore]
+    public virtual string Description
+    {
+        get => CustomProperties.TryGetValue("Description", out var description) && description != null
+            ? description.ToString() ?? string.Empty
+            : this is EESimulator.Core.Components.Base.ComponentBase componentBase
+                ? componentBase.Description
+                : string.Empty;
+        set => CustomProperties["Description"] = value;
+    }
+
     public double X { get; set; }
     public double Y { get; set; }
+
+    public (double X, double Y) Position
+    {
+        get => (X, Y);
+        set
+        {
+            X = value.X;
+            Y = value.Y;
+        }
+    }
 
     public double Rotation { get; set; }
 
@@ -41,7 +64,7 @@ public abstract class ComponentNode : RootNode
 
     public abstract string ComponentType { get; }
 
-    public List<ComponentPin> Pins { get; } = new();
+    public List<ComponentPin> Pins { get; private set; } = new();
 
     public Dictionary<string, double> ElectricalParameters { get; set; } = new();
 
@@ -87,9 +110,24 @@ public abstract class ComponentNode : RootNode
         };
     }
 
-    public List<double> WaveformTime { get; } = new();
-    public List<double> WaveformVoltage { get; } = new();
-    public List<double> WaveformCurrent { get; } = new();
+    public List<double> WaveformTime { get; private set; } = new();
+    public List<double> WaveformVoltage { get; private set; } = new();
+    public List<double> WaveformCurrent { get; private set; } = new();
+
+    /// <summary>Creates a detached copy with independent component collections.</summary>
+    public virtual ComponentNode Clone()
+    {
+        var clone = (ComponentNode)MemberwiseClone();
+        clone.Id = Guid.NewGuid();
+        clone.ResetHierarchyForClone();
+        clone.Pins = Pins.Select(pin => new ComponentPin(pin.Id, pin.Name, pin.RelativeX, pin.RelativeY)).ToList();
+        clone.ElectricalParameters = new Dictionary<string, double>(ElectricalParameters);
+        clone.CustomProperties = new Dictionary<string, object>(CustomProperties);
+        clone.WaveformTime = new List<double>(WaveformTime);
+        clone.WaveformVoltage = new List<double>(WaveformVoltage);
+        clone.WaveformCurrent = new List<double>(WaveformCurrent);
+        return clone;
+    }
 
     public ComponentPin? GetPin(string pinNameOrId)
     {

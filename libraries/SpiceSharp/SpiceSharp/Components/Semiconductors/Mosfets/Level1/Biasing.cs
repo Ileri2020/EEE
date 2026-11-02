@@ -39,43 +39,43 @@ namespace SpiceSharp.Components.Mosfets.Level1
         /// <inheritdoc/>
         public event EventHandler<MosfetContributionEventArgs> UpdateContributions;
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainCurrent/*'/>
+        /// <summary>Gets the drain current.</summary>
         [ParameterName("id"), ParameterName("cd"), ParameterInfo("Drain current")]
         public double Id { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceCurrent/*'/>
+        /// <summary>Gets the bulk-source current.</summary>
         [ParameterName("ibs"), ParameterInfo("B-S junction current")]
         public double Ibs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainCurrent/*'/>
+        /// <summary>Gets the bulk-drain current.</summary>
         [ParameterName("ibd"), ParameterInfo("B-D junction current")]
         public double Ibd { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/Transconductance/*'/>
+        /// <summary>Gets the small-signal transconductance.</summary>
         [ParameterName("gm"), ParameterInfo("Transconductance")]
         public double Gm { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceTransconductance/*'/>
+        /// <summary>Gets the small-signal bulk-source transconductance.</summary>
         [ParameterName("gmb"), ParameterName("gmbs"), ParameterInfo("Bulk-Source transconductance")]
         public double Gmbs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainSourceConductance/*'/>
+        /// <summary>Gets the small-signal drain-source conductance.</summary>
         [ParameterName("gds"), ParameterInfo("Drain-Source conductance")]
         public double Gds { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceConductance/*'/>
+        /// <summary>Gets the small-signal bulk-source conductance.</summary>
         [ParameterName("gbs"), ParameterInfo("Bulk-Source conductance")]
         public double Gbs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainConductance/*'/>
+        /// <summary>Gets the small-signal bulk-drain conductance.</summary>
         [ParameterName("gbd"), ParameterInfo("Bulk-Drain conductance")]
         public double Gbd { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/von/*'/>
+        /// <summary>Gets the turn-on voltage.</summary>
         [ParameterName("von"), ParameterInfo("Turn-on voltage")]
         public double Von { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/SaturationVoltage/*'/>
+        /// <summary>Gets the saturation drain-source voltage.</summary>
         [ParameterName("vdsat"), ParameterInfo("Saturation drain-source voltage")]
         public double Vdsat { get; private set; }
 

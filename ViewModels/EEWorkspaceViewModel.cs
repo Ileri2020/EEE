@@ -628,7 +628,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         var navRotate = new ButtonNode("NavRotate", "Rotate Selected Component", () => RotateSelectedComponent());
         var navViewToggle = new ButtonNode("NavViewToggle", "Toggle Script/Schematic View", () => ToggleViewport());
         var navWaveform = new ButtonNode("NavWaveform", "Toggle Waveform", () => ToggleWaveformDrawer());
-        var navSimSettings = new ButtonNode("NavSimSettings", "Simulation Settings", () => _ = OpenSimSettings());
+        var navSimSettings = new ButtonNode("NavSimSettings", "Simulation Settings", () => OpenSimSettings());
         var navSettings = new ButtonNode("NavSettings", "Settings", () => _ = OpenSettings());
         var navHelp = new ButtonNode("NavHelp", "Help", () => ToggleHelp());
 
@@ -987,7 +987,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 break;
             case ".cir":
             case ".sp":
-                System.IO.File.WriteAllText(filePath, SpiceNetlistExporter.ExportToSpice(Circuit, _simSettings));
+                System.IO.File.WriteAllText(filePath, SpiceNetlistExporter.ExportToSpice(Circuit, BuildSimulationSettings()));
                 break;
             case ".py":
                 System.IO.File.WriteAllText(filePath, PythonCodeGenerator.GenerateFullScript(Circuit));

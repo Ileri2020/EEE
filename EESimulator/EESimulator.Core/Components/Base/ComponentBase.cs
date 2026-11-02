@@ -24,7 +24,7 @@ public abstract class ComponentBase : ComponentNode
     /// <summary>
     /// Human-friendly description of this component module.
     /// </summary>
-    public virtual string Description => string.Empty;
+    public new virtual string Description => string.Empty;
 
     /// <summary>
     /// Symbol rendering key for schematic viewport.

@@ -42,12 +42,12 @@ public abstract class RootNode
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = "Object";
     public virtual string NodeType => GetType().Name;
-    public HashSet<string> Tags { get; } = new();
+    public HashSet<string> Tags { get; private set; } = new();
 
     // Hierarchy
     [JsonIgnore]
     public RootNode? Parent { get; private set; }
-    public List<RootNode> Children { get; } = new();
+    public List<RootNode> Children { get; private set; } = new();
 
     // Editor & Lifecycle State
     public bool Enabled { get; set; } = true;
@@ -68,6 +68,14 @@ public abstract class RootNode
     public void NotifyModified(string propertyName, object? oldValue = null, object? newValue = null)
     {
         OnModified?.Invoke(this, new NodeModifiedEventArgs(propertyName, oldValue, newValue));
+    }
+
+    /// <summary>Resets hierarchy-owned state on a shallow-cloned node.</summary>
+    protected void ResetHierarchyForClone()
+    {
+        Parent = null;
+        Children = new List<RootNode>();
+        Tags = new HashSet<string>(Tags);
     }
 
     public virtual void AddChild(RootNode child)
