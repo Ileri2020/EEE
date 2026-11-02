@@ -201,7 +201,7 @@
                                     <RoundRectangle CornerRadius="12"/>
                                 </Border.StrokeShape>
                                 <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadExampleCommand}"
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadExampleCommand, x:DataType=vm:ExamplesViewModel}"
                                                           CommandParameter="{Binding .}"/>
                                 </Border.GestureRecognizers>
 
@@ -306,7 +306,7 @@
                                         <Button Grid.Column="0"
                                                 Text="⚡ Load into Workspace"
                                                 Style="{StaticResource AccentBtn}"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadExampleCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadExampleCommand, x:DataType=vm:ExamplesViewModel}"
                                                 CommandParameter="{Binding .}"/>
 
                                         <!-- Export .eee file -->
@@ -314,7 +314,7 @@
                                                 Text="💾 Export .eee"
                                                 Style="{StaticResource ToolBtn}"
                                                 TextColor="#58A6FF"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=ExportExampleCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=ExportExampleCommand, x:DataType=vm:ExamplesViewModel}"
                                                 CommandParameter="{Binding .}"/>
 
                                         <!-- Copy Python script -->
@@ -322,7 +322,7 @@
                                                 Text="🐍 Copy Script"
                                                 Style="{StaticResource ToolBtn}"
                                                 TextColor="#E3B341"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=CopyPythonScriptCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=CopyPythonScriptCommand, x:DataType=vm:ExamplesViewModel}"
                                                 CommandParameter="{Binding .}"/>
                                     </Grid>
 

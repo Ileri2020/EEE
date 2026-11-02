@@ -2,7 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:vm="clr-namespace:EEE.ViewModels"
              x:Class="EEE.MainPage"
+             x:DataType="vm:MainViewModel"
              Title="Home"
              BackgroundColor="White">
 

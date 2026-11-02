@@ -346,7 +346,7 @@
                                                             FontSize="12"
                                                             FontAttributes="Bold"
                                                             Padding="6,2"
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=ExecuteCustomActionCommand}"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=ExecuteCustomActionCommand, x:DataType=vm:EEWorkspaceViewModel}"
                                                             CommandParameter="{Binding .}"
                                                             ToolTipProperties.Text="{Binding Description}"/>
 
@@ -357,7 +357,7 @@
                                                             FontSize="11"
                                                             TextColor="#F78166"
                                                             Padding="4,2"
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=DeleteCustomButtonCommand}"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=DeleteCustomButtonCommand, x:DataType=vm:EEWorkspaceViewModel}"
                                                             CommandParameter="{Binding .}"
                                                             ToolTipProperties.Text="Delete / disconnect button"/>
                                                 </Grid>
@@ -618,7 +618,7 @@
                                                     </Border.StrokeShape>
                                                     <Border.GestureRecognizers>
                                                         <TapGestureRecognizer
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand}"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand, x:DataType=vm:EEWorkspaceViewModel}"
                                                             CommandParameter="{Binding .}"/>
                                                     </Border.GestureRecognizers>
 
@@ -629,7 +629,7 @@
                                                             <MenuFlyoutItem Text="{Binding Description}" IsEnabled="False"/>
                                                             <MenuFlyoutSeparator/>
                                                             <MenuFlyoutItem Text="➕ Insert"
-                                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand}"
+                                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand, x:DataType=vm:EEWorkspaceViewModel}"
                                                                             CommandParameter="{Binding .}"/>
                                                         </MenuFlyout>
                                                     </FlyoutBase.ContextFlyout>
@@ -2292,7 +2292,7 @@
                                         <TapGestureRecognizer Command="{Binding SelectSaveFormatCommand}" CommandParameter="eesim"/>
                                     </Border.GestureRecognizers>
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                                        <Label Grid.Column="0" Text="&#x7B; &#x7D;" FontSize="16" TextColor="#79C0FF" VerticalOptions="Center"/>
+                                        <Label Grid.Column="0" Text="{}{ }" FontSize="16" TextColor="#79C0FF" VerticalOptions="Center"/>
                                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                                             <Label Text="EESim Circuit Schema (*.eesim / *.json)" FontSize="12" FontAttributes="Bold" TextColor="#C9D1D9"/>
                                             <Label Text="Standard JSON object hierarchy representing root node circuit graph."

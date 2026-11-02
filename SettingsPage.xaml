@@ -331,7 +331,7 @@
                                             <Button Grid.Column="4"
                                                     Text="✕"
                                                     Style="{StaticResource DangerBtn}"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SettingsViewModel}}, Path=DeleteControlButtonCommand}"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SettingsViewModel}}, Path=DeleteControlButtonCommand, x:DataType=vm:SettingsViewModel}"
                                                     CommandParameter="{Binding .}"
                                                     VerticalOptions="Center"/>
                                         </Grid>
