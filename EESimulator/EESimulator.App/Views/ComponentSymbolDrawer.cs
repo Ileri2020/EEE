@@ -58,6 +58,26 @@ public static class ComponentSymbolDrawer
             case "TransmissionLine": DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     DrawVoltageDelay(canvas); break;
             case "Clock":            DrawClock(canvas, isOn); break;
+            case "Buffer":           DrawDigitalBlock(canvas, "BUF", "#58A6FF"); break;
+            case "ControlledBuffer": DrawDigitalBlock(canvas, "TRI", "#58A6FF"); break;
+            case "EvenParity":       DrawDigitalBlock(canvas, "EVEN", "#58A6FF"); break;
+            case "OddParity":        DrawDigitalBlock(canvas, "ODD", "#58A6FF"); break;
+            case "PLA":              DrawDigitalBlock(canvas, "PLA", "#58A6FF"); break;
+            case "Multiplexer":      DrawDigitalBlock(canvas, "MUX", "#79C0FF"); break;
+            case "Demultiplexer":    DrawDigitalBlock(canvas, "DMX", "#79C0FF"); break;
+            case "Decoder":          DrawDigitalBlock(canvas, "DEC", "#79C0FF"); break;
+            case "PriorityEncoder":  DrawDigitalBlock(canvas, "PRI", "#79C0FF"); break;
+            case "BitSelector":      DrawDigitalBlock(canvas, "SEL", "#79C0FF"); break;
+            case "DFlipFlop":        DrawDigitalBlock(canvas, "DFF", "#D2A8FF"); break;
+            case "JKFlipFlop":       DrawDigitalBlock(canvas, "JK", "#D2A8FF"); break;
+            case "SRFlipFlop":       DrawDigitalBlock(canvas, "SR", "#D2A8FF"); break;
+            case "TFlipFlop":        DrawDigitalBlock(canvas, "TFF", "#D2A8FF"); break;
+            case "Register":         DrawDigitalBlock(canvas, "REG", "#D2A8FF"); break;
+            case "Counter":          DrawDigitalBlock(canvas, "CTR", "#D2A8FF"); break;
+            case "ShiftRegister":    DrawDigitalBlock(canvas, "SHR", "#D2A8FF"); break;
+            case "RAM":              DrawDigitalBlock(canvas, "RAM", "#D2A8FF"); break;
+            case "ROM":              DrawDigitalBlock(canvas, "ROM", "#D2A8FF"); break;
+            case "Random":           DrawDigitalBlock(canvas, "RND", "#D2A8FF"); break;
             case "Pin":              DrawPin(canvas, isOn); break;
             case "Power":
             case "VCC":              DrawPower(canvas); break;
@@ -76,6 +96,23 @@ public static class ComponentSymbolDrawer
             case "MicrostripLine":   DrawMicrostripLine(canvas); break;
             default:                 DrawGenericComponent(canvas, componentType); break;
         }
+    }
+
+    public static void DrawDigitalBlock(ICanvas canvas, string label, string color)
+    {
+        canvas.StrokeColor = Color.FromArgb(color);
+        canvas.StrokeSize = 2f;
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(-15, -13, 30, 26, 3);
+        canvas.DrawRoundedRectangle(-15, -13, 30, 26, 3);
+        canvas.DrawLine(-22, 0, -15, 0);
+        canvas.DrawLine(15, 0, 22, 0);
+        canvas.FillColor = Color.FromArgb(color);
+        canvas.FillCircle(-22, 0, 2);
+        canvas.FillCircle(22, 0, 2);
+        canvas.FontColor = Color.FromArgb(color);
+        canvas.FontSize = label.Length > 3 ? 7f : 9f;
+        canvas.DrawString(label, -13, -5, 26, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
     }
 
     public static void DrawResistor(ICanvas canvas)

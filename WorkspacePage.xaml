@@ -636,10 +636,11 @@
 
                                                     <!-- Icon tile content -->
                                                     <VerticalStackLayout Padding="4,6" Spacing="2">
-                                                        <views:ComponentIconView
-                                                            ComponentType="{Binding Type}"
+                                                        <Image
+                                                            Source="{Binding ImageSource}"
                                                             WidthRequest="52"
                                                             HeightRequest="42"
+                                                            Aspect="AspectFit"
                                                             HorizontalOptions="Center"
                                                             InputTransparent="True"/>
                                                         <Label Text="{Binding Type}"

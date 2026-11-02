@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -25 60 50" width="60" height="50">
+  <!-- Binary Counter -->
+  <line x1="-24" y1="-10" x2="-14" y2="-10" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-24" y1="0" x2="-14" y2="0" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-24" y1="10" x2="-14" y2="10" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="14" y1="-8" x2="24" y2="-8" stroke="#D2A8FF" stroke-width="3" stroke-linecap="round"/>
+  <line x1="14" y1="8" x2="24" y2="8" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <rect x="-14" y="-18" width="28" height="36" rx="3" fill="#161B22" stroke="#D2A8FF" stroke-width="2"/>
+  <!-- Clock Chevron -->
+  <path d="M -14,-14 L -8,-10 L -14,-6" fill="none" stroke="#D2A8FF" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="0" y="2" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#D2A8FF" text-anchor="middle">CTR</text>
+  <circle cx="-24" cy="-10" r="2.5" fill="#D2A8FF"/>
+  <circle cx="-24" cy="0" r="2.5" fill="#D2A8FF"/>
+  <circle cx="-24" cy="10" r="2.5" fill="#D2A8FF"/>
+  <circle cx="24" cy="-8" r="2.5" fill="#D2A8FF"/>
+  <circle cx="24" cy="8" r="2.5" fill="#D2A8FF"/>
+</svg>

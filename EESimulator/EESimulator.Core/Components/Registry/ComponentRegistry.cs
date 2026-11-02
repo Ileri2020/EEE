@@ -529,6 +529,154 @@ public static class ComponentRegistry
             d.IsSimulatable = false;
         });
 
+        // ── Logisim Gates Library ─────────────────────────────────────────────
+        Register<BufferComponent>("electronics.buffer", "Buffer", "Gates", "BUF", d =>
+        {
+            d.Description = "Unity-gain digital buffer (signal driver)";
+            d.Icon = "buffer.svg";
+            d.DefaultParameters["BitWidth"] = 1.0;
+        });
+
+        Register<ControlledBufferComponent>("electronics.controlledbuffer", "ControlledBuffer", "Gates", "TRI", d =>
+        {
+            d.Description = "Tri-state controlled buffer (enable input)";
+            d.Icon = "controlledbuffer.svg";
+            d.DefaultParameters["BitWidth"] = 1.0;
+        });
+
+        Register<EvenParityGateComponent>("electronics.evenparity", "EvenParity", "Gates", "EPAR", d =>
+        {
+            d.Description = "N-input even-parity check gate";
+            d.Icon = "evenparity.svg";
+            d.DefaultParameters["NumberOfInputs"] = 2.0;
+        });
+
+        Register<OddParityGateComponent>("electronics.oddparity", "OddParity", "Gates", "OPAR", d =>
+        {
+            d.Description = "N-input odd-parity check gate";
+            d.Icon = "oddparity.svg";
+            d.DefaultParameters["NumberOfInputs"] = 2.0;
+        });
+
+        Register<PLAComponent>("electronics.pla", "PLA", "Gates", "PLA", d =>
+        {
+            d.Description = "Programmable Logic Array";
+            d.Icon = "pla.svg";
+            d.DefaultParameters["InputCount"] = 4.0;
+            d.DefaultParameters["OutputCount"] = 4.0;
+            d.DefaultParameters["AndTerms"] = 4.0;
+        });
+
+        // ── Logisim Plexers Library ───────────────────────────────────────────
+        Register<MultiplexerComponent>("electronics.mux", "Multiplexer", "Plexers", "MUX", d =>
+        {
+            d.Description = "N-to-1 digital data selector (Multiplexer)";
+            d.Icon = "mux.svg";
+            d.DefaultParameters["SelectBits"] = 1.0;
+            d.DefaultParameters["BitWidth"] = 1.0;
+        });
+
+        Register<DemultiplexerComponent>("electronics.demux", "Demultiplexer", "Plexers", "DMX", d =>
+        {
+            d.Description = "1-to-N digital data distributor (Demultiplexer)";
+            d.Icon = "demux.svg";
+            d.DefaultParameters["SelectBits"] = 1.0;
+            d.DefaultParameters["BitWidth"] = 1.0;
+        });
+
+        Register<DecoderComponent>("electronics.decoder", "Decoder", "Plexers", "DEC", d =>
+        {
+            d.Description = "Binary decoder (n-to-2^n)";
+            d.Icon = "decoder.svg";
+            d.DefaultParameters["SelectBits"] = 2.0;
+        });
+
+        Register<PriorityEncoderComponent>("electronics.priorityencoder", "PriorityEncoder", "Plexers", "ENC", d =>
+        {
+            d.Description = "Priority encoder (highest active input to binary)";
+            d.Icon = "priorityencoder.svg";
+            d.DefaultParameters["SelectBits"] = 2.0;
+        });
+
+        Register<BitSelectorComponent>("electronics.bitselector", "BitSelector", "Plexers", "BSEL", d =>
+        {
+            d.Description = "Select specific bit from a digital bus";
+            d.Icon = "bitselector.svg";
+            d.DefaultParameters["DataBusWidth"] = 8.0;
+            d.DefaultParameters["SelectWidth"] = 3.0;
+        });
+
+        // ── Logisim Memory Library ────────────────────────────────────────────
+        Register<DFlipFlopComponent>("electronics.dff", "DFlipFlop", "Memory", "DFF", d =>
+        {
+            d.Description = "Edge-triggered D-Type Flip-Flop";
+            d.Icon = "dff.svg";
+        });
+
+        Register<JKFlipFlopComponent>("electronics.jkff", "JKFlipFlop", "Memory", "JKFF", d =>
+        {
+            d.Description = "Edge-triggered JK-Type Flip-Flop";
+            d.Icon = "jkff.svg";
+        });
+
+        Register<SRFlipFlopComponent>("electronics.srff", "SRFlipFlop", "Memory", "SRFF", d =>
+        {
+            d.Description = "Clocked Set-Reset (SR) Flip-Flop";
+            d.Icon = "srff.svg";
+        });
+
+        Register<TFlipFlopComponent>("electronics.tff", "TFlipFlop", "Memory", "TFF", d =>
+        {
+            d.Description = "Edge-triggered Toggle (T-Type) Flip-Flop";
+            d.Icon = "tff.svg";
+        });
+
+        Register<RegisterComponent>("electronics.register", "Register", "Memory", "REG", d =>
+        {
+            d.Description = "N-bit parallel-load register";
+            d.Icon = "register.svg";
+            d.DefaultParameters["BitWidth"] = 8.0;
+        });
+
+        Register<CounterComponent>("electronics.counter", "Counter", "Memory", "CTR", d =>
+        {
+            d.Description = "Up/Down binary counter with load and carry";
+            d.Icon = "counter.svg";
+            d.DefaultParameters["BitWidth"] = 8.0;
+            d.DefaultParameters["MaxValue"] = 255.0;
+        });
+
+        Register<ShiftRegisterComponent>("electronics.shiftregister", "ShiftRegister", "Memory", "SHR", d =>
+        {
+            d.Description = "Serial-in / parallel-out shift register";
+            d.Icon = "shiftregister.svg";
+            d.DefaultParameters["Length"] = 8.0;
+        });
+
+        Register<RAMComponent>("electronics.ram", "RAM", "Memory", "RAM", d =>
+        {
+            d.Description = "Random-access read/write memory";
+            d.Icon = "ram.svg";
+            d.DefaultParameters["AddressBitWidth"] = 8.0;
+            d.DefaultParameters["DataBitWidth"] = 8.0;
+        });
+
+        Register<ROMComponent>("electronics.rom", "ROM", "Memory", "ROM", d =>
+        {
+            d.Description = "Read-only memory with preloaded contents";
+            d.Icon = "rom.svg";
+            d.DefaultParameters["AddressBitWidth"] = 8.0;
+            d.DefaultParameters["DataBitWidth"] = 8.0;
+        });
+
+        Register<RandomComponent>("electronics.random", "Random", "Memory", "RND", d =>
+        {
+            d.Description = "Pseudo-random number generator (PRNG)";
+            d.Icon = "random.svg";
+            d.DefaultParameters["BitWidth"] = 8.0;
+            d.DefaultParameters["Seed"] = 1.0;
+        });
+
         // ── Aliases ──────────────────────────────────────────────────────────
         RegisterAlias("tline", "electrical.transmissionline");
         RegisterAlias("lossytline", "electrical.lossytransmissionline");
@@ -554,5 +702,13 @@ public static class ComponentRegistry
         RegisterAlias("const", "electronics.constant");
         RegisterAlias("dnc", "general.dnc");
         RegisterAlias("nc", "general.dnc");
+        RegisterAlias("mux", "electronics.mux");
+        RegisterAlias("demux", "electronics.demux");
+        RegisterAlias("dff", "electronics.dff");
+        RegisterAlias("jkff", "electronics.jkff");
+        RegisterAlias("srff", "electronics.srff");
+        RegisterAlias("tff", "electronics.tff");
+        RegisterAlias("tristate", "electronics.controlledbuffer");
+        RegisterAlias("prng", "electronics.random");
     }
 }

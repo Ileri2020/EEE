@@ -34,6 +34,10 @@ public class SpiceSharpAdapter : ISimulationEngine
 
         try
         {
+            // Resolve digital logic before building the analog netlist. Digital devices
+            // are represented to SpiceSharp as ideal voltage drivers at their output pins.
+            DigitalLogicSimulator.EvaluateCombinational(circuit);
+
             // 1. Build nodal network topology from the circuit connections
             var topology = NetlistBuilder.BuildTopology(circuit);
 
@@ -664,6 +668,19 @@ public class SpiceSharpAdapter : ISimulationEngine
                         break;
                     }
                 }
+
+                if (DigitalLogicSimulator.IsSpiceDrivenDigital(comp))
+                {
+                    foreach (var (pinId, voltage) in DigitalLogicSimulator.GetOutputVoltages(comp))
+                    {
+                        string outputNode = GetPinNode(comp, pinId);
+                        if (outputNode != "0")
+                        {
+                            string driverName = $"{comp.Name}_logic_{pinId}";
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(driverName, outputNode, "0", voltage));
+                        }
+                    }
+                }
             }
 
             // Link Mutual Inductances after inductors are added
@@ -821,6 +838,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                     }
                 }
             }
+
+            // Refresh logic outputs from the solved input nodes for probes and the next playback tick.
+            DigitalLogicSimulator.EvaluateCombinational(circuit);
 
             // 4. Generate Transient / Waveform data for components with ShowWaveform
             var waveComps = circuit.Components.Where(c => c.ShowWaveform).ToList();

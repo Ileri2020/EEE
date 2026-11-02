@@ -28,43 +28,43 @@ namespace SpiceSharp.Components.Mosfets
         private readonly ModelParameters _mp;
         private readonly Parameters _bp;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateSourceCharge/*'/>
+        /// <include file='docs.xml' path='docs/members/GateSourceCharge/*'/>
         [ParameterName("qgs"), ParameterInfo("Gate-source charge storage", Units = "C")]
         public double Qgs => _qgs.Value;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateSourceCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/GateSourceCapacitance/*'/>
         [ParameterName("cgs"), ParameterInfo("Gate-source capacitance", Units = "F")]
         public double Cgs => _charges.Cgs;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateDrainCharges/*'/>
+        /// <include file='docs.xml' path='docs/members/GateDrainCharge/*'/>
         [ParameterName("qgd"), ParameterInfo("Gate-drain charge storage", Units = "C")]
         public double Qgd => _qgd.Value;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateDrainCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/GateDrainCapacitance/*'/>
         [ParameterName("cgd"), ParameterInfo("Gate-drain capacitance", Units = "F")]
         public double Cgd => _charges.Cgd;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateBulkCharge/*'/>
+        /// <include file='docs.xml' path='docs/members/GateBulkCharge/*'/>
         [ParameterName("qgb"), ParameterInfo("Gate-bulk charge storage", Units = "C")]
         public double Qgb => _qgb.Value;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateBulkCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/GateBulkCapacitance/*'/>
         [ParameterName("cgb"), ParameterInfo("Gate-bulk capacitance", Units = "F")]
         public double Cgb => _charges.Cgb;
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceCharge/*'/>
+        /// <include file='docs.xml' path='docs/members/BulkSourceCharge/*'/>
         [ParameterName("qbs"), ParameterInfo("Bulk-source charge storage", Units = "C")]
         public double Qbs => _charges.Qbs;
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/BulkSourceCapacitance/*'/>
         [ParameterName("cbs"), ParameterInfo("Bulk-source capacitance", Units = "F")]
         public double Cbs => _charges.Cbs;
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainCharge/*'/>
+        /// <include file='docs.xml' path='docs/members/BulkDrainCharge/*'/>
         [ParameterName("qbd"), ParameterInfo("Bulk-drain charge storage", Units = "C")]
         public double Qbd => _charges.Qbd;
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/BulkDrainCapacitance/*'/>
         [ParameterName("cbd"), ParameterInfo("Bulk-drain capacitance", Units = "F")]
         public double Cbd => _charges.Cbd;
 

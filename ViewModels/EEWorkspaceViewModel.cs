@@ -443,6 +443,26 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("XNOR",             "⊙",   "XNR", "#58A6FF", "Electronics", "2-Input XNOR Gate",     "xnor.svg"),
         new ComponentPaletteItem("LogicGate",        "⊳",   "GATE","#58A6FF", "Electronics", "Digital Logic Gate",      "logicgate.svg"),
         new ComponentPaletteItem("IC",               "⊞",   "IC",  "#8B949E", "Electronics", "Integrated Circuit",    "ic.svg"),
+        new ComponentPaletteItem("Buffer",           "▷",   "BUF", "#58A6FF", "Gates", "Digital Buffer", "buffer.svg"),
+        new ComponentPaletteItem("ControlledBuffer",  "▷○",  "TRI", "#58A6FF", "Gates", "Tri-state Buffer", "controlledbuffer.svg"),
+        new ComponentPaletteItem("EvenParity",       "⊙",   "EPAR", "#58A6FF", "Gates", "Even Parity Gate", "evenparity.svg"),
+        new ComponentPaletteItem("OddParity",        "⊕",   "OPAR", "#58A6FF", "Gates", "Odd Parity Gate", "oddparity.svg"),
+        new ComponentPaletteItem("PLA",              "▦",   "PLA", "#58A6FF", "Gates", "Programmable Logic Array", "pla.svg"),
+        new ComponentPaletteItem("Multiplexer",      "MUX", "MUX", "#79C0FF", "Plexers", "N-to-1 Data Selector", "mux.svg"),
+        new ComponentPaletteItem("Demultiplexer",    "DMX", "DMX", "#79C0FF", "Plexers", "1-to-N Data Distributor", "demux.svg"),
+        new ComponentPaletteItem("Decoder",          "DEC", "DEC", "#79C0FF", "Plexers", "Binary Decoder", "decoder.svg"),
+        new ComponentPaletteItem("PriorityEncoder",  "ENC", "ENC", "#79C0FF", "Plexers", "Priority Encoder", "priorityencoder.svg"),
+        new ComponentPaletteItem("BitSelector",      "SEL", "BSEL", "#79C0FF", "Plexers", "Bus Bit Selector", "bitselector.svg"),
+        new ComponentPaletteItem("DFlipFlop",        "DFF", "DFF", "#D2A8FF", "Memory", "D Flip-Flop", "dff.svg"),
+        new ComponentPaletteItem("JKFlipFlop",       "JK",  "JKFF", "#D2A8FF", "Memory", "JK Flip-Flop", "jkff.svg"),
+        new ComponentPaletteItem("SRFlipFlop",       "SR",  "SRFF", "#D2A8FF", "Memory", "SR Flip-Flop", "srff.svg"),
+        new ComponentPaletteItem("TFlipFlop",        "TFF", "TFF", "#D2A8FF", "Memory", "T Flip-Flop", "tff.svg"),
+        new ComponentPaletteItem("Register",         "REG", "REG", "#D2A8FF", "Memory", "N-bit Register", "register.svg"),
+        new ComponentPaletteItem("Counter",          "CTR", "CTR", "#D2A8FF", "Memory", "Up/Down Counter", "counter.svg"),
+        new ComponentPaletteItem("ShiftRegister",    "SHR", "SHR", "#D2A8FF", "Memory", "Shift Register", "shiftregister.svg"),
+        new ComponentPaletteItem("RAM",              "RAM", "RAM", "#D2A8FF", "Memory", "Read/Write Memory", "ram.svg"),
+        new ComponentPaletteItem("ROM",              "ROM", "ROM", "#D2A8FF", "Memory", "Read-Only Memory", "rom.svg"),
+        new ComponentPaletteItem("Random",           "RND", "RND", "#D2A8FF", "Memory", "Pseudo-Random Generator", "random.svg"),
 
         // ── General (Structural & Schematic) ─────────────────────────────────
         new ComponentPaletteItem("Wire",          "—",   "W",   "#58A6FF", "General", "Wire segment",         "wire.svg"),
@@ -530,6 +550,35 @@ public partial class EEWorkspaceViewModel : ObservableObject
             new ComponentPaletteItem("XOR",  "=1", "XOR", "#58A6FF", "Logic", "2-Input XOR Gate",  "xor.svg"),
             new ComponentPaletteItem("XNOR", "⊙",  "XNR", "#58A6FF", "Logic", "2-Input XNOR Gate", "xnor.svg"),
             new ComponentPaletteItem("IC",   "⊞",  "IC",  "#8B949E", "Logic", "Integrated Circuit","ic.svg"),
+        }),
+        new ComponentPaletteGroup("▦ Additional Logic Gates", new[]
+        {
+            new ComponentPaletteItem("Buffer",          "▷",  "BUF",  "#58A6FF", "Gates", "Unity-gain digital buffer", "buffer.svg"),
+            new ComponentPaletteItem("ControlledBuffer", "▷○", "TRI",  "#58A6FF", "Gates", "Tri-state buffer with enable", "controlledbuffer.svg"),
+            new ComponentPaletteItem("EvenParity",      "⊙",  "EPAR", "#58A6FF", "Gates", "Even parity check", "evenparity.svg"),
+            new ComponentPaletteItem("OddParity",       "⊕",  "OPAR", "#58A6FF", "Gates", "Odd parity check", "oddparity.svg"),
+            new ComponentPaletteItem("PLA",             "▦",  "PLA",  "#58A6FF", "Gates", "Programmable logic array", "pla.svg"),
+        }),
+        new ComponentPaletteGroup("🔀 Plexers", new[]
+        {
+            new ComponentPaletteItem("Multiplexer",     "MUX", "MUX",  "#79C0FF", "Plexers", "N-to-1 data selector", "mux.svg"),
+            new ComponentPaletteItem("Demultiplexer",   "DMX", "DMX",  "#79C0FF", "Plexers", "1-to-N data distributor", "demux.svg"),
+            new ComponentPaletteItem("Decoder",         "DEC", "DEC",  "#79C0FF", "Plexers", "Binary decoder", "decoder.svg"),
+            new ComponentPaletteItem("PriorityEncoder", "ENC", "ENC",  "#79C0FF", "Plexers", "Priority encoder", "priorityencoder.svg"),
+            new ComponentPaletteItem("BitSelector",     "SEL", "BSEL", "#79C0FF", "Plexers", "Select a bit from a bus", "bitselector.svg"),
+        }),
+        new ComponentPaletteGroup("🧠 Memory & State", new[]
+        {
+            new ComponentPaletteItem("DFlipFlop",     "DFF", "DFF", "#D2A8FF", "Memory", "D flip-flop", "dff.svg"),
+            new ComponentPaletteItem("JKFlipFlop",    "JK",  "JKFF", "#D2A8FF", "Memory", "JK flip-flop", "jkff.svg"),
+            new ComponentPaletteItem("SRFlipFlop",    "SR",  "SRFF", "#D2A8FF", "Memory", "SR flip-flop", "srff.svg"),
+            new ComponentPaletteItem("TFlipFlop",     "TFF", "TFF", "#D2A8FF", "Memory", "T flip-flop", "tff.svg"),
+            new ComponentPaletteItem("Register",      "REG", "REG", "#D2A8FF", "Memory", "Parallel-load register", "register.svg"),
+            new ComponentPaletteItem("Counter",       "CTR", "CTR", "#D2A8FF", "Memory", "Up/down counter", "counter.svg"),
+            new ComponentPaletteItem("ShiftRegister", "SHR", "SHR", "#D2A8FF", "Memory", "Shift register", "shiftregister.svg"),
+            new ComponentPaletteItem("RAM",           "RAM", "RAM", "#D2A8FF", "Memory", "Read/write memory", "ram.svg"),
+            new ComponentPaletteItem("ROM",           "ROM", "ROM", "#D2A8FF", "Memory", "Read-only memory", "rom.svg"),
+            new ComponentPaletteItem("Random",        "RND", "RND", "#D2A8FF", "Memory", "Pseudo-random generator", "random.svg"),
         }),
         new ComponentPaletteGroup("🗂 Schematic", new[]
         {
@@ -1097,6 +1146,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     {
                         if (IsSimulationPlaying)
                         {
+                            DigitalLogicSimulator.Advance(Circuit, _animTimer.Interval.TotalSeconds);
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
                             CircuitChanged?.Invoke();
                         }

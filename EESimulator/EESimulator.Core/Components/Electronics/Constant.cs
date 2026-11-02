@@ -14,7 +14,6 @@ public class ConstantComponent : ElectronicComponent
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Constant";
-    public override string SpicePrefix => "CONST";
     public override string Description => "Wired Logic Constant Source (HIGH / LOW / Value)";
 
     /// <summary>Constant integer logic value (e.g. 0 or 1, or bus constant).</summary>

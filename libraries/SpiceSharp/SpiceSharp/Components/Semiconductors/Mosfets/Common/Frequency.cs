@@ -40,15 +40,15 @@ namespace SpiceSharp.Components.Mosfets
         /// </summary>
         protected MosfetVariables<Complex> Variables;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateSourceCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/GateSourceCapacitance/*'/>
         [ParameterName("cgs"), ParameterInfo("Gate-source capacitance", Units = "F")]
         public double Cgs => _charges.Cgs;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateDrainCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/GateDrainCapacitance/*'/>
         [ParameterName("cgd"), ParameterInfo("Gate-drain capacitance", Units = "F")]
         public double Cgd => _charges.Cgd;
 
-        /// <include file='../common/docs.xml' path='docs/members/GateBulkCapacitance/*'/>
+        /// <include file='docs.xml' path='docs/members/GateBulkCapacitance/*'/>
         [ParameterName("cgb"), ParameterInfo("Gate-bulk capacitance", Units = "F")]
         public double Cgb => _charges.Cgb;
 

@@ -1287,6 +1287,26 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "TransmissionLine": ComponentSymbolDrawer.DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     ComponentSymbolDrawer.DrawVoltageDelay(canvas); break;
             case "Clock":            ComponentSymbolDrawer.DrawClock(canvas, isOn); break;
+            case "Buffer":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "BUF", "#58A6FF"); break;
+            case "ControlledBuffer": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "TRI", "#58A6FF"); break;
+            case "EvenParity":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "EVEN", "#58A6FF"); break;
+            case "OddParity":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ODD", "#58A6FF"); break;
+            case "PLA":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PLA", "#58A6FF"); break;
+            case "Multiplexer":      ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MUX", "#79C0FF"); break;
+            case "Demultiplexer":    ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DMX", "#79C0FF"); break;
+            case "Decoder":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DEC", "#79C0FF"); break;
+            case "PriorityEncoder":  ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PRI", "#79C0FF"); break;
+            case "BitSelector":      ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SEL", "#79C0FF"); break;
+            case "DFlipFlop":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DFF", "#D2A8FF"); break;
+            case "JKFlipFlop":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "JK", "#D2A8FF"); break;
+            case "SRFlipFlop":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SR", "#D2A8FF"); break;
+            case "TFlipFlop":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "TFF", "#D2A8FF"); break;
+            case "Register":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "REG", "#D2A8FF"); break;
+            case "Counter":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "CTR", "#D2A8FF"); break;
+            case "ShiftRegister":    ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SHR", "#D2A8FF"); break;
+            case "RAM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RAM", "#D2A8FF"); break;
+            case "ROM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ROM", "#D2A8FF"); break;
+            case "Random":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RND", "#D2A8FF"); break;
             case "Pin":              ComponentSymbolDrawer.DrawPin(canvas, isOn); break;
             case "Power":
             case "VCC":              ComponentSymbolDrawer.DrawPower(canvas); break;
