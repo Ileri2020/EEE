@@ -12,10 +12,12 @@ using EESimulator.Scripting.API;
 using EESimulator.Engine;
 using EESimulator.Engine.Simulation;
 using EESimulator.Formats;
+using EEE.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EEE.ViewModels;
@@ -32,6 +34,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public UIRootNode UI { get; } = new UIRootNode();
 
     private readonly SimulationManager _simManager;
+    private readonly RemoteEeeApiClient _remoteApi;
+    private string? _lastSimulationCircuitSnapshot;
     public PythonApi PythonApi { get; }
     private readonly ScriptSynchronizer _sync;
 
@@ -45,6 +49,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     public partial string ConsoleOutput { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string AiSchemaPrompt { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string AiSchemaStatus { get; set; } = "AI drafts use the HTTPS API configured in Settings.";
+
+    [ObservableProperty]
+    public partial bool IsAiSchemaRequestInProgress { get; set; }
 
     [ObservableProperty]
     public partial bool IsSimulating { get; set; }
@@ -663,8 +676,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public event Action? CircuitChanged;
 
     // ── Constructor ──────────────────────────────────────────────────────────
-    public EEWorkspaceViewModel()
+    public EEWorkspaceViewModel(RemoteEeeApiClient remoteApi)
     {
+        _remoteApi = remoteApi ?? throw new ArgumentNullException(nameof(remoteApi));
         _simManager = new SimulationManager();
         PythonApi   = new PythonApi(CommandManager, Circuit, _simManager, UI);
         _sync       = new ScriptSynchronizer(CommandManager, Circuit);
@@ -856,11 +870,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         try
         {
-            await Shell.Current.GoToAsync("examples");
+            await Shell.Current.GoToAsync("//examples");
         }
-        catch
+        catch (Exception ex)
         {
-            StatusText = "Opening Examples";
+            StatusText = $"Could not open examples: {ex.Message}";
         }
     }
 
@@ -1244,6 +1258,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             var settings = BuildSimulationSettings();
             var results = await Task.Run(() => _simManager.Run(Circuit, settings));
+            _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = FormatResults(results);
         }
         catch (Exception ex)
@@ -1343,6 +1358,57 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task GenerateSchemaScriptAsync()
+    {
+        if (IsAiSchemaRequestInProgress) return;
+        if (string.IsNullOrWhiteSpace(AiSchemaPrompt))
+        {
+            AiSchemaStatus = "Describe the schematic change you want first.";
+            return;
+        }
+
+        try
+        {
+            IsAiSchemaRequestInProgress = true;
+            AiSchemaStatus = "Generating a script draft…";
+            string currentCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+            if (Circuit.Components.Any() &&
+                (_simManager.LastResults == null || !string.Equals(_lastSimulationCircuitSnapshot, currentCircuitSnapshot, StringComparison.Ordinal)))
+            {
+                AiSchemaStatus = "Measuring the current schematic…";
+                await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
+                _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+            }
+            var draft = await _remoteApi.GenerateSchemaScriptAsync(
+                AiSchemaPrompt,
+                ScriptText,
+                Circuit,
+                _simManager.LastResults);
+            if (draft.Questions.Count > 0 && string.IsNullOrWhiteSpace(draft.Script))
+            {
+                AiSchemaStatus = string.Join(" ", draft.Questions);
+                return;
+            }
+
+            ScriptText = draft.Script;
+            IsScriptViewActive = true;
+            var draftNotes = new List<string>();
+            if (!string.IsNullOrWhiteSpace(draft.Summary)) draftNotes.Add(draft.Summary);
+            if (draft.Warnings.Count > 0) draftNotes.Add("Warnings: " + string.Join("; ", draft.Warnings));
+            draftNotes.Add("Review the draft before Run.");
+            AiSchemaStatus = string.Join(" ", draftNotes);
+        }
+        catch (Exception ex)
+        {
+            AiSchemaStatus = $"AI request failed: {ex.Message}";
+        }
+        finally
+        {
+            IsAiSchemaRequestInProgress = false;
+        }
+    }
+
+    [RelayCommand]
     private async Task RunScriptAsync()
     {
         try
@@ -1364,12 +1430,26 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     ConsoleOutput += result + "\n";
             }
 
-            StatusText = "Script complete ✓";
+            var commandOutput = ConsoleOutput;
+            IsSimulating = true;
+            StatusText = "Changes applied. Running operating-point simulation for AI feedback…";
+            var feedback = await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
+            _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+            ConsoleOutput = commandOutput + "\n" + FormatResults(feedback);
+            AiSchemaStatus = feedback.Success
+                ? "Simulation feedback refreshed. The next AI request includes per-component measurements."
+                : $"Changes applied, but simulation failed: {feedback.Message}";
+            StatusText = feedback.Success ? "Script applied and simulated ✓" : "Script applied; simulation failed";
+            CircuitChanged?.Invoke();
         }
         catch (Exception ex)
         {
             ConsoleOutput += $"ERROR: {ex.Message}\n";
             StatusText = "Script error";
+        }
+        finally
+        {
+            IsSimulating = false;
         }
 
         await Task.CompletedTask;
@@ -1447,8 +1527,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
             var settings = BuildSimulationSettings();
             var results  = await Task.Run(() => _simManager.Run(Circuit, settings));
+            _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
 
             ConsoleOutput = FormatResults(results);
+            AiSchemaStatus = results.Success
+                ? "Simulation feedback refreshed for the next AI request."
+                : $"Simulation feedback unavailable: {results.Message}";
             StatusText    = results.Success
                 ? $"{settings.Analysis} simulation complete ✓"
                 : $"Sim error: {results.Message}";
@@ -2454,6 +2538,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     PythonApi.SetProperty(Unquote(args[0]), Unquote(args[1]), ParseD(args[2]));
                     return "[ok] property set";
 
+                case "set_component_property" when args.Length >= 3:
+                    PythonApi.SetComponentProperty(Unquote(args[0]), Unquote(args[1]), ParseScriptValue(args[2]));
+                    CircuitChanged?.Invoke();
+                    return "[ok] component property set";
+
                 case "set_custom_property" when args.Length >= 3:
                     PythonApi.SetCustomProperty(Unquote(args[0]), Unquote(args[1]), ParseScriptValue(args[2]));
                     CircuitChanged?.Invoke();
@@ -2771,23 +2860,68 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     private static string[] SplitArgs(string argsStr)
     {
-        // Simple comma-split respecting single quotes
+        // Split top-level commas while preserving quoted text and nested tuples.
         var result = new System.Collections.Generic.List<string>();
-        int depth = 0; bool inQ = false; var cur = new StringBuilder();
+        int depth = 0;
+        char quote = '\0';
+        bool escaped = false;
+        var cur = new StringBuilder();
         foreach (char c in argsStr)
         {
-            if (c == '\'' && depth == 0) { inQ = !inQ; cur.Append(c); }
-            else if (!inQ && c == '(') { depth++; cur.Append(c); }
-            else if (!inQ && c == ')') { depth--; cur.Append(c); }
-            else if (!inQ && c == ',' && depth == 0) { result.Add(cur.ToString().Trim()); cur.Clear(); }
+            if (escaped)
+            {
+                cur.Append(c);
+                escaped = false;
+                continue;
+            }
+            if (c == '\\' && quote != '\0')
+            {
+                cur.Append(c);
+                escaped = true;
+                continue;
+            }
+            if (quote != '\0')
+            {
+                cur.Append(c);
+                if (c == quote) quote = '\0';
+                continue;
+            }
+            if (c is '\'' or '"')
+            {
+                quote = c;
+                cur.Append(c);
+            }
+            else if (c == '(')
+            {
+                depth++;
+                cur.Append(c);
+            }
+            else if (c == ')')
+            {
+                depth--;
+                cur.Append(c);
+            }
+            else if (c == ',' && depth == 0)
+            {
+                result.Add(cur.ToString().Trim());
+                cur.Clear();
+            }
             else cur.Append(c);
         }
         if (cur.Length > 0) result.Add(cur.ToString().Trim());
         return result.ToArray();
     }
 
-    private static string Unquote(string s) =>
-        s.Trim().Trim('\'').Trim('"');
+    private static string Unquote(string s)
+    {
+        string value = s.Trim();
+        if (value.Length >= 2 && value[0] == '"' && value[^1] == '"')
+        {
+            try { return JsonSerializer.Deserialize<string>(value) ?? string.Empty; }
+            catch { /* Fall back to the existing permissive quote trimming for legacy scripts. */ }
+        }
+        return value.Trim('\'').Trim('"');
+    }
 
     private static double ParseD(string s) =>
         double.TryParse(s.Trim(), System.Globalization.NumberStyles.Any,

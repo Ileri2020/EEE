@@ -13,4 +13,10 @@ public partial class ExamplesPage : ContentPage
         _vm = vm;
         BindingContext = vm;
     }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _vm.LoadCommunityExamplesAsync();
+    }
 }

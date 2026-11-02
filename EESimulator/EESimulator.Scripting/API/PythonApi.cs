@@ -514,6 +514,15 @@ public class PythonApi
         _commandManager.ExecuteCommand(cmd);
     }
 
+    public void SetComponentProperty(string componentName, string propertyName, object? value)
+    {
+        var cmd = new SetComponentPropertyCommand(_circuit, componentName, propertyName, value)
+        {
+            Origin = CommandOrigin.Python
+        };
+        _commandManager.ExecuteCommand(cmd);
+    }
+
     public void SetMemoryWord(string componentName, int address, long value)
     {
         var component = _circuit.FindChild<ComponentNode>(componentName);

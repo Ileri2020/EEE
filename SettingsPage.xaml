@@ -363,7 +363,7 @@
                                TextColor="#8B949E"
                                FontSize="12"/>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
                             <!-- Show Grid -->
                             <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
                                 <Label Grid.Column="0" Text="Show Schematic Grid" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
@@ -430,7 +430,7 @@
                                TextColor="#8B949E"
                                FontSize="12"/>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
                             <!-- Mobile Pan Mode On Startup -->
                             <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
                                 <Label Grid.Column="0" Text="Default to Pan Mode on Mobile" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
@@ -463,6 +463,40 @@
                                        TextColor="#484F58"
                                        FontSize="10"/>
                             </VerticalStackLayout>
+
+                                <!-- Secured server endpoint; API credentials are never stored in the app -->
+                                <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
+                                    <Label Text="EESIMULATOR API URL (HTTPS)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                    <Entry Text="{Binding RemoteApiBaseUrl}"
+                                        Placeholder="https://your-secure-eee-api.example"
+                                        Keyboard="Url"
+                                        AutoCapitalize="None"
+                                        BackgroundColor="#0D1117"
+                                        TextColor="#C9D1D9"
+                                        PlaceholderColor="#484F58"/>
+                                    <Label Text="The API server handles MongoDB and Gemini credentials. Do not put secret keys in this app or URL."
+                                        TextColor="#8B949E" FontSize="10"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
+                                    <Label Text="USER ACCESS TOKEN" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                        <Entry Grid.Column="0"
+                                               Text="{Binding RemoteApiAccessTokenDraft}"
+                                               Placeholder="Token issued by your API sign-in"
+                                               IsPassword="True"
+                                               AutoCapitalize="None"
+                                               BackgroundColor="#0D1117"
+                                               TextColor="#C9D1D9"
+                                               PlaceholderColor="#484F58"/>
+                                        <Button Grid.Column="1" Text="Save securely" Style="{StaticResource ToolBtn}"
+                                                Command="{Binding SaveRemoteApiAccessTokenCommand}"/>
+                                        <Button Grid.Column="2" Text="Clear" Style="{StaticResource ToolBtn}"
+                                                Command="{Binding ClearRemoteApiAccessTokenCommand}"/>
+                                    </Grid>
+                                    <Label Text="This is a user login token stored in device secure storage; never paste a database password or Gemini API key here."
+                                           TextColor="#8B949E" FontSize="10"/>
+                                </VerticalStackLayout>
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

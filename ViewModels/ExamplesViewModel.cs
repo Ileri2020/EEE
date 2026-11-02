@@ -18,6 +18,8 @@ public partial class ExamplesViewModel : ObservableObject
 {
     private readonly EEWorkspaceViewModel _workspaceVm;
     private readonly IReadOnlyList<CircuitExampleItem> _allExamples;
+    private readonly RemoteEeeApiClient _remoteApi;
+    private readonly List<CircuitExampleItem> _communityExamples = new();
 
     [ObservableProperty]
     private ObservableCollection<CircuitExampleItem> _filteredExamples = new();
@@ -27,21 +29,88 @@ public partial class ExamplesViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsOscillatorsSelected))]
     [NotifyPropertyChangedFor(nameof(IsAmplifiersSelected))]
     [NotifyPropertyChangedFor(nameof(IsDigitalLogicSelected))]
+    [NotifyPropertyChangedFor(nameof(IsPassiveCircuitsSelected))]
+    [NotifyPropertyChangedFor(nameof(IsFiltersSelected))]
     private string _selectedCategory = "All";
 
     public bool IsAllSelected => SelectedCategory == "All";
     public bool IsOscillatorsSelected => SelectedCategory == "Oscillators";
     public bool IsAmplifiersSelected => SelectedCategory == "Amplifiers";
     public bool IsDigitalLogicSelected => SelectedCategory == "Digital Logic";
+    public bool IsPassiveCircuitsSelected => SelectedCategory == "Passive Circuits";
+    public bool IsFiltersSelected => SelectedCategory == "Filters";
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    public ExamplesViewModel(EEWorkspaceViewModel workspaceVm)
+    public ExamplesViewModel(EEWorkspaceViewModel workspaceVm, RemoteEeeApiClient remoteApi)
     {
         _workspaceVm = workspaceVm ?? throw new ArgumentNullException(nameof(workspaceVm));
+        _remoteApi = remoteApi ?? throw new ArgumentNullException(nameof(remoteApi));
         _allExamples = ExampleCircuitService.GetExamples();
         UpdateFilteredExamples();
+    }
+
+    [RelayCommand]
+    public async Task LoadCommunityExamplesAsync()
+    {
+        if (!_remoteApi.IsConfigured)
+        {
+            StatusMessage = "Set an HTTPS EESimulator API URL in Settings to browse community examples.";
+            return;
+        }
+
+        try
+        {
+            StatusMessage = "Loading community examples…";
+            var items = await _remoteApi.GetCommunityExamplesAsync();
+            _communityExamples.Clear();
+            _communityExamples.AddRange(items);
+            UpdateFilteredExamples();
+            StatusMessage = $"Loaded {items.Count} community example(s).";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Community examples unavailable: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task PublishCurrentCircuitAsync()
+    {
+        if (!_remoteApi.IsConfigured)
+        {
+            StatusMessage = "Set an HTTPS EESimulator API URL in Settings before publishing.";
+            return;
+        }
+
+        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page == null) return;
+        string suggestedName = string.IsNullOrWhiteSpace(_workspaceVm.Circuit.Title)
+            ? "Community Circuit"
+            : _workspaceVm.Circuit.Title;
+        string? title = await page.DisplayPromptAsync(
+            "Share Circuit",
+            "Enter a title for this public community example.",
+            accept: "Publish",
+            cancel: "Cancel",
+            initialValue: suggestedName,
+            maxLength: 80);
+        if (string.IsNullOrWhiteSpace(title)) return;
+
+        try
+        {
+            StatusMessage = "Publishing circuit…";
+            var published = await _remoteApi.PublishExampleAsync(_workspaceVm.Circuit, title.Trim());
+            _communityExamples.RemoveAll(item => item.Id == published.Id);
+            _communityExamples.Insert(0, published);
+            UpdateFilteredExamples();
+            StatusMessage = $"Published '{published.Title}' to the community library.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Publish failed: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -54,9 +123,10 @@ public partial class ExamplesViewModel : ObservableObject
     private void UpdateFilteredExamples()
     {
         FilteredExamples.Clear();
+        var all = _allExamples.Concat(_communityExamples);
         var items = SelectedCategory == "All"
-            ? _allExamples
-            : _allExamples.Where(e => e.Category.Equals(SelectedCategory, StringComparison.OrdinalIgnoreCase));
+            ? all
+            : all.Where(e => e.Category.Equals(SelectedCategory, StringComparison.OrdinalIgnoreCase));
 
         foreach (var item in items)
         {

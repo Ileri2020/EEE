@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using EESimulator.Scripting.API;
 
 namespace EESimulator.Scripting.Execution;
@@ -49,6 +51,24 @@ public class PythonCommandExecutor
 
     private void ExecuteLine(string line)
     {
+        // Example: eesim.set_component_property("R1", "Resistance", 2200)
+        var propertyMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_component_property\s*\(\s*""([^""]+)""\s*,\s*""([^""]+)""\s*,\s*(true|false|""[^""]*""|'[^']*'|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (propertyMatch.Success)
+        {
+            string componentName = propertyMatch.Groups[1].Value;
+            string propertyName = propertyMatch.Groups[2].Value;
+            string rawValue = propertyMatch.Groups[3].Value;
+            object value = rawValue.Equals("true", StringComparison.OrdinalIgnoreCase) ? true
+                : rawValue.Equals("false", StringComparison.OrdinalIgnoreCase) ? false
+                : rawValue.Length >= 2 && rawValue[0] == '"' ? JsonSerializer.Deserialize<string>(rawValue) ?? string.Empty
+                : rawValue.Length >= 2 && rawValue[0] == '\'' ? rawValue[1..^1]
+                : double.Parse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture);
+            _api.SetComponentProperty(componentName, propertyName, value);
+            return;
+        }
+
         // Example: r1 = circuit.add_component("Resistor", name="R1", position=(100, 200), resistance=1000)
         var addMatch = Regex.Match(line, @"add_component\s*\(\s*""([^""]+)""\s*,\s*name\s*=\s*""([^""]+)""\s*,\s*position\s*=\s*\(\s*([\d\.-]+)\s*,\s*([\d\.-]+)\s*\)(?:\s*,\s*(\w+)\s*=\s*([\d\.-]+))?\s*\)", RegexOptions.IgnoreCase);
         if (addMatch.Success)

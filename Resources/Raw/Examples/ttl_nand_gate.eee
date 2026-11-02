@@ -1,0 +1,18 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.0.0",
+  "Application": "EESimulator",
+  "Title": "74LS00 NAND Gate",
+  "Description": "Two logic inputs drive one gate of a 7400 quad 2-input NAND package.",
+  "Components": [
+    { "Id": "51000000-0000-0000-0000-000000000001", "ComponentType": "LogicInput", "Name": "A", "Reference": "A", "X": 100, "Y": 100, "ElectricalParameters": { "IsHigh": 1.0 }, "CustomProperties": { "IsHigh": true } },
+    { "Id": "51000000-0000-0000-0000-000000000002", "ComponentType": "LogicInput", "Name": "B", "Reference": "B", "X": 100, "Y": 180, "ElectricalParameters": { "IsHigh": 1.0 }, "CustomProperties": { "IsHigh": true } },
+    { "Id": "51000000-0000-0000-0000-000000000003", "ComponentType": "7400", "Name": "U1", "Reference": "U1", "X": 260, "Y": 140, "ElectricalParameters": {}, "CustomProperties": { "PartNumber": "7400", "ExposeSupplyPins": true, "ShowInternalStructure": true } },
+    { "Id": "51000000-0000-0000-0000-000000000004", "ComponentType": "LogicOutput", "Name": "Y", "Reference": "Y", "X": 420, "Y": 140, "ElectricalParameters": {}, "CustomProperties": {} }
+  ],
+  "Connections": [
+    { "Id": "52000000-0000-0000-0000-000000000001", "FromComponentId": "51000000-0000-0000-0000-000000000001", "FromPin": "out", "ToComponentId": "51000000-0000-0000-0000-000000000003", "ToPin": "pin1", "NetName": "A", "Resistance": 0.0 },
+    { "Id": "52000000-0000-0000-0000-000000000002", "FromComponentId": "51000000-0000-0000-0000-000000000002", "FromPin": "out", "ToComponentId": "51000000-0000-0000-0000-000000000003", "ToPin": "pin2", "NetName": "B", "Resistance": 0.0 },
+    { "Id": "52000000-0000-0000-0000-000000000003", "FromComponentId": "51000000-0000-0000-0000-000000000003", "FromPin": "pin3", "ToComponentId": "51000000-0000-0000-0000-000000000004", "ToPin": "in", "NetName": "Y", "Resistance": 0.0 }
+  ]
+}

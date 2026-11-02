@@ -55,7 +55,7 @@
               BackgroundColor="#161B22"
               HeightRequest="52"
               Padding="12,0"
-              ColumnDefinitions="Auto,*,Auto">
+              ColumnDefinitions="Auto,*,Auto,Auto,Auto">
 
             <!-- Back Button -->
             <Button Grid.Column="0"
@@ -81,8 +81,22 @@
                    FontSize="11"
                    VerticalOptions="Center"/>
 
+                <Button Grid.Column="3"
+                    Text="↻ Community"
+                    Style="{StaticResource ToolBtn}"
+                    Padding="8,4"
+                    Margin="6,0"
+                    Command="{Binding LoadCommunityExamplesCommand}"/>
+                <Button Grid.Column="4"
+                    Text="☁ Share Circuit"
+                    Style="{StaticResource ToolBtn}"
+                    TextColor="#79C0FF"
+                    Padding="8,4"
+                    Margin="0,0,6,0"
+                    Command="{Binding PublishCurrentCircuitCommand}"/>
+
             <!-- Bottom border -->
-            <BoxView Grid.ColumnSpan="3"
+            <BoxView Grid.ColumnSpan="5"
                      HeightRequest="1"
                      BackgroundColor="#30363D"
                      VerticalOptions="End"/>
@@ -157,6 +171,44 @@
                         <Label Text="🔊 Amplifiers" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
                     </Border>
 
+                    <!-- Passive Circuits -->
+                    <Border StrokeThickness="1" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsPassiveCircuitsSelected}" Value="True">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsPassiveCircuitsSelected}" Value="False">
+                                <Setter Property="Stroke" Value="#30363D"/>
+                                <Setter Property="BackgroundColor" Value="#161B22"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Passive Circuits"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="½ Passive Circuits" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+
+                    <!-- Filters -->
+                    <Border StrokeThickness="1" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsFiltersSelected}" Value="True">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsFiltersSelected}" Value="False">
+                                <Setter Property="Stroke" Value="#30363D"/>
+                                <Setter Property="BackgroundColor" Value="#161B22"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Filters"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="⌁ Filters" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+
                     <!-- Digital Logic -->
                     <Border StrokeThickness="1" Padding="14,6">
                         <Border.StrokeShape>
@@ -184,10 +236,18 @@
         <!-- ═══════════════════════════════════════════════════════════════ -->
         <!-- EXAMPLES CARDS LIST                                              -->
         <!-- ═══════════════════════════════════════════════════════════════ -->
-        <ScrollView Grid.Row="2" Padding="16,14">
-            <VerticalStackLayout Spacing="16" MaximumWidthRequest="920" HorizontalOptions="Center">
-
-                <CollectionView ItemsSource="{Binding FilteredExamples}" SelectionMode="None">
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding FilteredExamples}"
+                        SelectionMode="None"
+                        ItemsUpdatingScrollMode="KeepItemsInView"
+                        Margin="0"
+                        Padding="16,14">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="24" Spacing="8" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Label Text="No examples in this category yet" TextColor="#C9D1D9" FontSize="16" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                            <Label Text="Choose another category or return to All Circuits." TextColor="#8B949E" FontSize="12" HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Vertical" ItemSpacing="16"/>
                     </CollectionView.ItemsLayout>
@@ -244,6 +304,10 @@
                                                 </Border>
                                             </HorizontalStackLayout>
                                             <Label Text="{Binding Category}" FontSize="11" TextColor="#8B949E"/>
+                                              <Label Text="{Binding OwnerName, StringFormat='Shared by {0}'}"
+                                                  FontSize="10"
+                                                  TextColor="#79C0FF"
+                                                  IsVisible="{Binding IsCommunity}"/>
                                         </VerticalStackLayout>
 
                                         <!-- File type pill -->
@@ -330,10 +394,7 @@
                             </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
-                </CollectionView>
-
-            </VerticalStackLayout>
-        </ScrollView>
+        </CollectionView>
 
     </Grid>
 </ContentPage>

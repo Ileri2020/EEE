@@ -21,6 +21,7 @@ public static class MauiProgram
 
         // ─── EESimulator Services ──────────────────────────────────────────
         builder.Services.AddSingleton<EEWorkspaceViewModel>();
+        builder.Services.AddSingleton<EEE.Services.RemoteEeeApiClient>();
         builder.Services.AddSingleton<WorkspacePage>();
         builder.Services.AddSingleton<SettingsViewModel>();
         builder.Services.AddTransient<SettingsPage>();

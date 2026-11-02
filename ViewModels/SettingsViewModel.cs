@@ -135,6 +135,56 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnMobileToolbarPositionChanged(string value) => PersistString(nameof(MobileToolbarPosition), value);
 
+    [ObservableProperty]
+    private string _remoteApiBaseUrl = string.Empty;
+
+    partial void OnRemoteApiBaseUrlChanged(string value)
+    {
+        var normalized = (value ?? string.Empty).Trim().TrimEnd('/');
+        Preferences.Default.Set("Settings.RemoteApiBaseUrl", normalized);
+        EEE.Services.RemoteEeeApiClient.ApiBaseUrl = normalized;
+    }
+
+    [ObservableProperty]
+    private string _remoteApiAccessTokenDraft = string.Empty;
+
+    [RelayCommand]
+    private async Task SaveRemoteApiAccessTokenAsync()
+    {
+        if (string.IsNullOrWhiteSpace(RemoteApiAccessTokenDraft))
+        {
+            ShowToast("Enter a user access token first.");
+            return;
+        }
+
+        try
+        {
+            await SecureStorage.Default.SetAsync(
+                EEE.Services.RemoteEeeApiClient.SecureAccessTokenKey,
+                RemoteApiAccessTokenDraft.Trim());
+            RemoteApiAccessTokenDraft = string.Empty;
+            ShowToast("User access token saved securely on this device.");
+        }
+        catch (Exception ex)
+        {
+            ShowToast($"Could not save access token: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task ClearRemoteApiAccessTokenAsync()
+    {
+        try
+        {
+            SecureStorage.Default.Remove(EEE.Services.RemoteEeeApiClient.SecureAccessTokenKey);
+            ShowToast("Saved access token removed.");
+        }
+        catch (Exception ex)
+        {
+            ShowToast($"Could not remove access token: {ex.Message}");
+        }
+    }
+
     public List<string> ToolbarPositions { get; } = new()
     {
         "Left Dock", "Bottom Bar", "Floating"
@@ -246,6 +296,7 @@ public partial class SettingsViewModel : ObservableObject
         DefaultCategory            = Preferences.Default.Get($"Settings.{nameof(DefaultCategory)}",           "All");
         MobilePanModeOnStartup     = Preferences.Default.Get($"Settings.{nameof(MobilePanModeOnStartup)}",    true);
         MobileToolbarPosition      = Preferences.Default.Get($"Settings.{nameof(MobileToolbarPosition)}",     "Left Dock");
+        RemoteApiBaseUrl           = Preferences.Default.Get("Settings.RemoteApiBaseUrl", string.Empty);
     }
 
     // ─── Control Bindings ─────────────────────────────────────────────────────

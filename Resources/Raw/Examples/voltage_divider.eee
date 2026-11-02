@@ -1,0 +1,19 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.0.0",
+  "Application": "EESimulator",
+  "Title": "Resistive Voltage Divider",
+  "Description": "A 5 V source and two equal resistors create a 2.5 V midpoint.",
+  "Components": [
+    { "Id": "31000000-0000-0000-0000-000000000001", "ComponentType": "VoltageSource", "Name": "V1", "Reference": "V1", "X": 100, "Y": 100, "ElectricalParameters": { "Voltage": 5.0 }, "CustomProperties": {} },
+    { "Id": "31000000-0000-0000-0000-000000000002", "ComponentType": "Ground", "Name": "GND1", "Reference": "GND1", "X": 100, "Y": 220, "ElectricalParameters": {}, "CustomProperties": {} },
+    { "Id": "31000000-0000-0000-0000-000000000003", "ComponentType": "Resistor", "Name": "R1", "Reference": "R1", "X": 220, "Y": 100, "ElectricalParameters": { "Resistance": 10000.0 }, "CustomProperties": {} },
+    { "Id": "31000000-0000-0000-0000-000000000004", "ComponentType": "Resistor", "Name": "R2", "Reference": "R2", "X": 340, "Y": 100, "ElectricalParameters": { "Resistance": 10000.0 }, "CustomProperties": {} }
+  ],
+  "Connections": [
+    { "Id": "32000000-0000-0000-0000-000000000001", "FromComponentId": "31000000-0000-0000-0000-000000000001", "FromPin": "negative", "ToComponentId": "31000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 },
+    { "Id": "32000000-0000-0000-0000-000000000002", "FromComponentId": "31000000-0000-0000-0000-000000000001", "FromPin": "positive", "ToComponentId": "31000000-0000-0000-0000-000000000003", "ToPin": "pin1", "NetName": "VCC", "Resistance": 0.0 },
+    { "Id": "32000000-0000-0000-0000-000000000003", "FromComponentId": "31000000-0000-0000-0000-000000000003", "FromPin": "pin2", "ToComponentId": "31000000-0000-0000-0000-000000000004", "ToPin": "pin1", "NetName": "MID", "Resistance": 0.0 },
+    { "Id": "32000000-0000-0000-0000-000000000004", "FromComponentId": "31000000-0000-0000-0000-000000000004", "FromPin": "pin2", "ToComponentId": "31000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 }
+  ]
+}

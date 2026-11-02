@@ -26,6 +26,8 @@ public class CircuitExampleItem
     public string ComponentSummary { get; set; } = string.Empty;
     public string ResourcePath { get; set; } = string.Empty;
     public string RawEeeJson { get; set; } = string.Empty;
+    public bool IsCommunity { get; set; }
+    public string OwnerName { get; set; } = string.Empty;
 }
 
 
@@ -207,6 +209,45 @@ public static class ExampleCircuitService
             Description = "Fundamental digital arithmetic combinational half adder circuit built with XOR gate for Sum output and AND gate for Carry output, accepting two single-bit binary inputs with interactive live logic output displays.",
             ComponentSummary = "2x Interactive Logic Inputs, 1x 2-Input XOR Gate, 1x 2-Input AND Gate, 2x Interactive Logic Output Displays",
             ResourcePath = "Examples/logic_half_adder.eee"
+        });
+
+        _examples.Add(new CircuitExampleItem
+        {
+            Id = "voltage_divider",
+            Title = "Resistive Voltage Divider",
+            Category = "Passive Circuits",
+            Icon = "½",
+            Badge = "STARTER",
+            Formula = "Vout = Vin · R2 / (R1 + R2)",
+            Description = "Explore how two series resistors divide a source voltage. Equal 10 kΩ resistors produce approximately half the input voltage at their midpoint.",
+            ComponentSummary = "1x 5 V Voltage Source, 2x 10 kΩ Resistors, 1x Ground",
+            ResourcePath = "Examples/voltage_divider.eee"
+        });
+
+        _examples.Add(new CircuitExampleItem
+        {
+            Id = "rc_low_pass",
+            Title = "RC Low-Pass Filter",
+            Category = "Filters",
+            Icon = "⌁",
+            Badge = "FILTER",
+            Formula = "fc = 1 / (2πRC) ≈ 1.59 kHz",
+            Description = "A first-order passive RC network that passes low-frequency signals and attenuates high-frequency signals.",
+            ComponentSummary = "1x 1 V Source, 1x 1 kΩ Resistor, 1x 100 nF Capacitor, 1x Ground",
+            ResourcePath = "Examples/rc_low_pass.eee"
+        });
+
+        _examples.Add(new CircuitExampleItem
+        {
+            Id = "ttl_nand_gate",
+            Title = "74LS00 NAND Gate",
+            Category = "Digital Logic",
+            Icon = "⊼",
+            Badge = "TTL",
+            Formula = "Y = ¬(A · B)",
+            Description = "Connect two interactive logic inputs to one NAND gate inside a 7400 quad TTL package and observe its output.",
+            ComponentSummary = "2x Logic Inputs, 1x 7400 TTL IC, 1x Logic Output",
+            ResourcePath = "Examples/ttl_nand_gate.eee"
         });
     }
 }

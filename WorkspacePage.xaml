@@ -424,10 +424,46 @@
                             ToolTipProperties.Text="Play / Pause Simulation"/>
                 </Frame>
 
+                <!-- Prompt directly from the schematic canvas; results open as reviewable script drafts. -->
+                <Border IsVisible="{Binding IsScriptViewActive, Converter={StaticResource InvertedBoolConverter}}"
+                        ZIndex="45"
+                        HorizontalOptions="Center"
+                        VerticalOptions="End"
+                        MaximumWidthRequest="680"
+                        Margin="16,0,16,88"
+                        Padding="10,8"
+                        BackgroundColor="#161B22"
+                        Stroke="#30363D"
+                        StrokeThickness="1">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" RowSpacing="4">
+                        <Entry Grid.Row="0" Grid.Column="0"
+                               Text="{Binding AiSchemaPrompt}"
+                               Placeholder="Ask AI to modify this schematic…"
+                               BackgroundColor="#0D1117"
+                               TextColor="#C9D1D9"
+                               PlaceholderColor="#6E7681"
+                               FontSize="12"
+                               ReturnType="Send"
+                               IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Text="✨ Draft"
+                                Style="{StaticResource ToolBtn}"
+                                TextColor="#D2A8FF"
+                                Command="{Binding GenerateSchemaScriptCommand}"
+                                IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                        <Label Grid.Row="1" Grid.ColumnSpan="2"
+                               Text="{Binding AiSchemaStatus}"
+                               TextColor="#8B949E"
+                               FontSize="10"
+                               LineBreakMode="WordWrap"/>
+                    </Grid>
+                </Border>
+
                 <!-- Script Viewport -->
                 <Grid IsVisible="{Binding IsScriptViewActive}"
                       BackgroundColor="#0D1117"
-                      RowDefinitions="Auto,*,8,200">
+                        RowDefinitions="Auto,Auto,*,8,200">
 
                     <!-- Script editor header (Undo/Redo removed per §2.C: schematic history != script text history) -->
                     <Grid Grid.Row="0"
@@ -451,9 +487,38 @@
                                 Command="{Binding ClearConsoleCommand}"/>
                     </Grid>
 
+                          <!-- AI schema-to-script drafting (provider keys stay on the server) -->
+                          <Grid Grid.Row="1"
+                             BackgroundColor="#12161D"
+                             RowDefinitions="Auto,Auto"
+                             ColumnDefinitions="*,Auto"
+                             Padding="10,8"
+                             ColumnSpacing="8"
+                             RowSpacing="4">
+                           <Entry Grid.Row="0" Grid.Column="0"
+                               Text="{Binding AiSchemaPrompt}"
+                               Placeholder="Describe a schematic change…"
+                               BackgroundColor="#0D1117"
+                               TextColor="#C9D1D9"
+                               PlaceholderColor="#6E7681"
+                               FontSize="12"
+                               ReturnType="Send"
+                               IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                           <Button Grid.Row="0" Grid.Column="1"
+                                Text="✨ Draft script"
+                                Style="{StaticResource ToolBtn}"
+                                TextColor="#D2A8FF"
+                                Command="{Binding GenerateSchemaScriptCommand}"
+                                IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                           <Label Grid.Row="1" Grid.ColumnSpan="2"
+                               Text="{Binding AiSchemaStatus}"
+                               TextColor="#8B949E"
+                               FontSize="10"
+                               LineBreakMode="WordWrap"/>
+                          </Grid>
 
                     <!-- Code editor -->
-                    <Border Grid.Row="1"
+                          <Border Grid.Row="2"
                             BackgroundColor="#0D1117"
                             Padding="0"
                             Stroke="#30363D"
@@ -472,10 +537,10 @@
                     </Border>
 
                     <!-- Splitter -->
-                    <BoxView Grid.Row="2" BackgroundColor="#21262D"/>
+                    <BoxView Grid.Row="3" BackgroundColor="#21262D"/>
 
                     <!-- Console output -->
-                    <Grid Grid.Row="3" BackgroundColor="#0D1117" RowDefinitions="Auto,*">
+                    <Grid Grid.Row="4" BackgroundColor="#0D1117" RowDefinitions="Auto,*">
                         <Label Grid.Row="0"
                                Text="Console Output"
                                TextColor="#8B949E"
