@@ -196,6 +196,103 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty] public partial bool IsControlledSourceComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsTransmissionLineComponent { get; set; } = false;
     [ObservableProperty] public partial bool IsVoltageDelayComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsClockComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsPinComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsPowerComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsPullResistorComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsTunnelComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsProbeComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsDigitalTransistorComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsTransmissionGateComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsBitExtenderComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsConstantComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsDoNotConnectComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsLossyTransmissionLineComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsCoaxialCableComponent { get; set; } = false;
+    [ObservableProperty] public partial bool IsMicrostripLineComponent { get; set; } = false;
+
+    // Clock
+    [ObservableProperty] public partial double EditClockFrequency { get; set; } = 1000.0;
+    [ObservableProperty] public partial double EditClockDutyCycle { get; set; } = 0.5;
+    [ObservableProperty] public partial double EditClockHighVoltage { get; set; } = 5.0;
+    [ObservableProperty] public partial double EditClockLowVoltage { get; set; } = 0.0;
+    [ObservableProperty] public partial int EditClockHighDuration { get; set; } = 1;
+    [ObservableProperty] public partial int EditClockLowDuration { get; set; } = 1;
+    [ObservableProperty] public partial int EditClockPhase { get; set; } = 0;
+
+    // Pin
+    [ObservableProperty] public partial string EditPinDirection { get; set; } = "Input";
+    [ObservableProperty] public partial int EditPinBitWidth { get; set; } = 1;
+    [ObservableProperty] public partial string EditPinBehavior { get; set; } = "Tristate";
+    [ObservableProperty] public partial long EditPinInitialValue { get; set; } = 0;
+    [ObservableProperty] public partial string EditPinRadix { get; set; } = "Binary";
+    [ObservableProperty] public partial double EditPinHighVoltage { get; set; } = 5.0;
+    [ObservableProperty] public partial double EditPinLowVoltage { get; set; } = 0.0;
+
+    // Power
+    [ObservableProperty] public partial double EditPowerVoltage { get; set; } = 5.0;
+    [ObservableProperty] public partial int EditPowerBitWidth { get; set; } = 1;
+
+    // PullResistor
+    [ObservableProperty] public partial string EditPullMode { get; set; } = "PullUp";
+    [ObservableProperty] public partial double EditPullResistance { get; set; } = 10000.0;
+    [ObservableProperty] public partial double EditPullRailVoltage { get; set; } = 5.0;
+
+    // Tunnel
+    [ObservableProperty] public partial string EditTunnelLabel { get; set; } = "NET1";
+    [ObservableProperty] public partial int EditTunnelBitWidth { get; set; } = 1;
+
+    // Probe
+    [ObservableProperty] public partial string EditProbeRadix { get; set; } = "Binary";
+    [ObservableProperty] public partial double EditProbeInputImpedance { get; set; } = 10e6;
+
+    // Digital Transistor
+    [ObservableProperty] public partial string EditTransistorType { get; set; } = "NType";
+    [ObservableProperty] public partial string EditTransistorGateLocation { get; set; } = "TopRight";
+    [ObservableProperty] public partial int EditTransistorBitWidth { get; set; } = 1;
+    [ObservableProperty] public partial double EditTransistorRon { get; set; } = 0.1;
+    [ObservableProperty] public partial double EditTransistorRoff { get; set; } = 10e6;
+    [ObservableProperty] public partial double EditTransistorThreshold { get; set; } = 2.5;
+
+    // Transmission Gate
+    [ObservableProperty] public partial string EditTransmissionGateSelectLoc { get; set; } = "TopRight";
+    [ObservableProperty] public partial int EditTransmissionGateBitWidth { get; set; } = 1;
+    [ObservableProperty] public partial double EditTransmissionGateRon { get; set; } = 0.2;
+    [ObservableProperty] public partial double EditTransmissionGateRoff { get; set; } = 10e6;
+
+    // Bit Extender
+    [ObservableProperty] public partial int EditBitExtenderInWidth { get; set; } = 8;
+    [ObservableProperty] public partial int EditBitExtenderOutWidth { get; set; } = 16;
+    [ObservableProperty] public partial string EditBitExtenderType { get; set; } = "SignExtend";
+
+    // Constant
+    [ObservableProperty] public partial long EditConstantValue { get; set; } = 1;
+    [ObservableProperty] public partial int EditConstantBitWidth { get; set; } = 1;
+    [ObservableProperty] public partial double EditConstantVoltageHigh { get; set; } = 5.0;
+    [ObservableProperty] public partial double EditConstantVoltageLow { get; set; } = 0.0;
+
+    // DoNotConnect
+    [ObservableProperty] public partial int EditDncBitWidth { get; set; } = 1;
+
+    // Lossy Transmission Line
+    [ObservableProperty] public partial double EditLossyResistance { get; set; } = 0.2;
+    [ObservableProperty] public partial double EditLossyInductance { get; set; } = 250e-9;
+    [ObservableProperty] public partial double EditLossyConductance { get; set; } = 10e-6;
+    [ObservableProperty] public partial double EditLossyCapacitance { get; set; } = 100e-12;
+    [ObservableProperty] public partial double EditLossyLength { get; set; } = 1.0;
+
+    // Coaxial Cable
+    [ObservableProperty] public partial double EditCoaxZ0 { get; set; } = 50.0;
+    [ObservableProperty] public partial double EditCoaxVF { get; set; } = 0.66;
+    [ObservableProperty] public partial double EditCoaxLength { get; set; } = 1.0;
+    [ObservableProperty] public partial double EditCoaxAttenuation { get; set; } = 0.05;
+
+    // Microstrip Line
+    [ObservableProperty] public partial double EditMicrostripWidth { get; set; } = 1.5e-3;
+    [ObservableProperty] public partial double EditMicrostripHeight { get; set; } = 0.8e-3;
+    [ObservableProperty] public partial double EditMicrostripEr { get; set; } = 4.4;
+    [ObservableProperty] public partial double EditMicrostripLength { get; set; } = 0.05;
+
     [ObservableProperty] public partial string EditJfetChannel { get; set; } = "NChannel";
     [ObservableProperty] public partial double EditResistanceOff { get; set; } = 1e6;
     [ObservableProperty] public partial double EditThreshold { get; set; } = 1.0;
@@ -302,6 +399,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("Inductor",      "L",   "H",  "#D2A8FF", "Electrical",  "Inductor",              "inductor.svg"),
         new ComponentPaletteItem("VoltageSource", "V",   "V",  "#56D364", "Electrical",  "Voltage source",        "voltagesource.svg"),
         new ComponentPaletteItem("CurrentSource", "I",   "A",  "#56D364", "Electrical",  "Current source",        "currentsource.svg"),
+        new ComponentPaletteItem("Power",         "VCC", "+V", "#56D364", "Electrical",  "Positive Supply Rail (+VCC)", "power.svg"),
+        new ComponentPaletteItem("PullResistor",  "RP",  "PULL","#E3B341", "Electrical",  "Pull-Up / Pull-Down Resistor", "pullresistor.svg"),
         new ComponentPaletteItem("Ground",        "⏚",   "GND","#8B949E", "Electrical",  "Circuit ground",        "ground.svg"),
         new ComponentPaletteItem("Diode",            "D",   "▷|", "#FF7B72", "Electrical",  "Semiconductor diode",      "diode.svg"),
         new ComponentPaletteItem("MutualInductance", "K",   "k",  "#D2A8FF", "Electrical",  "Mutual coupled inductors", "mutualinductance.svg"),
@@ -312,35 +411,47 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("VoltageSwitch",    "S",   "SW", "#E3B341", "Electrical",  "Voltage-Controlled Switch", "voltageswitch.svg"),
         new ComponentPaletteItem("CurrentSwitch",    "W",   "SW", "#E3B341", "Electrical",  "Current-Controlled Switch", "currentswitch.svg"),
         new ComponentPaletteItem("TransmissionLine", "T",   "Ω",  "#79C0FF", "Electrical",  "Lossless Transmission Line", "transmissionline.svg"),
+        new ComponentPaletteItem("LossyTransmissionLine", "TL", "RLGC", "#FFA657", "Electrical", "Lossy Transmission Line", "lossy_transmissionline.svg"),
+        new ComponentPaletteItem("CoaxialCable",     "CX",  "COAX","#79C0FF", "Electrical",  "Coaxial Cable Line", "coaxial.svg"),
+        new ComponentPaletteItem("MicrostripLine",   "MS",  "PCB", "#56D364", "Electrical",  "PCB Microstrip Line", "microstrip.svg"),
         new ComponentPaletteItem("VoltageDelay",     "VD",  "s",  "#56D364", "Electrical",  "Voltage Delay Element",      "voltagedelay.svg"),
         new ComponentPaletteItem("Bulb",             "💡",  "LAMP","#F59E0B", "Electrical",  "Incandescent Light Bulb",    "bulb.svg"),
 
         // ── Electronics (Semiconductors & Active) ────────────────────────────
-        new ComponentPaletteItem("LED",           "💡",  "LED","#E3B341", "Electronics", "Light Emitting Diode",       "led.svg"),
-        new ComponentPaletteItem("LogicInput",    "🔲",  "IN", "#56D364", "Electronics", "Toggle Logic Input (0/1)",   "logicinput.svg"),
-        new ComponentPaletteItem("LogicOutput",   "🎯",  "OUT","#79C0FF", "Electronics", "Digital Logic Probe (0/1)",  "logicoutput.svg"),
-        new ComponentPaletteItem("NPN",           "Q",   "NPN","#FFA657", "Electronics", "BJT NPN Transistor",         "bjt_npn.svg"),
-        new ComponentPaletteItem("PNP",           "Q",   "PNP","#FFA657", "Electronics", "BJT PNP Transistor",    "bjt_pnp.svg"),
-        new ComponentPaletteItem("JFET",          "J",   "FET","#FFA657", "Electronics", "Junction Field-Effect",  "jfet.svg"),
-        new ComponentPaletteItem("NMOS",          "M",   "NMOS","#D2A8FF", "Electronics", "N-Channel MOSFET",     "nmos.svg"),
-        new ComponentPaletteItem("PMOS",          "M",   "PMOS","#D2A8FF", "Electronics", "P-Channel MOSFET",     "pmos.svg"),
-        new ComponentPaletteItem("OpAmp",         "▷",   "AMP","#79C0FF", "Electronics", "Operational Amplifier", "opamp.svg"),
-        new ComponentPaletteItem("AND",           "&",   "AND","#58A6FF", "Electronics", "2-Input AND Gate",      "and.svg"),
-        new ComponentPaletteItem("OR",            "≥1",  "OR", "#58A6FF", "Electronics", "2-Input OR Gate",       "or.svg"),
-        new ComponentPaletteItem("NOT",           "¬",   "NOT","#58A6FF", "Electronics", "Inverter / NOT Gate",   "not.svg"),
-        new ComponentPaletteItem("NAND",          "⊼",   "NND","#58A6FF", "Electronics", "2-Input NAND Gate",     "nand.svg"),
-        new ComponentPaletteItem("NOR",           "⊽",   "NOR","#58A6FF", "Electronics", "2-Input NOR Gate",      "nor.svg"),
-        new ComponentPaletteItem("XOR",           "=1",  "XOR","#58A6FF", "Electronics", "2-Input XOR Gate",      "xor.svg"),
-        new ComponentPaletteItem("XNOR",          "⊙",   "XNR","#58A6FF", "Electronics", "2-Input XNOR Gate",     "xnor.svg"),
-        new ComponentPaletteItem("LogicGate",     "⊳",   "GATE","#58A6FF", "Electronics", "Digital Logic Gate",      "logicgate.svg"),
-        new ComponentPaletteItem("IC",            "⊞",   "IC", "#8B949E", "Electronics", "Integrated Circuit",    "ic.svg"),
+        new ComponentPaletteItem("LED",              "💡",  "LED","#E3B341", "Electronics", "Light Emitting Diode",       "led.svg"),
+        new ComponentPaletteItem("Clock",            "⏱",  "CLK", "#58A6FF", "Electronics", "Digital Clock Pulse Generator", "clock.svg"),
+        new ComponentPaletteItem("Pin",              "⚲",   "PIN", "#58A6FF", "Electronics", "Named I/O Port Terminal", "pin.svg"),
+        new ComponentPaletteItem("Constant",         "1",   "CST", "#56D364", "Electronics", "Logic Constant Source (1/0)", "constant.svg"),
+        new ComponentPaletteItem("LogicInput",       "🔲",  "IN",  "#56D364", "Electronics", "Toggle Logic Input (0/1)",   "logicinput.svg"),
+        new ComponentPaletteItem("LogicOutput",      "🎯",  "OUT", "#79C0FF", "Electronics", "Digital Logic Probe (0/1)",  "logicoutput.svg"),
+        new ComponentPaletteItem("Probe",            "👁",  "PRB", "#79C0FF", "Electronics", "Voltage/Current Probe Point", "probe.svg"),
+        new ComponentPaletteItem("Transistor",       "SW",  "SWT", "#FFA657", "Electronics", "Digital Switch Transistor", "transistor_digital.svg"),
+        new ComponentPaletteItem("TransmissionGate", "TG",  "TG",  "#D2A8FF", "Electronics", "CMOS Transmission Gate", "transmissiongate.svg"),
+        new ComponentPaletteItem("BitExtender",      "⇄",   "EXT", "#79C0FF", "Electronics", "Bus Bit Extender", "bitextender.svg"),
+        new ComponentPaletteItem("NPN",              "Q",   "NPN", "#FFA657", "Electronics", "BJT NPN Transistor",         "bjt_npn.svg"),
+        new ComponentPaletteItem("PNP",              "Q",   "PNP", "#FFA657", "Electronics", "BJT PNP Transistor",    "bjt_pnp.svg"),
+        new ComponentPaletteItem("JFET",             "J",   "FET", "#FFA657", "Electronics", "Junction Field-Effect",  "jfet.svg"),
+        new ComponentPaletteItem("NMOS",             "M",   "NMOS","#D2A8FF", "Electronics", "N-Channel MOSFET",     "nmos.svg"),
+        new ComponentPaletteItem("PMOS",             "M",   "PMOS","#D2A8FF", "Electronics", "P-Channel MOSFET",     "pmos.svg"),
+        new ComponentPaletteItem("OpAmp",            "▷",   "AMP", "#79C0FF", "Electronics", "Operational Amplifier", "opamp.svg"),
+        new ComponentPaletteItem("AND",              "&",   "AND", "#58A6FF", "Electronics", "2-Input AND Gate",      "and.svg"),
+        new ComponentPaletteItem("OR",               "≥1",  "OR",  "#58A6FF", "Electronics", "2-Input OR Gate",       "or.svg"),
+        new ComponentPaletteItem("NOT",              "¬",   "NOT", "#58A6FF", "Electronics", "Inverter / NOT Gate",   "not.svg"),
+        new ComponentPaletteItem("NAND",             "⊼",   "NND", "#58A6FF", "Electronics", "2-Input NAND Gate",     "nand.svg"),
+        new ComponentPaletteItem("NOR",              "⊽",   "NOR", "#58A6FF", "Electronics", "2-Input NOR Gate",      "nor.svg"),
+        new ComponentPaletteItem("XOR",              "=1",  "XOR", "#58A6FF", "Electronics", "2-Input XOR Gate",      "xor.svg"),
+        new ComponentPaletteItem("XNOR",             "⊙",   "XNR", "#58A6FF", "Electronics", "2-Input XNOR Gate",     "xnor.svg"),
+        new ComponentPaletteItem("LogicGate",        "⊳",   "GATE","#58A6FF", "Electronics", "Digital Logic Gate",      "logicgate.svg"),
+        new ComponentPaletteItem("IC",               "⊞",   "IC",  "#8B949E", "Electronics", "Integrated Circuit",    "ic.svg"),
 
         // ── General (Structural & Schematic) ─────────────────────────────────
-        new ComponentPaletteItem("Wire",          "—",   "W",  "#58A6FF", "General", "Wire segment",         "wire.svg"),
-        new ComponentPaletteItem("Junction",      "•",   "J",  "#58A6FF", "General", "Wire junction",        "junction.svg"),
-        new ComponentPaletteItem("Label",         "🏷",  "LBL","#56D364", "General", "Net label",            "label.svg"),
-        new ComponentPaletteItem("TextAnnotation","🗎",  "TXT","#8B949E", "General", "Text note",            "textannotation.svg"),
-        new ComponentPaletteItem("Connector",     "⑉",   "HDR","#E3B341", "General", "Header connector",     "connector.svg")
+        new ComponentPaletteItem("Wire",          "—",   "W",   "#58A6FF", "General", "Wire segment",         "wire.svg"),
+        new ComponentPaletteItem("Junction",      "•",   "J",   "#58A6FF", "General", "Wire junction",        "junction.svg"),
+        new ComponentPaletteItem("Tunnel",        "TUN", "NET", "#56D364", "General", "Named Net Tunnel",     "tunnel.svg"),
+        new ComponentPaletteItem("Label",         "🏷",  "LBL", "#56D364", "General", "Net label",            "label.svg"),
+        new ComponentPaletteItem("DoNotConnect",  "✕",   "DNC", "#F78166", "General", "Do Not Connect Marker","dnc.svg"),
+        new ComponentPaletteItem("TextAnnotation","🗎",  "TXT", "#8B949E", "General", "Text note",            "textannotation.svg"),
+        new ComponentPaletteItem("Connector",     "⑉",   "HDR", "#E3B341", "General", "Header connector",     "connector.svg")
     };
 
     /// <summary>Palette grouped by category for the sidebar 2-per-row grid layout.</summary>
@@ -348,17 +459,21 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         new ComponentPaletteGroup("⚡ Passives", new[]
         {
-            new ComponentPaletteItem("Resistor",      "R",  "Ω",  "#F78166", "Passives",  "Linear resistor",          "resistor.svg"),
-            new ComponentPaletteItem("Capacitor",     "C",  "F",  "#79C0FF", "Passives",  "Capacitor",                "capacitor.svg"),
-            new ComponentPaletteItem("Inductor",      "L",  "H",  "#D2A8FF", "Passives",  "Inductor",                 "inductor.svg"),
-            new ComponentPaletteItem("MutualInductance","K","k",  "#D2A8FF", "Passives",  "Mutual coupled inductors", "mutualinductance.svg"),
+            new ComponentPaletteItem("Resistor",      "R",  "Ω",    "#F78166", "Passives",  "Linear resistor",          "resistor.svg"),
+            new ComponentPaletteItem("Capacitor",     "C",  "F",    "#79C0FF", "Passives",  "Capacitor",                "capacitor.svg"),
+            new ComponentPaletteItem("Inductor",      "L",  "H",    "#D2A8FF", "Passives",  "Inductor",                 "inductor.svg"),
+            new ComponentPaletteItem("MutualInductance","K","k",    "#D2A8FF", "Passives",  "Mutual coupled inductors", "mutualinductance.svg"),
+            new ComponentPaletteItem("PullResistor",  "RP", "PULL", "#E3B341", "Passives",  "Pull-Up / Pull-Down Resistor", "pullresistor.svg"),
         }),
-        new ComponentPaletteGroup("🔋 Sources", new[]
+        new ComponentPaletteGroup("🔋 Sources & Power", new[]
         {
-            new ComponentPaletteItem("VoltageSource", "V",  "V",  "#56D364", "Sources",   "Voltage source",           "voltagesource.svg"),
-            new ComponentPaletteItem("CurrentSource", "I",  "A",  "#56D364", "Sources",   "Current source",           "currentsource.svg"),
-            new ComponentPaletteItem("VoltageDelay",  "VD", "s",  "#56D364", "Sources",   "Voltage Delay Element",    "voltagedelay.svg"),
-            new ComponentPaletteItem("Ground",        "⏚",  "GND","#8B949E", "Sources",   "Circuit ground",           "ground.svg"),
+            new ComponentPaletteItem("VoltageSource", "V",   "V",   "#56D364", "Sources",   "Voltage source",           "voltagesource.svg"),
+            new ComponentPaletteItem("CurrentSource", "I",   "A",   "#56D364", "Sources",   "Current source",           "currentsource.svg"),
+            new ComponentPaletteItem("Power",         "VCC", "+V",  "#56D364", "Sources",   "Positive Supply Rail (+VCC)", "power.svg"),
+            new ComponentPaletteItem("Constant",      "1",   "CST", "#56D364", "Sources",   "Logic Constant (1/0)",     "constant.svg"),
+            new ComponentPaletteItem("Clock",         "⏱",   "CLK", "#58A6FF", "Sources",   "Digital Clock Generator",  "clock.svg"),
+            new ComponentPaletteItem("VoltageDelay",  "VD",  "s",   "#56D364", "Sources",   "Voltage Delay Element",    "voltagedelay.svg"),
+            new ComponentPaletteItem("Ground",        "⏚",   "GND", "#8B949E", "Sources",   "Circuit ground",           "ground.svg"),
         }),
         new ComponentPaletteGroup("🔀 Dependent Sources", new[]
         {
@@ -378,15 +493,23 @@ public partial class EEWorkspaceViewModel : ObservableObject
             new ComponentPaletteItem("LED",         "💡", "LED",  "#E3B341", "Output",  "Light Emitting Diode",      "led.svg"),
             new ComponentPaletteItem("LogicInput",  "🔲", "IN",   "#56D364", "Digital", "Toggle Logic Input (0/1)",  "logicinput.svg"),
             new ComponentPaletteItem("LogicOutput", "🎯", "OUT",  "#79C0FF", "Digital", "Digital Logic Probe (0/1)", "logicoutput.svg"),
+            new ComponentPaletteItem("Pin",         "⚲",  "PIN",  "#58A6FF", "Digital", "Named I/O Port Terminal",   "pin.svg"),
+            new ComponentPaletteItem("Probe",       "👁",  "PRB",  "#79C0FF", "Digital", "Voltage/Current Probe Point","probe.svg"),
+            new ComponentPaletteItem("BitExtender", "⇄",  "EXT",  "#79C0FF", "Digital", "Bus Bit Extender",          "bitextender.svg"),
         }),
         new ComponentPaletteGroup("⚙ Switches", new[]
         {
-            new ComponentPaletteItem("VoltageSwitch", "S", "SW", "#E3B341", "Switches", "Voltage-Controlled Switch", "voltageswitch.svg"),
-            new ComponentPaletteItem("CurrentSwitch", "W", "SW", "#E3B341", "Switches", "Current-Controlled Switch", "currentswitch.svg"),
+            new ComponentPaletteItem("VoltageSwitch",   "S",  "SW", "#E3B341", "Switches", "Voltage-Controlled Switch", "voltageswitch.svg"),
+            new ComponentPaletteItem("CurrentSwitch",   "W",  "SW", "#E3B341", "Switches", "Current-Controlled Switch", "currentswitch.svg"),
+            new ComponentPaletteItem("Transistor",      "SW", "SWT","#FFA657", "Switches", "Digital Switch Transistor", "transistor_digital.svg"),
+            new ComponentPaletteItem("TransmissionGate","TG", "TG", "#D2A8FF", "Switches", "CMOS Transmission Gate",    "transmissiongate.svg"),
         }),
-        new ComponentPaletteGroup("📡 Transmission", new[]
+        new ComponentPaletteGroup("📡 Transmission Lines", new[]
         {
-            new ComponentPaletteItem("TransmissionLine", "T",  "Ω", "#79C0FF", "Transmission", "Lossless Transmission Line", "transmissionline.svg"),
+            new ComponentPaletteItem("TransmissionLine",      "T",  "Ω",   "#79C0FF", "Transmission", "Lossless Transmission Line", "transmissionline.svg"),
+            new ComponentPaletteItem("LossyTransmissionLine", "TL", "RLGC","#FFA657", "Transmission", "Lossy Transmission Line",    "lossy_transmissionline.svg"),
+            new ComponentPaletteItem("CoaxialCable",          "CX", "COAX","#79C0FF", "Transmission", "Coaxial Cable Line",         "coaxial.svg"),
+            new ComponentPaletteItem("MicrostripLine",        "MS", "PCB", "#56D364", "Transmission", "PCB Microstrip Line",        "microstrip.svg"),
         }),
         new ComponentPaletteGroup("🔌 Semiconductors", new[]
         {
@@ -410,11 +533,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
         }),
         new ComponentPaletteGroup("🗂 Schematic", new[]
         {
-            new ComponentPaletteItem("Wire",           "—",  "W",   "#58A6FF", "Schematic", "Wire segment",      "wire.svg"),
-            new ComponentPaletteItem("Junction",       "•",  "J",   "#58A6FF", "Schematic", "Wire junction",     "junction.svg"),
-            new ComponentPaletteItem("Label",          "🏷", "LBL", "#56D364", "Schematic", "Net label",         "label.svg"),
-            new ComponentPaletteItem("TextAnnotation", "🗎", "TXT", "#8B949E", "Schematic", "Text note",         "textannotation.svg"),
-            new ComponentPaletteItem("Connector",      "⑉",  "HDR", "#E3B341", "Schematic", "Header connector",  "connector.svg"),
+            new ComponentPaletteItem("Wire",           "—",   "W",   "#58A6FF", "Schematic", "Wire segment",          "wire.svg"),
+            new ComponentPaletteItem("Junction",       "•",   "J",   "#58A6FF", "Schematic", "Wire junction",         "junction.svg"),
+            new ComponentPaletteItem("Tunnel",         "TUN", "NET", "#56D364", "Schematic", "Named Net Tunnel",     "tunnel.svg"),
+            new ComponentPaletteItem("Label",          "🏷",  "LBL", "#56D364", "Schematic", "Net label",             "label.svg"),
+            new ComponentPaletteItem("DoNotConnect",   "✕",   "DNC", "#F78166", "Schematic", "Do Not Connect Marker",  "dnc.svg"),
+            new ComponentPaletteItem("TextAnnotation", "🗎",  "TXT", "#8B949E", "Schematic", "Text note",             "textannotation.svg"),
+            new ComponentPaletteItem("Connector",      "⑉",   "HDR", "#E3B341", "Schematic", "Header connector",      "connector.svg"),
         }),
     };
 
@@ -1291,6 +1416,20 @@ public partial class EEWorkspaceViewModel : ObservableObject
         IsControlledSourceComponent = comp is VCVSComponent || comp is VCCSComponent || comp is CCVSComponent || comp is CCCSComponent;
         IsTransmissionLineComponent = comp is TransmissionLineComponent;
         IsVoltageDelayComponent = comp is VoltageDelayComponent;
+        IsClockComponent = comp is EESimulator.Core.Components.Electronics.ClockComponent;
+        IsPinComponent = comp is EESimulator.Core.Components.Electronics.PinComponent;
+        IsPowerComponent = comp is EESimulator.Core.Components.Electrical.PowerComponent;
+        IsPullResistorComponent = comp is EESimulator.Core.Components.Electrical.PullResistorComponent;
+        IsTunnelComponent = comp is EESimulator.Core.Components.General.TunnelComponent;
+        IsProbeComponent = comp is EESimulator.Core.Components.General.ProbeComponent;
+        IsDigitalTransistorComponent = comp is EESimulator.Core.Components.Electronics.DigitalTransistorComponent;
+        IsTransmissionGateComponent = comp is EESimulator.Core.Components.Electronics.TransmissionGateComponent;
+        IsBitExtenderComponent = comp is EESimulator.Core.Components.Electronics.BitExtenderComponent;
+        IsConstantComponent = comp is EESimulator.Core.Components.Electronics.ConstantComponent;
+        IsDoNotConnectComponent = comp is EESimulator.Core.Components.General.DoNotConnectComponent;
+        IsLossyTransmissionLineComponent = comp is EESimulator.Core.Components.Electrical.LossyTransmissionLineComponent;
+        IsCoaxialCableComponent = comp is EESimulator.Core.Components.Electrical.CoaxialCableComponent;
+        IsMicrostripLineComponent = comp is EESimulator.Core.Components.Electrical.MicrostripLineComponent;
 
         if (comp is ResistorComponent r)
         {
@@ -1467,6 +1606,129 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditParamName = "Delay Time (s)";
             EditParamValue = vdelay.Delay;
             EditDelayTime = vdelay.Delay;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.ClockComponent clk)
+        {
+            EditParamName = "Frequency (Hz)";
+            EditParamValue = clk.Frequency;
+            EditClockFrequency = clk.Frequency;
+            EditClockDutyCycle = clk.DutyCycle;
+            EditClockHighVoltage = clk.HighVoltage;
+            EditClockLowVoltage = clk.LowVoltage;
+            EditClockHighDuration = clk.HighDuration;
+            EditClockLowDuration = clk.LowDuration;
+            EditClockPhase = clk.Phase;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.PinComponent pin)
+        {
+            EditParamName = "Value / Logic Level";
+            EditParamValue = pin.Value;
+            EditPinDirection = pin.Direction.ToString();
+            EditPinBitWidth = pin.BitWidth;
+            EditPinBehavior = pin.Behavior.ToString();
+            EditPinInitialValue = pin.InitialValue;
+            EditPinRadix = pin.Radix.ToString();
+            EditPinHighVoltage = pin.HighVoltage;
+            EditPinLowVoltage = pin.LowVoltage;
+        }
+        else if (comp is EESimulator.Core.Components.Electrical.PowerComponent pw)
+        {
+            EditParamName = "Rail Voltage (V)";
+            EditParamValue = pw.Voltage;
+            EditPowerVoltage = pw.Voltage;
+            EditPowerBitWidth = pw.BitWidth;
+        }
+        else if (comp is EESimulator.Core.Components.Electrical.PullResistorComponent pr)
+        {
+            EditParamName = "Resistance (Ω)";
+            EditParamValue = pr.Resistance;
+            EditPullMode = pr.Mode.ToString();
+            EditPullResistance = pr.Resistance;
+            EditPullRailVoltage = pr.RailVoltage;
+        }
+        else if (comp is EESimulator.Core.Components.General.TunnelComponent tun)
+        {
+            EditParamName = "Tunnel Label";
+            EditTunnelLabel = tun.TunnelLabel;
+            EditTunnelBitWidth = tun.BitWidth;
+        }
+        else if (comp is EESimulator.Core.Components.General.ProbeComponent prb)
+        {
+            EditParamName = "Input Impedance (Ω)";
+            EditParamValue = prb.InputImpedance;
+            EditProbeRadix = prb.Radix.ToString();
+            EditProbeInputImpedance = prb.InputImpedance;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.DigitalTransistorComponent dtr)
+        {
+            EditParamName = "On Resistance Ron (Ω)";
+            EditParamValue = dtr.ResistanceOn;
+            EditTransistorType = dtr.TransistorType.ToString();
+            EditTransistorGateLocation = dtr.GateLocation.ToString();
+            EditTransistorBitWidth = dtr.BitWidth;
+            EditTransistorRon = dtr.ResistanceOn;
+            EditTransistorRoff = dtr.ResistanceOff;
+            EditTransistorThreshold = dtr.Threshold;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.TransmissionGateComponent tg)
+        {
+            EditParamName = "On Resistance Ron (Ω)";
+            EditParamValue = tg.ResistanceOn;
+            EditTransmissionGateSelectLoc = tg.SelectLocation.ToString();
+            EditTransmissionGateBitWidth = tg.BitWidth;
+            EditTransmissionGateRon = tg.ResistanceOn;
+            EditTransmissionGateRoff = tg.ResistanceOff;
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.BitExtenderComponent be)
+        {
+            EditParamName = "Output Bit Width";
+            EditParamValue = be.OutputBitWidth;
+            EditBitExtenderInWidth = be.InputBitWidth;
+            EditBitExtenderOutWidth = be.OutputBitWidth;
+            EditBitExtenderType = be.ExtensionType.ToString();
+        }
+        else if (comp is EESimulator.Core.Components.Electronics.ConstantComponent cst)
+        {
+            EditParamName = "Constant Value";
+            EditParamValue = cst.Value;
+            EditConstantValue = cst.Value;
+            EditConstantBitWidth = cst.BitWidth;
+            EditConstantVoltageHigh = cst.VoltageHigh;
+            EditConstantVoltageLow = cst.VoltageLow;
+        }
+        else if (comp is EESimulator.Core.Components.General.DoNotConnectComponent dnc)
+        {
+            EditParamName = "Bit Width";
+            EditParamValue = dnc.BitWidth;
+            EditDncBitWidth = dnc.BitWidth;
+        }
+        else if (comp is EESimulator.Core.Components.Electrical.LossyTransmissionLineComponent ltl)
+        {
+            EditParamName = "Length (m)";
+            EditParamValue = ltl.Length;
+            EditLossyResistance = ltl.ResistancePerMeter;
+            EditLossyInductance = ltl.InductancePerMeter;
+            EditLossyConductance = ltl.ConductancePerMeter;
+            EditLossyCapacitance = ltl.CapacitancePerMeter;
+            EditLossyLength = ltl.Length;
+        }
+        else if (comp is EESimulator.Core.Components.Electrical.CoaxialCableComponent coax)
+        {
+            EditParamName = "Impedance Z0 (Ω)";
+            EditParamValue = coax.CharacteristicImpedance;
+            EditCoaxZ0 = coax.CharacteristicImpedance;
+            EditCoaxVF = coax.VelocityFactor;
+            EditCoaxLength = coax.Length;
+            EditCoaxAttenuation = coax.Attenuation;
+        }
+        else if (comp is EESimulator.Core.Components.Electrical.MicrostripLineComponent ustrip)
+        {
+            EditParamName = "Trace Width (m)";
+            EditParamValue = ustrip.TraceWidth;
+            EditMicrostripWidth = ustrip.TraceWidth;
+            EditMicrostripHeight = ustrip.SubstrateHeight;
+            EditMicrostripEr = ustrip.DielectricConstant;
+            EditMicrostripLength = ustrip.Length;
         }
         else if (comp is WireComponent w)
         {
@@ -1738,6 +2000,113 @@ public partial class EEWorkspaceViewModel : ObservableObject
         else if (EditingComponent is EESimulator.Core.Components.Electronics.LogicOutputComponent lout)
         {
             lout.Threshold = EditParamValue;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.ClockComponent clk)
+        {
+            clk.Frequency = EditClockFrequency > 0 ? EditClockFrequency : Math.Max(EditParamValue, 0.01);
+            clk.DutyCycle = Math.Clamp(EditClockDutyCycle, 0.01, 0.99);
+            clk.HighVoltage = EditClockHighVoltage;
+            clk.LowVoltage = EditClockLowVoltage;
+            clk.HighDuration = Math.Max(EditClockHighDuration, 1);
+            clk.LowDuration = Math.Max(EditClockLowDuration, 1);
+            clk.Phase = Math.Max(EditClockPhase, 0);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.PinComponent pin)
+        {
+            pin.Value = (long)EditParamValue;
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.PinDirection>(EditPinDirection, true, out var pdir))
+                pin.Direction = pdir;
+            pin.BitWidth = Math.Clamp(EditPinBitWidth, 1, 32);
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.PinBehavior>(EditPinBehavior, true, out var pbeh))
+                pin.Behavior = pbeh;
+            pin.InitialValue = EditPinInitialValue;
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.DisplayRadix>(EditPinRadix, true, out var prad))
+                pin.Radix = prad;
+            pin.HighVoltage = EditPinHighVoltage;
+            pin.LowVoltage = EditPinLowVoltage;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electrical.PowerComponent pw)
+        {
+            pw.Voltage = EditPowerVoltage != 0 ? EditPowerVoltage : EditParamValue;
+            pw.BitWidth = Math.Clamp(EditPowerBitWidth, 1, 32);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electrical.PullResistorComponent pr)
+        {
+            pr.Resistance = EditPullResistance > 0 ? EditPullResistance : Math.Max(EditParamValue, 1.0);
+            pr.RailVoltage = EditPullRailVoltage;
+            if (Enum.TryParse<EESimulator.Core.Components.Electrical.PullResistorMode>(EditPullMode, true, out var prm))
+                pr.Mode = prm;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.General.TunnelComponent tun)
+        {
+            if (!string.IsNullOrWhiteSpace(EditTunnelLabel))
+                tun.TunnelLabel = EditTunnelLabel.Trim();
+            tun.BitWidth = Math.Clamp(EditTunnelBitWidth, 1, 32);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.General.ProbeComponent prb)
+        {
+            prb.InputImpedance = EditProbeInputImpedance > 0 ? EditProbeInputImpedance : Math.Max(EditParamValue, 1e3);
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.DisplayRadix>(EditProbeRadix, true, out var prad))
+                prb.Radix = prad;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.DigitalTransistorComponent dtr)
+        {
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.DigitalTransistorType>(EditTransistorType, true, out var dtt))
+                dtr.TransistorType = dtt;
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.GateLocation>(EditTransistorGateLocation, true, out var gloc))
+                dtr.GateLocation = gloc;
+            dtr.BitWidth = Math.Clamp(EditTransistorBitWidth, 1, 32);
+            dtr.ResistanceOn = EditTransistorRon > 0 ? EditTransistorRon : Math.Max(EditParamValue, 1e-4);
+            dtr.ResistanceOff = Math.Max(EditTransistorRoff, 100.0);
+            dtr.Threshold = EditTransistorThreshold;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.TransmissionGateComponent tg)
+        {
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.GateLocation>(EditTransmissionGateSelectLoc, true, out var gloc))
+                tg.SelectLocation = gloc;
+            tg.BitWidth = Math.Clamp(EditTransmissionGateBitWidth, 1, 32);
+            tg.ResistanceOn = EditTransmissionGateRon > 0 ? EditTransmissionGateRon : Math.Max(EditParamValue, 1e-4);
+            tg.ResistanceOff = Math.Max(EditTransmissionGateRoff, 100.0);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.BitExtenderComponent be)
+        {
+            be.InputBitWidth = Math.Clamp(EditBitExtenderInWidth, 1, 32);
+            be.OutputBitWidth = Math.Clamp(EditBitExtenderOutWidth, 1, 64);
+            if (Enum.TryParse<EESimulator.Core.Components.Electronics.BitExtensionType>(EditBitExtenderType, true, out var bet))
+                be.ExtensionType = bet;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electronics.ConstantComponent cst)
+        {
+            cst.Value = EditConstantValue != 0 ? EditConstantValue : (long)EditParamValue;
+            cst.BitWidth = Math.Clamp(EditConstantBitWidth, 1, 32);
+            cst.VoltageHigh = EditConstantVoltageHigh;
+            cst.VoltageLow = EditConstantVoltageLow;
+        }
+        else if (EditingComponent is EESimulator.Core.Components.General.DoNotConnectComponent dnc)
+        {
+            dnc.BitWidth = Math.Clamp(EditDncBitWidth > 0 ? EditDncBitWidth : (int)EditParamValue, 1, 32);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electrical.LossyTransmissionLineComponent ltl)
+        {
+            ltl.Length = EditLossyLength > 0 ? EditLossyLength : Math.Max(EditParamValue, 0.001);
+            ltl.ResistancePerMeter = Math.Max(EditLossyResistance, 0.0);
+            ltl.InductancePerMeter = Math.Max(EditLossyInductance, 1e-12);
+            ltl.ConductancePerMeter = Math.Max(EditLossyConductance, 0.0);
+            ltl.CapacitancePerMeter = Math.Max(EditLossyCapacitance, 1e-15);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electrical.CoaxialCableComponent coax)
+        {
+            coax.CharacteristicImpedance = EditCoaxZ0 > 0 ? EditCoaxZ0 : Math.Max(EditParamValue, 1.0);
+            coax.VelocityFactor = Math.Clamp(EditCoaxVF, 0.1, 1.0);
+            coax.Length = Math.Max(EditCoaxLength, 0.01);
+            coax.Attenuation = Math.Max(EditCoaxAttenuation, 0.0);
+        }
+        else if (EditingComponent is EESimulator.Core.Components.Electrical.MicrostripLineComponent ustrip)
+        {
+            ustrip.TraceWidth = EditMicrostripWidth > 0 ? EditMicrostripWidth : Math.Max(EditParamValue, 1e-6);
+            ustrip.SubstrateHeight = Math.Max(EditMicrostripHeight, 1e-6);
+            ustrip.DielectricConstant = Math.Max(EditMicrostripEr, 1.0);
+            ustrip.Length = Math.Max(EditMicrostripLength, 1e-4);
         }
         else if (!string.IsNullOrEmpty(EditParamName))
         {
@@ -2017,6 +2386,100 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     PythonApi.AddLogicOutput(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
                         args.Length > 3 ? ParseD(args[3]) : 2.5);
                     return $"[ok] logic output {Unquote(args[0])} added";
+
+                case "add_clock" when args.Length >= 3:
+                    PythonApi.AddClock(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 1000.0,
+                        args.Length > 4 ? ParseD(args[4]) : 0.5,
+                        args.Length > 5 ? ParseD(args[5]) : 5.0,
+                        args.Length > 6 ? ParseD(args[6]) : 0.0);
+                    return $"[ok] clock {Unquote(args[0])} added";
+
+                case "add_pin" when args.Length >= 3:
+                    PythonApi.AddPin(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? Unquote(args[3]) : "Input",
+                        args.Length > 4 ? (int)ParseD(args[4]) : 1,
+                        args.Length > 5 ? ParseD(args[5]) : 0.0);
+                    return $"[ok] pin {Unquote(args[0])} added";
+
+                case "add_power" when args.Length >= 3:
+                    PythonApi.AddPower(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 5.0);
+                    return $"[ok] power rail {Unquote(args[0])} added";
+
+                case "add_pull_resistor" or "add_pullresistor" when args.Length >= 3:
+                    PythonApi.AddPullResistor(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? Unquote(args[3]) : "PullUp",
+                        args.Length > 4 ? ParseD(args[4]) : 10000.0,
+                        args.Length > 5 ? ParseD(args[5]) : 5.0);
+                    return $"[ok] pull resistor {Unquote(args[0])} added";
+
+                case "add_tunnel" when args.Length >= 3:
+                    PythonApi.AddTunnel(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? Unquote(args[3]) : "NET");
+                    return $"[ok] tunnel {Unquote(args[0])} added";
+
+                case "add_probe" when args.Length >= 3:
+                    PythonApi.AddProbe(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? Unquote(args[3]) : "PRB");
+                    return $"[ok] probe {Unquote(args[0])} added";
+
+                case "add_digital_transistor" or "add_transistor" when args.Length >= 3:
+                    PythonApi.AddDigitalTransistor(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? Unquote(args[3]) : "N-Type",
+                        args.Length > 4 ? ParseD(args[4]) : 0.1,
+                        args.Length > 5 ? ParseD(args[5]) : 10e6,
+                        args.Length > 6 ? ParseD(args[6]) : 2.5);
+                    return $"[ok] digital transistor {Unquote(args[0])} added";
+
+                case "add_transmission_gate" or "add_transmissiongate" when args.Length >= 3:
+                    PythonApi.AddTransmissionGate(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 0.2,
+                        args.Length > 4 ? ParseD(args[4]) : 10e6);
+                    return $"[ok] transmission gate {Unquote(args[0])} added";
+
+                case "add_bit_extender" or "add_bitextender" when args.Length >= 3:
+                    PythonApi.AddBitExtender(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? (int)ParseD(args[3]) : 1,
+                        args.Length > 4 ? (int)ParseD(args[4]) : 8,
+                        args.Length > 5 ? Unquote(args[5]) : "Zero");
+                    return $"[ok] bit extender {Unquote(args[0])} added";
+
+                case "add_constant" when args.Length >= 3:
+                    PythonApi.AddConstant(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 1.0,
+                        args.Length > 4 ? ParseD(args[4]) : 5.0,
+                        args.Length > 5 ? ParseD(args[5]) : 0.0);
+                    return $"[ok] constant {Unquote(args[0])} added";
+
+                case "add_dnc" or "add_do_not_connect" when args.Length >= 3:
+                    PythonApi.AddDoNotConnect(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
+                    return $"[ok] DNC marker {Unquote(args[0])} added";
+
+                case "add_lossy_transmission_line" or "add_lossy_transmissionline" when args.Length >= 3:
+                    PythonApi.AddLossyTransmissionLine(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 0.2,
+                        args.Length > 4 ? ParseD(args[4]) : 250e-9,
+                        args.Length > 5 ? ParseD(args[5]) : 10e-6,
+                        args.Length > 6 ? ParseD(args[6]) : 100e-12,
+                        args.Length > 7 ? ParseD(args[7]) : 1.0);
+                    return $"[ok] lossy transmission line {Unquote(args[0])} added";
+
+                case "add_coaxial_cable" or "add_coax" when args.Length >= 3:
+                    PythonApi.AddCoaxialCable(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 50.0,
+                        args.Length > 4 ? ParseD(args[4]) : 0.66,
+                        args.Length > 5 ? ParseD(args[5]) : 1.0,
+                        args.Length > 6 ? ParseD(args[6]) : 0.05);
+                    return $"[ok] coaxial cable {Unquote(args[0])} added";
+
+                case "add_microstrip_line" or "add_microstrip" when args.Length >= 3:
+                    PythonApi.AddMicrostripLine(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),
+                        args.Length > 3 ? ParseD(args[3]) : 1.5e-3,
+                        args.Length > 4 ? ParseD(args[4]) : 0.8e-3,
+                        args.Length > 5 ? ParseD(args[5]) : 4.4,
+                        args.Length > 6 ? ParseD(args[6]) : 0.05);
+                    return $"[ok] microstrip line {Unquote(args[0])} added";
 
                 case "toggle_logic" when args.Length >= 1:
                     PythonApi.ToggleLogic(Unquote(args[0]));

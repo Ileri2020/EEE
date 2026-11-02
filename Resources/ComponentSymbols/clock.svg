@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-25 -25 50 50" width="50" height="50">
+  <!-- Digital Clock Pulse Generator -->
+  <rect x="-16" y="-16" width="32" height="32" rx="6" fill="#161B22" stroke="#58A6FF" stroke-width="2"/>
+  <!-- Square wave pulse inside -->
+  <path d="M-10 6 L-10 -4 L-2 -4 L-2 6 L6 6 L6 -4 L10 -4" fill="none" stroke="#56D364" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Output terminal lead & pin -->
+  <line x1="16" y1="0" x2="22" y2="0" stroke="#58A6FF" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="22" cy="0" r="2.5" fill="#58A6FF"/>
+</svg>

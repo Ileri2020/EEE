@@ -81,22 +81,42 @@ public class SpiceSharpAdapter : ISimulationEngine
                     {
                         var res = new SpiceSharp.Components.Resistor(r.Name, nodeA, nodeB, Math.Max(r.Resistance, 1e-6));
                         res.Parameters.TemperatureCelsius = r.Temperature;
+                        if (r.TemperatureCoefficient1 != 0) res.Parameters.TemperatureCoefficient1 = r.TemperatureCoefficient1;
+                        if (r.TemperatureCoefficient2 != 0) res.Parameters.TemperatureCoefficient2 = r.TemperatureCoefficient2;
                         spiceCircuit.Add(res);
                         break;
                     }
 
                     case CapacitorComponent c:
                     {
-                        var cap = new SpiceSharp.Components.Capacitor(c.Name, nodeA, nodeB, Math.Max(c.Capacitance, 1e-15));
+                        string capNodeA = nodeA;
+                        if (c.EquivalentSeriesResistance > 0)
+                        {
+                            capNodeA = $"{c.Name}_esr_internal";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{c.Name}_esr", nodeA, capNodeA, c.EquivalentSeriesResistance));
+                        }
+
+                        var cap = new SpiceSharp.Components.Capacitor(c.Name, capNodeA, nodeB, Math.Max(c.Capacitance, 1e-15));
                         if (c.InitialCondition != 0)
                             cap.Parameters.InitialCondition = c.InitialCondition;
+                        if (c.TemperatureCoefficient1 != 0)
+                            cap.Parameters.TemperatureCoefficient1 = c.TemperatureCoefficient1;
+                        if (c.TemperatureCoefficient2 != 0)
+                            cap.Parameters.TemperatureCoefficient2 = c.TemperatureCoefficient2;
                         spiceCircuit.Add(cap);
                         break;
                     }
 
                     case InductorComponent l:
                     {
-                        var ind = new SpiceSharp.Components.Inductor(l.Name, nodeA, nodeB, Math.Max(l.Inductance, 1e-15));
+                        string indNodeA = nodeA;
+                        if (l.DcResistance > 0)
+                        {
+                            indNodeA = $"{l.Name}_dcr_internal";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{l.Name}_dcr", nodeA, indNodeA, l.DcResistance));
+                        }
+
+                        var ind = new SpiceSharp.Components.Inductor(l.Name, indNodeA, nodeB, Math.Max(l.Inductance, 1e-15));
                         if (l.InitialCondition != 0)
                             ind.Parameters.InitialCondition = l.InitialCondition;
                         if (l.SeriesMultiplier > 0)
@@ -172,8 +192,12 @@ public class SpiceSharpAdapter : ISimulationEngine
                     case LEDComponent led:
                     {
                         var dModel = new SpiceSharp.Components.DiodeModel($"{led.Name}_model");
-                        dModel.Parameters.SaturationCurrent = 1e-20;
-                        dModel.Parameters.EmissionCoefficient = 2.0;
+                        // Calculate realistic saturation current based on rated ForwardVoltage: Is = 0.02 * exp(-Vf / (n * Vt))
+                        double vt = 0.02585; // thermal voltage at 300K
+                        double n = 2.0;
+                        double isat = Math.Max(0.02 * Math.Exp(-led.ForwardVoltage / (n * vt)), 1e-22);
+                        dModel.Parameters.SaturationCurrent = isat;
+                        dModel.Parameters.EmissionCoefficient = n;
                         string anode = GetPinNode(led, "anode", 0);
                         string cathode = GetPinNode(led, "cathode", 1);
                         var diode = new SpiceSharp.Components.Diode(led.Name, anode, cathode, $"{led.Name}_model");
@@ -259,8 +283,14 @@ public class SpiceSharpAdapter : ISimulationEngine
                         string dNode = GetPinNode(m, "drain", 1);
                         string gNode = GetPinNode(m, "gate", 0);
                         string sNode = GetPinNode(m, "source", 2);
+                        string bNode = GetPinNode(m, "body", 3);
+                        if (bNode == "0" && sNode != "0")
+                        {
+                            // If bulk/body pin is not wired externally, tie to source
+                            bNode = sNode;
+                        }
 
-                        var mosfet = new SpiceSharp.Components.Mosfet1(m.Name, dNode, gNode, sNode, sNode, $"{m.Name}_model");
+                        var mosfet = new SpiceSharp.Components.Mosfet1(m.Name, dNode, gNode, sNode, bNode, $"{m.Name}_model");
                         spiceCircuit.Add(mModel);
                         spiceCircuit.Add(mosfet);
                         break;
@@ -295,9 +325,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                         string ctrlSource = ccvs.ControllingSource;
                         string ctrlPos = GetPinNode(ccvs, "ctrl_pos", 2);
                         string ctrlNeg = GetPinNode(ccvs, "ctrl_neg", 3);
-                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" && ctrlNeg != "0"))
+                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" || ctrlNeg != "0"))
                         {
-                            ctrlSource = $"V_sense_{ccvs.Name}";
+                            ctrlSource = $"V_sense_{ccvs.Name}_{ccvs.Id.ToString("N")[..6]}";
                             spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(ctrlSource, ctrlPos, ctrlNeg, 0.0));
                         }
                         var hsrc = new SpiceSharp.Components.CurrentControlledVoltageSource(ccvs.Name, outPos, outNeg, ctrlSource, ccvs.Transresistance);
@@ -312,9 +342,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                         string ctrlSource = cccs.ControllingSource;
                         string ctrlPos = GetPinNode(cccs, "ctrl_pos", 2);
                         string ctrlNeg = GetPinNode(cccs, "ctrl_neg", 3);
-                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" && ctrlNeg != "0"))
+                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" || ctrlNeg != "0"))
                         {
-                            ctrlSource = $"V_sense_{cccs.Name}";
+                            ctrlSource = $"V_sense_{cccs.Name}_{cccs.Id.ToString("N")[..6]}";
                             spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(ctrlSource, ctrlPos, ctrlNeg, 0.0));
                         }
                         var fsrc = new SpiceSharp.Components.CurrentControlledCurrentSource(cccs.Name, outPos, outNeg, ctrlSource, cccs.CurrentGain);
@@ -354,9 +384,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                         string ctrlSource = csw.ControllingSource;
                         string ctrlPos = GetPinNode(csw, "ctrl_pos", 2);
                         string ctrlNeg = GetPinNode(csw, "ctrl_neg", 3);
-                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" && ctrlNeg != "0"))
+                        if (string.IsNullOrEmpty(ctrlSource) || (ctrlPos != "0" || ctrlNeg != "0"))
                         {
-                            ctrlSource = $"V_sense_{csw.Name}";
+                            ctrlSource = $"V_sense_{csw.Name}_{csw.Id.ToString("N")[..6]}";
                             spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(ctrlSource, ctrlPos, ctrlNeg, 0.0));
                         }
 
@@ -399,18 +429,282 @@ public class SpiceSharpAdapter : ISimulationEngine
                     case WireComponent w when w.Resistance > 0:
                         spiceCircuit.Add(new SpiceSharp.Components.Resistor(w.Name, nodeA, nodeB, w.Resistance));
                         break;
+
+                    case ClockComponent clk:
+                    {
+                        string outNode = GetPinNode(clk, "out", 0);
+                        var clkSrc = new SpiceSharp.Components.VoltageSource(clk.Name, outNode, "0", clk.HighVoltage);
+                        double period = 1.0 / Math.Max(clk.Frequency, 0.01);
+                        double width = period * Math.Clamp(clk.DutyCycle, 0.01, 0.99);
+                        clkSrc.Parameters.Waveform = new SpiceSharp.Components.Pulse(
+                            clk.LowVoltage, clk.HighVoltage, 0.0, 1e-9, 1e-9, width, period);
+                        spiceCircuit.Add(clkSrc);
+                        break;
+                    }
+
+                    case PinComponent pin:
+                    {
+                        string pinNode = GetPinNode(pin, "pin", 0);
+                        if (pin.Direction == PinDirection.Input)
+                        {
+                            double vLevel = pin.Value > 0 ? pin.HighVoltage : pin.LowVoltage;
+                            var vsrc = new SpiceSharp.Components.VoltageSource(pin.Name, pinNode, "0", vLevel);
+                            spiceCircuit.Add(vsrc);
+                        }
+                        else
+                        {
+                            var sense = new SpiceSharp.Components.Resistor($"{pin.Name}_sense", pinNode, "0", 10e6);
+                            spiceCircuit.Add(sense);
+                        }
+                        break;
+                    }
+
+                    case PowerComponent vcc:
+                    {
+                        string pNode = GetPinNode(vcc, "vcc", 0);
+                        var vsrc = new SpiceSharp.Components.VoltageSource(vcc.Name, pNode, "0", vcc.Voltage);
+                        spiceCircuit.Add(vsrc);
+                        break;
+                    }
+
+                    case PullResistorComponent pr:
+                    {
+                        string targetNode = GetPinNode(pr, "pin", 0);
+                        string customRailNode = GetPinNode(pr, "rail", 1);
+                        double resVal = Math.Max(pr.Resistance, 1.0);
+
+                        if (pr.Mode == PullResistorMode.PullDown)
+                        {
+                            string gndNode = customRailNode != "0" ? customRailNode : "0";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(pr.Name, targetNode, gndNode, resVal));
+                        }
+                        else if (pr.Mode == PullResistorMode.PullUp)
+                        {
+                            string railNode = customRailNode;
+                            if (railNode == "0")
+                            {
+                                railNode = $"V_rail_{pr.Name}";
+                                spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{pr.Name}_vrail", railNode, "0", pr.RailVoltage));
+                            }
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(pr.Name, targetNode, railNode, resVal));
+                        }
+                        break;
+                    }
+
+                    case ProbeComponent probe:
+                    {
+                        string prbNode = GetPinNode(probe, "in", 0);
+                        var sense = new SpiceSharp.Components.Resistor($"{probe.Name}_sense", prbNode, "0", Math.Max(probe.InputImpedance, 1e3));
+                        spiceCircuit.Add(sense);
+                        break;
+                    }
+
+                    case DigitalTransistorComponent dtr:
+                    {
+                        string dNode = GetPinNode(dtr, "drain", 0);
+                        string sNode = GetPinNode(dtr, "source", 1);
+                        string gNode = GetPinNode(dtr, "gate", 2);
+
+                        var swModel = new SpiceSharp.Components.VoltageSwitchModel($"{dtr.Name}_model");
+                        swModel.SetParameter("ron", Math.Max(dtr.ResistanceOn, 1e-4));
+                        swModel.SetParameter("roff", Math.Max(dtr.ResistanceOff, 100.0));
+                        swModel.Parameters.Threshold = dtr.Threshold;
+                        swModel.Parameters.Hysteresis = Math.Max(dtr.Threshold * 0.05, 0.01);
+
+                        var sw = dtr.TransistorType == DigitalTransistorType.NType
+                            ? new SpiceSharp.Components.VoltageSwitch(dtr.Name, dNode, sNode, gNode, sNode, $"{dtr.Name}_model")
+                            : new SpiceSharp.Components.VoltageSwitch(dtr.Name, dNode, sNode, sNode, gNode, $"{dtr.Name}_model");
+
+                        spiceCircuit.Add(swModel);
+                        spiceCircuit.Add(sw);
+                        break;
+                    }
+
+                    case TransmissionGateComponent tg:
+                    {
+                        string inNode = GetPinNode(tg, "in", 0);
+                        string outNode = GetPinNode(tg, "out", 1);
+                        string ctrlNode = GetPinNode(tg, "ctrl", 2);
+                        string ctrlInvNode = GetPinNode(tg, "ctrl_inv", 3);
+
+                        // Complementary N-MOS and P-MOS switch pair in parallel
+                        var swModelN = new SpiceSharp.Components.VoltageSwitchModel($"{tg.Name}_nmodel");
+                        swModelN.SetParameter("ron", Math.Max(tg.ResistanceOn, 1e-4));
+                        swModelN.SetParameter("roff", Math.Max(tg.ResistanceOff, 100.0));
+                        swModelN.Parameters.Threshold = 2.5;
+                        swModelN.Parameters.Hysteresis = 0.2;
+
+                        var swN = new SpiceSharp.Components.VoltageSwitch($"{tg.Name}_n", inNode, outNode, ctrlNode, "0", $"{tg.Name}_nmodel");
+
+                        var swModelP = new SpiceSharp.Components.VoltageSwitchModel($"{tg.Name}_pmodel");
+                        swModelP.SetParameter("ron", Math.Max(tg.ResistanceOn, 1e-4));
+                        swModelP.SetParameter("roff", Math.Max(tg.ResistanceOff, 100.0));
+                        swModelP.Parameters.Threshold = -2.5;
+                        swModelP.Parameters.Hysteresis = 0.2;
+
+                        var swP = new SpiceSharp.Components.VoltageSwitch($"{tg.Name}_p", inNode, outNode, "0", ctrlInvNode, $"{tg.Name}_pmodel");
+
+                        spiceCircuit.Add(swModelN);
+                        spiceCircuit.Add(swN);
+                        spiceCircuit.Add(swModelP);
+                        spiceCircuit.Add(swP);
+                        break;
+                    }
+
+                    case BitExtenderComponent be:
+                    {
+                        string inNode = GetPinNode(be, "in", 0);
+                        string outNode = GetPinNode(be, "out", 1);
+                        var vcvs = new SpiceSharp.Components.VoltageControlledVoltageSource(be.Name, outNode, "0", inNode, "0", 1.0);
+                        spiceCircuit.Add(vcvs);
+                        break;
+                    }
+
+                    case ConstantComponent cst:
+                    {
+                        string outNode = GetPinNode(cst, "out", 0);
+                        double vLevel = cst.Value > 0 ? cst.VoltageHigh : cst.VoltageLow;
+                        var vsrc = new SpiceSharp.Components.VoltageSource(cst.Name, outNode, "0", vLevel);
+                        spiceCircuit.Add(vsrc);
+                        break;
+                    }
+
+                    case DoNotConnectComponent dnc:
+                    {
+                        string pinNode = GetPinNode(dnc, "pin", 0);
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{dnc.Name}_term", pinNode, "0", 100e6));
+                        break;
+                    }
+
+                    case LossyTransmissionLineComponent ltl:
+                    {
+                        string p1Pos = GetPinNode(ltl, "pos1", 0);
+                        string p1Neg = GetPinNode(ltl, "neg1", 1);
+                        string p2Pos = GetPinNode(ltl, "pos2", 2);
+                        string p2Neg = GetPinNode(ltl, "neg2", 3);
+                        double z0 = Math.Max(ltl.CharacteristicImpedance, 1e-3);
+                        double td = Math.Max(ltl.TotalDelay, 1e-15);
+
+                        var t = new SpiceSharp.Components.LosslessTransmissionLine(ltl.Name, p1Pos, p1Neg, p2Pos, p2Neg, z0, td);
+                        spiceCircuit.Add(t);
+
+                        double totalR = ltl.ResistancePerMeter * ltl.Length;
+                        if (totalR > 1e-6)
+                        {
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{ltl.Name}_r_pos", p1Pos, p2Pos, totalR / 2.0));
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{ltl.Name}_r_neg", p1Neg, p2Neg, totalR / 2.0));
+                        }
+
+                        double totalG = ltl.ConductancePerMeter * ltl.Length;
+                        if (totalG > 1e-12)
+                        {
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{ltl.Name}_g_shunt", p2Pos, p2Neg, 1.0 / totalG));
+                        }
+                        break;
+                    }
+
+                    case CoaxialCableComponent coax:
+                    {
+                        string p1Pos = GetPinNode(coax, "core_in", 0);
+                        string p1Neg = GetPinNode(coax, "shield_in", 1);
+                        string p2Pos = GetPinNode(coax, "core_out", 2);
+                        string p2Neg = GetPinNode(coax, "shield_out", 3);
+                        double z0 = Math.Max(coax.CharacteristicImpedance, 1e-3);
+                        double td = Math.Max(coax.Delay, 1e-15);
+
+                        var t = new SpiceSharp.Components.LosslessTransmissionLine(coax.Name, p1Pos, p1Neg, p2Pos, p2Neg, z0, td);
+                        spiceCircuit.Add(t);
+
+                        double totalAttenDb = coax.Attenuation * coax.Length;
+                        if (totalAttenDb > 1e-4)
+                        {
+                            double rLoss = 2.0 * (Math.Pow(10.0, totalAttenDb / 20.0) - 1.0) * z0;
+                            if (rLoss > 1e-6)
+                            {
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{coax.Name}_loss", p1Pos, p2Pos, rLoss));
+                            }
+                        }
+                        break;
+                    }
+
+                    case MicrostripLineComponent ustrip:
+                    {
+                        string p1Pos = GetPinNode(ustrip, "in", 0);
+                        string p1Neg = GetPinNode(ustrip, "gnd_in", 1);
+                        string p2Pos = GetPinNode(ustrip, "out", 2);
+                        string p2Neg = GetPinNode(ustrip, "gnd_out", 3);
+                        double z0 = Math.Max(ustrip.CharacteristicImpedance, 1e-3);
+                        double td = Math.Max(ustrip.Delay, 1e-15);
+
+                        var t = new SpiceSharp.Components.LosslessTransmissionLine(ustrip.Name, p1Pos, p1Neg, p2Pos, p2Neg, z0, td);
+                        spiceCircuit.Add(t);
+                        break;
+                    }
+
+                    case OpAmpComponent opamp:
+                    {
+                        string inPos = GetPinNode(opamp, "in_pos", 1);
+                        string inNeg = GetPinNode(opamp, "in_neg", 0);
+                        string outNode = GetPinNode(opamp, "out", 2);
+                        string vPos = GetPinNode(opamp, "v_pos", 3);
+                        string vNeg = GetPinNode(opamp, "v_neg", 4);
+
+                        double aol = Math.Max(opamp.OpenLoopGain, 1.0);
+                        var vcvs = new SpiceSharp.Components.VoltageControlledVoltageSource(opamp.Name, outNode, "0", inPos, inNeg, aol);
+                        spiceCircuit.Add(vcvs);
+
+                        if (vPos != "0")
+                        {
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{opamp.Name}_vp", vPos, "0", opamp.SupplyPositive));
+                        }
+                        if (vNeg != "0")
+                        {
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{opamp.Name}_vn", vNeg, "0", opamp.SupplyNegative));
+                        }
+                        break;
+                    }
                 }
             }
 
             // Link Mutual Inductances after inductors are added
             foreach (var m in mutualInductances)
             {
+                string l1 = m.Inductor1;
+                string l2 = m.Inductor2;
+
+                // Resolve inductor names from connected pins if wired
+                string pri1Net = GetPinNode(m, "pri1", 0);
+                string pri2Net = GetPinNode(m, "pri2", 1);
+                string sec1Net = GetPinNode(m, "sec1", 2);
+                string sec2Net = GetPinNode(m, "sec2", 3);
+
+                var allInductors = circuit.Components.OfType<InductorComponent>().ToList();
+                var foundL1 = allInductors.FirstOrDefault(ind =>
+                {
+                    string nA = GetPinNode(ind, "pin1", 0);
+                    string nB = GetPinNode(ind, "pin2", 1);
+                    return (nA == pri1Net && nB == pri2Net) || (nA == pri2Net && nB == pri1Net);
+                });
+                if (foundL1 != null) l1 = foundL1.Name;
+
+                var foundL2 = allInductors.FirstOrDefault(ind =>
+                {
+                    if (ind == foundL1) return false;
+                    string nA = GetPinNode(ind, "pin1", 0);
+                    string nB = GetPinNode(ind, "pin2", 1);
+                    return (nA == sec1Net && nB == sec2Net) || (nA == sec2Net && nB == sec1Net);
+                });
+                if (foundL2 != null) l2 = foundL2.Name;
+
                 try
                 {
-                    var mutual = new SpiceSharp.Components.MutualInductance(m.Name, m.Inductor1, m.Inductor2, m.Coupling);
+                    var mutual = new SpiceSharp.Components.MutualInductance(m.Name, l1, l2, m.Coupling);
                     spiceCircuit.Add(mutual);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    results.Message += $"\n[Warning] Mutual inductance {m.Name} ({l1}, {l2}, k={m.Coupling}) could not be linked: {ex.Message}";
+                }
             }
 
             // 3. Run SpiceSharp Operating Point (DC) analysis
@@ -463,7 +757,15 @@ public class SpiceSharpAdapter : ISimulationEngine
                     else if (comp is BulbComponent b && b.Resistance > 0)
                     {
                         comp.LiveCurrent = vDrop / b.Resistance;
+                        b.Brightness = Math.Clamp(vDrop / Math.Max(b.RatedVoltage, 0.1), 0.0, 1.0);
+                        b.IsOn = vDrop >= b.ThresholdVoltage || comp.LiveCurrent >= 0.02;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
+                    }
+                    else if (comp is LEDComponent led)
+                    {
+                        comp.LiveVoltage = vDrop;
+                        led.IsOn = vDrop >= Math.Min(led.ForwardVoltage * 0.75, 1.5) || comp.LiveCurrent >= 0.001;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = vDrop;
                     }
                     else if (comp is LogicInputComponent lin)
                     {
@@ -473,6 +775,7 @@ public class SpiceSharpAdapter : ISimulationEngine
                     else if (comp is LogicOutputComponent lout)
                     {
                         comp.LiveVoltage = va;
+                        lout.IsOn = va >= lout.Threshold;
                         results.OperatingPointVoltages[$"V({comp.Name})"] = va;
                     }
                     else if (comp is VoltageSourceComponent v)
@@ -484,6 +787,37 @@ public class SpiceSharpAdapter : ISimulationEngine
                     {
                         comp.LiveCurrent = csrc.Current;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = csrc.Current;
+                    }
+                    else if (comp is ClockComponent clk)
+                    {
+                        comp.LiveVoltage = clk.HighVoltage;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = comp.LiveVoltage;
+                    }
+                    else if (comp is PinComponent pin)
+                    {
+                        comp.LiveVoltage = pin.Direction == PinDirection.Input ? (pin.Value > 0 ? pin.HighVoltage : pin.LowVoltage) : va;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = comp.LiveVoltage;
+                    }
+                    else if (comp is PowerComponent pw)
+                    {
+                        comp.LiveVoltage = pw.Voltage;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = pw.Voltage;
+                    }
+                    else if (comp is ConstantComponent cst)
+                    {
+                        comp.LiveVoltage = cst.Value > 0 ? cst.VoltageHigh : cst.VoltageLow;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = comp.LiveVoltage;
+                    }
+                    else if (comp is ProbeComponent prb)
+                    {
+                        comp.LiveVoltage = va;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = va;
+                    }
+                    else if (comp is PullResistorComponent pr)
+                    {
+                        comp.LiveVoltage = vDrop;
+                        comp.LiveCurrent = pr.Resistance > 0 ? vDrop / pr.Resistance : 0.0;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                 }
             }
@@ -598,6 +932,12 @@ public class SpiceSharpAdapter : ISimulationEngine
                 wfType = icomp.WaveformType.ToUpperInvariant();
                 freq = icomp.SineFrequency > 0 ? icomp.SineFrequency : 50.0;
                 amp = icomp.SineAmplitude > 0 ? icomp.SineAmplitude : baseI;
+            }
+            else if (comp is ClockComponent clkComp)
+            {
+                wfType = "PULSE";
+                freq = clkComp.Frequency > 0 ? clkComp.Frequency : 1000.0;
+                amp = clkComp.HighVoltage;
             }
 
             for (int i = 0; i <= steps; i++)

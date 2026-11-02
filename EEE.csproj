@@ -24,7 +24,8 @@
 		     For individual files, you can override by setting Inflator metadata:
 		       <MauiXaml Update="MyPage.xaml" Inflator="Default" /> (reverts to defaults: Runtime for Debug, XamlC for Release)
 		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
-		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+		<!-- To disable SourceGen, remove the line below or set to Default -->
+		<!-- <MauiXamlInflator>SourceGen</MauiXamlInflator> -->
 
 		<!-- Display name -->
 		<ApplicationTitle>EEE</ApplicationTitle>
@@ -46,6 +47,11 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- WorkspacePage uses XAML constructs that currently fail MAUI SourceGen parsing; use XamlC for reliable generated InitializeComponent. -->
+		<MauiXaml Update="WorkspacePage.xaml" Inflator="XamlC" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- App Icon -->

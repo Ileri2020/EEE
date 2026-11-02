@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-25 -25 50 50" width="50" height="50">
+  <!-- Digital Mode Switch Transistor -->
+  <!-- Gate lead & plate -->
+  <line x1="-18" y1="0" x2="-6" y2="0" stroke="#FFA657" stroke-width="2" stroke-linecap="round"/>
+  <line x1="-6" y1="-12" x2="-6" y2="12" stroke="#FFA657" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="-18" cy="0" r="2.5" fill="#58A6FF"/>
+  <!-- Switch channel plate -->
+  <line x1="-1" y1="-14" x2="-1" y2="14" stroke="#79C0FF" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Drain & Source leads -->
+  <line x1="-1" y1="-10" x2="10" y2="-10" stroke="#79C0FF" stroke-width="2"/>
+  <line x1="10" y1="-10" x2="10" y2="-18" stroke="#79C0FF" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="10" cy="-18" r="2.5" fill="#58A6FF"/>
+  <line x1="-1" y1="10" x2="10" y2="10" stroke="#79C0FF" stroke-width="2"/>
+  <line x1="10" y1="10" x2="10" y2="18" stroke="#79C0FF" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="10" cy="18" r="2.5" fill="#58A6FF"/>
+</svg>

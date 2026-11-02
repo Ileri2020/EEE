@@ -18,10 +18,40 @@ public class LEDComponent : ElectronicComponent
     public double ForwardVoltage
     {
         get => ElectricalParameters.TryGetValue("Vf", out var val) ? val : 2.0;
-        set => ElectricalParameters["Vf"] = value;
+        set
+        {
+            ElectricalParameters["Vf"] = Math.Max(value, 0.1);
+            NotifyModified(nameof(ForwardVoltage));
+        }
     }
 
-    public string ColorName { get; set; } = "Red";
+    /// <summary>Optical emission dominant wavelength in nanometers (nm, e.g. 630 nm for Red, 525 nm for Green).</summary>
+    public double Wavelength
+    {
+        get => ElectricalParameters.TryGetValue("Wavelength", out var val) ? val : 630.0;
+        set
+        {
+            ElectricalParameters["Wavelength"] = Math.Max(value, 200.0);
+            NotifyModified(nameof(Wavelength));
+        }
+    }
+
+    public string ColorName
+    {
+        get => CustomProperties.TryGetValue("Color", out var val) ? val?.ToString() ?? "Red" : "Red";
+        set
+        {
+            CustomProperties["Color"] = value;
+            NotifyModified(nameof(ColorName));
+            NotifyModified(nameof(Color));
+        }
+    }
+
+    public string Color
+    {
+        get => ColorName;
+        set => ColorName = value;
+    }
 
     /// <summary>
     /// Indicates whether the LED is currently illuminated (emitting light).

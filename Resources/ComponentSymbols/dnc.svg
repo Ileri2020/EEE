@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-25 -25 50 50" width="50" height="50">
+  <!-- Do Not Connect (DNC / No Connect) marker -->
+  <line x1="-12" y1="0" x2="0" y2="0" stroke="#8B949E" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="-12" cy="0" r="2.5" fill="#58A6FF"/>
+  <!-- Prominent DNC 'X' mark in coral / red -->
+  <line x1="-7" y1="-7" x2="7" y2="7" stroke="#F78166" stroke-width="3" stroke-linecap="round"/>
+  <line x1="7" y1="-7" x2="-7" y2="7" stroke="#F78166" stroke-width="3" stroke-linecap="round"/>
+</svg>

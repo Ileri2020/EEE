@@ -123,6 +123,19 @@ public class AddComponentCommand : ICommand
                 else if (CreatedComponent is EESimulator.Core.Components.Electronics.OpAmpComponent op && ParameterValue > 0) op.OpenLoopGain = ParameterValue;
                 else if (CreatedComponent is EESimulator.Core.Components.Electrical.TransmissionLineComponent tline && ParameterValue > 0) tline.CharacteristicImpedance = ParameterValue;
                 else if (CreatedComponent is EESimulator.Core.Components.Electrical.VoltageDelayComponent vdelay && ParameterValue > 0) vdelay.Delay = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.ClockComponent clk && ParameterValue > 0) clk.Frequency = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.PinComponent pin) pin.Value = (long)ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.PowerComponent pw) pw.Voltage = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.PullResistorComponent pr && ParameterValue > 0) pr.Resistance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.LossyTransmissionLineComponent ltl && ParameterValue > 0) ltl.Length = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.CoaxialCableComponent coax && ParameterValue > 0) coax.CharacteristicImpedance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.MicrostripLineComponent ustrip && ParameterValue > 0) ustrip.TraceWidth = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electrical.BulbComponent bulb && ParameterValue > 0) bulb.Resistance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.LEDComponent led && ParameterValue > 0) led.ForwardVoltage = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.General.WireComponent wire && ParameterValue > 0) wire.Resistance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.General.ProbeComponent prb && ParameterValue > 0) prb.InputImpedance = ParameterValue;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.LogicInputComponent lin) lin.State = ParameterValue > 0.5;
+                else if (CreatedComponent is EESimulator.Core.Components.Electronics.LogicOutputComponent lout && ParameterValue > 0) lout.Threshold = ParameterValue;
             }
         }
 

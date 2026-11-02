@@ -527,6 +527,10 @@ public class SchematicViewport : GraphicsView, IDrawable
         {
             lin.Toggle();
         }
+        else if (_selectedComponent is EESimulator.Core.Components.Electronics.PinComponent pinComp)
+        {
+            pinComp.Toggle();
+        }
         Invalidate();
         if (_selectedComponent != null)
             ComponentSelected?.Invoke(this, _selectedComponent);
@@ -1220,6 +1224,9 @@ public class SchematicViewport : GraphicsView, IDrawable
             EESimulator.Core.Components.Electrical.BulbComponent bulb => bulb.IsOn,
             EESimulator.Core.Components.Electronics.LogicOutputComponent lout => lout.IsOn,
             EESimulator.Core.Components.Electronics.LogicInputComponent lin => lin.State,
+            EESimulator.Core.Components.Electronics.ClockComponent clk => clk.State,
+            EESimulator.Core.Components.Electronics.PinComponent pin => pin.Value > 0,
+            EESimulator.Core.Components.Electronics.ConstantComponent cst => cst.Value > 0,
             _ => (comp.CustomProperties.TryGetValue("IsOn", out var cVal) && Convert.ToBoolean(cVal))
                  || (comp.ElectricalParameters.TryGetValue("IsOn", out var pVal) && pVal > 0.5)
                  || (comp.ComponentType == "LED" && comp.LiveVoltage >= 1.5)
@@ -1279,6 +1286,23 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "MutualInductance": ComponentSymbolDrawer.DrawMutualInductance(canvas); break;
             case "TransmissionLine": ComponentSymbolDrawer.DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     ComponentSymbolDrawer.DrawVoltageDelay(canvas); break;
+            case "Clock":            ComponentSymbolDrawer.DrawClock(canvas, isOn); break;
+            case "Pin":              ComponentSymbolDrawer.DrawPin(canvas, isOn); break;
+            case "Power":
+            case "VCC":              ComponentSymbolDrawer.DrawPower(canvas); break;
+            case "PullResistor":     ComponentSymbolDrawer.DrawPullResistor(canvas); break;
+            case "Tunnel":           ComponentSymbolDrawer.DrawTunnel(canvas, comp.Reference.Length > 0 ? comp.Reference : comp.Name); break;
+            case "Probe":            ComponentSymbolDrawer.DrawProbe(canvas, isOn); break;
+            case "Transistor":
+            case "DigitalTransistor":ComponentSymbolDrawer.DrawDigitalTransistor(canvas); break;
+            case "TransmissionGate": ComponentSymbolDrawer.DrawTransmissionGate(canvas); break;
+            case "BitExtender":      ComponentSymbolDrawer.DrawBitExtender(canvas); break;
+            case "Constant":         ComponentSymbolDrawer.DrawConstant(canvas, isOn); break;
+            case "DoNotConnect":
+            case "DNC":              ComponentSymbolDrawer.DrawDoNotConnect(canvas); break;
+            case "LossyTransmissionLine": ComponentSymbolDrawer.DrawLossyTransmissionLine(canvas); break;
+            case "CoaxialCable":     ComponentSymbolDrawer.DrawCoaxialCable(canvas); break;
+            case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;
             default:                 DrawGenericComponent(canvas, comp.ComponentType); break;
         }
 

@@ -21,19 +21,60 @@ public class BulbComponent : ElectricalComponent
     public double Resistance
     {
         get => ElectricalParameters.TryGetValue("Resistance", out var val) ? val : 50.0;
-        set => ElectricalParameters["Resistance"] = value;
+        set
+        {
+            ElectricalParameters["Resistance"] = Math.Max(value, 1e-3);
+            NotifyModified(nameof(Resistance));
+        }
     }
 
     public double ThresholdVoltage
     {
         get => ElectricalParameters.TryGetValue("ThresholdVoltage", out var val) ? val : 1.0;
-        set => ElectricalParameters["ThresholdVoltage"] = value;
+        set
+        {
+            ElectricalParameters["ThresholdVoltage"] = Math.Max(value, 0.0);
+            NotifyModified(nameof(ThresholdVoltage));
+        }
     }
 
     public double RatedVoltage
     {
         get => ElectricalParameters.TryGetValue("RatedVoltage", out var val) ? val : 6.0;
-        set => ElectricalParameters["RatedVoltage"] = value;
+        set
+        {
+            ElectricalParameters["RatedVoltage"] = Math.Max(value, 0.1);
+            NotifyModified(nameof(RatedVoltage));
+        }
+    }
+
+    /// <summary>Rated electrical power in Watts (W). Default is 0.72 W.</summary>
+    public double PowerRating
+    {
+        get => ElectricalParameters.TryGetValue("PowerRating", out var val) ? val : 0.72;
+        set
+        {
+            ElectricalParameters["PowerRating"] = Math.Max(value, 0.01);
+            NotifyModified(nameof(PowerRating));
+        }
+    }
+
+    /// <summary>
+    /// Relative optical illumination brightness from 0.0 (off) to 1.0 (fully lit).
+    /// </summary>
+    public double Brightness
+    {
+        get
+        {
+            if (ElectricalParameters.TryGetValue("Brightness", out var val))
+                return Math.Clamp(val, 0.0, 1.0);
+            return IsOn ? Math.Clamp(LiveVoltage / Math.Max(RatedVoltage, 0.1), 0.0, 1.0) : 0.0;
+        }
+        set
+        {
+            ElectricalParameters["Brightness"] = Math.Clamp(value, 0.0, 1.0);
+            NotifyModified(nameof(Brightness));
+        }
     }
 
     /// <summary>

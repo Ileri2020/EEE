@@ -21,7 +21,22 @@ public class VoltageDelayComponent : ElectricalComponent
     public double Delay
     {
         get => ElectricalParameters.TryGetValue("Delay", out var val) ? val : 1e-6;
-        set => ElectricalParameters["Delay"] = value;
+        set
+        {
+            ElectricalParameters["Delay"] = Math.Max(value, 1e-15);
+            NotifyModified(nameof(Delay));
+        }
+    }
+
+    /// <summary>Bandwidth in Hz (default 1 GHz).</summary>
+    public double Bandwidth
+    {
+        get => ElectricalParameters.TryGetValue("Bandwidth", out var val) ? val : 1e9;
+        set
+        {
+            ElectricalParameters["Bandwidth"] = Math.Max(value, 1.0);
+            NotifyModified(nameof(Bandwidth));
+        }
     }
 
     public VoltageDelayComponent()

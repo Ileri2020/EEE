@@ -21,44 +21,74 @@ public class MOSFETComponent : ElectronicComponent
     public override string ComponentType => "MOSFET";
     public override string Description => "MOSFET Field-Effect Transistor";
 
-    public MosfetChannel Channel { get; set; } = MosfetChannel.NChannel;
+    private MosfetChannel _channel = MosfetChannel.NChannel;
+    public MosfetChannel Channel
+    {
+        get => _channel;
+        set
+        {
+            _channel = value;
+            NotifyModified(nameof(Channel));
+        }
+    }
 
     public double ThresholdVoltage
     {
         get => ElectricalParameters.TryGetValue("Vto", out var val) ? val : 2.0;
-        set => ElectricalParameters["Vto"] = value;
+        set
+        {
+            ElectricalParameters["Vto"] = value;
+            NotifyModified(nameof(ThresholdVoltage));
+        }
     }
 
     public double Transconductance
     {
         get => ElectricalParameters.TryGetValue("Kp", out var val) ? val : 2e-5;
-        set => ElectricalParameters["Kp"] = value;
+        set
+        {
+            ElectricalParameters["Kp"] = Math.Max(value, 1e-12);
+            NotifyModified(nameof(Transconductance));
+        }
     }
 
     public double ChannelWidth
     {
         get => ElectricalParameters.TryGetValue("W", out var val) ? val : 1e-4;
-        set => ElectricalParameters["W"] = value;
+        set
+        {
+            ElectricalParameters["W"] = Math.Max(value, 1e-9);
+            NotifyModified(nameof(ChannelWidth));
+        }
     }
 
     public double ChannelLength
     {
         get => ElectricalParameters.TryGetValue("L", out var val) ? val : 1e-6;
-        set => ElectricalParameters["L"] = value;
+        set
+        {
+            ElectricalParameters["L"] = Math.Max(value, 1e-9);
+            NotifyModified(nameof(ChannelLength));
+        }
     }
 
     public double Lambda
     {
         get => ElectricalParameters.TryGetValue("Lambda", out var val) ? val : 0.0;
-        set => ElectricalParameters["Lambda"] = value;
+        set
+        {
+            ElectricalParameters["Lambda"] = Math.Max(value, 0.0);
+            NotifyModified(nameof(Lambda));
+        }
     }
 
     public MOSFETComponent()
     {
-        // Pin layout: Gate (left), Drain (top-right), Source (bottom-right)
+        // Pin layout: Gate (left), Drain (top-right), Source (bottom-right), Body (middle-right)
         Pins.Add(new ComponentPin("gate", "G", -20, 0));
         Pins.Add(new ComponentPin("drain", "D", 15, -20));
         Pins.Add(new ComponentPin("source", "S", 15, 20));
+        Pins.Add(new ComponentPin("body", "B", 15, 0));
         ThresholdVoltage = 2.0;
         Transconductance = 2e-5;
         ChannelWidth = 1e-4;

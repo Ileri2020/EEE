@@ -24,7 +24,37 @@ public class WireComponent : GeneralComponent
     public double Resistance
     {
         get => ElectricalParameters.TryGetValue("Resistance", out var val) ? val : 0.0;
-        set => ElectricalParameters["Resistance"] = value;
+        set
+        {
+            ElectricalParameters["Resistance"] = Math.Max(value, 0.0);
+            NotifyModified(nameof(Resistance));
+        }
+    }
+
+    /// <summary>
+    /// Parasitic series inductance of the wire in Henries (H).
+    /// </summary>
+    public double Inductance
+    {
+        get => ElectricalParameters.TryGetValue("Inductance", out var val) ? val : 0.0;
+        set
+        {
+            ElectricalParameters["Inductance"] = Math.Max(value, 0.0);
+            NotifyModified(nameof(Inductance));
+        }
+    }
+
+    /// <summary>
+    /// Parasitic shunt capacitance to ground/shield in Farads (F).
+    /// </summary>
+    public double Capacitance
+    {
+        get => ElectricalParameters.TryGetValue("Capacitance", out var val) ? val : 0.0;
+        set
+        {
+            ElectricalParameters["Capacitance"] = Math.Max(value, 0.0);
+            NotifyModified(nameof(Capacitance));
+        }
     }
 
     public WireComponent()

@@ -256,6 +256,175 @@ public class PythonApi
         AddComponent("voltagedelay", name, x, y, delay);
     }
 
+    public void AddClock(string name, double x, double y, double frequency = 1000.0, double dutyCycle = 0.5, double highVoltage = 5.0, double lowVoltage = 0.0, int highDuration = 1, int lowDuration = 1, int phase = 0)
+    {
+        AddComponent("clock", name, x, y, frequency);
+        if (dutyCycle != 0.5) SetProperty(name, "DutyCycle", dutyCycle);
+        if (highVoltage != 5.0) SetProperty(name, "HighVoltage", highVoltage);
+        if (lowVoltage != 0.0) SetProperty(name, "LowVoltage", lowVoltage);
+        if (highDuration != 1) SetCustomProperty(name, "HighDuration", highDuration);
+        if (lowDuration != 1) SetCustomProperty(name, "LowDuration", lowDuration);
+        if (phase != 0) SetCustomProperty(name, "Phase", phase);
+    }
+
+    public void AddPin(string name, double x, double y, string direction = "Input", int bitWidth = 1, long value = 0, string behavior = "Tristate", long initialValue = 0, string radix = "Binary")
+    {
+        AddComponent("pin", name, x, y, value);
+        SetCustomProperty(name, "Direction", direction);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+        if (behavior != "Tristate") SetCustomProperty(name, "Behavior", behavior);
+        if (initialValue != 0) SetCustomProperty(name, "InitialValue", initialValue);
+        if (radix != "Binary") SetCustomProperty(name, "Radix", radix);
+    }
+
+    public void AddPower(string name, double x, double y, double voltage = 5.0, int bitWidth = 1)
+    {
+        AddComponent("power", name, x, y, voltage);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+    }
+
+    public void AddPullResistor(string name, double x, double y, string mode = "PullUp", double resistance = 10000.0, double railVoltage = 5.0)
+    {
+        AddComponent("pullresistor", name, x, y, resistance);
+        SetCustomProperty(name, "Mode", mode);
+        if (railVoltage != 5.0) SetProperty(name, "RailVoltage", railVoltage);
+    }
+
+    public void AddTunnel(string name, double x, double y, string label = "", int bitWidth = 1)
+    {
+        AddComponent("tunnel", name, x, y, 0);
+        if (!string.IsNullOrWhiteSpace(label))
+            SetCustomProperty(name, "TunnelLabel", label);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+    }
+
+    public void AddProbe(string name, double x, double y, double inputImpedance = 10e6, string radix = "Binary")
+    {
+        AddComponent("probe", name, x, y, inputImpedance);
+        if (radix != "Binary") SetCustomProperty(name, "Radix", radix);
+    }
+
+    public void AddDigitalTransistor(string name, double x, double y, string type = "NType", double ron = 0.1, double roff = 10e6, double threshold = 2.5, string gateLocation = "TopRight", int bitWidth = 1)
+    {
+        AddComponent("transistor", name, x, y, threshold);
+        SetCustomProperty(name, "TransistorType", type);
+        if (ron != 0.1) SetProperty(name, "Ron", ron);
+        if (roff != 10e6) SetProperty(name, "Roff", roff);
+        if (gateLocation != "TopRight") SetCustomProperty(name, "GateLocation", gateLocation);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+    }
+
+    public void AddTransmissionGate(string name, double x, double y, double ron = 0.2, double roff = 10e6, string selectLoc = "TopRight", int bitWidth = 1)
+    {
+        AddComponent("transmissiongate", name, x, y, ron);
+        if (roff != 10e6) SetProperty(name, "Roff", roff);
+        if (selectLoc != "TopRight") SetCustomProperty(name, "SelectLocation", selectLoc);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+    }
+
+    public void AddBitExtender(string name, double x, double y, int inWidth = 1, int outWidth = 8, string type = "ZeroExtend")
+    {
+        AddComponent("bitextender", name, x, y, inWidth);
+        SetProperty(name, "OutputBitWidth", outWidth);
+        SetCustomProperty(name, "ExtensionType", type);
+    }
+
+    public void AddConstant(string name, double x, double y, long value = 1, double vHigh = 5.0, double vLow = 0.0, int bitWidth = 1)
+    {
+        AddComponent("constant", name, x, y, value);
+        if (vHigh != 5.0) SetProperty(name, "VoltageHigh", vHigh);
+        if (vLow != 0.0) SetProperty(name, "VoltageLow", vLow);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+    }
+
+    public void AddDoNotConnect(string name, double x, double y, int bitWidth = 1)
+    {
+        AddComponent("dnc", name, x, y, 0);
+        if (bitWidth != 1) SetProperty(name, "BitWidth", bitWidth);
+    }
+
+    public void AddLossyTransmissionLine(string name, double x, double y, double r = 0.2, double l = 250e-9, double g = 10e-6, double c = 100e-12, double length = 1.0)
+    {
+        AddComponent("lossytransmissionline", name, x, y, length);
+        SetProperty(name, "R", r);
+        SetProperty(name, "L", l);
+        SetProperty(name, "G", g);
+        SetProperty(name, "C", c);
+    }
+
+    public void AddCoaxialCable(string name, double x, double y, double z0 = 50.0, double length = 1.0, double vf = 0.66, double attenuation = 0.05)
+    {
+        AddComponent("coaxialcable", name, x, y, z0);
+        SetProperty(name, "Length", length);
+        SetProperty(name, "VF", vf);
+        if (attenuation != 0.05) SetProperty(name, "Attenuation", attenuation);
+    }
+
+    public void AddMicrostripLine(string name, double x, double y, double w = 1.5e-3, double h = 0.8e-3, double er = 4.4, double length = 0.05)
+    {
+        AddComponent("microstripline", name, x, y, w);
+        SetProperty(name, "H", h);
+        SetProperty(name, "Er", er);
+        SetProperty(name, "Length", length);
+    }
+
+    public void AddGround(string name, double x, double y)
+    {
+        AddComponent("ground", name, x, y);
+    }
+
+    public void AddBulb(string name, double x, double y, double resistance = 50.0, double ratedVoltage = 6.0, double powerRating = 0.72)
+    {
+        AddComponent("bulb", name, x, y, resistance);
+        if (ratedVoltage != 6.0) SetProperty(name, "RatedVoltage", ratedVoltage);
+        if (powerRating != 0.72) SetProperty(name, "PowerRating", powerRating);
+    }
+
+    public void AddLED(string name, double x, double y, string color = "Red", double vf = 2.0)
+    {
+        AddComponent("led", name, x, y, vf);
+        if (!string.Equals(color, "Red", StringComparison.OrdinalIgnoreCase))
+            SetCustomProperty(name, "Color", color);
+    }
+
+    public void AddLogicInput(string name, double x, double y, bool state = false, double highVoltage = 5.0, double lowVoltage = 0.0)
+    {
+        AddComponent("logicinput", name, x, y, state ? 1.0 : 0.0);
+        if (highVoltage != 5.0) SetProperty(name, "HighVoltage", highVoltage);
+        if (lowVoltage != 0.0) SetProperty(name, "LowVoltage", lowVoltage);
+    }
+
+    public void AddLogicOutput(string name, double x, double y, double threshold = 2.5, double highValue = 5.0, double lowValue = 0.0)
+    {
+        AddComponent("logicoutput", name, x, y, threshold);
+        if (highValue != 5.0) SetProperty(name, "HighValue", highValue);
+        if (lowValue != 0.0) SetProperty(name, "LowValue", lowValue);
+    }
+
+    public void AddWire(string name, double x, double y, double resistance = 0.0, double inductance = 0.0, double capacitance = 0.0)
+    {
+        AddComponent("wire", name, x, y, resistance);
+        if (inductance != 0.0) SetProperty(name, "Inductance", inductance);
+        if (capacitance != 0.0) SetProperty(name, "Capacitance", capacitance);
+    }
+
+    public void AddJunction(string name, double x, double y)
+    {
+        AddComponent("junction", name, x, y);
+    }
+
+    public void AddLabel(string name, double x, double y, string text = "NET1")
+    {
+        AddComponent("label", name, x, y);
+        SetCustomProperty(name, "NetName", text);
+    }
+
+    public void AddTextAnnotation(string name, double x, double y, string text = "Note")
+    {
+        AddComponent("textannotation", name, x, y);
+        SetCustomProperty(name, "Text", text);
+    }
+
     // Waveform Configuration Methods
     public void ConfigureSineWaveform(string sourceName, double offset, double amplitude, double frequency, double delay = 0.0, double theta = 0.0, double phase = 0.0)
     {

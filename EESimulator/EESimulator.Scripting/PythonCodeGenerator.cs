@@ -1,8 +1,10 @@
+using System;
 using System.Linq;
 using System.Text;
 using EESimulator.Commands;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.Electronics;
+using EESimulator.Core.Components.General;
 using EESimulator.Core.Models;
 
 
@@ -68,53 +70,214 @@ public class PythonCodeGenerator
         return comp switch
         {
             // ── Passives ─────────────────────────────────────────────────────
-            ResistorNode r =>
-                $"{varName} = circuit.add_resistor(\"{comp.Name}\", position=({x}, {y}), resistance={r.Resistance})",
+            ResistorComponent r =>
+                $"{varName} = circuit.add_resistor(\"{comp.Name}\", position=({x}, {y}), resistance={r.Resistance}, tc1={r.TemperatureCoefficient1}, tc2={r.TemperatureCoefficient2}, power_rating={r.PowerRating}, tolerance={r.Tolerance})",
 
-            CapacitorNode c =>
-                $"{varName} = circuit.add_capacitor(\"{comp.Name}\", position=({x}, {y}), capacitance={c.Capacitance})",
+            CapacitorComponent c =>
+                $"{varName} = circuit.add_capacitor(\"{comp.Name}\", position=({x}, {y}), capacitance={c.Capacitance}, ic={c.InitialCondition}, esr={c.EquivalentSeriesResistance}, tc1={c.TemperatureCoefficient1}, tc2={c.TemperatureCoefficient2})",
 
-            InductorNode l =>
-                $"{varName} = circuit.add_inductor(\"{comp.Name}\", position=({x}, {y}), inductance={l.Inductance})",
+            InductorComponent l =>
+                $"{varName} = circuit.add_inductor(\"{comp.Name}\", position=({x}, {y}), inductance={l.Inductance}, ic={l.InitialCondition}, dcr={l.DcResistance}, series_multiplier={l.SeriesMultiplier}, parallel_multiplier={l.ParallelMultiplier})",
 
-            // ── Sources ───────────────────────────────────────────────────────
-            VoltageSourceNode v =>
-                $"{varName} = circuit.add_voltage_source(\"{comp.Name}\", position=({x}, {y}), voltage={v.Voltage})",
+            // ── Sources & Rails ───────────────────────────────────────────────
+            VoltageSourceComponent v =>
+                BuildVoltageSourceStatement(varName, comp.Name, x, y, v),
 
-            CurrentSourceNode i =>
-                $"{varName} = circuit.add_current_source(\"{comp.Name}\", position=({x}, {y}), current={BuildCurrentParam(i)})",
+            CurrentSourceComponent i =>
+                BuildCurrentSourceStatement(varName, comp.Name, x, y, i),
+
+            PowerComponent pw =>
+                $"{varName} = circuit.add_power(\"{comp.Name}\", position=({x}, {y}), voltage={pw.Voltage})",
+
+            PullResistorComponent pr =>
+                $"{varName} = circuit.add_pull_resistor(\"{comp.Name}\", position=({x}, {y}), mode=\"{pr.Mode}\", resistance={pr.Resistance}, rail_voltage={pr.RailVoltage})",
 
             GroundNode _ =>
                 $"{varName} = circuit.add_ground(\"{comp.Name}\", position=({x}, {y}))",
 
+            GroundComponent _ =>
+                $"{varName} = circuit.add_ground(\"{comp.Name}\", position=({x}, {y}))",
+
+            // ── Controlled Sources ───────────────────────────────────────────
+            VCVSComponent vcvs =>
+                $"{varName} = circuit.add_vcvs(\"{comp.Name}\", position=({x}, {y}), gain={vcvs.VoltageGain})",
+
+            VCCSComponent vccs =>
+                $"{varName} = circuit.add_vccs(\"{comp.Name}\", position=({x}, {y}), transconductance={vccs.Transconductance})",
+
+            CCVSComponent ccvs =>
+                $"{varName} = circuit.add_ccvs(\"{comp.Name}\", position=({x}, {y}), transresistance={ccvs.Transresistance}, controlling_source=\"{ccvs.ControllingSource}\")",
+
+            CCCSComponent cccs =>
+                $"{varName} = circuit.add_cccs(\"{comp.Name}\", position=({x}, {y}), gain={cccs.CurrentGain}, controlling_source=\"{cccs.ControllingSource}\")",
+
+            // ── Switches & Delays ────────────────────────────────────────────
+            VoltageSwitchComponent vsw =>
+                $"{varName} = circuit.add_voltage_switch(\"{comp.Name}\", position=({x}, {y}), ron={vsw.ResistanceOn}, roff={vsw.ResistanceOff}, threshold={vsw.Threshold}, hysteresis={vsw.Hysteresis})",
+
+            CurrentSwitchComponent csw =>
+                $"{varName} = circuit.add_current_switch(\"{comp.Name}\", position=({x}, {y}), ron={csw.ResistanceOn}, roff={csw.ResistanceOff}, threshold={csw.Threshold}, hysteresis={csw.Hysteresis}, controlling_source=\"{csw.ControllingSource}\")",
+
+            VoltageDelayComponent vd =>
+                $"{varName} = circuit.add_voltage_delay(\"{comp.Name}\", position=({x}, {y}), delay={vd.Delay}, bandwidth={vd.Bandwidth})",
+
+            MutualInductanceComponent mi =>
+                $"{varName} = circuit.add_mutual_inductance(\"{comp.Name}\", position=({x}, {y}), inductor1=\"{mi.Inductor1}\", inductor2=\"{mi.Inductor2}\", coupling={mi.Coupling})",
+
+            // ── Opto / Indicators ────────────────────────────────────────────
+            BulbComponent bulb =>
+                $"{varName} = circuit.add_bulb(\"{comp.Name}\", position=({x}, {y}), resistance={bulb.Resistance}, rated_voltage={bulb.RatedVoltage}, power_rating={bulb.PowerRating})",
+
+            LEDComponent led =>
+                $"{varName} = circuit.add_led(\"{comp.Name}\", position=({x}, {y}), color=\"{led.ColorName}\", vf={led.ForwardVoltage})",
+
+            // ── Digital / Core Wiring ──────────────────────────────────────────
+            ClockComponent clk =>
+                $"{varName} = circuit.add_clock(\"{comp.Name}\", position=({x}, {y}), frequency={clk.Frequency}, duty_cycle={clk.DutyCycle}, high_voltage={clk.HighVoltage}, phase={clk.Phase})",
+
+            PinComponent pin =>
+                $"{varName} = circuit.add_pin(\"{comp.Name}\", position=({x}, {y}), direction=\"{pin.Direction}\", bit_width={pin.BitWidth}, value={pin.Value})",
+
+            ConstantComponent cst =>
+                $"{varName} = circuit.add_constant(\"{comp.Name}\", position=({x}, {y}), value={cst.Value}, voltage_high={cst.VoltageHigh}, voltage_low={cst.VoltageLow}, bit_width={cst.BitWidth})",
+
+            LogicInputComponent lin =>
+                $"{varName} = circuit.add_logic_input(\"{comp.Name}\", position=({x}, {y}), state={lin.State.ToString().ToLower()}, high_voltage={lin.HighVoltage}, low_voltage={lin.LowVoltage})",
+
+            LogicOutputComponent lout =>
+                $"{varName} = circuit.add_logic_output(\"{comp.Name}\", position=({x}, {y}), threshold={lout.Threshold}, high_value={lout.HighValue}, low_value={lout.LowValue})",
+
+            DigitalTransistorComponent dtr =>
+                $"{varName} = circuit.add_digital_transistor(\"{comp.Name}\", position=({x}, {y}), type=\"{dtr.TransistorType}\", ron={dtr.ResistanceOn}, roff={dtr.ResistanceOff}, threshold={dtr.Threshold}, gate_location=\"{dtr.GateLocation}\", bit_width={dtr.BitWidth})",
+
+            TransmissionGateComponent tg =>
+                $"{varName} = circuit.add_transmission_gate(\"{comp.Name}\", position=({x}, {y}), ron={tg.ResistanceOn}, roff={tg.ResistanceOff}, select_location=\"{tg.SelectLocation}\", bit_width={tg.BitWidth})",
+
+            BitExtenderComponent be =>
+                $"{varName} = circuit.add_bit_extender(\"{comp.Name}\", position=({x}, {y}), in_width={be.InputBitWidth}, out_width={be.OutputBitWidth}, type=\"{be.ExtensionType}\")",
+
             // ── Semiconductors ────────────────────────────────────────────────
             BJTComponent bjt =>
-                $"{varName} = circuit.add_bjt(\"{comp.Name}\", position=({x}, {y}), polarity=\"{bjt.Polarity}\", bf={bjt.GainBeta}, is_={bjt.SaturationCurrent:G3}, vaf={bjt.EarlyVoltage})",
+                $"{varName} = circuit.add_bjt(\"{comp.Name}\", position=({x}, {y}), polarity=\"{bjt.Polarity}\", bf={bjt.GainBeta}, br={bjt.ReverseGainBeta}, is_={bjt.SaturationCurrent:G3}, vaf={bjt.EarlyVoltage})",
 
             MOSFETComponent mos =>
-                $"{varName} = circuit.add_mosfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{mos.Channel}\", vto={mos.ThresholdVoltage}, kp={mos.Transconductance:G3}, w={mos.ChannelWidth:G3}, l={mos.ChannelLength:G3})",
+                $"{varName} = circuit.add_mosfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{mos.Channel}\", vto={mos.ThresholdVoltage}, kp={mos.Transconductance:G3}, w={mos.ChannelWidth:G3}, l={mos.ChannelLength:G3}, lambda_={mos.Lambda})",
 
             JFETComponent jfet =>
-                $"{varName} = circuit.add_jfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{jfet.Channel}\", vto={jfet.ThresholdVoltage}, beta={jfet.Transconductance:G3})",
+                $"{varName} = circuit.add_jfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{jfet.Channel}\", vto={jfet.ThresholdVoltage}, beta={jfet.Transconductance:G3}, lambda_={jfet.Lambda}, dr={jfet.DrainResistance}, sr={jfet.SourceResistance})",
 
             DiodeComponent d =>
-                $"{varName} = circuit.add_diode(\"{comp.Name}\", position=({x}, {y}), is_={d.SaturationCurrent:G3}, n={d.EmissionCoefficient})",
+                $"{varName} = circuit.add_diode(\"{comp.Name}\", position=({x}, {y}), is_={d.SaturationCurrent:G3}, n={d.EmissionCoefficient}, rs={d.SeriesResistance:G3}, cj0={d.JunctionCapacitance:G3}, tt={d.TransitTime:G3}, bv={d.BreakdownVoltage}, ibv={d.BreakdownCurrent:G3})",
 
             OpAmpComponent op =>
-                $"{varName} = circuit.add_opamp(\"{comp.Name}\", position=({x}, {y}), aol={op.OpenLoopGain:G3}, gbw={op.GainBandwidth:G3}, sr={op.SlewRate})",
+                $"{varName} = circuit.add_opamp(\"{comp.Name}\", position=({x}, {y}), aol={op.OpenLoopGain:G3}, gbw={op.GainBandwidth:G3}, sr={op.SlewRate}, v_pos={op.SupplyPositive}, v_neg={op.SupplyNegative}, vos={op.InputOffsetVoltage:G3}, ib={op.InputBiasCurrent:G3}, cmrr={op.CMRR})",
 
-            // ── Structural / General ──────────────────────────────────────────
+            // ── Transmission Lines ───────────────────────────────────────────
+            TransmissionLineComponent tl =>
+                $"{varName} = circuit.add_transmission_line(\"{comp.Name}\", position=({x}, {y}), z0={tl.CharacteristicImpedance}, td={tl.Delay}, frequency={tl.Frequency}, nl={tl.NormalizedLength})",
+
+            LossyTransmissionLineComponent ltl =>
+                $"{varName} = circuit.add_lossy_transmission_line(\"{comp.Name}\", position=({x}, {y}), length={ltl.Length}, r={ltl.ResistancePerMeter}, l={ltl.InductancePerMeter}, c={ltl.CapacitancePerMeter}, g={ltl.ConductancePerMeter})",
+
+            CoaxialCableComponent coax =>
+                $"{varName} = circuit.add_coaxial_cable(\"{comp.Name}\", position=({x}, {y}), z0={coax.CharacteristicImpedance}, length={coax.Length}, vf={coax.VelocityFactor}, attenuation={coax.Attenuation})",
+
+            MicrostripLineComponent ustrip =>
+                $"{varName} = circuit.add_microstrip_line(\"{comp.Name}\", position=({x}, {y}), w={ustrip.TraceWidth}, h={ustrip.SubstrateHeight}, er={ustrip.DielectricConstant}, length={ustrip.Length})",
+
+            // ── Structural / Measurement / General ───────────────────────────
+            TunnelComponent tun =>
+                $"{varName} = circuit.add_tunnel(\"{comp.Name}\", position=({x}, {y}), label=\"{tun.TunnelLabel}\")",
+
+            ProbeComponent prb =>
+                $"{varName} = circuit.add_probe(\"{comp.Name}\", position=({x}, {y}), impedance={prb.InputImpedance}, mode=\"{prb.MeasurementMode}\")",
+
+            WireComponent w =>
+                $"{varName} = circuit.add_wire(\"{comp.Name}\", position=({x}, {y}), resistance={w.Resistance}, inductance={w.Inductance}, capacitance={w.Capacitance})",
+
+            DoNotConnectComponent _ =>
+                $"{varName} = circuit.add_do_not_connect(\"{comp.Name}\", position=({x}, {y}))",
+
+            JunctionComponent _ =>
+                $"{varName} = circuit.add_junction(\"{comp.Name}\", position=({x}, {y}))",
+
+            LabelComponent lbl =>
+                $"{varName} = circuit.add_label(\"{comp.Name}\", position=({x}, {y}), text=\"{lbl.NetName}\")",
+
+            TextAnnotationComponent txt =>
+                $"{varName} = circuit.add_text_annotation(\"{comp.Name}\", position=({x}, {y}), text=\"{txt.Text}\")",
+
             _ =>
                 $"{varName} = circuit.add_component(\"{comp.ComponentType}\", name=\"{comp.Name}\", position=({x}, {y}))"
         };
     }
 
-    /// <summary>Extracts the current value from a CurrentSourceComponent.</summary>
-    private static string BuildCurrentParam(CurrentSourceNode i)
+    private static string BuildVoltageSourceStatement(string varName, string name, double x, double y, VoltageSourceComponent v)
     {
-        if (i.ElectricalParameters.TryGetValue("Current", out var dc))
-            return dc.ToString("G6");
-        return "0.001";
+        var sb = new StringBuilder();
+        sb.Append($"{varName} = circuit.add_voltage_source(\"{name}\", position=({x}, {y}), voltage={v.Voltage}");
+        if (v.AcMagnitude > 0 || v.AcPhase != 0)
+        {
+            sb.Append($", ac_mag={v.AcMagnitude}, ac_phase={v.AcPhase}");
+        }
+        if (!string.Equals(v.WaveformType, "DC", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.Append($", waveform_type=\"{v.WaveformType}\"");
+            switch (v.WaveformType.ToUpperInvariant())
+            {
+                case "SINE":
+                    sb.Append($", sine_offset={v.SineOffset}, sine_amplitude={v.SineAmplitude}, sine_frequency={v.SineFrequency}, sine_delay={v.SineDelay}, sine_phase={v.SinePhase}");
+                    break;
+                case "PULSE":
+                    sb.Append($", pulse_initial={v.PulseInitial}, pulse_pulsed={v.PulsePulsed}, pulse_delay={v.PulseDelay}, pulse_rise={v.PulseRiseTime}, pulse_fall={v.PulseFallTime}, pulse_width={v.PulseWidth}, pulse_period={v.PulsePeriod}");
+                    break;
+                case "PWL":
+                    sb.Append($", pwl_points=\"{v.PwlPoints}\"");
+                    break;
+                case "AM":
+                    sb.Append($", am_amplitude={v.AmAmplitude}, am_offset={v.AmOffset}, am_mod_freq={v.AmModulationFrequency}, am_carrier_freq={v.AmCarrierFrequency}, am_delay={v.AmDelay}");
+                    break;
+                case "SFFM":
+                    sb.Append($", sffm_offset={v.SffmOffset}, sffm_amplitude={v.SffmAmplitude}, sffm_carrier_freq={v.SffmCarrierFrequency}, sffm_mod_index={v.SffmModulationIndex}, sffm_signal_freq={v.SffmSignalFrequency}");
+                    break;
+            }
+        }
+        sb.Append(")");
+        return sb.ToString();
+    }
+
+    private static string BuildCurrentSourceStatement(string varName, string name, double x, double y, CurrentSourceComponent i)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"{varName} = circuit.add_current_source(\"{name}\", position=({x}, {y}), current={i.Current}");
+        if (i.AcMagnitude > 0 || i.AcPhase != 0)
+        {
+            sb.Append($", ac_mag={i.AcMagnitude}, ac_phase={i.AcPhase}");
+        }
+        if (!string.Equals(i.WaveformType, "DC", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.Append($", waveform_type=\"{i.WaveformType}\"");
+            switch (i.WaveformType.ToUpperInvariant())
+            {
+                case "SINE":
+                    sb.Append($", sine_offset={i.SineOffset}, sine_amplitude={i.SineAmplitude}, sine_frequency={i.SineFrequency}, sine_delay={i.SineDelay}, sine_phase={i.SinePhase}");
+                    break;
+                case "PULSE":
+                    sb.Append($", pulse_initial={i.PulseInitial}, pulse_pulsed={i.PulsePulsed}, pulse_delay={i.PulseDelay}, pulse_rise={i.PulseRiseTime}, pulse_fall={i.PulseFallTime}, pulse_width={i.PulseWidth}, pulse_period={i.PulsePeriod}");
+                    break;
+                case "PWL":
+                    sb.Append($", pwl_points=\"{i.PwlPoints}\"");
+                    break;
+                case "AM":
+                    sb.Append($", am_amplitude={i.AmAmplitude}, am_offset={i.AmOffset}, am_mod_freq={i.AmModulationFrequency}, am_carrier_freq={i.AmCarrierFrequency}, am_delay={i.AmDelay}");
+                    break;
+                case "SFFM":
+                    sb.Append($", sffm_offset={i.SffmOffset}, sffm_amplitude={i.SffmAmplitude}, sffm_carrier_freq={i.SffmCarrierFrequency}, sffm_mod_index={i.SffmModulationIndex}, sffm_signal_freq={i.SffmSignalFrequency}");
+                    break;
+            }
+        }
+        sb.Append(")");
+        return sb.ToString();
     }
 
     /// <summary>

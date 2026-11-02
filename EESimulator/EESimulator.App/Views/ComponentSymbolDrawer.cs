@@ -57,6 +57,23 @@ public static class ComponentSymbolDrawer
             case "MutualInductance": DrawMutualInductance(canvas); break;
             case "TransmissionLine": DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     DrawVoltageDelay(canvas); break;
+            case "Clock":            DrawClock(canvas, isOn); break;
+            case "Pin":              DrawPin(canvas, isOn); break;
+            case "Power":
+            case "VCC":              DrawPower(canvas); break;
+            case "PullResistor":     DrawPullResistor(canvas); break;
+            case "Tunnel":           DrawTunnel(canvas, name); break;
+            case "Probe":            DrawProbe(canvas, isOn); break;
+            case "Transistor":
+            case "DigitalTransistor":DrawDigitalTransistor(canvas); break;
+            case "TransmissionGate": DrawTransmissionGate(canvas); break;
+            case "BitExtender":      DrawBitExtender(canvas); break;
+            case "Constant":         DrawConstant(canvas, isOn); break;
+            case "DoNotConnect":
+            case "DNC":              DrawDoNotConnect(canvas); break;
+            case "LossyTransmissionLine": DrawLossyTransmissionLine(canvas); break;
+            case "CoaxialCable":     DrawCoaxialCable(canvas); break;
+            case "MicrostripLine":   DrawMicrostripLine(canvas); break;
             default:                 DrawGenericComponent(canvas, componentType); break;
         }
     }
@@ -748,4 +765,292 @@ public static class ComponentSymbolDrawer
         canvas.DrawLine(0, 0, 0, -4);
         canvas.DrawLine(0, 0, 3, 0);
     }
+
+    public static void DrawClock(ICanvas canvas, bool isOn = false)
+    {
+        canvas.StrokeColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawRoundedRectangle(-14, -14, 28, 28, 4);
+
+        // Square wave symbol
+        canvas.StrokeColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.8f;
+        var path = new PathF();
+        path.MoveTo(-9, 5);
+        path.LineTo(-9, -4);
+        path.LineTo(-2, -4);
+        path.LineTo(-2, 5);
+        path.LineTo(5, 5);
+        path.LineTo(5, -4);
+        path.LineTo(9, -4);
+        canvas.DrawPath(path);
+
+        // Output pin lead
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(14, 0, 20, 0);
+    }
+
+    public static void DrawPin(ICanvas canvas, bool isOn = false)
+    {
+        canvas.StrokeColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawCircle(-4, 0, 12);
+
+        // Arrow or level
+        canvas.StrokeColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawLine(-9, 0, 1, 0);
+        canvas.DrawLine(-3, -4, 1, 0);
+        canvas.DrawLine(-3, 4, 1, 0);
+
+        // Pin lead
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(8, 0, 20, 0);
+    }
+
+    public static void DrawPower(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2.2f;
+        canvas.DrawLine(0, 15, 0, -4);
+
+        // Upward arrow VCC
+        canvas.DrawLine(-10, -4, 0, -14);
+        canvas.DrawLine(0, -14, 10, -4);
+
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 8f;
+        canvas.DrawString("VCC", -15, -24, 30, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawPullResistor(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-10, -16, 10, -16);
+        canvas.DrawLine(0, -16, 0, -12);
+
+        // Resistor zigzag
+        canvas.StrokeColor = Color.FromArgb("#F78166");
+        var pts = new[] { 0f, -12f, 4f, -9f, -4f, -5f, 4f, -1f, -4f, 3f, 4f, 7f, 0f, 10f };
+        for (int i = 0; i < pts.Length - 2; i += 2)
+            canvas.DrawLine(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]);
+
+        canvas.DrawLine(0, 10, 0, 15);
+
+        // Direction arrow
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.StrokeSize = 1.5f;
+        canvas.DrawLine(8, 2, 8, -6);
+        canvas.DrawLine(5, -3, 8, -6);
+        canvas.DrawLine(11, -3, 8, -6);
+    }
+
+    public static void DrawTunnel(ICanvas canvas, string label = "")
+    {
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-15, 0, -7, 0);
+
+        // Pointed tag banner
+        var path = new PathF();
+        path.MoveTo(-7, -10);
+        path.LineTo(9, -10);
+        path.LineTo(16, 0);
+        path.LineTo(9, 10);
+        path.LineTo(-7, 10);
+        path.Close();
+
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillPath(path);
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawPath(path);
+
+        string txt = !string.IsNullOrWhiteSpace(label) ? label : "NET";
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 8f;
+        canvas.DrawString(txt, -7, -8, 20, 16, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawProbe(ICanvas canvas, bool isOn = false)
+    {
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-15, 0, -8, 0);
+
+        canvas.StrokeColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#79C0FF");
+        canvas.DrawCircle(4, 0, 12);
+
+        canvas.FontColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#79C0FF");
+        canvas.FontSize = 10f;
+        canvas.DrawString("V", -1, -5, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawDigitalTransistor(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#FFA657");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -6, 0);
+        canvas.DrawLine(-6, -11, -6, 11);
+
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawLine(-1, -13, -1, 13);
+        canvas.DrawLine(-1, -10, 8, -10);
+        canvas.DrawLine(8, -10, 8, -20);
+        canvas.DrawLine(-1, 10, 8, 10);
+        canvas.DrawLine(8, 10, 8, 20);
+    }
+
+    public static void DrawTransmissionGate(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -12, 0);
+        canvas.DrawLine(12, 0, 20, 0);
+
+        // Upper triangle
+        var path1 = new PathF();
+        path1.MoveTo(-12, -7);
+        path1.LineTo(12, -7);
+        path1.LineTo(0, 5);
+        path1.Close();
+
+        // Lower triangle
+        var path2 = new PathF();
+        path2.MoveTo(-12, 7);
+        path2.LineTo(12, 7);
+        path2.LineTo(0, -5);
+        path2.Close();
+
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawPath(path1);
+        canvas.DrawPath(path2);
+
+        // Control leads
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.DrawLine(0, -18, 0, -8);
+        canvas.StrokeColor = Color.FromArgb("#F78166");
+        canvas.DrawCircle(0, 10, 2);
+        canvas.DrawLine(0, 12, 0, 18);
+    }
+
+    public static void DrawBitExtender(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, 0, -14, 0);
+        canvas.DrawLine(14, 0, 20, 0);
+
+        var path = new PathF();
+        path.MoveTo(-14, -7);
+        path.LineTo(14, -13);
+        path.LineTo(14, 13);
+        path.LineTo(-14, 7);
+        path.Close();
+
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillPath(path);
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawPath(path);
+
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.FontSize = 7.5f;
+        canvas.DrawString("EXT", -10, -6, 20, 12, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawConstant(ICanvas canvas, bool isOn = false)
+    {
+        canvas.StrokeColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawRoundedRectangle(-12, -10, 20, 20, 4);
+
+        canvas.FontColor = isOn ? Color.FromArgb("#56D364") : Color.FromArgb("#C9D1D9");
+        canvas.FontSize = 10f;
+        canvas.DrawString("1", -8, -6, 12, 12, HorizontalAlignment.Center, VerticalAlignment.Center);
+
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.DrawLine(8, 0, 15, 0);
+    }
+
+    public static void DrawDoNotConnect(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawLine(-10, 0, 0, 0);
+
+        canvas.StrokeColor = Color.FromArgb("#F78166");
+        canvas.StrokeSize = 2.5f;
+        canvas.DrawLine(-6, -6, 6, 6);
+        canvas.DrawLine(6, -6, -6, 6);
+    }
+
+    public static void DrawLossyTransmissionLine(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#FFA657");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, -10, -12, -10);
+        canvas.DrawLine(-20, 10, -12, 10);
+        canvas.DrawLine(12, -10, 20, -10);
+        canvas.DrawLine(12, 10, 20, 10);
+
+        canvas.DrawRoundedRectangle(-12, -13, 24, 26, 4);
+        canvas.StrokeSize = 1.4f;
+        // Resistor-loss top line
+        canvas.DrawLine(-9, -6, -5, -8);
+        canvas.DrawLine(-5, -8, -1, -4);
+        canvas.DrawLine(-1, -4, 3, -8);
+        canvas.DrawLine(3, -8, 7, -4);
+        canvas.DrawLine(7, -4, 9, -6);
+        // Bottom ground reference
+        canvas.DrawLine(-9, 6, 9, 6);
+    }
+
+    public static void DrawCoaxialCable(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, -10, -12, -10);
+        canvas.DrawLine(-20, 10, -12, 10);
+        canvas.DrawLine(12, -10, 20, -10);
+        canvas.DrawLine(12, 10, 20, 10);
+
+        canvas.DrawRoundedRectangle(-12, -13, 24, 26, 5);
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 1.5f;
+        canvas.DrawCircle(0, 0, 8);
+        canvas.FillColor = Color.FromArgb("#79C0FF");
+        canvas.FillCircle(0, 0, 3.5f);
+    }
+
+    public static void DrawMicrostripLine(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, -8, -12, -8);
+        canvas.DrawLine(-20, 10, -12, 10);
+        canvas.DrawLine(12, -8, 20, -8);
+        canvas.DrawLine(12, 10, 20, 10);
+
+        // Dielectric substrate
+        canvas.FillColor = Color.FromArgb("#21262D");
+        canvas.FillRectangle(-12, -3, 24, 11);
+        canvas.StrokeColor = Color.FromArgb("#30363D");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawRectangle(-12, -3, 24, 11);
+
+        // Top trace
+        canvas.FillColor = Color.FromArgb("#56D364");
+        canvas.FillRectangle(-12, -8, 24, 5);
+
+        // Ground plane
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-12, 9, 12, 9);
+    }
 }
+

@@ -65,6 +65,28 @@ public class NetlistBuilder
             dsu.Union(p1, p2);
         }
 
+        // Union same-labeled Tunnel components across the schematic
+        var tunnelGroups = circuit.Components
+            .OfType<EESimulator.Core.Components.General.TunnelComponent>()
+            .GroupBy(t => t.TunnelLabel, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tGroup in tunnelGroups)
+        {
+            var tunnels = tGroup.ToList();
+            if (tunnels.Count > 1 && tunnels[0].Pins.Count > 0)
+            {
+                var p0 = new PinReference(tunnels[0].Id, tunnels[0].Pins[0].Id);
+                for (int i = 1; i < tunnels.Count; i++)
+                {
+                    if (tunnels[i].Pins.Count > 0)
+                    {
+                        var pi = new PinReference(tunnels[i].Id, tunnels[i].Pins[0].Id);
+                        dsu.Union(p0, pi);
+                    }
+                }
+            }
+        }
+
         // Group pins by their root representative
         var groups = new Dictionary<PinReference, List<PinReference>>();
         foreach (var pin in dsu.AllPins)
@@ -88,7 +110,31 @@ public class NetlistBuilder
         {
             var pinList = kvp.Value;
             bool isGround = pinList.Any(p => groundCompIds.Contains(p.ComponentId));
-            string netName = isGround ? "0" : $"Net_{netCounter++}";
+
+            // Check if any connected component is a Tunnel or Label to give the net a descriptive name
+            string? descriptiveName = null;
+            if (!isGround)
+            {
+                var tunnelComp = circuit.Components
+                    .OfType<EESimulator.Core.Components.General.TunnelComponent>()
+                    .FirstOrDefault(t => pinList.Any(p => p.ComponentId == t.Id));
+                if (tunnelComp != null && !string.IsNullOrWhiteSpace(tunnelComp.TunnelLabel))
+                {
+                    descriptiveName = tunnelComp.TunnelLabel;
+                }
+                else
+                {
+                    var labelComp = circuit.Components
+                        .OfType<EESimulator.Core.Components.General.LabelComponent>()
+                        .FirstOrDefault(l => pinList.Any(p => p.ComponentId == l.Id));
+                    if (labelComp != null && !string.IsNullOrWhiteSpace(labelComp.Name))
+                    {
+                        descriptiveName = labelComp.Name;
+                    }
+                }
+            }
+
+            string netName = isGround ? "0" : (descriptiveName ?? $"Net_{netCounter++}");
 
             var netNode = new NetNode(netName, isGround);
             foreach (var p in pinList)

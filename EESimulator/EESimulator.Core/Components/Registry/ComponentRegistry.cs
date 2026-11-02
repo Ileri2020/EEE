@@ -375,6 +375,129 @@ public static class ComponentRegistry
             d.DefaultParameters["Threshold"] = 2.5;
         });
 
+        // ── Digital & Core Wiring (Logisim compatible) ─────────────────────
+        Register<ClockComponent>("electronics.clock", "Clock", "Electronics", "CLK", d =>
+        {
+            d.Description = "Digital clock pulse generator";
+            d.Icon = "clock.svg";
+            d.DefaultParameters["Frequency"] = 1000.0;
+            d.DefaultParameters["DutyCycle"] = 0.50;
+            d.DefaultParameters["HighVoltage"] = 5.0;
+            d.DefaultParameters["LowVoltage"] = 0.0;
+        });
+
+        Register<PinComponent>("electronics.pin", "Pin", "Electronics", "PIN", d =>
+        {
+            d.Description = "Named I/O port terminal (Input / Output)";
+            d.Icon = "pin.svg";
+            d.DefaultParameters["BitWidth"] = 1.0;
+            d.DefaultParameters["Value"] = 0.0;
+            d.DefaultParameters["HighVoltage"] = 5.0;
+            d.DefaultParameters["LowVoltage"] = 0.0;
+        });
+
+        Register<PowerComponent>("electrical.power", "Power", "Electrical", "VCC", d =>
+        {
+            d.Description = "Positive supply rail (+VCC node)";
+            d.Icon = "power.svg";
+            d.DefaultParameters["Voltage"] = 5.0;
+        });
+
+        Register<PullResistorComponent>("electrical.pullresistor", "PullResistor", "Electrical", "RPULL", d =>
+        {
+            d.Description = "Configurable pull-up / pull-down resistor";
+            d.Icon = "pullresistor.svg";
+            d.DefaultParameters["Resistance"] = 10000.0;
+            d.DefaultParameters["RailVoltage"] = 5.0;
+        });
+
+        Register<TunnelComponent>("general.tunnel", "Tunnel", "General", "TUN", d =>
+        {
+            d.Description = "Named net tunnel / label junction";
+            d.Icon = "tunnel.svg";
+            d.IsSimulatable = true;
+        });
+
+        Register<ProbeComponent>("general.probe", "Probe", "General", "PRB", d =>
+        {
+            d.Description = "Voltage/current probe measurement point";
+            d.Icon = "probe.svg";
+            d.IsSimulatable = true;
+        });
+
+        Register<DigitalTransistorComponent>("electronics.transistor", "Transistor", "Electronics", "SWT", d =>
+        {
+            d.Description = "Digital-mode switch transistor (N-Type / P-Type)";
+            d.Icon = "transistor_digital.svg";
+            d.DefaultParameters["Ron"] = 0.1;
+            d.DefaultParameters["Roff"] = 10e6;
+            d.DefaultParameters["Threshold"] = 2.5;
+        });
+
+        Register<TransmissionGateComponent>("electronics.transmissiongate", "TransmissionGate", "Electronics", "TG", d =>
+        {
+            d.Description = "CMOS bilateral switch (N+P MOSFET transmission gate)";
+            d.Icon = "transmissiongate.svg";
+            d.DefaultParameters["Ron"] = 0.2;
+            d.DefaultParameters["Roff"] = 10e6;
+        });
+
+        Register<BitExtenderComponent>("electronics.bitextender", "BitExtender", "Electronics", "EXT", d =>
+        {
+            d.Description = "Bus bit extender (sign/zero-extend bus signal)";
+            d.Icon = "bitextender.svg";
+            d.DefaultParameters["InputBitWidth"] = 1.0;
+            d.DefaultParameters["OutputBitWidth"] = 8.0;
+        });
+
+        Register<ConstantComponent>("electronics.constant", "Constant", "Electronics", "CONST", d =>
+        {
+            d.Description = "Wired logic HIGH/LOW constant value source";
+            d.Icon = "constant.svg";
+            d.DefaultParameters["Value"] = 1.0;
+            d.DefaultParameters["VoltageHigh"] = 5.0;
+            d.DefaultParameters["VoltageLow"] = 0.0;
+        });
+
+        Register<DoNotConnectComponent>("general.dnc", "DoNotConnect", "General", "DNC", d =>
+        {
+            d.Description = "DNC marker for unused pins";
+            d.Icon = "dnc.svg";
+            d.IsSimulatable = true;
+        });
+
+        // ── Additional Transmission Line Components ──────────────────────────
+        Register<LossyTransmissionLineComponent>("electrical.lossytransmissionline", "LossyTransmissionLine", "Electrical", "TLOSS", d =>
+        {
+            d.Description = "Lossy Transmission Line (RLGC Distributed Model)";
+            d.Icon = "lossy_transmissionline.svg";
+            d.DefaultParameters["R"] = 0.2;
+            d.DefaultParameters["L"] = 250e-9;
+            d.DefaultParameters["G"] = 10e-6;
+            d.DefaultParameters["C"] = 100e-12;
+            d.DefaultParameters["Length"] = 1.0;
+        });
+
+        Register<CoaxialCableComponent>("electrical.coaxialcable", "CoaxialCable", "Electrical", "COAX", d =>
+        {
+            d.Description = "Coaxial Cable Transmission Line";
+            d.Icon = "coaxial.svg";
+            d.DefaultParameters["Z0"] = 50.0;
+            d.DefaultParameters["VF"] = 0.66;
+            d.DefaultParameters["Length"] = 1.0;
+            d.DefaultParameters["Attenuation"] = 0.05;
+        });
+
+        Register<MicrostripLineComponent>("electrical.microstripline", "MicrostripLine", "Electrical", "USTRIP", d =>
+        {
+            d.Description = "PCB Microstrip Planar Transmission Line";
+            d.Icon = "microstrip.svg";
+            d.DefaultParameters["W"] = 1.5e-3;
+            d.DefaultParameters["H"] = 0.8e-3;
+            d.DefaultParameters["Er"] = 4.4;
+            d.DefaultParameters["Length"] = 0.05;
+        });
+
         // ── General (Structural & Schematic) ─────────────────────────────────
         Register<WireComponent>("general.wire", "Wire", "General", "W", d =>
         {
@@ -408,6 +531,9 @@ public static class ComponentRegistry
 
         // ── Aliases ──────────────────────────────────────────────────────────
         RegisterAlias("tline", "electrical.transmissionline");
+        RegisterAlias("lossytline", "electrical.lossytransmissionline");
+        RegisterAlias("coax", "electrical.coaxialcable");
+        RegisterAlias("microstrip", "electrical.microstripline");
         RegisterAlias("vdelay", "electrical.voltagedelay");
         RegisterAlias("npn", "electronics.bjt.npn");
         RegisterAlias("pnp", "electronics.bjt.pnp");
@@ -417,5 +543,16 @@ public static class ComponentRegistry
         RegisterAlias("lightbulb", "electrical.bulb");
         RegisterAlias("logicin", "electronics.logicinput");
         RegisterAlias("logicout", "electronics.logicoutput");
+        RegisterAlias("clk", "electronics.clock");
+        RegisterAlias("vcc", "electrical.power");
+        RegisterAlias("pullup", "electrical.pullresistor");
+        RegisterAlias("pulldown", "electrical.pullresistor");
+        RegisterAlias("netlabel", "general.tunnel");
+        RegisterAlias("switch_transistor", "electronics.transistor");
+        RegisterAlias("tgate", "electronics.transmissiongate");
+        RegisterAlias("extender", "electronics.bitextender");
+        RegisterAlias("const", "electronics.constant");
+        RegisterAlias("dnc", "general.dnc");
+        RegisterAlias("nc", "general.dnc");
     }
 }

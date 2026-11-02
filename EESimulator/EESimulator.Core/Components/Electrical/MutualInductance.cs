@@ -20,19 +20,31 @@ public class MutualInductanceComponent : ElectricalComponent
     public string Inductor1
     {
         get => CustomProperties.TryGetValue("Inductor1", out var v) ? v?.ToString() ?? "L1" : "L1";
-        set => CustomProperties["Inductor1"] = value;
+        set
+        {
+            CustomProperties["Inductor1"] = value;
+            NotifyModified(nameof(Inductor1));
+        }
     }
 
     public string Inductor2
     {
         get => CustomProperties.TryGetValue("Inductor2", out var v) ? v?.ToString() ?? "L2" : "L2";
-        set => CustomProperties["Inductor2"] = value;
+        set
+        {
+            CustomProperties["Inductor2"] = value;
+            NotifyModified(nameof(Inductor2));
+        }
     }
 
     public double Coupling
     {
         get => ElectricalParameters.TryGetValue("Coupling", out var val) ? val : 0.99;
-        set => ElectricalParameters["Coupling"] = Math.Clamp(value, 0.0, 1.0);
+        set
+        {
+            ElectricalParameters["Coupling"] = Math.Clamp(value, 0.0, 1.0);
+            NotifyModified(nameof(Coupling));
+        }
     }
 
     public MutualInductanceComponent()
