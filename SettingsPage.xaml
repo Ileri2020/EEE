@@ -470,7 +470,6 @@
                                     <Entry Text="{Binding RemoteApiBaseUrl}"
                                         Placeholder="https://your-secure-eee-api.example"
                                         Keyboard="Url"
-                                        AutoCapitalize="None"
                                         BackgroundColor="#0D1117"
                                         TextColor="#C9D1D9"
                                         PlaceholderColor="#484F58"/>
@@ -485,7 +484,6 @@
                                                Text="{Binding RemoteApiAccessTokenDraft}"
                                                Placeholder="Token issued by your API sign-in"
                                                IsPassword="True"
-                                               AutoCapitalize="None"
                                                BackgroundColor="#0D1117"
                                                TextColor="#C9D1D9"
                                                PlaceholderColor="#484F58"/>

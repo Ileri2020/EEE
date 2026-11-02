@@ -589,7 +589,7 @@
                                     Style="{StaticResource ToolBtn}"
                                     FontSize="11"
                                     Padding="8,4"
-                                    Command="{Binding RunConfiguredSimulationAsyncCommand}"/>
+                                    Command="{Binding RunConfiguredSimulationCommand}"/>
 
                             <Button Text="✕"
                                     Style="{StaticResource IconBtn}"
