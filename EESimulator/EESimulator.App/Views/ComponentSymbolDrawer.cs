@@ -78,6 +78,32 @@ public static class ComponentSymbolDrawer
             case "RAM":              DrawDigitalBlock(canvas, "RAM", "#D2A8FF"); break;
             case "ROM":              DrawDigitalBlock(canvas, "ROM", "#D2A8FF"); break;
             case "Random":           DrawDigitalBlock(canvas, "RND", "#D2A8FF"); break;
+            case "Adder":             DrawDigitalBlock(canvas, "+", "#FFB86C"); break;
+            case "Subtractor":        DrawDigitalBlock(canvas, "−", "#FFB86C"); break;
+            case "Multiplier":        DrawDigitalBlock(canvas, "×", "#FFB86C"); break;
+            case "Divider":           DrawDigitalBlock(canvas, "÷", "#FFB86C"); break;
+            case "Comparator":        DrawDigitalBlock(canvas, "CMP", "#FFB86C"); break;
+            case "Negator":           DrawDigitalBlock(canvas, "−x", "#FFB86C"); break;
+            case "Shifter":           DrawDigitalBlock(canvas, "SHF", "#FFB86C"); break;
+            case "BitAdder":          DrawDigitalBlock(canvas, "POP", "#FFB86C"); break;
+            case "BitFinder":         DrawDigitalBlock(canvas, "FND", "#FFB86C"); break;
+            case "SquareRoot":        DrawDigitalBlock(canvas, "√", "#FFB86C"); break;
+            case "AbsoluteValue":     DrawDigitalBlock(canvas, "ABS", "#FFB86C"); break;
+            case "MinMax":            DrawDigitalBlock(canvas, "MIN", "#FFB86C"); break;
+            case "Exponentiator":     DrawDigitalBlock(canvas, "POW", "#FFB86C"); break;
+            case "Button":            DrawButton(canvas, isOn); break;
+            case "DIPSwitch":         DrawDigitalBlock(canvas, "DIP", "#56D364"); break;
+            case "SevenSegment":      DrawSevenSegment(canvas, 0);
+                break;
+            case "HexDigit":          DrawDigitalBlock(canvas, "HEX", "#56D364"); break;
+            case "LedBar":            DrawDigitalBlock(canvas, "LED", "#56D364"); break;
+            case "RGBLED":            DrawRgbLed(canvas, 0); break;
+            case "DotMatrix":         DrawDigitalBlock(canvas, "DOT", "#56D364"); break;
+            case "Joystick":          DrawJoystick(canvas); break;
+            case "Keyboard":          DrawDigitalBlock(canvas, "KEY", "#56D364"); break;
+            case "TTY":               DrawDigitalBlock(canvas, "TTY", "#56D364"); break;
+            case "Video":             DrawDigitalBlock(canvas, "VID", "#56D364"); break;
+            case "RealTimeClock":     DrawDigitalBlock(canvas, "RTC", "#56D364"); break;
             case "Pin":              DrawPin(canvas, isOn); break;
             case "Power":
             case "VCC":              DrawPower(canvas); break;
@@ -113,6 +139,120 @@ public static class ComponentSymbolDrawer
         canvas.FontColor = Color.FromArgb(color);
         canvas.FontSize = label.Length > 3 ? 7f : 9f;
         canvas.DrawString(label, -13, -5, 26, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawButton(ICanvas canvas, bool pressed)
+    {
+        canvas.StrokeColor = pressed ? Color.FromArgb("#56D364") : Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2;
+        canvas.DrawLine(-20, 0, -8, 0);
+        canvas.DrawLine(8, 0, 20, 0);
+        canvas.DrawCircle(0, pressed ? 3 : -2, 8);
+        canvas.DrawLine(0, -14, 0, pressed ? -5 : -10);
+    }
+
+    public static void DrawSevenSegment(ICanvas canvas, int segments)
+    {
+        const string colorOn = "#56D364";
+        const string colorOff = "#30363D";
+        canvas.StrokeSize = 3;
+        (float x1, float y1, float x2, float y2)[] lines =
+        {
+            (-6,-12,6,-12), (8,-10,8,-2), (8,2,8,10), (-6,12,6,12), (-8,2,-8,10), (-8,-10,-8,-2), (-6,0,6,0)
+        };
+        for (int i = 0; i < lines.Length; i++)
+        {
+            canvas.StrokeColor = (segments & (1 << i)) != 0 ? Color.FromArgb(colorOn) : Color.FromArgb(colorOff);
+            canvas.DrawLine(lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2);
+        }
+        canvas.StrokeColor = (segments & 0x80) != 0 ? Color.FromArgb(colorOn) : Color.FromArgb(colorOff);
+        canvas.FillColor = canvas.StrokeColor;
+        canvas.FillCircle(12, 10, 2);
+    }
+
+    public static void DrawHexDigit(ICanvas canvas, int value)
+    {
+        int[] patterns = { 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x77, 0x7C, 0x39, 0x5E, 0x79, 0x71 };
+        DrawSevenSegment(canvas, patterns[Math.Clamp(value, 0, 15)]);
+    }
+
+    public static void DrawLedBar(ICanvas canvas, long value, int count)
+    {
+        canvas.StrokeColor = Color.FromArgb("#30363D");
+        canvas.StrokeSize = 1;
+        int total = Math.Clamp(count, 1, 16);
+        float barWidth = 28f / total;
+        for (int bit = 0; bit < total; bit++)
+        {
+            bool on = ((value >> bit) & 1) != 0;
+            canvas.FillColor = on ? Color.FromArgb("#56D364") : Color.FromArgb("#161B22");
+            canvas.FillRoundedRectangle(-14 + bit * barWidth, -8, Math.Max(1, barWidth - 1), 16, 1);
+            canvas.DrawRoundedRectangle(-14 + bit * barWidth, -8, Math.Max(1, barWidth - 1), 16, 1);
+        }
+    }
+
+    public static void DrawDotMatrix(ICanvas canvas, long rowMask, long columnMask, int rows, int columns)
+    {
+        int rowCount = Math.Clamp(rows, 1, 8), columnCount = Math.Clamp(columns, 1, 8);
+        float dx = 24f / Math.Max(1, columnCount - 1), dy = 24f / Math.Max(1, rowCount - 1);
+        for (int row = 0; row < rowCount; row++)
+            for (int column = 0; column < columnCount; column++)
+            {
+                bool on = ((rowMask >> row) & 1) != 0 && ((columnMask >> column) & 1) != 0;
+                canvas.FillColor = on ? Color.FromArgb("#56D364") : Color.FromArgb("#30363D");
+                canvas.FillCircle(-12 + column * dx, -12 + row * dy, 1.5f);
+            }
+    }
+
+    public static void DrawTty(ICanvas canvas, string text)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1.5f;
+        canvas.FillColor = Color.FromArgb("#0D1117");
+        canvas.FillRoundedRectangle(-18, -12, 36, 24, 3);
+        canvas.DrawRoundedRectangle(-18, -12, 36, 24, 3);
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 7;
+        string visible = text.Length > 6 ? text[^6..] : text;
+        canvas.DrawString(visible, -15, -8, 30, 16, HorizontalAlignment.Left, VerticalAlignment.Center);
+    }
+
+    public static void DrawVideo(ICanvas canvas, int rgb)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2;
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(-19, -14, 38, 28, 3);
+        canvas.DrawRoundedRectangle(-19, -14, 38, 28, 3);
+        canvas.FillColor = Color.FromArgb($"#{rgb & 0xFFFFFF:X6}");
+        canvas.FillRectangle(-15, -10, 30, 20);
+        canvas.DrawLine(-7, 14, -7, 19);
+        canvas.DrawLine(7, 14, 7, 19);
+        canvas.DrawLine(-8, 19, 8, 19);
+    }
+
+    public static void DrawRgbLed(ICanvas canvas, int channels)
+    {
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2;
+        canvas.DrawCircle(0, 0, 13);
+        if ((channels & 1) != 0) { canvas.FillColor = Color.FromArgb("#FF5B5B"); canvas.FillCircle(-5, 0, 5); }
+        if ((channels & 2) != 0) { canvas.FillColor = Color.FromArgb("#56D364"); canvas.FillCircle(3, -4, 5); }
+        if ((channels & 4) != 0) { canvas.FillColor = Color.FromArgb("#58A6FF"); canvas.FillCircle(3, 5, 5); }
+        canvas.DrawLine(-6, 13, -6, 20);
+        canvas.DrawLine(6, 13, 6, 20);
+    }
+
+    public static void DrawJoystick(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2;
+        canvas.DrawRoundedRectangle(-14, -14, 28, 28, 6);
+        canvas.DrawLine(0, -8, 0, 8);
+        canvas.DrawLine(-8, 0, 8, 0);
+        canvas.FillColor = Color.FromArgb("#79C0FF");
+        canvas.FillCircle(0, 0, 4);
     }
 
     public static void DrawResistor(ICanvas canvas)

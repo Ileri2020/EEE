@@ -49,6 +49,8 @@ public static class DigitalLogicSimulator
         PriorityEncoderComponent or BitSelectorComponent or DFlipFlopComponent or JKFlipFlopComponent or
         SRFlipFlopComponent or TFlipFlopComponent or RegisterComponent or CounterComponent or
         ShiftRegisterComponent or RAMComponent or ROMComponent or RandomComponent or
+        ArithmeticComponentBase or ButtonComponent or DipSwitchComponent or JoystickComponent or
+        KeyboardComponent or RealTimeClockComponent or
         AndGateComponent or OrGateComponent or NotGateComponent or NandGateComponent or NorGateComponent or
         XorGateComponent or XnorGateComponent or LogicGateComponent;
 
@@ -122,7 +124,7 @@ public static class DigitalLogicSimulator
             RegisterComponent register when pinId == "Q" => register.Value != 0,
             CounterComponent counter when pinId == "Q" => counter.Value != 0,
             CounterComponent counter when pinId == "carry" => counter.CarryOut,
-            ShiftRegisterComponent shift when pinId == "sout" => (shift.Value & 1) != 0,
+            ShiftRegisterComponent shift when pinId == "sout" => ((shift.Value >> (shift.Length - 1)) & 1) != 0,
             RandomComponent random when pinId == "out" => random.Value != 0,
             RAMComponent ram when pinId == "dout" => ram.MemoryData.Values.FirstOrDefault() != 0,
             ROMComponent rom when pinId == "dout" => rom.MemoryData.Values.FirstOrDefault() != 0,
@@ -137,6 +139,12 @@ public static class DigitalLogicSimulator
         ConstantComponent => pinId == "out",
         PowerComponent => pinId == "vcc",
         PinComponent pin => pinId == "pin" && pin.Direction == PinDirection.Input,
+        ButtonComponent => pinId == "out",
+        DipSwitchComponent => pinId.StartsWith("Q", StringComparison.Ordinal),
+        JoystickComponent => pinId.StartsWith("x", StringComparison.Ordinal) || pinId.StartsWith("y", StringComparison.Ordinal) || pinId == "button",
+        KeyboardComponent => pinId.StartsWith("D", StringComparison.Ordinal) || pinId == "valid",
+        RealTimeClockComponent => pinId.StartsWith("seconds", StringComparison.Ordinal) || pinId.StartsWith("minutes", StringComparison.Ordinal) || pinId.StartsWith("hours", StringComparison.Ordinal),
+        ArithmeticComponentBase arithmetic => IsArithmeticOutput(arithmetic, pinId),
         BufferComponent or ControlledBufferComponent or EvenParityGateComponent or OddParityGateComponent or MultiplexerComponent or BitSelectorComponent => pinId == "out" || pinId.StartsWith("out", StringComparison.Ordinal),
         PLAComponent or DemultiplexerComponent or DecoderComponent => pinId.StartsWith("out", StringComparison.Ordinal),
         PriorityEncoderComponent => pinId.StartsWith("out", StringComparison.Ordinal) || pinId is "any_active" or "en_out",
@@ -149,6 +157,15 @@ public static class DigitalLogicSimulator
         AndGateComponent or OrGateComponent or NotGateComponent or NandGateComponent or NorGateComponent or XorGateComponent or XnorGateComponent => pinId == "out",
         _ => false
     };
+
+    private static bool IsArithmeticOutput(ArithmeticComponentBase component, string pinId)
+    {
+        if (component is ComparatorComponent) return pinId is "gt" or "eq" or "lt";
+        if (component is BitFinderComponent) return pinId.StartsWith("Y", StringComparison.Ordinal) || pinId == "found";
+        if (component is AdderComponent or SubtractorComponent) return pinId.StartsWith("Y", StringComparison.Ordinal) || pinId == "cout";
+        if (component is DividerComponent) return pinId.StartsWith("Y", StringComparison.Ordinal) || pinId == "divide_by_zero";
+        return pinId.StartsWith("Y", StringComparison.Ordinal);
+    }
 
     private sealed class Context
     {
@@ -415,6 +432,69 @@ public static class DigitalLogicSimulator
                         case ROMComponent rom:
                             EvaluateRomRead(rom);
                             break;
+                        case ArithmeticComponentBase arithmetic:
+                            EvaluateArithmetic(arithmetic);
+                            break;
+                        case ButtonComponent button:
+                            Set(button, "out", button.IsPressed, 5, 0);
+                            break;
+                        case DipSwitchComponent dip:
+                            for (int bit = 0; bit < dip.PoleCount; bit++) Set(dip, $"Q{bit}", ((dip.Value >> bit) & 1) != 0, 5, 0);
+                            break;
+                        case JoystickComponent joystick:
+                            for (int bit = 0; bit < 8; bit++)
+                            {
+                                Set(joystick, $"x{bit}", ((joystick.XValue >> bit) & 1) != 0, 5, 0);
+                                Set(joystick, $"y{bit}", ((joystick.YValue >> bit) & 1) != 0, 5, 0);
+                            }
+                            Set(joystick, "button", joystick.Pressed, 5, 0);
+                            break;
+                        case KeyboardComponent keyboard:
+                            for (int bit = 0; bit < 8; bit++) Set(keyboard, $"D{bit}", ((keyboard.Data >> bit) & 1) != 0, 5, 0);
+                            Set(keyboard, "valid", keyboard.DataReady, 5, 0);
+                            if (Read(keyboard, "ack")) keyboard.DataReady = false;
+                            break;
+                        case RealTimeClockComponent rtc:
+                            var now = DateTime.Now;
+                            rtc.CustomProperties["RenderedSeconds"] = now.Second;
+                            rtc.CustomProperties["RenderedMinutes"] = now.Minute;
+                            rtc.CustomProperties["RenderedHours"] = now.Hour;
+                            WriteBusOutputs(rtc, "seconds", (long)now.Second, 32);
+                            WriteBusOutputs(rtc, "minutes", (long)now.Minute, 6);
+                            WriteBusOutputs(rtc, "hours", (long)now.Hour, 5);
+                            break;
+                        case SevenSegmentComponent sevenSegment:
+                            int segments = 0;
+                            for (int bit = 0; bit < 8; bit++) if (Read(sevenSegment, $"seg{bit}") != sevenSegment.ActiveLow) segments |= 1 << bit;
+                            sevenSegment.CustomProperties["RenderedSegments"] = segments;
+                            break;
+                        case HexDigitComponent hexDigit:
+                            hexDigit.CustomProperties["RenderedValue"] = (int)ReadBus(hexDigit, "D", 4);
+                            break;
+                        case LedBarComponent ledBar:
+                            ledBar.CustomProperties["RenderedValue"] = ReadBus(ledBar, "D", ledBar.LedCount);
+                            break;
+                        case RgbLedComponent rgb:
+                            rgb.CustomProperties["RenderedRgb"] = (Read(rgb, "R") ? 1 : 0) | (Read(rgb, "G") ? 2 : 0) | (Read(rgb, "B") ? 4 : 0);
+                            break;
+                        case DotMatrixComponent matrix:
+                            long rows = ReadBus(matrix, "row", matrix.Rows);
+                            long columns = ReadBus(matrix, "col", matrix.Columns);
+                            matrix.CustomProperties["RenderedRows"] = rows;
+                            matrix.CustomProperties["RenderedColumns"] = columns;
+                            break;
+                        case TtyComponent tty:
+                            if (Read(tty, "clear")) tty.Text = string.Empty;
+                            else if (Read(tty, "strobe") && !Bool(tty, "_previousStrobe", false))
+                            {
+                                tty.Text += (char)ReadBus(tty, "D", 8);
+                                if (tty.Text.Length > 4096) tty.Text = tty.Text[^4096..];
+                            }
+                            SetBool(tty, "_previousStrobe", Read(tty, "strobe"));
+                            break;
+                        case VideoComponent video:
+                            video.CustomProperties["RenderedRgb"] = (long)ReadBus(video, "R", 8) << 16 | (long)ReadBus(video, "G", 8) << 8 | ReadBus(video, "B", 8);
+                            break;
                         case LogicGateComponent logicGate:
                             EvaluateLogicGate(logicGate);
                             break;
@@ -600,6 +680,115 @@ public static class DigitalLogicSimulator
                 _ => false
             };
             Set(gate, "out", result, 5, 0);
+        }
+
+        private void EvaluateArithmetic(ArithmeticComponentBase component)
+        {
+            int width = component.BitWidth;
+            long mask = Mask(width);
+            long a = ReadBus(component, "A", width) & mask;
+            long b = component is ArithmeticComponentBase { ComponentType: "Shifter" }
+                ? 0
+                : ReadBus(component, "B", width) & mask;
+            long result = 0;
+            bool carry = false;
+            bool found = false;
+            bool divideByZero = false;
+            bool signed = Bool(component, "Signed", false);
+            long signedA = ToSigned(a, width);
+            long signedB = ToSigned(b, width);
+
+            if (component is AdderComponent)
+            {
+                long sum = a + b + (Read(component, "cin") ? 1L : 0L);
+                result = sum & mask;
+                carry = (sum & ~mask) != 0;
+            }
+            else if (component is SubtractorComponent)
+            {
+                long diff = a - b - (Read(component, "cin") ? 1L : 0L);
+                result = diff & mask;
+                carry = a >= b + (Read(component, "cin") ? 1L : 0L);
+            }
+            else if (component is MultiplierComponent) result = (a * b) & mask;
+            else if (component is DividerComponent)
+            {
+                divideByZero = b == 0;
+                result = divideByZero ? 0 : (signed ? signedA / signedB : a / b) & mask;
+            }
+            else if (component is ComparatorComponent)
+            {
+                long compareA = signed ? signedA : a;
+                long compareB = signed ? signedB : b;
+                Set(component, "gt", compareA > compareB, 5, 0);
+                Set(component, "eq", compareA == compareB, 5, 0);
+                Set(component, "lt", compareA < compareB, 5, 0);
+                return;
+            }
+            else if (component is NegatorComponent) result = (-signedA) & mask;
+            else if (component is ShifterComponent shifter)
+            {
+                int shift = (int)ReadBus(component, "S", component.ShiftWidth);
+                bool arith = shifter.Mode.Equals("ArithmeticRight", StringComparison.OrdinalIgnoreCase) || shifter.Mode.Equals("ASR", StringComparison.OrdinalIgnoreCase);
+                bool right = shifter.Mode.Contains("Right", StringComparison.OrdinalIgnoreCase) || shifter.Mode.Equals("LSR", StringComparison.OrdinalIgnoreCase);
+                bool rotate = shifter.Mode.StartsWith("Rotate", StringComparison.OrdinalIgnoreCase) || shifter.Mode.StartsWith("ROL", StringComparison.OrdinalIgnoreCase) || shifter.Mode.StartsWith("ROR", StringComparison.OrdinalIgnoreCase);
+                if (rotate) shift %= width;
+                if (width > 0 && shift >= width) result = right && arith && ((a >> (width - 1)) & 1) != 0 ? mask : 0;
+                else if (rotate && right) result = ((a >> shift) | (a << (width - shift))) & mask;
+                else if (rotate) result = ((a << shift) | (a >> (width - shift))) & mask;
+                else if (right && arith) result = (signedA >> shift) & mask;
+                else if (right) result = a >> shift;
+                else result = (a << shift) & mask;
+            }
+            else if (component is BitAdderComponent)
+            {
+                for (int bit = 0; bit < width; bit++) if (((a >> bit) & 1) != 0) result++;
+            }
+            else if (component is BitFinderComponent finder)
+            {
+                bool findLast = finder.Mode.Equals("Last", StringComparison.OrdinalIgnoreCase) || finder.Mode.Equals("MSB", StringComparison.OrdinalIgnoreCase);
+                result = findLast ? width - 1 : 0;
+                found = false;
+                for (int step = 0; step < width; step++)
+                {
+                    int bit = findLast ? width - 1 - step : step;
+                    if (((a >> bit) & 1) == 0) continue;
+                    result = bit;
+                    found = true;
+                    break;
+                }
+                Set(component, "found", found, 5, 0);
+            }
+            else if (component is SquareRootComponent) result = (long)Math.Sqrt(a);
+            else if (component is AbsoluteValueComponent) result = Math.Abs(signedA) & mask;
+            else if (component is MinMaxComponent)
+            {
+                bool maximum = component.Mode.Equals("Max", StringComparison.OrdinalIgnoreCase) || component.Mode.Equals("Maximum", StringComparison.OrdinalIgnoreCase);
+                long av = signed ? signedA : a, bv = signed ? signedB : b;
+                result = (maximum ? Math.Max(av, bv) : Math.Min(av, bv)) & mask;
+            }
+            else if (component is ExponentiatorComponent)
+            {
+                long exponent = Math.Min(b, 1024);
+                result = 1;
+                for (long i = 0; i < exponent; i++) result = (result * a) & mask;
+            }
+
+            WriteBusOutputs(component, "Y", result & mask, width);
+            if (component is AdderComponent or SubtractorComponent) Set(component, "cout", carry, 5, 0);
+            if (component is DividerComponent) Set(component, "divide_by_zero", divideByZero, 5, 0);
+        }
+
+        private static long ToSigned(long value, int width)
+        {
+            if (width >= 64) return value;
+            long sign = 1L << (width - 1);
+            return (value & sign) == 0 ? value : value - (1L << width);
+        }
+
+        private void WriteBusOutputs(ComponentNode component, string prefix, long value, int width)
+        {
+            for (int bit = 0; bit < width; bit++) Set(component, $"{prefix}{bit}", ((value >> bit) & 1) != 0, 5, 0);
         }
 
         private void EvaluateNamedGate(ComponentNode gate)

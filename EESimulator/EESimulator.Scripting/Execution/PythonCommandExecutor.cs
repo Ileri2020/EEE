@@ -222,6 +222,18 @@ public class PythonCommandExecutor
             return;
         }
 
+        var customPropMatch = Regex.Match(line, "(?:circuit|app)\\.set_custom_property\\s*\\(\\s*\"([^\"]+)\"\\s*,\\s*\"([^\"]+)\"\\s*,\\s*(.+?)\\s*\\)", RegexOptions.IgnoreCase);
+        if (customPropMatch.Success)
+        {
+            string rawValue = customPropMatch.Groups[3].Value.Trim();
+            object value = rawValue.Trim('"', '\'');
+            if (bool.TryParse(rawValue, out var boolean)) value = boolean;
+            else if (long.TryParse(rawValue, out var integer)) value = integer;
+            else if (double.TryParse(rawValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var number)) value = number;
+            _api.SetCustomProperty(customPropMatch.Groups[1].Value, customPropMatch.Groups[2].Value, value);
+            return;
+        }
+
 
         // Example: r1.resistance = 2200
         var propMatch = Regex.Match(line, @"(\w+)\.(\w+)\s*=\s*([\d\.-]+)", RegexOptions.IgnoreCase);

@@ -463,6 +463,33 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("ROM",              "ROM", "ROM", "#D2A8FF", "Memory", "Read-Only Memory", "rom.svg"),
         new ComponentPaletteItem("Random",           "RND", "RND", "#D2A8FF", "Memory", "Pseudo-Random Generator", "random.svg"),
 
+        new ComponentPaletteItem("Adder", "＋", "ADD", "#FFB86C", "Arithmetic", "N-bit binary adder", "adder.svg"),
+        new ComponentPaletteItem("Subtractor", "−", "SUB", "#FFB86C", "Arithmetic", "N-bit binary subtractor", "subtractor.svg"),
+        new ComponentPaletteItem("Multiplier", "×", "MUL", "#FFB86C", "Arithmetic", "N-bit binary multiplier", "multiplier.svg"),
+        new ComponentPaletteItem("Divider", "÷", "DIV", "#FFB86C", "Arithmetic", "N-bit binary divider", "divider.svg"),
+        new ComponentPaletteItem("Comparator", "≷", "CMP", "#FFB86C", "Arithmetic", "Magnitude comparator", "comparator.svg"),
+        new ComponentPaletteItem("Negator", "−x", "NEG", "#FFB86C", "Arithmetic", "Two's-complement negator", "negator.svg"),
+        new ComponentPaletteItem("Shifter", "⇆", "SHF", "#FFB86C", "Arithmetic", "Barrel shifter", "shifter.svg"),
+        new ComponentPaletteItem("BitAdder", "Σ1", "POP", "#FFB86C", "Arithmetic", "Population count", "bitadder.svg"),
+        new ComponentPaletteItem("BitFinder", "⌕", "FND", "#FFB86C", "Arithmetic", "Find first/last set bit", "bitfinder.svg"),
+        new ComponentPaletteItem("SquareRoot", "√", "SQR", "#FFB86C", "Arithmetic", "Integer square root", "sqrt.svg"),
+        new ComponentPaletteItem("AbsoluteValue", "|x|", "ABS", "#FFB86C", "Arithmetic", "Absolute value", "absolute.svg"),
+        new ComponentPaletteItem("MinMax", "↕", "MM", "#FFB86C", "Arithmetic", "Minimum/maximum selector", "minmax.svg"),
+        new ComponentPaletteItem("Exponentiator", "xʸ", "POW", "#FFB86C", "Arithmetic", "Integer exponentiation", "exponentiator.svg"),
+
+        new ComponentPaletteItem("Button", "●", "BTN", "#56D364", "I/O", "Momentary push-button", "button.svg"),
+        new ComponentPaletteItem("DIPSwitch", "▤", "DIP", "#56D364", "I/O", "DIP switch bank", "dipswitch.svg"),
+        new ComponentPaletteItem("SevenSegment", "8", "7SEG", "#56D364", "I/O", "Seven-segment display", "sevensegment.svg"),
+        new ComponentPaletteItem("HexDigit", "A", "HEX", "#56D364", "I/O", "Hex digit display", "hexdigit.svg"),
+        new ComponentPaletteItem("LedBar", "▥", "LBA", "#56D364", "I/O", "LED bar array", "ledbar.svg"),
+        new ComponentPaletteItem("RGBLED", "●", "RGB", "#56D364", "I/O", "RGB LED indicator", "rgbled.svg"),
+        new ComponentPaletteItem("DotMatrix", "▦", "DM", "#56D364", "I/O", "Dot matrix display", "dotmatrix.svg"),
+        new ComponentPaletteItem("Joystick", "✥", "JOY", "#56D364", "I/O", "Two-axis joystick input", "joystick.svg"),
+        new ComponentPaletteItem("Keyboard", "⌨", "KEY", "#56D364", "I/O", "ASCII keyboard buffer", "keyboard.svg"),
+        new ComponentPaletteItem("TTY", "▣", "TTY", "#56D364", "I/O", "Serial text terminal", "tty.svg"),
+        new ComponentPaletteItem("Video", "▧", "VID", "#56D364", "I/O", "Pixel framebuffer", "video.svg"),
+        new ComponentPaletteItem("RealTimeClock", "◷", "RTC", "#56D364", "I/O", "Wall-clock time source", "realtimeclock.svg"),
+
         // ── General (Structural & Schematic) ─────────────────────────────────
         new ComponentPaletteItem("Wire",          "—",   "W",   "#58A6FF", "General", "Wire segment",         "wire.svg"),
         new ComponentPaletteItem("Junction",      "•",   "J",   "#58A6FF", "General", "Wire junction",        "junction.svg"),
@@ -578,6 +605,37 @@ public partial class EEWorkspaceViewModel : ObservableObject
             new ComponentPaletteItem("RAM",           "RAM", "RAM", "#D2A8FF", "Memory", "Read/write memory", "ram.svg"),
             new ComponentPaletteItem("ROM",           "ROM", "ROM", "#D2A8FF", "Memory", "Read-only memory", "rom.svg"),
             new ComponentPaletteItem("Random",        "RND", "RND", "#D2A8FF", "Memory", "Pseudo-random generator", "random.svg"),
+        }),
+        new ComponentPaletteGroup("∑ Arithmetic", new[]
+        {
+            new ComponentPaletteItem("Adder", "＋", "ADD", "#FFB86C", "Arithmetic", "N-bit binary adder", "adder.svg"),
+            new ComponentPaletteItem("Subtractor", "−", "SUB", "#FFB86C", "Arithmetic", "N-bit binary subtractor", "subtractor.svg"),
+            new ComponentPaletteItem("Multiplier", "×", "MUL", "#FFB86C", "Arithmetic", "N-bit binary multiplier", "multiplier.svg"),
+            new ComponentPaletteItem("Divider", "÷", "DIV", "#FFB86C", "Arithmetic", "N-bit binary divider", "divider.svg"),
+            new ComponentPaletteItem("Comparator", "≷", "CMP", "#FFB86C", "Arithmetic", "Magnitude comparator", "comparator.svg"),
+            new ComponentPaletteItem("Negator", "−x", "NEG", "#FFB86C", "Arithmetic", "Two's-complement negator", "negator.svg"),
+            new ComponentPaletteItem("Shifter", "⇆", "SHF", "#FFB86C", "Arithmetic", "Barrel shifter", "shifter.svg"),
+            new ComponentPaletteItem("BitAdder", "Σ1", "POP", "#FFB86C", "Arithmetic", "Population count", "bitadder.svg"),
+            new ComponentPaletteItem("BitFinder", "⌕", "FND", "#FFB86C", "Arithmetic", "Find first/last set bit", "bitfinder.svg"),
+            new ComponentPaletteItem("SquareRoot", "√", "SQR", "#FFB86C", "Arithmetic", "Integer square root", "sqrt.svg"),
+            new ComponentPaletteItem("AbsoluteValue", "|x|", "ABS", "#FFB86C", "Arithmetic", "Absolute value", "absolute.svg"),
+            new ComponentPaletteItem("MinMax", "↕", "MM", "#FFB86C", "Arithmetic", "Minimum/maximum selector", "minmax.svg"),
+            new ComponentPaletteItem("Exponentiator", "xʸ", "POW", "#FFB86C", "Arithmetic", "Integer exponentiation", "exponentiator.svg"),
+        }),
+        new ComponentPaletteGroup("🖥 I/O & Displays", new[]
+        {
+            new ComponentPaletteItem("Button", "●", "BTN", "#56D364", "I/O", "Momentary push-button", "button.svg"),
+            new ComponentPaletteItem("DIPSwitch", "▤", "DIP", "#56D364", "I/O", "DIP switch bank", "dipswitch.svg"),
+            new ComponentPaletteItem("SevenSegment", "8", "7SEG", "#56D364", "I/O", "Seven-segment display", "sevensegment.svg"),
+            new ComponentPaletteItem("HexDigit", "A", "HEX", "#56D364", "I/O", "Hex digit display", "hexdigit.svg"),
+            new ComponentPaletteItem("LedBar", "▥", "LBA", "#56D364", "I/O", "LED bar array", "ledbar.svg"),
+            new ComponentPaletteItem("RGBLED", "●", "RGB", "#56D364", "I/O", "RGB LED indicator", "rgbled.svg"),
+            new ComponentPaletteItem("DotMatrix", "▦", "DM", "#56D364", "I/O", "Dot matrix display", "dotmatrix.svg"),
+            new ComponentPaletteItem("Joystick", "✥", "JOY", "#56D364", "I/O", "Two-axis joystick input", "joystick.svg"),
+            new ComponentPaletteItem("Keyboard", "⌨", "KEY", "#56D364", "I/O", "ASCII keyboard buffer", "keyboard.svg"),
+            new ComponentPaletteItem("TTY", "▣", "TTY", "#56D364", "I/O", "Serial text terminal", "tty.svg"),
+            new ComponentPaletteItem("Video", "▧", "VID", "#56D364", "I/O", "Pixel framebuffer", "video.svg"),
+            new ComponentPaletteItem("RealTimeClock", "◷", "RTC", "#56D364", "I/O", "Wall-clock time source", "realtimeclock.svg"),
         }),
         new ComponentPaletteGroup("🗂 Schematic", new[]
         {
@@ -2378,6 +2436,27 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     PythonApi.SetMemoryWord(Unquote(args[0]), (int)ParseD(args[1]), (long)ParseD(args[2]));
                     CircuitChanged?.Invoke();
                     return "[ok] memory word set";
+
+                case "press_button" or "release_button" when args.Length >= 1:
+                    PythonApi.PressButton(Unquote(args[0]), method == "press_button");
+                    CircuitChanged?.Invoke();
+                    return "[ok] button state set";
+
+                case "set_dip_switch" when args.Length >= 2:
+                    PythonApi.SetDipSwitch(Unquote(args[0]), (long)ParseD(args[1]));
+                    CircuitChanged?.Invoke();
+                    return "[ok] DIP switch value set";
+
+                case "set_joystick" when args.Length >= 3:
+                    PythonApi.SetJoystick(Unquote(args[0]), (int)ParseD(args[1]), (int)ParseD(args[2]), args.Length > 3 && bool.TryParse(Unquote(args[3]), out var pressed) && pressed);
+                    CircuitChanged?.Invoke();
+                    return "[ok] joystick state set";
+
+                case "keyboard_key" when args.Length >= 2:
+                    string keyText = Unquote(args[1]);
+                    PythonApi.SendKeyboardKey(Unquote(args[0]), keyText.Length == 1 ? keyText[0] : (int)ParseD(args[1]));
+                    CircuitChanged?.Invoke();
+                    return "[ok] keyboard byte queued";
 
                 case "set_live_probe" or "set_probe" when args.Length >= 2:
                     PythonApi.SetLiveProbe(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var lp) && lp);

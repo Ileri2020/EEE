@@ -523,6 +523,37 @@ public class PythonApi
         }
     }
 
+    public void PressButton(string componentName, bool pressed = true)
+    {
+        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.ButtonComponent button)
+            button.IsPressed = pressed;
+    }
+
+    public void SetDipSwitch(string componentName, long value)
+    {
+        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.DipSwitchComponent dip)
+            dip.Value = value & ((1L << dip.PoleCount) - 1);
+    }
+
+    public void SetJoystick(string componentName, int x, int y, bool pressed = false)
+    {
+        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.JoystickComponent joystick)
+        {
+            joystick.XValue = x;
+            joystick.YValue = y;
+            joystick.Pressed = pressed;
+        }
+    }
+
+    public void SendKeyboardKey(string componentName, int characterCode)
+    {
+        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.KeyboardComponent keyboard)
+        {
+            keyboard.Data = Math.Clamp(characterCode, 0, 255);
+            keyboard.DataReady = true;
+        }
+    }
+
     public void SetCustomProperty(string componentName, string propertyName, object value)
     {
         var comp = _circuit.FindChild<ComponentNode>(componentName);

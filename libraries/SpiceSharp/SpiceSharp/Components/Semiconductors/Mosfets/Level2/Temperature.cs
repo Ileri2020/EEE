@@ -37,28 +37,28 @@ namespace SpiceSharp.Components.Mosfets.Level2
         /// </summary>
         protected readonly ModelTemperature ModelTemperature;
 
-        /// <include file='../common/docs.xml' path='docs/members/SourceConductance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/SourceConductance/*'/>
         [ParameterName("sourceconductance"), ParameterInfo("Conductance at the source")]
         public double SourceConductance => Properties.SourceConductance.Equals(0.0) ? double.PositiveInfinity : Properties.SourceConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainConductance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/DrainConductance/*'/>
         [ParameterName("drainconductance"), ParameterInfo("Conductance at the drain")]
         public double DrainConductance => Properties.DrainConductance.Equals(0.0) ? double.PositiveInfinity : Properties.DrainConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/SourceResistance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/SourceResistance/*'/>
         [ParameterName("rs"), ParameterInfo("Source resistance")]
 
         public double SourceResistance => Properties.SourceConductance.Equals(0.0) ? 0 : 1.0 / Properties.SourceConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainResistance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/DrainResistance/*'/>
         [ParameterName("rd"), ParameterInfo("Drain conductance")]
         public double DrainResistance => Properties.DrainConductance.Equals(0.0) ? 0 : 1.0 / Properties.DrainConductance;
 
-        /// <include file='../common/docs.xml' path='docs/members/CriticalSourceVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/CriticalSourceVoltage/*'/>
         [ParameterName("sourcevcrit"), ParameterInfo("Critical source voltage")]
         public double SourceVCritical => Properties.SourceVCritical;
 
-        /// <include file='../common/docs.xml' path='docs/members/CriticalDrainVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/CriticalDrainVoltage/*'/>
         [ParameterName("drainvcrit"), ParameterInfo("Critical drain voltage")]
         public double DrainVCritical => Properties.DrainVCritical;
 

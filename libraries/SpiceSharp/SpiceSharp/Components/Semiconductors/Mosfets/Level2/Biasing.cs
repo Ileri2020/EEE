@@ -62,46 +62,46 @@ namespace SpiceSharp.Components.Mosfets.Level2
         [ParameterName("gm"), ParameterInfo("Transconductance")]
         public double Gm { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceTransconductance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/BulkSourceTransconductance/*'/>
         [ParameterName("gmb"), ParameterName("gmbs"), ParameterInfo("Bulk-Source transconductance")]
         public double Gmbs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainSourceConductance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/DrainSourceConductance/*'/>
         [ParameterName("gds"), ParameterInfo("Drain-Source conductance")]
         public double Gds { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceConductance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/BulkSourceConductance/*'/>
         [ParameterName("gbs"), ParameterInfo("Bulk-Source conductance")]
         public double Gbs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainConductance/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/BulkDrainConductance/*'/>
         [ParameterName("gbd"), ParameterInfo("Bulk-Drain conductance")]
         public double Gbd { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/von/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/Von/*'/>
         [ParameterName("von"), ParameterInfo("Turn-on voltage")]
         public double Von { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/SaturationVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/SaturationVoltage/*'/>
         [ParameterName("vdsat"), ParameterInfo("Saturation drain-source voltage")]
         public double Vdsat { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/Mode/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/Mode/*'/>
         public double Mode { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/GateSourceVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/GateSourceVoltage/*'/>
         [ParameterName("vgs"), ParameterInfo("Gate-Source voltage")]
         public double Vgs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/DrainSourceVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/DrainSourceVoltage/*'/>
         [ParameterName("vds"), ParameterInfo("Drain-Source voltage")]
         public double Vds { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkSourceVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/BulkSourceVoltage/*'/>
         [ParameterName("vbs"), ParameterInfo("Bulk-Source voltage")]
         public double Vbs { get; private set; }
 
-        /// <include file='../common/docs.xml' path='docs/members/BulkDrainVoltage/*'/>
+        /// <include file='../Common/docs.xml' path='docs/members/BulkDrainVoltage/*'/>
         [ParameterName("vbd"), ParameterInfo("Bulk-Drain voltage")]
         public double Vbd { get; private set; }
 
@@ -183,7 +183,7 @@ namespace SpiceSharp.Components.Mosfets.Level2
             else
                 Mode = -1;
 
-            // An example out in the wild once-good, now-bad spaghetti code... Not touching this too much.
+            // Evaluate the Level 2 MOSFET channel current and its small-signal derivatives.
             {
                 /* moseq2(vds,vbs,vgs,gm,gds,gmbs,qg,qc,qb,
                  *        cggb,cgdb,cgsb,cbgb,cbdb,cbsb)
@@ -896,7 +896,7 @@ namespace SpiceSharp.Components.Mosfets.Level2
                 );
         }
 
-        /// <include file='../common/docs.xml' path='docs/methods/Initialize/*'/>
+        /// <include file='../Common/docs.xml' path='docs/methods/Initialize/*'/>
         protected void Initialize(out double vgs, out double vds, out double vbs, out bool check)
         {
             check = true;

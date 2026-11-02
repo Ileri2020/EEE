@@ -150,6 +150,7 @@ public static class ComponentRegistry
         Register<GroundNode>("electrical.ground", "Ground", "Electrical", "GND", d =>
         {
             d.Description = "Circuit ground reference (Node 0)";
+            d.Icon = "ground.svg";
         });
 
         Register<DiodeComponent>("electrical.diode", "Diode", "Electrical", "D", d =>
@@ -677,6 +678,35 @@ public static class ComponentRegistry
             d.DefaultParameters["Seed"] = 1.0;
         });
 
+        // ── Logisim Arithmetic Library ──────────────────────────────────────
+        Register<AdderComponent>("arith.adder", "Adder", "Arithmetic", "ADD", d => { d.Description = "N-bit binary adder"; d.Icon = "adder.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<SubtractorComponent>("arith.subtractor", "Subtractor", "Arithmetic", "SUB", d => { d.Description = "N-bit binary subtractor"; d.Icon = "subtractor.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<MultiplierComponent>("arith.multiplier", "Multiplier", "Arithmetic", "MUL", d => { d.Description = "N-bit binary multiplier"; d.Icon = "multiplier.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<DividerComponent>("arith.divider", "Divider", "Arithmetic", "DIV", d => { d.Description = "N-bit binary divider"; d.Icon = "divider.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<ComparatorComponent>("arith.comparator", "Comparator", "Arithmetic", "CMP", d => { d.Description = "N-bit magnitude comparator"; d.Icon = "comparator.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<NegatorComponent>("arith.negator", "Negator", "Arithmetic", "NEG", d => { d.Description = "Two's-complement negator"; d.Icon = "negator.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<ShifterComponent>("arith.shifter", "Shifter", "Arithmetic", "SHF", d => { d.Description = "Logical/arithmetic barrel shifter"; d.Icon = "shifter.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<BitAdderComponent>("arith.bitadder", "BitAdder", "Arithmetic", "POP", d => { d.Description = "Population count"; d.Icon = "bitadder.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<BitFinderComponent>("arith.bitfinder", "BitFinder", "Arithmetic", "FND", d => { d.Description = "First/last set bit finder"; d.Icon = "bitfinder.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<SquareRootComponent>("arith.sqrt", "SquareRoot", "Arithmetic", "SQR", d => { d.Description = "Integer square root"; d.Icon = "sqrt.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<AbsoluteValueComponent>("arith.absolute", "AbsoluteValue", "Arithmetic", "ABS", d => { d.Description = "N-bit absolute value"; d.Icon = "absolute.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<MinMaxComponent>("arith.minmax", "MinMax", "Arithmetic", "MM", d => { d.Description = "Minimum/maximum selector"; d.Icon = "minmax.svg"; d.DefaultParameters["BitWidth"] = 8; });
+        Register<ExponentiatorComponent>("arith.exponentiator", "Exponentiator", "Arithmetic", "POW", d => { d.Description = "Integer exponentiation"; d.Icon = "exponentiator.svg"; d.DefaultParameters["BitWidth"] = 8; });
+
+        // ── Logisim I/O Library ──────────────────────────────────────────────
+        Register<ButtonComponent>("io.button", "Button", "I/O", "BTN", d => { d.Description = "Momentary push-button input"; d.Icon = "button.svg"; });
+        Register<DipSwitchComponent>("io.dipswitch", "DIPSwitch", "I/O", "DIP", d => { d.Description = "N-pole DIP switch bank"; d.Icon = "dipswitch.svg"; d.DefaultParameters[nameof(DipSwitchComponent.PoleCount)] = 8; });
+        Register<SevenSegmentComponent>("io.sevensegment", "SevenSegment", "I/O", "7SEG", d => { d.Description = "Seven-segment display"; d.Icon = "sevensegment.svg"; });
+        Register<HexDigitComponent>("io.hexdigit", "HexDigit", "I/O", "HEX", d => { d.Description = "Hexadecimal digit display"; d.Icon = "hexdigit.svg"; });
+        Register<LedBarComponent>("io.ledbar", "LedBar", "I/O", "LBA", d => { d.Description = "LED bar array"; d.Icon = "ledbar.svg"; d.DefaultParameters[nameof(LedBarComponent.LedCount)] = 8; });
+        Register<RgbLedComponent>("io.rgbled", "RGBLED", "I/O", "RGB", d => { d.Description = "RGB LED indicator"; d.Icon = "rgbled.svg"; });
+        Register<DotMatrixComponent>("io.dotmatrix", "DotMatrix", "I/O", "DM", d => { d.Description = "Scanned LED dot matrix"; d.Icon = "dotmatrix.svg"; d.DefaultParameters[nameof(DotMatrixComponent.Rows)] = 7; d.DefaultParameters[nameof(DotMatrixComponent.Columns)] = 5; });
+        Register<JoystickComponent>("io.joystick", "Joystick", "I/O", "JOY", d => { d.Description = "Two-axis joystick input"; d.Icon = "joystick.svg"; });
+        Register<KeyboardComponent>("io.keyboard", "Keyboard", "I/O", "KEY", d => { d.Description = "ASCII keyboard buffer"; d.Icon = "keyboard.svg"; });
+        Register<TtyComponent>("io.tty", "TTY", "I/O", "TTY", d => { d.Description = "Serial text terminal"; d.Icon = "tty.svg"; });
+        Register<VideoComponent>("io.video", "Video", "I/O", "VID", d => { d.Description = "Pixel framebuffer display"; d.Icon = "video.svg"; });
+        Register<RealTimeClockComponent>("io.realtimeclock", "RealTimeClock", "I/O", "RTC", d => { d.Description = "Wall-clock time source"; d.Icon = "realtimeclock.svg"; });
+
         // ── Aliases ──────────────────────────────────────────────────────────
         RegisterAlias("tline", "electrical.transmissionline");
         RegisterAlias("lossytline", "electrical.lossytransmissionline");
@@ -703,6 +733,16 @@ public static class ComponentRegistry
         RegisterAlias("dnc", "general.dnc");
         RegisterAlias("nc", "general.dnc");
         RegisterAlias("mux", "electronics.mux");
+        RegisterAlias("add", "arith.adder");
+        RegisterAlias("sub", "arith.subtractor");
+        RegisterAlias("mul", "arith.multiplier");
+        RegisterAlias("div", "arith.divider");
+        RegisterAlias("sqrt", "arith.sqrt");
+        RegisterAlias("abs", "arith.absolute");
+        RegisterAlias("button", "io.button");
+        RegisterAlias("dip", "io.dipswitch");
+        RegisterAlias("7segment", "io.sevensegment");
+        RegisterAlias("rtc", "io.realtimeclock");
         RegisterAlias("demux", "electronics.demux");
         RegisterAlias("dff", "electronics.dff");
         RegisterAlias("jkff", "electronics.jkff");

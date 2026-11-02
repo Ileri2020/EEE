@@ -762,7 +762,7 @@ namespace SpiceSharp.Components.Mosfets.Level3
                 );
         }
 
-        /// <include file='../common/docs.xml' path='docs/methods/Initialize/*'/>
+        /// <include file='../Common/docs.xml' path='docs/methods/Initialize/*'/>
         protected void Initialize(out double vgs, out double vds, out double vbs, out bool check)
         {
             check = true;

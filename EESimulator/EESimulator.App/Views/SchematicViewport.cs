@@ -527,6 +527,15 @@ public class SchematicViewport : GraphicsView, IDrawable
         {
             lin.Toggle();
         }
+        else if (_selectedComponent is EESimulator.Core.Components.Electronics.ButtonComponent button)
+        {
+            button.Press();
+            Dispatcher?.DispatchDelayed(TimeSpan.FromMilliseconds(120), button.Release);
+        }
+        else if (_selectedComponent is EESimulator.Core.Components.Electronics.DipSwitchComponent dip)
+        {
+            dip.Value = (dip.Value ^ 1) & ((1L << dip.PoleCount) - 1);
+        }
         else if (_selectedComponent is EESimulator.Core.Components.Electronics.PinComponent pinComp)
         {
             pinComp.Toggle();
@@ -1227,6 +1236,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             EESimulator.Core.Components.Electronics.ClockComponent clk => clk.State,
             EESimulator.Core.Components.Electronics.PinComponent pin => pin.Value > 0,
             EESimulator.Core.Components.Electronics.ConstantComponent cst => cst.Value > 0,
+            EESimulator.Core.Components.Electronics.ButtonComponent button => button.IsPressed,
             _ => (comp.CustomProperties.TryGetValue("IsOn", out var cVal) && Convert.ToBoolean(cVal))
                  || (comp.ElectricalParameters.TryGetValue("IsOn", out var pVal) && pVal > 0.5)
                  || (comp.ComponentType == "LED" && comp.LiveVoltage >= 1.5)
@@ -1307,6 +1317,36 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "RAM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RAM", "#D2A8FF"); break;
             case "ROM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ROM", "#D2A8FF"); break;
             case "Random":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RND", "#D2A8FF"); break;
+            case "Adder":             ComponentSymbolDrawer.DrawDigitalBlock(canvas, "+", "#FFB86C"); break;
+            case "Subtractor":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "−", "#FFB86C"); break;
+            case "Multiplier":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "×", "#FFB86C"); break;
+            case "Divider":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "÷", "#FFB86C"); break;
+            case "Comparator":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "CMP", "#FFB86C"); break;
+            case "Negator":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "−x", "#FFB86C"); break;
+            case "Shifter":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SHF", "#FFB86C"); break;
+            case "BitAdder":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "POP", "#FFB86C"); break;
+            case "BitFinder":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "FND", "#FFB86C"); break;
+            case "SquareRoot":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "√", "#FFB86C"); break;
+            case "AbsoluteValue":     ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ABS", "#FFB86C"); break;
+            case "MinMax":            ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MIN", "#FFB86C"); break;
+            case "Exponentiator":     ComponentSymbolDrawer.DrawDigitalBlock(canvas, "POW", "#FFB86C"); break;
+            case "Button":            ComponentSymbolDrawer.DrawButton(canvas, isOn); break;
+            case "DIPSwitch":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DIP", "#56D364"); break;
+            case "SevenSegment":      ComponentSymbolDrawer.DrawSevenSegment(canvas, comp.CustomProperties.TryGetValue("RenderedSegments", out var segs) ? Convert.ToInt32(segs) : 0); break;
+            case "HexDigit":          ComponentSymbolDrawer.DrawHexDigit(canvas, comp.CustomProperties.TryGetValue("RenderedValue", out var hexValue) ? Convert.ToInt32(hexValue) : 0); break;
+            case "LedBar":            ComponentSymbolDrawer.DrawLedBar(canvas, comp.CustomProperties.TryGetValue("RenderedValue", out var ledBarValue) ? Convert.ToInt64(ledBarValue) : 0, comp is EESimulator.Core.Components.Electronics.LedBarComponent ledBar ? ledBar.LedCount : 8); break;
+            case "RGBLED":            ComponentSymbolDrawer.DrawRgbLed(canvas, comp.CustomProperties.TryGetValue("RenderedRgb", out var rgb) ? Convert.ToInt32(rgb) : 0); break;
+            case "DotMatrix":         ComponentSymbolDrawer.DrawDotMatrix(canvas, comp.CustomProperties.TryGetValue("RenderedRows", out var matrixRows) ? Convert.ToInt64(matrixRows) : 0, comp.CustomProperties.TryGetValue("RenderedColumns", out var matrixCols) ? Convert.ToInt64(matrixCols) : 0, comp is EESimulator.Core.Components.Electronics.DotMatrixComponent matrix ? matrix.Rows : 7, comp is EESimulator.Core.Components.Electronics.DotMatrixComponent matrixColumns ? matrixColumns.Columns : 5); break;
+            case "Joystick":          ComponentSymbolDrawer.DrawJoystick(canvas); break;
+            case "Keyboard":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "KEY", "#56D364"); break;
+            case "TTY":               ComponentSymbolDrawer.DrawTty(canvas, comp is EESimulator.Core.Components.Electronics.TtyComponent tty ? tty.Text : string.Empty); break;
+            case "Video":             ComponentSymbolDrawer.DrawVideo(canvas, comp.CustomProperties.TryGetValue("RenderedRgb", out var videoRgb) ? Convert.ToInt32(videoRgb) : 0); break;
+            case "RealTimeClock":
+                string clockLabel = comp.CustomProperties.TryGetValue("RenderedHours", out var clockHours) && comp.CustomProperties.TryGetValue("RenderedMinutes", out var clockMinutes)
+                    ? $"{Convert.ToInt32(clockHours):00}:{Convert.ToInt32(clockMinutes):00}"
+                    : "RTC";
+                ComponentSymbolDrawer.DrawDigitalBlock(canvas, clockLabel, "#56D364");
+                break;
             case "Pin":              ComponentSymbolDrawer.DrawPin(canvas, isOn); break;
             case "Power":
             case "VCC":              ComponentSymbolDrawer.DrawPower(canvas); break;
