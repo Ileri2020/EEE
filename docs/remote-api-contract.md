@@ -5,7 +5,7 @@ The MAUI application has no MongoDB or Gemini credentials. Configure an **HTTPS*
 ## Community examples
 
 - `GET /api/examples` returns a JSON array with `id`, `title`, `category`, optional `icon`, `formula`, `description`, `componentSummary`, `ownerName`, and `contentJson` (native EEE schematic JSON).
-- `POST /api/examples` requires a user-scoped `Authorization: Bearer <token>` issued by the API's sign-in system and accepts `title`, `category`, `description`, and `contentJson`. Validate and size-limit the schematic before storing it; return the saved example using the same fields as GET.
+- `POST /api/examples` requires a user-scoped `Authorization: Bearer <token>` issued by the API's sign-in system and accepts `title`, `category`, optional `icon`, `description`, and `contentJson`. Validate and size-limit the schematic before storing it; return the saved example using the same fields as GET. The MAUI client publishes reusable user circuits with category `Custom Components`; their EEE description includes versioned exposed-port metadata, and the optional `icon` is a sanitized inline SVG string.
 
 The app's “Community” action refreshes and downloads the returned public examples. “Share Circuit” posts the current circuit. The app does not expose MongoDB credentials or grant database access to clients.
 

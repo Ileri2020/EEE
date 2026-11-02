@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace EESimulator.Core.Models;
@@ -91,7 +92,7 @@ public abstract class ComponentNode : RootNode
     /// <summary>
     /// Indicates whether the component is currently exceeding its safe maximum breaking current.
     /// </summary>
-    public bool IsBrokenDown => BreakingCurrent > 0 && LiveCurrent > BreakingCurrent;
+    public bool IsBrokenDown => BreakingCurrent > 0 && Math.Abs(LiveCurrent) > BreakingCurrent;
 
     private double GetDefaultBreakingCurrent()
     {
@@ -114,6 +115,34 @@ public abstract class ComponentNode : RootNode
     public List<double> WaveformVoltage { get; private set; } = new();
     public List<double> WaveformCurrent { get; private set; } = new();
 
+    [JsonIgnore]
+    private List<SimulationEventTrigger>? _eventTriggers;
+
+    /// <summary>User-configured measurement events. Persisted in StringParameters.</summary>
+    [JsonIgnore]
+    public List<SimulationEventTrigger> EventTriggers
+    {
+        get
+        {
+            if (_eventTriggers != null) return _eventTriggers;
+            if (CustomProperties.TryGetValue("SimulationEventTriggers", out var raw) && raw is string json)
+            {
+                try { _eventTriggers = JsonSerializer.Deserialize<List<SimulationEventTrigger>>(json) ?? new List<SimulationEventTrigger>(); }
+                catch (JsonException) { _eventTriggers = new List<SimulationEventTrigger>(); }
+            }
+            else _eventTriggers = new List<SimulationEventTrigger>();
+            return _eventTriggers;
+        }
+        set
+        {
+            _eventTriggers = value ?? new List<SimulationEventTrigger>();
+            PersistEventTriggers();
+        }
+    }
+
+    public void PersistEventTriggers() =>
+        CustomProperties["SimulationEventTriggers"] = JsonSerializer.Serialize(EventTriggers);
+
     /// <summary>Creates a detached copy with independent component collections.</summary>
     public virtual ComponentNode Clone()
     {
@@ -126,6 +155,12 @@ public abstract class ComponentNode : RootNode
         clone.WaveformTime = new List<double>(WaveformTime);
         clone.WaveformVoltage = new List<double>(WaveformVoltage);
         clone.WaveformCurrent = new List<double>(WaveformCurrent);
+        var clonedTriggers = EventTriggers
+            .Select(trigger => JsonSerializer.Deserialize<SimulationEventTrigger>(JsonSerializer.Serialize(trigger))!)
+            .ToList();
+        foreach (var trigger in clonedTriggers)
+            trigger.Id = Guid.NewGuid().ToString("N");
+        clone.EventTriggers = clonedTriggers;
         return clone;
     }
 

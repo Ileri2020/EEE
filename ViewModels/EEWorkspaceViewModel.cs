@@ -13,6 +13,7 @@ using EESimulator.Engine;
 using EESimulator.Engine.Simulation;
 using EESimulator.Formats;
 using EEE.Services;
+using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -36,8 +37,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private readonly SimulationManager _simManager;
     private readonly RemoteEeeApiClient _remoteApi;
     private string? _lastSimulationCircuitSnapshot;
+    private readonly HashSet<string> _activeSimulationEventIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _simulationEventOwnersByTarget = new(StringComparer.OrdinalIgnoreCase);
     public PythonApi PythonApi { get; }
     private readonly ScriptSynchronizer _sync;
+    private readonly Dictionary<string, CustomCircuitDefinition> _customCircuitDefinitions = new(StringComparer.OrdinalIgnoreCase);
 
     // ── Observable state ─────────────────────────────────────────────────────
     [ObservableProperty]
@@ -63,7 +67,64 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsSimulating { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
     public partial bool IsScriptViewActive { get; set; } = false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
+    public partial bool IsAnalyticsViewActive { get; set; }
+
+    public bool IsSchematicViewActive => !IsScriptViewActive && !IsAnalyticsViewActive;
+
+    public ObservableCollection<string> AnalyticsModes { get; } = new()
+    {
+        "Mesh analysis",
+        "Nodal analysis",
+        "KCL",
+        "KVL",
+        "Thevenin voltage and current",
+        "Superposition"
+    };
+
+    [ObservableProperty]
+    public partial string SelectedAnalyticsMode { get; set; } = "Nodal analysis";
+
+    [ObservableProperty]
+    public partial string AnalyticsOutput { get; set; } = "Choose an analysis and select Run Analysis.";
+
+    [ObservableProperty]
+    public partial bool IsAnalyticsRunning { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsCreateCircuitComponentDialogVisible { get; set; }
+
+    [ObservableProperty]
+    public partial string NewCircuitComponentName { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string NewCircuitComponentSvg { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string CreateCircuitComponentStatus { get; set; } = string.Empty;
+
+    public ObservableCollection<CustomCircuitPortDraft> NewCircuitComponentPorts { get; } = new();
+
+    public ObservableCollection<SimulationEventTrigger> SelectedComponentEventTriggers { get; } = new();
+
+    [ObservableProperty]
+    public partial bool IsSimulationEventDialogVisible { get; set; }
+
+    [ObservableProperty]
+    public partial string SimulationEventDialogTitle { get; set; } = "Simulation event";
+
+    [ObservableProperty]
+    public partial string SimulationEventDialogMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsSimulationEventChatVisible { get; set; }
+
+    [ObservableProperty]
+    public partial string SimulationEventChatMessage { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = "Ready";
@@ -408,6 +469,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsMobilePanMode { get; set; } = true;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LiveMeasurementEyeText))]
+    public partial bool IsLiveMeasurementsVisible { get; set; }
+
+    public string LiveMeasurementEyeText => IsLiveMeasurementsVisible ? "👁" : "◉";
+
     // Component palette items for the sidebar (Electrical, Electronics, General)
     public ObservableCollection<ComponentPaletteItem> ComponentPalette { get; } = new()
     {
@@ -520,7 +587,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     };
 
     /// <summary>Palette grouped by category for the sidebar 2-per-row grid layout.</summary>
-    public IReadOnlyList<ComponentPaletteGroup> GroupedPalette { get; } = new List<ComponentPaletteGroup>
+    public ObservableCollection<ComponentPaletteGroup> GroupedPalette { get; } = new()
     {
         new ComponentPaletteGroup("⚡ Passives", new[]
         {
@@ -841,6 +908,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
             CurrentFilePath = path;
             ProjectName = System.IO.Path.GetFileName(path);
         };
+
+        _ = LoadCustomCircuitLibraryAsync();
     }
 
 
@@ -1167,6 +1236,38 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void ToggleLiveMeasurements()
+    {
+        IsLiveMeasurementsVisible = !IsLiveMeasurementsVisible;
+        StatusText = IsLiveMeasurementsVisible
+            ? "Live voltage and current overlays enabled"
+            : "Live voltage and current overlays hidden";
+        CircuitChanged?.Invoke();
+    }
+
+    [RelayCommand]
+    public void ToggleSelectedWaveform()
+    {
+        var component = SelectedComponent;
+        if (component == null) return;
+
+        component.ShowWaveform = !component.ShowWaveform;
+        if (component.ShowWaveform)
+        {
+            WaveformComponent = component;
+            IsWaveformDrawerOpen = true;
+            StatusText = $"Waveform enabled for {component.Reference}";
+        }
+        else if (WaveformComponent == component)
+        {
+            WaveformComponent = null;
+            IsWaveformDrawerOpen = false;
+            StatusText = $"Waveform disabled for {component.Reference}";
+        }
+        CircuitChanged?.Invoke();
+    }
+
+    [RelayCommand]
     public void ApplyDescriptionSidebarChanges()
     {
         if (SelectedComponent == null) return;
@@ -1189,7 +1290,320 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ToggleViewport() => IsScriptViewActive = !IsScriptViewActive;
+    public void OpenCreateCircuitComponent()
+    {
+        if (SelectedComponent == null)
+        {
+            StatusText = "Select a component in the circuit you want to package first.";
+            return;
+        }
+
+        var island = FindConnectedCircuitIsland(SelectedComponent);
+        if (island.Count < 2)
+        {
+            StatusText = "A reusable circuit component needs a connected circuit with at least two components.";
+            return;
+        }
+        if (island.Any(component => component is CustomCircuitComponent))
+        {
+            StatusText = "Nested reusable circuit components are not supported. Expand the existing custom component first.";
+            return;
+        }
+
+        var islandIds = island.Select(component => component.Id).ToHashSet();
+        var connectedPins = Circuit.Connections
+            .Where(connection => islandIds.Contains(connection.FromComponentId) && islandIds.Contains(connection.ToComponentId))
+            .SelectMany(connection => new[]
+            {
+                (connection.FromComponentId, connection.FromPin),
+                (connection.ToComponentId, connection.ToPin)
+            }).ToHashSet();
+        foreach (var tunnelGroup in island.OfType<TunnelComponent>().GroupBy(tunnel => tunnel.TunnelLabel, StringComparer.OrdinalIgnoreCase))
+        {
+            if (tunnelGroup.Count() < 2) continue;
+            foreach (var tunnel in tunnelGroup)
+                if (tunnel.Pins.Count > 0) connectedPins.Add((tunnel.Id, tunnel.Pins[0].Id));
+        }
+
+        var openPins = island.SelectMany(component => component.Pins
+                .Where(pin => !connectedPins.Contains((component.Id, pin.Id)))
+                .Select(pin => (Component: component, Pin: pin)))
+            .OrderBy(item => item.Component.Reference, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.Pin.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (openPins.Count == 0)
+        {
+            StatusText = "This circuit has no open pins to expose. Leave at least one terminal open before packaging it.";
+            return;
+        }
+
+        NewCircuitComponentPorts.Clear();
+        for (int index = 0; index < openPins.Count; index++)
+        {
+            var item = openPins[index];
+            bool leftSide = index < (openPins.Count + 1) / 2;
+            int row = leftSide ? index : index - (openPins.Count + 1) / 2;
+            NewCircuitComponentPorts.Add(new CustomCircuitPortDraft(
+                item.Component.Id, item.Pin.Id, item.Component.Reference, item.Pin.Name,
+                $"N{index + 1}", leftSide ? -28 : 28, (row - (openPins.Count / 4)) * 14));
+        }
+
+        NewCircuitComponentName = string.IsNullOrWhiteSpace(SelectedComponent.Reference)
+            ? "CustomCircuit"
+            : $"{SelectedComponent.Reference}Module";
+        NewCircuitComponentSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 48\"><rect x=\"4\" y=\"4\" width=\"56\" height=\"40\" rx=\"6\" fill=\"#161B22\" stroke=\"#58A6FF\" stroke-width=\"3\"/><path d=\"M0 16h10M54 32h10\" stroke=\"#58A6FF\" stroke-width=\"3\"/></svg>";
+        CreateCircuitComponentStatus = $"{island.Count} connected components; {openPins.Count} open pins will become named component nodes.";
+        IsCreateCircuitComponentDialogVisible = true;
+    }
+
+    [RelayCommand]
+    public void CancelCreateCircuitComponent() => IsCreateCircuitComponentDialogVisible = false;
+
+    [RelayCommand]
+    public async Task CreateSelectedCircuitComponentAsync(bool publishOnline)
+    {
+        if (SelectedComponent == null) return;
+        string name = NewCircuitComponentName.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            CreateCircuitComponentStatus = "Enter a component name.";
+            return;
+        }
+        if (NewCircuitComponentPorts.Count == 0 || NewCircuitComponentPorts.Any(port => string.IsNullOrWhiteSpace(port.Name)))
+        {
+            CreateCircuitComponentStatus = "Every exposed terminal needs a name.";
+            return;
+        }
+        if (NewCircuitComponentPorts.Select(port => port.Name.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() != NewCircuitComponentPorts.Count)
+        {
+            CreateCircuitComponentStatus = "Terminal names must be unique.";
+            return;
+        }
+
+        try
+        {
+            var island = FindConnectedCircuitIsland(SelectedComponent);
+            var islandIds = island.Select(component => component.Id).ToHashSet();
+            var subCircuit = new CircuitNode { Title = name, Description = "Reusable EESimulator circuit component" };
+            foreach (var component in island)
+            {
+                var clone = component.Clone();
+                clone.Id = component.Id;
+                subCircuit.AddChild(clone);
+            }
+            var internalConnections = Circuit.Connections
+                .Where(connection => islandIds.Contains(connection.FromComponentId) && islandIds.Contains(connection.ToComponentId))
+                .ToList();
+            foreach (var connection in internalConnections)
+            {
+                var clone = new ConnectionNode(connection.FromComponentId, connection.FromPin,
+                    connection.ToComponentId, connection.ToPin, connection.NetName)
+                {
+                    Id = connection.Id,
+                    Resistance = connection.Resistance
+                };
+                foreach (var point in connection.RoutingPoints)
+                    clone.RoutingPoints.Add(new Point2D(point.X, point.Y));
+                subCircuit.AddChild(clone);
+            }
+
+            string definitionId = Guid.NewGuid().ToString("N");
+            var ports = NewCircuitComponentPorts.Select(port => new CustomCircuitPort
+            {
+                Id = $"port_{Guid.NewGuid():N}",
+                Name = port.Name.Trim(),
+                InnerComponentId = port.InnerComponentId,
+                InnerPinId = port.InnerPinId,
+                RelativeX = port.RelativeX,
+                RelativeY = port.RelativeY
+            }).ToList();
+            subCircuit.Description = CustomCircuitLibrary.AddMetadata(subCircuit.Description, definitionId, ports);
+            var definition = new CustomCircuitDefinition
+            {
+                Id = definitionId,
+                Name = name,
+                SvgIcon = NewCircuitComponentSvg,
+                CircuitJson = EeePlatformSerializer.ExportToEee(subCircuit),
+                Ports = ports
+            };
+
+            await CustomCircuitLibrary.SaveAsync(definition);
+            _customCircuitDefinitions[definition.Id] = definition;
+            RefreshCustomCircuitPalette();
+
+            string onlineStatus = string.Empty;
+            if (publishOnline)
+            {
+                try
+                {
+                    if (!_remoteApi.IsConfigured)
+                        throw new InvalidOperationException("Configure an HTTPS API URL and user access token in Settings first.");
+                    await _remoteApi.PublishExampleAsync(subCircuit, name, "Custom Components", definition.SvgIcon);
+                    onlineStatus = " Published online.";
+                }
+                catch (Exception ex)
+                {
+                    onlineStatus = $" Saved locally; online publish failed: {ex.Message}";
+                }
+            }
+
+            double x = island.Average(component => component.X);
+            double y = island.Average(component => component.Y);
+            foreach (var connection in Circuit.Connections.Where(connection =>
+                         islandIds.Contains(connection.FromComponentId) || islandIds.Contains(connection.ToComponentId)).ToList())
+                Circuit.RemoveChild(connection);
+            foreach (var component in island)
+                Circuit.RemoveChild(component);
+
+            var macroReference = GetNextReference("CustomCircuit");
+            var macro = new CustomCircuitComponent
+            {
+                Name = macroReference,
+                Reference = macroReference,
+                X = x,
+                Y = y
+            };
+            macro.SetDefinition(definition);
+            var addCommand = new AddComponentCommand(Circuit, macro) { Origin = CommandOrigin.Schematic };
+            CommandManager.ExecuteCommand(addCommand);
+            SelectedComponent = macro;
+            IsCreateCircuitComponentDialogVisible = false;
+            OnComponentSelected(macro);
+            StatusText = $"Created reusable component '{name}'. Saved locally.{onlineStatus}";
+            CircuitChanged?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            CreateCircuitComponentStatus = $"Could not create component: {ex.Message}";
+        }
+    }
+
+    private List<ComponentNode> FindConnectedCircuitIsland(ComponentNode selected)
+    {
+        var components = Circuit.Components.ToList();
+        var adjacency = components.ToDictionary(component => component.Id, _ => new HashSet<Guid>());
+        foreach (var connection in Circuit.Connections)
+        {
+            if (adjacency.ContainsKey(connection.FromComponentId) && adjacency.ContainsKey(connection.ToComponentId))
+            {
+                adjacency[connection.FromComponentId].Add(connection.ToComponentId);
+                adjacency[connection.ToComponentId].Add(connection.FromComponentId);
+            }
+        }
+        foreach (var group in components.OfType<TunnelComponent>().GroupBy(tunnel => tunnel.TunnelLabel, StringComparer.OrdinalIgnoreCase))
+        {
+            var ids = group.Select(tunnel => tunnel.Id).ToArray();
+            for (int i = 1; i < ids.Length; i++)
+            {
+                adjacency[ids[0]].Add(ids[i]);
+                adjacency[ids[i]].Add(ids[0]);
+            }
+        }
+        var groundIds = components.Where(component => component is GroundNode).Select(component => component.Id).ToArray();
+        for (int i = 1; i < groundIds.Length; i++)
+        {
+            adjacency[groundIds[0]].Add(groundIds[i]);
+            adjacency[groundIds[i]].Add(groundIds[0]);
+        }
+
+        var visited = new HashSet<Guid> { selected.Id };
+        var queue = new Queue<Guid>();
+        queue.Enqueue(selected.Id);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var neighbor in adjacency[current])
+                if (visited.Add(neighbor)) queue.Enqueue(neighbor);
+        }
+        return components.Where(component => visited.Contains(component.Id)).ToList();
+    }
+
+    private async Task LoadCustomCircuitLibraryAsync()
+    {
+        var definitions = await CustomCircuitLibrary.LoadAsync();
+        foreach (var definition in definitions)
+            _customCircuitDefinitions[definition.Id] = definition;
+
+        if (_remoteApi.IsConfigured)
+        {
+            try
+            {
+                var online = await _remoteApi.GetCommunityExamplesAsync();
+                foreach (var example in online.Where(example => example.Category.Equals("Custom Components", StringComparison.OrdinalIgnoreCase)))
+                {
+                    var definition = CustomCircuitLibrary.TryReadRemoteDefinition(example);
+                    if (definition == null) continue;
+                    _customCircuitDefinitions[definition.Id] = definition;
+                    await CustomCircuitLibrary.SaveAsync(definition);
+                }
+            }
+            catch { /* Local custom components remain available while the optional API is offline. */ }
+        }
+        RefreshCustomCircuitPalette();
+    }
+
+    private void RefreshCustomCircuitPalette()
+    {
+        var existing = GroupedPalette.FirstOrDefault(group => group.Header == "🧩 My Circuits");
+        if (existing != null) GroupedPalette.Remove(existing);
+        var items = _customCircuitDefinitions.Values.OrderBy(definition => definition.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(definition => new ComponentPaletteItem(
+                $"custom:{definition.Id}", "⌗", "MAC", "#D2A8FF", "My Circuits",
+                $"Reusable circuit with {definition.Ports.Count} exposed nodes", string.Empty))
+            .ToList();
+        if (items.Count > 0) GroupedPalette.Add(new ComponentPaletteGroup("🧩 My Circuits", items));
+    }
+
+    [RelayCommand]
+    private void ToggleViewport()
+    {
+        if (IsSchematicViewActive)
+        {
+            IsScriptViewActive = true;
+            IsAnalyticsViewActive = false;
+            UI.Workspace.SetViewport("Script");
+        }
+        else if (IsScriptViewActive)
+        {
+            IsScriptViewActive = false;
+            IsAnalyticsViewActive = true;
+            UI.Workspace.SetViewport("Analytics");
+            _ = RunAnalyticsAsync();
+        }
+        else
+        {
+            IsAnalyticsViewActive = false;
+            IsScriptViewActive = false;
+            UI.Workspace.SetViewport("Schematic");
+        }
+    }
+
+    [RelayCommand]
+    public async Task RunAnalyticsAsync()
+    {
+        if (IsAnalyticsRunning) return;
+        IsAnalyticsRunning = true;
+        AnalyticsOutput = "Running circuit analysis…";
+        try
+        {
+            AnalyticsOutput = await Task.Run(() =>
+            {
+                var result = _simManager.Run(Circuit, new SimulationSettings());
+                _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+                return CircuitAnalyticsService.Analyze(Circuit, result, SelectedAnalyticsMode, SelectedComponent);
+            });
+            DispatchTriggeredUiEvents();
+            OnPropertyChanged(nameof(SelectedComponent));
+        }
+        catch (Exception ex)
+        {
+            AnalyticsOutput = $"Analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            IsAnalyticsRunning = false;
+        }
+    }
 
     [RelayCommand]
     private void ToggleSidebar()
@@ -1260,6 +1674,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
             var results = await Task.Run(() => _simManager.Run(Circuit, settings));
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = FormatResults(results);
+            DispatchTriggeredUiEvents();
+            OnPropertyChanged(nameof(SelectedComponent));
         }
         catch (Exception ex)
         {
@@ -1378,6 +1794,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 AiSchemaStatus = "Measuring the current schematic…";
                 await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
                 _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+                DispatchTriggeredUiEvents();
             }
             var draft = await _remoteApi.GenerateSchemaScriptAsync(
                 AiSchemaPrompt,
@@ -1393,6 +1810,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
             ScriptText = draft.Script;
             IsScriptViewActive = true;
+            IsAnalyticsViewActive = false;
+            UI.Workspace.SetViewport("Script");
             var draftNotes = new List<string>();
             if (!string.IsNullOrWhiteSpace(draft.Summary)) draftNotes.Add(draft.Summary);
             if (draft.Warnings.Count > 0) draftNotes.Add("Warnings: " + string.Join("; ", draft.Warnings));
@@ -1445,6 +1864,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
             var feedback = await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = commandOutput + "\n" + FormatResults(feedback);
+            DispatchTriggeredUiEvents();
+            OnPropertyChanged(nameof(SelectedComponent));
             AiSchemaStatus = feedback.Success
                 ? scriptHadErrors
                     ? "Some script commands failed. Simulation feedback reflects the resulting partial state; the next AI request includes the errors and measurements."
@@ -1463,6 +1884,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         finally
         {
             IsSimulating = false;
+            OnPropertyChanged(nameof(SelectedComponent));
         }
 
         await Task.CompletedTask;
@@ -1541,6 +1963,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             var settings = BuildSimulationSettings();
             var results  = await Task.Run(() => _simManager.Run(Circuit, settings));
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+            DispatchTriggeredUiEvents();
 
             ConsoleOutput = FormatResults(results);
             AiSchemaStatus = results.Success
@@ -1558,6 +1981,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         finally
         {
             IsSimulating = false;
+            OnPropertyChanged(nameof(SelectedComponent));
         }
     }
 
@@ -1569,6 +1993,23 @@ public partial class EEWorkspaceViewModel : ObservableObject
         // Place on a grid pattern, offset from centre of view
         double cx = 100 + (count % 6) * 90;
         double cy = 100 + (count / 6) * 90;
+
+        if (item.Type.StartsWith("custom:", StringComparison.OrdinalIgnoreCase))
+        {
+            var definitionId = item.Type["custom:".Length..];
+            if (!_customCircuitDefinitions.TryGetValue(definitionId, out var definition))
+            {
+                StatusText = "That saved custom component could not be loaded.";
+                return;
+            }
+            var custom = new CustomCircuitComponent { Name = name, Reference = name, X = cx, Y = cy };
+            custom.SetDefinition(definition);
+            var customCommand = new AddComponentCommand(Circuit, custom) { Origin = CommandOrigin.Schematic };
+            CommandManager.ExecuteCommand(customCommand);
+            StatusText = $"Added custom component {name} ({definition.Name})";
+            CircuitChanged?.Invoke();
+            return;
+        }
 
         var cmd = new AddComponentCommand(Circuit, item.Type, name, cx, cy, 0)
         {
@@ -1603,6 +2044,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public void OnComponentSelected(ComponentNode comp)
     {
         SelectedComponent = comp;
+        SelectedComponentEventTriggers.Clear();
+        foreach (var trigger in comp.EventTriggers)
+            SelectedComponentEventTriggers.Add(trigger);
         EditName = comp.Reference;
         EditType = comp.ComponentType;
         EditDescription = comp.CustomProperties.TryGetValue("Description", out var dVal) ? dVal?.ToString() ?? comp.Description : comp.Description;
@@ -1617,6 +2061,121 @@ public partial class EEWorkspaceViewModel : ObservableObject
         string paramStr = param.Key != null ? $"{param.Key}={param.Value:G4}" : "";
         ActiveComponentInfo = $"{comp.Reference}  [{comp.ComponentType}]  ({comp.X:F0}, {comp.Y:F0})  {paramStr}";
         StatusText = $"Selected {comp.Reference} [{comp.ComponentType}]";
+    }
+
+    [RelayCommand]
+    public void AddComponentEventTrigger()
+    {
+        if (SelectedComponent == null) return;
+        var trigger = new SimulationEventTrigger
+        {
+            Name = $"Event {SelectedComponentEventTriggers.Count + 1}",
+            Measurement = "Voltage",
+            Comparison = ">=",
+            Threshold = 1,
+            Target = "Chat bubble",
+            Message = "Voltage threshold reached",
+            Mode = "Latched"
+        };
+        SelectedComponentEventTriggers.Add(trigger);
+        SaveComponentEventTriggers();
+    }
+
+    [RelayCommand]
+    public void RemoveComponentEventTrigger(SimulationEventTrigger trigger)
+    {
+        if (trigger != null && SelectedComponentEventTriggers.Remove(trigger))
+            SaveComponentEventTriggers();
+    }
+
+    [RelayCommand]
+    public void SaveComponentEventTriggers()
+    {
+        if (SelectedComponent == null) return;
+        SelectedComponent.EventTriggers = SelectedComponentEventTriggers.ToList();
+        SelectedComponent.PersistEventTriggers();
+        CircuitChanged?.Invoke();
+        StatusText = $"Saved {SelectedComponentEventTriggers.Count} UI event trigger(s) for {SelectedComponent.Reference}";
+    }
+
+    [RelayCommand]
+    public void CloseSimulationEventDialog() => IsSimulationEventDialogVisible = false;
+
+    [RelayCommand]
+    public void DismissSimulationEventChat() => IsSimulationEventChatVisible = false;
+
+    public void FireNamedUiEvent(string eventName, string? message = null)
+    {
+        var match = Circuit.Components.SelectMany(component => component.EventTriggers
+                .Select(trigger => (Component: component, Trigger: trigger)))
+            .FirstOrDefault(item => item.Trigger.Name.Equals(eventName, StringComparison.OrdinalIgnoreCase) ||
+                                    item.Trigger.Id.Equals(eventName, StringComparison.OrdinalIgnoreCase));
+        if (match.Trigger == null)
+        {
+            ShowSimulationEventChat(message ?? eventName);
+            return;
+        }
+
+        match.Trigger.IsFired = true;
+        DispatchUiEvent(match.Component, match.Trigger.Name, match.Trigger.Target, message ?? match.Trigger.Message, match.Trigger.Id);
+    }
+
+    private void DispatchTriggeredUiEvents()
+    {
+        var activeEvents = ComponentEventEvaluator.Evaluate(Circuit);
+        var activeIds = activeEvents.Select(item => item.TriggerId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in activeEvents)
+        {
+            if (!_activeSimulationEventIds.Add(item.TriggerId)) continue;
+            var component = Circuit.Components.FirstOrDefault(candidate => candidate.Id == item.ComponentId);
+            if (component != null)
+                DispatchUiEvent(component, item.Name, item.Target, item.Message, item.TriggerId);
+        }
+
+        foreach (var inactiveId in _activeSimulationEventIds.Where(id => !activeIds.Contains(id)).ToList())
+        {
+            _activeSimulationEventIds.Remove(inactiveId);
+            foreach (var target in _simulationEventOwnersByTarget.Where(pair => pair.Value == inactiveId).Select(pair => pair.Key).ToList())
+            {
+                _simulationEventOwnersByTarget.Remove(target);
+                if (target == "Dialog") IsSimulationEventDialogVisible = false;
+                if (target == "Chat bubble") IsSimulationEventChatVisible = false;
+            }
+        }
+    }
+
+    private void DispatchUiEvent(ComponentNode source, string eventName, string target, string message, string triggerId)
+    {
+        _simulationEventOwnersByTarget[target] = triggerId;
+        switch (target)
+        {
+            case "Dialog":
+                SimulationEventDialogTitle = $"{source.Reference}: {eventName}";
+                SimulationEventDialogMessage = message;
+                IsSimulationEventDialogVisible = true;
+                break;
+            case "Waveform drawer":
+                WaveformComponent ??= SelectedComponent;
+                IsWaveformDrawerOpen = true;
+                break;
+            case "Description sidebar":
+                IsDescriptionSidebarVisible = true;
+                break;
+            case "Control sidebar":
+                IsControlSidebarVisible = true;
+                IsSidebarVisible = false;
+                break;
+            default:
+                ShowSimulationEventChat(message);
+                break;
+        }
+        StatusText = $"UI event '{eventName}' fired by {source.Reference}";
+    }
+
+    private void ShowSimulationEventChat(string message)
+    {
+        SimulationEventChatMessage = message;
+        IsSimulationEventChatVisible = true;
     }
 
     // Called by the canvas when user clicks a specific node/pin on a component
@@ -2596,7 +3155,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
                 case "simulate":
                     var r = PythonApi.Simulate(args.Length > 0 ? Unquote(args[0]) : "OperatingPoint");
+                    DispatchTriggeredUiEvents();
                     return FormatResults(r);
+
+                case "fire_event" or "ui.fire_event" when args.Length >= 1:
+                    string firedEventName = Unquote(args[0]);
+                    string? firedEventMessage = args.Length > 1 ? Unquote(args[1]) : null;
+                    FireNamedUiEvent(firedEventName, firedEventMessage);
+                    return $"[ok] UI event '{firedEventName}' fired";
 
                 // UI Hierarchy Operations (RootNode script interface)
                 case "ui.open_dialog" or "ui.dialog.open":
@@ -2978,6 +3544,15 @@ public record ComponentPaletteItem(
 {
     public string DisplayText => $"{Symbol}  {Type}";
     public string IconLetter  => Symbol;
+    public bool IsCustomCircuit => Category.Equals("My Circuits", StringComparison.OrdinalIgnoreCase);
+    public bool HasCustomSvg => IsCustomCircuit && SvgIcon.Contains("<svg", StringComparison.OrdinalIgnoreCase);
+    public bool IsCustomWithoutSvg => IsCustomCircuit && !HasCustomSvg;
+    public HtmlWebViewSource? CustomSvgSource => HasCustomSvg
+        ? new HtmlWebViewSource
+        {
+            Html = $"<html><head><meta name='viewport' content='width=device-width, initial-scale=1'/><style>html,body{{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}}svg{{width:100%;height:100%}}</style></head><body>{SvgIcon}</body></html>"
+        }
+        : null;
     public string TooltipText => $"{Type}  [{Category}]\n{Description}\nUnit: {Unit}";
     public string ImageSource => !string.IsNullOrEmpty(SvgIcon)
         ? (SvgIcon.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) ? SvgIcon[..^4] + ".png" : SvgIcon)
@@ -3018,6 +3593,31 @@ public class ComponentPaletteGroup
     {
         Header = header;
         Items  = items.ToList();
+    }
+}
+
+public partial class CustomCircuitPortDraft : ObservableObject
+{
+    public Guid InnerComponentId { get; }
+    public string InnerPinId { get; }
+    public string ComponentReference { get; }
+    public string OriginalPinName { get; }
+    public double RelativeX { get; }
+    public double RelativeY { get; }
+
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    public CustomCircuitPortDraft(Guid innerComponentId, string innerPinId, string componentReference,
+        string originalPinName, string name, double relativeX, double relativeY)
+    {
+        InnerComponentId = innerComponentId;
+        InnerPinId = innerPinId;
+        ComponentReference = componentReference;
+        OriginalPinName = originalPinName;
+        _name = name;
+        RelativeX = relativeX;
+        RelativeY = relativeY;
     }
 }
 

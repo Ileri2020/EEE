@@ -38,6 +38,16 @@ public class SchematicViewport : GraphicsView, IDrawable
         set => SetValue(CircuitProperty, value);
     }
 
+    public static readonly BindableProperty LiveMeasurementsVisibleProperty =
+        BindableProperty.Create(nameof(LiveMeasurementsVisible), typeof(bool), typeof(SchematicViewport), false,
+            propertyChanged: (b, _, _) => ((SchematicViewport)b).Invalidate());
+
+    public bool LiveMeasurementsVisible
+    {
+        get => (bool)GetValue(LiveMeasurementsVisibleProperty);
+        set => SetValue(LiveMeasurementsVisibleProperty, value);
+    }
+
     /// <summary>Reflects the ViewModel's IsMobilePanMode; set from WorkspacePage.</summary>
     public bool IsMobilePanMode { get; set; } = true;
 
@@ -635,9 +645,7 @@ public class SchematicViewport : GraphicsView, IDrawable
                     _isDrawingWire   = true;
                     _wireSourceComp  = pinComp;
                     _wireSourcePin   = pin;
-                    _wireCursorWorld = new PointF(
-                        (float)(pinComp.X + pin.RelativeX),
-                        (float)(pinComp.Y + pin.RelativeY));
+                    _wireCursorWorld = SchematicWireRouter.GetPinWorldPosition(pinComp, pin);
                     Invalidate();
                 });
             }, null, 350, System.Threading.Timeout.Infinite);
@@ -776,6 +784,9 @@ public class SchematicViewport : GraphicsView, IDrawable
                 dy = ry;
             }
 
+            dx /= (float)(comp.ScaleX > 0 ? comp.ScaleX : 1.0);
+            dy /= (float)(comp.ScaleY > 0 ? comp.ScaleY : 1.0);
+
             foreach (var pin in comp.Pins)
             {
                 float px = (float)pin.RelativeX;
@@ -795,8 +806,21 @@ public class SchematicViewport : GraphicsView, IDrawable
     private ComponentNode? HitTest(float wx, float wy)
     {
         if (Circuit == null) return null;
+        var point = new PointF(wx, wy);
+        var components = Circuit.FindChildren<ComponentNode>().ToList();
+        foreach (var wire in components.OfType<WireComponent>())
+        {
+            var path = SchematicWireRouter.RouteWireComponent(wire, components);
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                if (DistanceToSegment(point, path[i], path[i + 1]) <= 9f)
+                    return wire;
+            }
+        }
+
         foreach (var node in Circuit.FindChildren<ComponentNode>())
         {
+            if (node is WireComponent) continue;
             float dx = wx - (float)node.X;
             float dy = wy - (float)node.Y;
             if (Math.Abs(dx) <= 26 && Math.Abs(dy) <= 26)
@@ -871,10 +895,12 @@ public class SchematicViewport : GraphicsView, IDrawable
             var toPin   = toComp.GetPin(conn.ToPin);
             if (fromPin == null || toPin == null) continue;
 
-            float x1 = (float)(fromComp.X + fromPin.RelativeX);
-            float y1 = (float)(fromComp.Y + fromPin.RelativeY);
-            float x2 = (float)(toComp.X + toPin.RelativeX);
-            float y2 = (float)(toComp.Y + toPin.RelativeY);
+            var fromPoint = SchematicWireRouter.GetPinWorldPosition(fromComp, fromPin);
+            var toPoint = SchematicWireRouter.GetPinWorldPosition(toComp, toPin);
+            float x1 = fromPoint.X;
+            float y1 = fromPoint.Y;
+            float x2 = toPoint.X;
+            float y2 = toPoint.Y;
             float midX = (x1 + x2) / 2f;
 
             if (DistanceToSegment(w, new PointF(x1, y1), new PointF(midX, y1)) <= hitDist ||
@@ -1009,16 +1035,18 @@ public class SchematicViewport : GraphicsView, IDrawable
     {
         if (!_isDrawingWire || _wireSourceComp == null || _wireSourcePin == null) return;
 
-        float x1 = (float)(_wireSourceComp.X + _wireSourcePin.RelativeX);
-        float y1 = (float)(_wireSourceComp.Y + _wireSourcePin.RelativeY);
+        var wireStart = SchematicWireRouter.GetPinWorldPosition(_wireSourceComp, _wireSourcePin);
+        float x1 = wireStart.X;
+        float y1 = wireStart.Y;
         float x2 = _wireCursorWorld.X;
         float y2 = _wireCursorWorld.Y;
 
         var targetHit = HitTestPin(_wireCursorWorld.X, _wireCursorWorld.Y);
         if (targetHit != null && (targetHit.Value.Component != _wireSourceComp || targetHit.Value.Pin != _wireSourcePin))
         {
-            x2 = (float)(targetHit.Value.Component.X + targetHit.Value.Pin.RelativeX);
-            y2 = (float)(targetHit.Value.Component.Y + targetHit.Value.Pin.RelativeY);
+            var targetPoint = SchematicWireRouter.GetPinWorldPosition(targetHit.Value.Component, targetHit.Value.Pin);
+            x2 = targetPoint.X;
+            y2 = targetPoint.Y;
 
             // Green target snap halo
             canvas.StrokeColor = Color.FromArgb("#56D364");
@@ -1072,82 +1100,200 @@ public class SchematicViewport : GraphicsView, IDrawable
     private void DrawConnections(ICanvas canvas)
     {
         if (Circuit == null) return;
+        var components = Circuit.FindChildren<ComponentNode>().ToList();
+        var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, int ElectronDirection)>();
+
+        foreach (var wire in components.OfType<WireComponent>())
+        {
+            var path = SchematicWireRouter.RouteWireComponent(wire, components);
+            routedWires.Add((path, wire, wire.LiveCurrent > 0 ? -1 : wire.LiveCurrent < 0 ? 1 : 0));
+        }
+
         foreach (var conn in Circuit.FindChildren<ConnectionNode>())
         {
             var fromComp = Circuit.FindChildById<ComponentNode>(conn.FromComponentId);
-            var toComp   = Circuit.FindChildById<ComponentNode>(conn.ToComponentId);
+            var toComp = Circuit.FindChildById<ComponentNode>(conn.ToComponentId);
             if (fromComp == null || toComp == null) continue;
-
             var fromPin = fromComp.GetPin(conn.FromPin);
-            var toPin   = toComp.GetPin(conn.ToPin);
+            var toPin = toComp.GetPin(conn.ToPin);
             if (fromPin == null || toPin == null) continue;
 
-            float x1 = (float)(fromComp.X + fromPin.RelativeX);
-            float y1 = (float)(fromComp.Y + fromPin.RelativeY);
-            float x2 = (float)(toComp.X + toPin.RelativeX);
-            float y2 = (float)(toComp.Y + toPin.RelativeY);
+            var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components);
+            routedWires.Add((path, null, GetElectronDirection(fromComp, fromPin, toComp, toPin)));
+        }
 
-            // Draw wire with elbow routing
-            canvas.StrokeColor = Color.FromArgb("#58A6FF");
-            canvas.StrokeSize = 1.5f;
-            float midX = (x1 + x2) / 2f;
-            canvas.DrawLine(x1, y1, midX, y1);
-            canvas.DrawLine(midX, y1, midX, y2);
-            canvas.DrawLine(midX, y2, x2, y2);
+        for (int index = 0; index < routedWires.Count; index++)
+        {
+            var wire = routedWires[index];
+            var previousPaths = routedWires.Take(index).Select(item => item.Path).ToList();
+            DrawRoutedWire(canvas, wire.Path, previousPaths);
+            if (IsSimulationPlaying && wire.ElectronDirection != 0)
+                DrawElectricityDots(canvas, wire.Path, wire.ElectronDirection);
 
-            // Junction dots at endpoints
-            canvas.FillColor = Color.FromArgb("#58A6FF");
-            canvas.FillCircle(x1, y1, 3);
-            canvas.FillCircle(x2, y2, 3);
+            if (wire.Owner is WireComponent owner && owner.ShowLiveProbe)
+                DrawWireMeasurement(canvas, owner, wire.Path);
+        }
+    }
 
-            // Flowing electricity charges along connected wires when simulation is playing
-            if (IsSimulationPlaying)
+    private static int GetElectronDirection(ComponentNode fromComponent, ComponentPin fromPin, ComponentNode toComponent, ComponentPin toPin)
+    {
+        int fromPinIndex = fromComponent.Pins.IndexOf(fromPin);
+        if (Math.Abs(fromComponent.LiveCurrent) > 1e-12 && fromPinIndex >= 0)
+        {
+            int conventionalDirection = Math.Sign(fromComponent.LiveCurrent) * (fromPinIndex == 0 ? -1 : 1);
+            return -conventionalDirection;
+        }
+
+        int toPinIndex = toComponent.Pins.IndexOf(toPin);
+        if (Math.Abs(toComponent.LiveCurrent) > 1e-12 && toPinIndex >= 0)
+        {
+            int conventionalDirection = Math.Sign(toComponent.LiveCurrent) * (toPinIndex == 0 ? 1 : -1);
+            return -conventionalDirection;
+        }
+        return 0;
+    }
+
+    private static void DrawRoutedWire(ICanvas canvas, List<PointF> path, List<List<PointF>> previousPaths)
+    {
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 1.7f;
+        for (int segmentIndex = 0; segmentIndex < path.Count - 1; segmentIndex++)
+        {
+            var start = path[segmentIndex];
+            var end = path[segmentIndex + 1];
+            bool horizontal = MathF.Abs(start.Y - end.Y) < 0.01f;
+            var crossings = FindCrossings(start, end, horizontal, previousPaths);
+            float cursor = horizontal ? Math.Min(start.X, end.X) : Math.Min(start.Y, end.Y);
+            float finish = horizontal ? Math.Max(start.X, end.X) : Math.Max(start.Y, end.Y);
+
+            foreach (float crossing in crossings)
             {
-                DrawElectricityDots(canvas, x1, y1, midX, y1, midX, y2, x2, y2);
+                const float radius = 7f;
+                float clearStart = Math.Max(cursor, crossing - radius);
+                float clearEnd = Math.Min(finish, crossing + radius);
+                DrawAxisLine(canvas, horizontal, start, cursor, clearStart);
+                canvas.StrokeColor = Color.FromArgb("#0D1117");
+                canvas.StrokeSize = 4f;
+                DrawAxisLine(canvas, horizontal, start, clearStart, clearEnd);
+                canvas.StrokeColor = Color.FromArgb("#58A6FF");
+                canvas.StrokeSize = 1.7f;
+                DrawBridge(canvas, horizontal, start, crossing, radius);
+                cursor = clearEnd;
+            }
+            DrawAxisLine(canvas, horizontal, start, cursor, finish);
+        }
+
+        if (path.Count > 0)
+        {
+            canvas.FillColor = Color.FromArgb("#58A6FF");
+            canvas.FillCircle(path[0].X, path[0].Y, 3f);
+            canvas.FillCircle(path[^1].X, path[^1].Y, 3f);
+        }
+    }
+
+    private static List<float> FindCrossings(PointF start, PointF end, bool horizontal, List<List<PointF>> previousPaths)
+    {
+        var crossings = new List<float>();
+        foreach (var prior in previousPaths)
+        {
+            for (int i = 0; i < prior.Count - 1; i++)
+            {
+                var a = prior[i];
+                var b = prior[i + 1];
+                bool priorHorizontal = MathF.Abs(a.Y - b.Y) < 0.01f;
+                if (priorHorizontal == horizontal) continue;
+                float x = horizontal ? a.X : start.X;
+                float y = horizontal ? start.Y : a.Y;
+                float currentMin = horizontal ? Math.Min(start.X, end.X) : Math.Min(start.Y, end.Y);
+                float currentMax = horizontal ? Math.Max(start.X, end.X) : Math.Max(start.Y, end.Y);
+                float priorMin = priorHorizontal ? Math.Min(a.X, b.X) : Math.Min(a.Y, b.Y);
+                float priorMax = priorHorizontal ? Math.Max(a.X, b.X) : Math.Max(a.Y, b.Y);
+                float alongCurrent = horizontal ? x : y;
+                float alongPrior = priorHorizontal ? x : y;
+                if (alongCurrent <= currentMin + 8 || alongCurrent >= currentMax - 8 ||
+                    alongPrior <= priorMin + 3 || alongPrior >= priorMax - 3) continue;
+                crossings.Add(alongCurrent);
+            }
+        }
+        return crossings.Distinct().OrderBy(value => value).ToList();
+    }
+
+    private static void DrawAxisLine(ICanvas canvas, bool horizontal, PointF reference, float from, float to)
+    {
+        if (to <= from) return;
+        if (horizontal) canvas.DrawLine(from, reference.Y, to, reference.Y);
+        else canvas.DrawLine(reference.X, from, reference.X, to);
+    }
+
+    private static void DrawBridge(ICanvas canvas, bool horizontal, PointF reference, float center, float radius)
+    {
+        var bridge = new PathF();
+        if (horizontal)
+        {
+            bridge.MoveTo(center - radius, reference.Y);
+            bridge.LineTo(center - radius, reference.Y - 4);
+            bridge.LineTo(center - radius * 0.5f, reference.Y - 7);
+            bridge.LineTo(center + radius * 0.5f, reference.Y - 7);
+            bridge.LineTo(center + radius, reference.Y - 4);
+            bridge.LineTo(center + radius, reference.Y);
+        }
+        else
+        {
+            bridge.MoveTo(reference.X, center - radius);
+            bridge.LineTo(reference.X + 4, center - radius);
+            bridge.LineTo(reference.X + 7, center - radius * 0.5f);
+            bridge.LineTo(reference.X + 7, center + radius * 0.5f);
+            bridge.LineTo(reference.X + 4, center + radius);
+            bridge.LineTo(reference.X, center + radius);
+        }
+        canvas.DrawPath(bridge);
+    }
+
+    private void DrawElectricityDots(ICanvas canvas, List<PointF> path, int electronDirection)
+    {
+        float totalLength = 0;
+        for (int i = 0; i < path.Count - 1; i++)
+            totalLength += MathF.Abs(path[i + 1].X - path[i].X) + MathF.Abs(path[i + 1].Y - path[i].Y);
+        if (totalLength < 1f) return;
+
+        int dotCount = Math.Clamp((int)(totalLength / 28f), 2, 6);
+        for (int i = 0; i < dotCount; i++)
+        {
+            float norm = ((float)i / dotCount + ElectricityAnimPhase) % 1.0f;
+            if (electronDirection < 0) norm = 1f - norm;
+            float distance = norm * totalLength;
+            for (int segment = 0; segment < path.Count - 1; segment++)
+            {
+                var a = path[segment];
+                var b = path[segment + 1];
+                float segmentLength = MathF.Abs(b.X - a.X) + MathF.Abs(b.Y - a.Y);
+                if (distance > segmentLength) { distance -= segmentLength; continue; }
+                float ratio = segmentLength > 0 ? distance / segmentLength : 0;
+                float x = a.X + (b.X - a.X) * ratio;
+                float y = a.Y + (b.Y - a.Y) * ratio;
+                canvas.FillColor = Color.FromArgb("#6656D364");
+                canvas.FillCircle(x, y, 4f);
+                canvas.FillColor = Color.FromArgb("#E3B341");
+                canvas.FillCircle(x, y, 2.2f);
+                break;
             }
         }
     }
 
-    private void DrawElectricityDots(ICanvas canvas, float x1, float y1, float mx1, float my1, float mx2, float my2, float x2, float y2)
+    private static void DrawWireMeasurement(ICanvas canvas, WireComponent wire, List<PointF> path)
     {
-        float len1 = MathF.Abs(mx1 - x1);
-        float len2 = MathF.Abs(my2 - my1);
-        float len3 = MathF.Abs(x2 - mx2);
-        float totalLen = len1 + len2 + len3;
-        if (totalLen <= 0.1f) return;
-
-        int dotCount = Math.Clamp((int)(totalLen / 28f), 2, 6);
-        for (int i = 0; i < dotCount; i++)
-        {
-            float norm = ((float)i / dotCount + ElectricityAnimPhase) % 1.0f;
-            float targetDist = norm * totalLen;
-
-            float dotX, dotY;
-            if (targetDist <= len1)
-            {
-                float t = len1 > 0 ? targetDist / len1 : 0;
-                dotX = x1 + (mx1 - x1) * t;
-                dotY = y1;
-            }
-            else if (targetDist <= len1 + len2)
-            {
-                float t = len2 > 0 ? (targetDist - len1) / len2 : 0;
-                dotX = mx1;
-                dotY = my1 + (my2 - my1) * t;
-            }
-            else
-            {
-                float t = len3 > 0 ? (targetDist - len1 - len2) / len3 : 0;
-                dotX = mx2 + (x2 - mx2) * t;
-                dotY = y2;
-            }
-
-            // Outer electric halo + inner bright charge dot
-            canvas.FillColor = Color.FromArgb("#6656D364");
-            canvas.FillCircle(dotX, dotY, 4.0f);
-            canvas.FillColor = Color.FromArgb("#E3B341");
-            canvas.FillCircle(dotX, dotY, 2.2f);
-        }
+        if (path.Count < 2) return;
+        var midpoint = path[path.Count / 2];
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(midpoint.X + 4, midpoint.Y - 19, 84, 30, 4);
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1f;
+        canvas.DrawRoundedRectangle(midpoint.X + 4, midpoint.Y - 19, 84, 30, 4);
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 8f;
+        canvas.DrawString($"{wire.LiveVoltage:F2} V", midpoint.X + 8, midpoint.Y - 17, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString($"{wire.LiveCurrent * 1000:F1} mA", midpoint.X + 8, midpoint.Y - 5, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
     private void DrawComponents(ICanvas canvas)
@@ -1291,6 +1437,13 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "XOR":           DrawXorGate(canvas); break;
             case "XNOR":          DrawXnorGate(canvas); break;
             case "IC":            DrawIC(canvas); break;
+            case "Wire":           break; // Routed separately so it can avoid components and bridge crossings.
+            case "CustomCircuit":
+                string macroLabel = comp is CustomCircuitComponent macro
+                    ? macro.DisplayName[..Math.Min(5, macro.DisplayName.Length)].ToUpperInvariant()
+                    : "MACRO";
+                ComponentSymbolDrawer.DrawDigitalBlock(canvas, macroLabel, "#D2A8FF");
+                break;
             case "Junction":      DrawJunction(canvas, comp); break;
             case "Label":            DrawLabel(canvas, comp.Name); break;
             case "MutualInductance": ComponentSymbolDrawer.DrawMutualInductance(canvas); break;
@@ -1380,7 +1533,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             -30, 22, 60, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
 
         // Live probe HUD (Eye icon probe enabled)
-        if (comp.ShowLiveProbe)
+        if ((comp.ShowLiveProbe || LiveMeasurementsVisible) && comp.ComponentType != "Wire")
         {
             float badgeX = 26;
             float badgeY = -18;
@@ -1413,8 +1566,8 @@ public class SchematicViewport : GraphicsView, IDrawable
         // Draw small circle to nodes/pins on all components in viewport with connection degree coloring
         foreach (var pin in comp.Pins)
         {
-            float px = (float)pin.RelativeX;
-            float py = (float)pin.RelativeY;
+            float px = (float)pin.RelativeX * sx;
+            float py = (float)pin.RelativeY * sy;
             bool isPinSelected = (_selectedPin != null &&
                                   _selectedPin.Value.Component == comp &&
                                   _selectedPin.Value.Pin == pin);

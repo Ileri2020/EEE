@@ -32,8 +32,13 @@ public class SpiceSharpAdapter : ISimulationEngine
             return results;
         }
 
+        var originalCircuit = circuit;
+        CircuitMacroExpansion? macroExpansion = null;
+
         try
         {
+            macroExpansion = CircuitMacroExpander.Expand(circuit);
+            circuit = macroExpansion.Circuit;
             // Resolve digital logic before building the analog netlist. Digital devices
             // are represented to SpiceSharp as ideal voltage drivers at their output pins.
             DigitalLogicSimulator.EvaluateCombinational(circuit);
@@ -191,6 +196,15 @@ public class SpiceSharpAdapter : ISimulationEngine
                     case BulbComponent bulb:
                     {
                         var res = new SpiceSharp.Components.Resistor(bulb.Name, nodeA, nodeB, Math.Max(bulb.Resistance, 1e-6));
+                        spiceCircuit.Add(res);
+                        break;
+                    }
+
+                    case WireComponent wire:
+                    {
+                        // A schematic wire is an electrical branch too. Use a tiny
+                        // resistance for an ideal wire so its branch current is measurable.
+                        var res = new SpiceSharp.Components.Resistor(wire.Name, nodeA, nodeB, Math.Max(wire.Resistance, 1e-6));
                         spiceCircuit.Add(res);
                         break;
                     }
@@ -431,10 +445,6 @@ public class SpiceSharpAdapter : ISimulationEngine
                         spiceCircuit.Add(vd);
                         break;
                     }
-
-                    case WireComponent w when w.Resistance > 0:
-                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(w.Name, nodeA, nodeB, w.Resistance));
-                        break;
 
                     case ClockComponent clk:
                     {
@@ -746,6 +756,15 @@ public class SpiceSharpAdapter : ISimulationEngine
                 compExports[item.Comp] = (expA, expB);
             }
 
+            var branchCurrentExports = new Dictionary<ComponentNode, RealCurrentExport>();
+            foreach (var item in componentsWithPins)
+            {
+                if (item.Comp is ElectricalComponent || item.Comp is WireComponent)
+                {
+                    branchCurrentExports[item.Comp] = new RealCurrentExport(op, item.Comp.Name);
+                }
+            }
+
             foreach (int _ in op.Run(spiceCircuit))
             {
                 foreach (var net in topology.Nets)
@@ -765,26 +784,31 @@ public class SpiceSharpAdapter : ISimulationEngine
                 {
                     double va = expA != null ? expA.Value : 0.0;
                     double vb = expB != null ? expB.Value : 0.0;
-                    double vDrop = Math.Abs(va - vb);
-                    comp.LiveVoltage = vDrop;
+                    double signedVoltage = va - vb;
+                    double vDrop = Math.Abs(signedVoltage);
+                    comp.LiveVoltage = signedVoltage;
+                    comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var branchCurrent) ? branchCurrent.Value : 0.0;
 
                     if (comp is ResistorComponent r && r.Resistance > 0)
                     {
-                        comp.LiveCurrent = vDrop / r.Resistance;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                     else if (comp is BulbComponent b && b.Resistance > 0)
                     {
-                        comp.LiveCurrent = vDrop / b.Resistance;
                         b.Brightness = Math.Clamp(vDrop / Math.Max(b.RatedVoltage, 0.1), 0.0, 1.0);
-                        b.IsOn = vDrop >= b.ThresholdVoltage || comp.LiveCurrent >= 0.02;
+                        b.IsOn = vDrop >= b.ThresholdVoltage || Math.Abs(comp.LiveCurrent) >= 0.02;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
+                    }
+                    else if (comp is WireComponent)
+                    {
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                     else if (comp is LEDComponent led)
                     {
-                        comp.LiveVoltage = vDrop;
-                        led.IsOn = vDrop >= Math.Min(led.ForwardVoltage * 0.75, 1.5) || comp.LiveCurrent >= 0.001;
-                        results.OperatingPointVoltages[$"V({comp.Name})"] = vDrop;
+                        comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var ledCurrent) ? ledCurrent.Value : 0.0;
+                        led.IsOn = vDrop >= Math.Min(led.ForwardVoltage * 0.75, 1.5) || Math.Abs(comp.LiveCurrent) >= 0.001;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = signedVoltage;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                     else if (comp is LogicInputComponent lin)
                     {
@@ -799,13 +823,14 @@ public class SpiceSharpAdapter : ISimulationEngine
                     }
                     else if (comp is VoltageSourceComponent v)
                     {
-                        comp.LiveVoltage = v.Voltage;
-                        results.OperatingPointVoltages[$"V({comp.Name})"] = v.Voltage;
+                        comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var voltageSourceCurrent) ? voltageSourceCurrent.Value : 0.0;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = signedVoltage;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                     else if (comp is CurrentSourceComponent csrc)
                     {
-                        comp.LiveCurrent = csrc.Current;
-                        results.OperatingPointCurrents[$"I({comp.Name})"] = csrc.Current;
+                        comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var currentSourceCurrent) ? currentSourceCurrent.Value : csrc.Current;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                     else if (comp is ClockComponent clk)
                     {
@@ -832,10 +857,8 @@ public class SpiceSharpAdapter : ISimulationEngine
                         comp.LiveVoltage = va;
                         results.OperatingPointVoltages[$"V({comp.Name})"] = va;
                     }
-                    else if (comp is PullResistorComponent pr)
+                    else if (comp is PullResistorComponent)
                     {
-                        comp.LiveVoltage = vDrop;
-                        comp.LiveCurrent = pr.Resistance > 0 ? vDrop / pr.Resistance : 0.0;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                 }
@@ -859,6 +882,9 @@ public class SpiceSharpAdapter : ISimulationEngine
             // Fallback gracefully so UI and probes still update
             RunFallbackSolver(circuit, results, ex);
         }
+
+        if (macroExpansion?.HasMacros == true)
+            CircuitMacroExpander.CopyMeasurementsBack(originalCircuit, macroExpansion, results);
 
         return results;
     }
@@ -936,8 +962,8 @@ public class SpiceSharpAdapter : ISimulationEngine
             comp.WaveformVoltage.Clear();
             comp.WaveformCurrent.Clear();
 
-            double baseV = comp.LiveVoltage > 0 ? comp.LiveVoltage : 5.0;
-            double baseI = comp.LiveCurrent > 0 ? comp.LiveCurrent : 0.005;
+            double baseV = Math.Abs(comp.LiveVoltage) > 1e-12 ? comp.LiveVoltage : 5.0;
+            double baseI = Math.Abs(comp.LiveCurrent) > 1e-12 ? comp.LiveCurrent : 0.005;
 
             // Check if source has customized waveform parameters
             string wfType = "DC";
@@ -1029,7 +1055,7 @@ public class SpiceSharpAdapter : ISimulationEngine
             }
         }
 
-        if (totalResistance > 0 && sourceVoltage > 0)
+        if (totalResistance > 0 && Math.Abs(sourceVoltage) > 0)
         {
             double current = sourceVoltage / totalResistance;
             results.OperatingPointCurrents["I_total"] = current;
@@ -1041,6 +1067,17 @@ public class SpiceSharpAdapter : ISimulationEngine
                 comp.LiveCurrent = current;
                 results.OperatingPointVoltages[$"V({comp.Name})"] = vDrop;
             }
+
+            foreach (var wire in circuit.Components.OfType<WireComponent>())
+            {
+                wire.LiveVoltage = current * wire.Resistance;
+                wire.LiveCurrent = current;
+                results.OperatingPointVoltages[$"V({wire.Name})"] = wire.LiveVoltage;
+                results.OperatingPointCurrents[$"I({wire.Name})"] = wire.LiveCurrent;
+            }
+
+            foreach (var source in circuit.Components.OfType<VoltageSourceComponent>())
+                source.LiveCurrent = -current;
         }
 
         GenerateWaveforms(circuit.Components.Where(c => c.ShowWaveform).ToList());

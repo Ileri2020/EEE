@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:EEE.ViewModels"
              xmlns:models="clr-namespace:EEE.Services"
+             xmlns:core="clr-namespace:EESimulator.Core.Models"
              xmlns:views="clr-namespace:EESimulator.App.Views"
              x:Class="EEE.WorkspacePage"
              x:DataType="vm:EEWorkspaceViewModel"
@@ -151,7 +152,7 @@
                     <!-- Script / Schematic toggle ('SCR' label — §2.E; &lt;/&gt; entity breaks MAUI source gen) -->
                     <Button Text="SCR" Style="{StaticResource IconBtn}"
                             Command="{Binding ToggleViewportCommand}"
-                            ToolTipProperties.Text="Toggle Script / Schematic View"/>
+                            ToolTipProperties.Text="Cycle Schematic → Script → Analytics view"/>
                     <!-- Waveform -->
                     <Button Text="📈" Style="{StaticResource IconBtn}"
                             Command="{Binding ToggleWaveformDrawerCommand}"
@@ -209,6 +210,17 @@
                                 TextColor="#58A6FF"
                                 Command="{Binding ToggleControlSidebarCommand}"
                                 ToolTipProperties.Text="Toggle Control Sidebar"/>
+                        <Button Text="{Binding LiveMeasurementEyeText}"
+                            Style="{StaticResource IconBtn}"
+                            TextColor="#56D364"
+                            Command="{Binding ToggleLiveMeasurementsCommand}"
+                            ToolTipProperties.Text="Toggle voltage and current overlays on all non-wire components"/>
+                            <Button Text="🧩+"
+                                Style="{StaticResource IconBtn}"
+                                TextColor="#D2A8FF"
+                                Command="{Binding OpenCreateCircuitComponentCommand}"
+                                IsEnabled="{Binding HasSelectedComponent}"
+                                ToolTipProperties.Text="Package the selected connected circuit as a reusable component"/>
                         <Button Text="📄"
                                 Style="{StaticResource IconBtn}"
                                 TextColor="#E3B341"
@@ -395,12 +407,13 @@
                 <views:SchematicViewport
                     x:Name="SchematicCanvas"
                     Circuit="{Binding Circuit}"
-                    IsVisible="{Binding IsScriptViewActive, Converter={StaticResource InvertedBoolConverter}}"
+                    LiveMeasurementsVisible="{Binding IsLiveMeasurementsVisible}"
+                    IsVisible="{Binding IsSchematicViewActive}"
                     HorizontalOptions="Fill"
                     VerticalOptions="Fill"/>
 
                 <!-- ── Floating Play/Pause FAB ─────────────────────────────── -->
-                <Frame IsVisible="{Binding IsScriptViewActive, Converter={StaticResource InvertedBoolConverter}}"
+                <Frame IsVisible="{Binding IsSchematicViewActive}"
                        ZIndex="50"
                        HorizontalOptions="End"
                        VerticalOptions="End"
@@ -425,7 +438,7 @@
                 </Frame>
 
                 <!-- Prompt directly from the schematic canvas; results open as reviewable script drafts. -->
-                <Border IsVisible="{Binding IsScriptViewActive, Converter={StaticResource InvertedBoolConverter}}"
+                <Border IsVisible="{Binding IsSchematicViewActive}"
                         ZIndex="45"
                         HorizontalOptions="Center"
                         VerticalOptions="End"
@@ -459,6 +472,40 @@
                                LineBreakMode="WordWrap"/>
                     </Grid>
                 </Border>
+
+                <!-- Third viewport: circuit analytics -->
+                <Grid IsVisible="{Binding IsAnalyticsViewActive}"
+                      BackgroundColor="#0D1117"
+                      RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" BackgroundColor="#161B22"
+                          ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="12,8">
+                        <Label Grid.Column="0" Text="ANALYTICS" TextColor="#58A6FF"
+                               FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                        <Picker Grid.Column="1" ItemsSource="{Binding AnalyticsModes}"
+                                SelectedItem="{Binding SelectedAnalyticsMode}"
+                                Title="Select analysis"
+                                BackgroundColor="#0D1117" TextColor="#C9D1D9"
+                                FontSize="12"/>
+                        <Button Grid.Column="2" Text="Run Analysis" Style="{StaticResource AccentBtn}"
+                                Command="{Binding RunAnalyticsCommand}"
+                                IsEnabled="{Binding IsAnalyticsRunning, Converter={StaticResource InvertedBoolConverter}}"/>
+                    </Grid>
+                    <ScrollView Grid.Row="1" Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Results use a fresh operating-point simulation. Select a two-terminal component before choosing Thevenin analysis."
+                                   TextColor="#8B949E" FontSize="11" LineBreakMode="WordWrap"/>
+                            <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="12">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                                <Editor Text="{Binding AnalyticsOutput}" IsReadOnly="True" AutoSize="TextChanges"
+                                        BackgroundColor="Transparent" TextColor="#56D364"
+                                        FontFamily="Courier New" FontSize="12"/>
+                            </Border>
+                            <ActivityIndicator IsRunning="{Binding IsAnalyticsRunning}"
+                                               IsVisible="{Binding IsAnalyticsRunning}"
+                                               Color="#58A6FF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Grid>
 
                 <!-- Script Viewport -->
                 <Grid IsVisible="{Binding IsScriptViewActive}"
@@ -702,12 +749,26 @@
                                                     <!-- Icon tile content -->
                                                     <VerticalStackLayout Padding="4,6" Spacing="2">
                                                         <Image
-                                                            Source="{Binding ImageSource}"
+                                                                Source="{Binding ImageSource}"
                                                             WidthRequest="52"
                                                             HeightRequest="42"
                                                             Aspect="AspectFit"
                                                             HorizontalOptions="Center"
+                                                                IsVisible="{Binding IsCustomCircuit, Converter={StaticResource InvertedBoolConverter}}"
                                                             InputTransparent="True"/>
+                                                            <Label Text="{Binding Symbol}"
+                                                                IsVisible="{Binding IsCustomWithoutSvg}"
+                                                                   TextColor="{Binding Color}"
+                                                                   FontSize="28"
+                                                                   HeightRequest="42"
+                                                                   HorizontalOptions="Center"
+                                                                   VerticalTextAlignment="Center"/>
+                                                                <WebView Source="{Binding CustomSvgSource}"
+                                                                      IsVisible="{Binding HasCustomSvg}"
+                                                                      InputTransparent="True"
+                                                                      BackgroundColor="Transparent"
+                                                                      WidthRequest="52"
+                                                                      HeightRequest="42"/>
                                                         <Label Text="{Binding Type}"
                                                                TextColor="#8B949E"
                                                                FontSize="9"
@@ -930,13 +991,64 @@
                                     </VerticalStackLayout>
                                 </Border>
 
+                                <!-- Component measurement events only target UI surfaces, never circuit components. -->
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1" Padding="8">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="6"/></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="SIMULATION UI EVENTS" TextColor="#D2A8FF" FontSize="9" FontAttributes="Bold" VerticalOptions="Center"/>
+                                            <Button Grid.Column="1" Text="＋ Add" Style="{StaticResource ToolBtn}" FontSize="10" Padding="4"
+                                                    Command="{Binding AddComponentEventTriggerCommand}"/>
+                                        </Grid>
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding SelectedComponentEventTriggers}" Spacing="6">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="core:SimulationEventTrigger">
+                                                    <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="6">
+                                                        <Border.StrokeShape><RoundRectangle CornerRadius="5"/></Border.StrokeShape>
+                                                        <VerticalStackLayout Spacing="4">
+                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                                                                <Entry Text="{Binding Name}" Placeholder="Event name" FontSize="10" HeightRequest="32"
+                                                                       BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                                                                <Button Grid.Column="1" Text="✕" Style="{StaticResource IconBtn}" Padding="2" FontSize="10"
+                                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=RemoveComponentEventTriggerCommand, x:DataType=vm:EEWorkspaceViewModel}"
+                                                                        CommandParameter="{Binding .}"/>
+                                                            </Grid>
+                                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="4">
+                                                                <Picker Grid.Column="0" ItemsSource="{Binding MeasurementOptions}" SelectedItem="{Binding Measurement}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                                <Picker Grid.Column="1" ItemsSource="{Binding ComparisonOptions}" SelectedItem="{Binding Comparison}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                                <Entry Grid.Column="2" Text="{Binding Threshold}" Keyboard="Numeric" FontSize="10"
+                                                                       BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                                                            </Grid>
+                                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                                                                <Picker Grid.Column="0" ItemsSource="{Binding TargetOptions}" SelectedItem="{Binding Target}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                                <Picker Grid.Column="1" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                            </Grid>
+                                                            <Entry Text="{Binding Message}" Placeholder="Short text shown when fired" FontSize="10" HeightRequest="32"
+                                                                   BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                                                        </VerticalStackLayout>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Button Text="Save Event Rules" Style="{StaticResource ToolBtn}" FontSize="10"
+                                                Command="{Binding SaveComponentEventTriggersCommand}"/>
+                                    </VerticalStackLayout>
+                                </Border>
+
                                 <!-- Quick Action Buttons: Rotate, Copy, Delete -->
-                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6" Margin="0,4,0,0">
+                                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6" Margin="0,4,0,0">
                                     <Button Grid.Column="0" Text="⟳ Rotate" Style="{StaticResource ToolBtn}" FontSize="10" Padding="4"
                                             Command="{Binding RotateSelectedComponentCommand}"/>
                                     <Button Grid.Column="1" Text="📋 Copy" Style="{StaticResource ToolBtn}" FontSize="10" Padding="4"
                                             Command="{Binding CopySelectedComponentCommand}"/>
-                                    <Button Grid.Column="2" Text="🗑 Delete" Style="{StaticResource ToolBtn}" TextColor="#F85149" FontSize="10" Padding="4"
+                                    <Button Grid.Column="2" Text="📈 Wave" Style="{StaticResource ToolBtn}" TextColor="#79C0FF" FontSize="10" Padding="4"
+                                        Command="{Binding ToggleSelectedWaveformCommand}"
+                                        ToolTipProperties.Text="Show or hide this component in the waveform drawer"/>
+                                    <Button Grid.Column="3" Text="🗑 Delete" Style="{StaticResource ToolBtn}" TextColor="#F85149" FontSize="10" Padding="4"
                                             Command="{Binding DeleteSelectedComponentCommand}"/>
                                 </Grid>
                             </VerticalStackLayout>
@@ -2429,6 +2541,84 @@
                                 Text="💾 Save File"
                                 Style="{StaticResource AccentBtn}"
                                 Command="{Binding ConfirmSaveAsCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Latched/while-true simulation event chat surface. -->
+        <Border IsVisible="{Binding IsSimulationEventChatVisible}"
+                ZIndex="240" HorizontalOptions="End" VerticalOptions="End"
+                Margin="0,0,20,40" Padding="12,8"
+                BackgroundColor="#1C2128" Stroke="#58A6FF" StrokeThickness="1">
+            <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" MaximumWidthRequest="340">
+                <Label Text="{Binding SimulationEventChatMessage}" TextColor="#C9D1D9" FontSize="11"
+                       LineBreakMode="WordWrap" VerticalOptions="Center"/>
+                <Button Grid.Column="1" Text="✕" Style="{StaticResource IconBtn}" FontSize="10" Padding="2"
+                        Command="{Binding DismissSimulationEventChatCommand}"/>
+            </Grid>
+        </Border>
+
+        <!-- UI-only event dialog; it is not connected to any circuit component. -->
+        <Grid IsVisible="{Binding IsSimulationEventDialogVisible}" ZIndex="250" BackgroundColor="#AA000000" Padding="16">
+            <Border MaximumWidthRequest="420" HorizontalOptions="Center" VerticalOptions="Center"
+                    BackgroundColor="#161B22" Stroke="#D2A8FF" StrokeThickness="1" Padding="16">
+                <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="{Binding SimulationEventDialogTitle}" TextColor="#D2A8FF" FontSize="14" FontAttributes="Bold"/>
+                    <Label Text="{Binding SimulationEventDialogMessage}" TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                    <Button Text="OK" Style="{StaticResource AccentBtn}" HorizontalOptions="End"
+                            Command="{Binding CloseSimulationEventDialogCommand}"/>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- Save the selected connected circuit as a reusable component. -->
+        <Grid IsVisible="{Binding IsCreateCircuitComponentDialogVisible}"
+              ZIndex="200"
+              BackgroundColor="#AA000000"
+              Padding="16">
+            <Border MaximumWidthRequest="560" MaximumHeightRequest="680"
+                    HorizontalOptions="Center" VerticalOptions="Center"
+                    BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="16,12" ColumnDefinitions="*,Auto">
+                        <Label Text="CREATE REUSABLE CIRCUIT COMPONENT" TextColor="#D2A8FF"
+                               FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                        <Button Grid.Column="1" Text="✕" Style="{StaticResource IconBtn}" Padding="4"
+                                Command="{Binding CancelCreateCircuitComponentCommand}"/>
+                    </Grid>
+                    <ScrollView Grid.Row="1" Padding="16,12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="The connected circuit containing the selected component will be replaced by a reusable block. Open pins become its named nodes."
+                                   TextColor="#8B949E" FontSize="11" LineBreakMode="WordWrap"/>
+                            <Label Text="COMPONENT NAME" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                            <Entry Text="{Binding NewCircuitComponentName}" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                            <Label Text="EXPOSED NODE NAMES" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding NewCircuitComponentPorts}" Spacing="4">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CustomCircuitPortDraft">
+                                        <Grid ColumnDefinitions="*,Auto,2*" ColumnSpacing="8">
+                                            <Label Grid.Column="0" Text="{Binding ComponentReference}" TextColor="#79C0FF" FontSize="10" VerticalOptions="Center"/>
+                                            <Label Grid.Column="1" Text="{Binding OriginalPinName}" TextColor="#8B949E" FontSize="10" VerticalOptions="Center"/>
+                                            <Entry Grid.Column="2" Text="{Binding Name}" Placeholder="Node name" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="11"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <Label Text="INLINE SVG ICON (scripts and external resources are not allowed)" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                            <Editor Text="{Binding NewCircuitComponentSvg}" HeightRequest="100" AutoSize="TextChanges"
+                                    BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="10"/>
+                            <Label Text="{Binding CreateCircuitComponentStatus}" TextColor="#E3B341" FontSize="10" LineBreakMode="WordWrap"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="12,10" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <Button Grid.Column="1" Text="Save Locally" Style="{StaticResource ToolBtn}"
+                                Command="{Binding CreateSelectedCircuitComponentCommand}" CommandParameter="False"/>
+                        <Button Grid.Column="2" Text="Save Local + Online" Style="{StaticResource AccentBtn}"
+                                Command="{Binding CreateSelectedCircuitComponentCommand}" CommandParameter="True"/>
                     </Grid>
                 </Grid>
             </Border>

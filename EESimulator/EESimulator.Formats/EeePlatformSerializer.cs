@@ -217,7 +217,11 @@ public static class EeePlatformSerializer
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"EEE file not found: {filePath}");
 
-        string json = File.ReadAllText(filePath);
+        return LoadFromEeeJson(File.ReadAllText(filePath));
+    }
+
+    public static CircuitNode LoadFromEeeJson(string json)
+    {
         var dto = JsonSerializer.Deserialize<EeeProjectDto>(json, JsonOptions);
         if (dto == null)
             throw new InvalidOperationException("Failed to parse EEE project file.");
@@ -274,6 +278,9 @@ public static class EeePlatformSerializer
                 {
                     comp.CustomProperties[kvp.Key] = kvp.Value;
                 }
+
+                if (comp is EESimulator.Core.Components.General.CustomCircuitComponent customCircuit)
+                    customCircuit.RestorePorts();
 
                 // Legacy: if old file had CustomProperties as object bag, it is now ignored
                 // (PropertyNameCaseInsensitive will map StringParameters from the JSON correctly).

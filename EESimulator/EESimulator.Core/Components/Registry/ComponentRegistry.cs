@@ -506,6 +506,12 @@ public static class ComponentRegistry
             d.IsSimulatable = false;
         });
 
+        Register<CustomCircuitComponent>(CustomCircuitComponent.StableType, "CustomCircuit", "Custom Circuits", "X", d =>
+        {
+            d.Description = "Reusable user-created circuit component";
+            d.Icon = "customcircuit.svg";
+        });
+
         Register<JunctionComponent>("general.junction", "Junction", "General", "J", d =>
         {
             d.Description = "Electrical wire junction";
