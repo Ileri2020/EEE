@@ -562,8 +562,8 @@ public static class ComponentRegistry
         {
             d.Description = "Programmable Logic Array";
             d.Icon = "pla.svg";
-            d.DefaultParameters["InputCount"] = 4.0;
-            d.DefaultParameters["OutputCount"] = 4.0;
+            d.DefaultParameters["InputCount"] = 2.0;
+            d.DefaultParameters["OutputCount"] = 2.0;
             d.DefaultParameters["AndTerms"] = 4.0;
         });
 
@@ -588,14 +588,14 @@ public static class ComponentRegistry
         {
             d.Description = "Binary decoder (n-to-2^n)";
             d.Icon = "decoder.svg";
-            d.DefaultParameters["SelectBits"] = 2.0;
+            d.DefaultParameters["SelectBits"] = 1.0;
         });
 
         Register<PriorityEncoderComponent>("electronics.priorityencoder", "PriorityEncoder", "Plexers", "ENC", d =>
         {
             d.Description = "Priority encoder (highest active input to binary)";
             d.Icon = "priorityencoder.svg";
-            d.DefaultParameters["SelectBits"] = 2.0;
+            d.DefaultParameters["SelectBits"] = 3.0;
         });
 
         Register<BitSelectorComponent>("electronics.bitselector", "BitSelector", "Plexers", "BSEL", d =>

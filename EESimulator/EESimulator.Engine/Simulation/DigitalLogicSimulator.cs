@@ -57,7 +57,7 @@ public static class DigitalLogicSimulator
         foreach (var pin in component.Pins)
         {
             if (!IsOutputPin(component, pin.Id)) continue;
-            if (component is ControlledBufferComponent && !Bool(component, "_triStateEnabled", true)) continue;
+            if (Bool(component, $"HighZ:{pin.Id}", false)) continue;
             if (component.CustomProperties.TryGetValue($"OutputVoltage:{pin.Id}", out var outputVoltage) &&
                 double.TryParse(outputVoltage?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var storedVoltage))
             {
@@ -137,9 +137,9 @@ public static class DigitalLogicSimulator
         ConstantComponent => pinId == "out",
         PowerComponent => pinId == "vcc",
         PinComponent pin => pinId == "pin" && pin.Direction == PinDirection.Input,
-        BufferComponent or ControlledBufferComponent or EvenParityGateComponent or OddParityGateComponent or MultiplexerComponent or BitSelectorComponent => pinId == "out" || pinId.StartsWith("out_", StringComparison.Ordinal),
+        BufferComponent or ControlledBufferComponent or EvenParityGateComponent or OddParityGateComponent or MultiplexerComponent or BitSelectorComponent => pinId == "out" || pinId.StartsWith("out", StringComparison.Ordinal),
         PLAComponent or DemultiplexerComponent or DecoderComponent => pinId.StartsWith("out", StringComparison.Ordinal),
-        PriorityEncoderComponent => pinId.StartsWith("out", StringComparison.Ordinal) || pinId == "any_active",
+        PriorityEncoderComponent => pinId.StartsWith("out", StringComparison.Ordinal) || pinId is "any_active" or "en_out",
         DFlipFlopComponent or JKFlipFlopComponent or SRFlipFlopComponent or TFlipFlopComponent => pinId is "Q" or "Q_bar",
         RegisterComponent => pinId.StartsWith("Q", StringComparison.Ordinal),
         CounterComponent => pinId.StartsWith("Q", StringComparison.Ordinal) || pinId == "carry",
@@ -180,6 +180,10 @@ public static class DigitalLogicSimulator
                     JKFlipFlopComponent jk => jk.Trigger,
                     SRFlipFlopComponent sr => sr.Trigger,
                     TFlipFlopComponent tff => tff.Trigger,
+                    RegisterComponent register => register.Trigger,
+                    CounterComponent counter => counter.Trigger,
+                    ShiftRegisterComponent shift => shift.Trigger,
+                    RandomComponent random => random.Trigger,
                     _ => ClockTriggerType.RisingEdge
                 };
                 int edges = ClockEdges(component, clockPin, trigger);
@@ -195,6 +199,7 @@ public static class DigitalLogicSimulator
                         break;
                     case JKFlipFlopComponent jk:
                         if (Read(jk, "reset")) jk.StateQ = false;
+                        else if (Read(jk, "set")) jk.StateQ = true;
                         else for (int i = 0; i < edges; i++)
                         {
                             bool j = Read(jk, "J"), k = Read(jk, "K");
@@ -206,61 +211,102 @@ public static class DigitalLogicSimulator
                         Set(jk, "Q_bar", !jk.StateQ, jk.HighVoltage, jk.LowVoltage);
                         break;
                     case SRFlipFlopComponent sr:
-                        for (int i = 0; i < edges; i++)
+                        if (Read(sr, "reset")) { sr.StateQ = false; SetBool(sr, "_invalidState", false); }
+                        else if (Read(sr, "set")) { sr.StateQ = true; SetBool(sr, "_invalidState", false); }
+                        else for (int i = 0; i < edges; i++)
                         {
                             bool set = Read(sr, "S"), reset = Read(sr, "R");
-                            if (set && !reset) sr.StateQ = true;
-                            else if (reset && !set) sr.StateQ = false;
+                            if (set && reset) SetBool(sr, "_invalidState", true);
+                            else if (set) { sr.StateQ = true; SetBool(sr, "_invalidState", false); }
+                            else if (reset) { sr.StateQ = false; SetBool(sr, "_invalidState", false); }
                         }
-                        Set(sr, "Q", sr.StateQ, sr.HighVoltage, sr.LowVoltage);
-                        Set(sr, "Q_bar", !sr.StateQ, sr.HighVoltage, sr.LowVoltage);
+                        if (Bool(sr, "_invalidState", false))
+                        {
+                            SetHighZ(sr, "Q");
+                            SetHighZ(sr, "Q_bar");
+                        }
+                        else
+                        {
+                            Set(sr, "Q", sr.StateQ, sr.HighVoltage, sr.LowVoltage);
+                            Set(sr, "Q_bar", !sr.StateQ, sr.HighVoltage, sr.LowVoltage);
+                        }
                         break;
                     case TFlipFlopComponent tff:
                         if (Read(tff, "reset")) tff.StateQ = false;
+                        else if (Read(tff, "set")) tff.StateQ = true;
                         else for (int i = 0; i < edges; i++) if (Read(tff, "T")) tff.StateQ = !tff.StateQ;
                         Set(tff, "Q", tff.StateQ, tff.HighVoltage, tff.LowVoltage);
                         Set(tff, "Q_bar", !tff.StateQ, tff.HighVoltage, tff.LowVoltage);
                         break;
                     case RegisterComponent register:
                         if (Read(register, "clr")) register.Value = 0;
-                        else if (Read(register, "en") || !HasConnected(register, "en"))
+                        else if (edges > 0 && (Read(register, "en") || !HasConnected(register, "en")))
                             for (int i = 0; i < edges; i++) register.Value = ReadBus(register, "D", register.BitWidth);
                         for (int bit = 0; bit < register.BitWidth; bit++) Set(register, $"Q{bit}", ((register.Value >> bit) & 1) != 0, 5, 0);
                         break;
                     case CounterComponent counter:
-                        if (Read(counter, "clr")) counter.Value = 0;
-                        else if (Read(counter, "en"))
+                        if (Read(counter, "clr")) { counter.Value = 0; counter.CarryOut = false; }
+                        else if (edges > 0 && Read(counter, "ld")) counter.Value = ReadBus(counter, "D", counter.BitWidth) & Mask(counter.BitWidth);
+                        else if (edges > 0 && Read(counter, "en"))
                         {
-                            long max = Math.Max(1, counter.MaxValue);
-                            for (int i = 0; i < edges; i++) counter.Value = Read(counter, "up_down") ? (counter.Value + 1) % (max + 1) : (counter.Value <= 0 ? max : counter.Value - 1);
-                            counter.CarryOut = counter.Value == 0;
+                            long max = Math.Min(Mask(counter.BitWidth), Math.Max(1, counter.MaxValue));
+                            for (int i = 0; i < edges; i++)
+                            {
+                                bool countUp = Read(counter, "up_down");
+                                bool atGoal = countUp ? counter.Value >= max : counter.Value <= 0;
+                                if (!atGoal)
+                                    counter.Value = countUp ? counter.Value + 1 : counter.Value - 1;
+                                else
+                                {
+                                    counter.Value = counter.GoalAction switch
+                                    {
+                                        "Stay" => counter.Value,
+                                        "Continue" => countUp ? (counter.Value + 1) & Mask(counter.BitWidth) : (counter.Value - 1) & Mask(counter.BitWidth),
+                                        "Load" => ReadBus(counter, "D", counter.BitWidth) & Mask(counter.BitWidth),
+                                        _ => countUp ? 0 : max
+                                    };
+                                }
+                                counter.CarryOut = atGoal;
+                            }
                         }
                         for (int bit = 0; bit < counter.BitWidth; bit++) Set(counter, $"Q{bit}", ((counter.Value >> bit) & 1) != 0, 5, 0);
                         Set(counter, "carry", counter.CarryOut, 5, 0);
                         break;
                     case ShiftRegisterComponent shift:
                         if (Read(shift, "clr")) shift.Value = 0;
-                        else if (Read(shift, "en") || !HasConnected(shift, "en"))
+                        else if (edges > 0 && shift.HasParallelLoad && Read(shift, "ld")) shift.Value = ReadBus(shift, "D", shift.Length) & Mask(shift.Length);
+                        else if (edges > 0 && (Read(shift, "en") || !HasConnected(shift, "en")))
                             for (int i = 0; i < edges; i++) shift.Value = ((shift.Value << 1) | (Read(shift, "sin") ? 1L : 0L)) & Mask(shift.Length);
                         for (int bit = 0; bit < shift.Length; bit++) Set(shift, $"Q{bit}", ((shift.Value >> bit) & 1) != 0, 5, 0);
-                        Set(shift, "sout", (shift.Value & 1) != 0, 5, 0);
+                        Set(shift, "sout", ((shift.Value >> (shift.Length - 1)) & 1) != 0, 5, 0);
                         break;
                     case RandomComponent random:
-                        if (Read(random, "rst")) random.Value = Math.Max(1, random.Seed);
-                        else if (Read(random, "en") || !HasConnected(random, "en"))
+                        if (Read(random, "rst"))
+                        {
+                            const long seedMask = (1L << 48) - 1;
+                            SetNumber(random, "_randomSeed48", Math.Max(1, random.Seed) & seedMask);
+                            random.Value = random.Seed;
+                        }
+                        else if (edges > 0 && (Read(random, "en") || !HasConnected(random, "en")))
                             for (int i = 0; i < edges; i++)
                             {
-                                long value = random.Value == 0 ? Math.Max(1, random.Seed) : random.Value;
-                                long feedback = ((value >> 7) ^ (value >> 5) ^ (value >> 4) ^ (value >> 3)) & 1;
-                                random.Value = ((value << 1) | feedback) & Mask(random.BitWidth);
+                                const long addend = 0xB;
+                                const long seedMask = (1L << 48) - 1;
+                                const long multiplier = 0x5DEECE66D;
+                                long seed = (long)Number(random, "_randomSeed48", Math.Max(1, random.Seed) & seedMask);
+                                seed = (seed * multiplier + addend) & seedMask;
+                                SetNumber(random, "_randomSeed48", seed);
+                                random.Value = (seed >> 12) & Mask(random.BitWidth);
                             }
                         for (int bit = 0; bit < random.BitWidth; bit++) Set(random, $"Q{bit}", ((random.Value >> bit) & 1) != 0, 5, 0);
                         break;
                     case RAMComponent ram:
                         int address = (int)ReadBus(ram, "addr", ram.AddressBitWidth);
-                        if (Read(ram, "we") && edges > 0) ram.MemoryData[address] = ReadBus(ram, "din", ram.DataBitWidth);
-                        long word = ram.MemoryData.TryGetValue(address, out var storedWord) ? storedWord : 0;
-                        for (int bit = 0; bit < ram.DataBitWidth; bit++) Set(ram, $"dout{bit}", ((word >> bit) & 1) != 0, 5, 0);
+                        if (edges > 0)
+                        {
+                            ram.ReadAddress = address;
+                            if (Read(ram, "we")) ram.MemoryData[address] = ReadBus(ram, "din", ram.DataBitWidth) & Mask(ram.DataBitWidth);
+                        }
                         break;
                 }
             }
@@ -268,6 +314,7 @@ public static class DigitalLogicSimulator
 
         public void EvaluateCombinational()
         {
+            PublishStoredOutputs();
             // Fixed-point iteration settles short cascades of combinational gates.
             for (int pass = 0; pass < Math.Clamp(Components.Count, 1, 24); pass++)
             {
@@ -276,19 +323,32 @@ public static class DigitalLogicSimulator
                     switch (component)
                     {
                         case BufferComponent buffer:
-                            Set(buffer, "out", Read(buffer, "in"), buffer.HighVoltage, buffer.LowVoltage);
+                            for (int bit = 0; bit < buffer.BitWidth; bit++)
+                            {
+                                string input = BusPin(buffer, "in", bit, buffer.BitWidth);
+                                string output = BusPin(buffer, "out", bit, buffer.BitWidth);
+                                bool inputState = Read(buffer, input);
+                                string mode = buffer.OutputMode;
+                                if ((mode == "0Z" && inputState) || (mode == "Z1" && !inputState)) SetHighZ(buffer, output);
+                                else Set(buffer, output, inputState, buffer.HighVoltage, buffer.LowVoltage);
+                            }
                             break;
                         case ControlledBufferComponent tri:
                             bool triEnabled = Read(tri, "ctrl") != tri.ControlActiveLow;
                             SetBool(tri, "_triStateEnabled", triEnabled);
-                            if (triEnabled)
-                                Set(tri, "out", Read(tri, "in"), tri.HighVoltage, tri.LowVoltage);
+                            for (int bit = 0; bit < tri.BitWidth; bit++)
+                            {
+                                string input = BusPin(tri, "in", bit, tri.BitWidth);
+                                string output = BusPin(tri, "out", bit, tri.BitWidth);
+                                if (triEnabled) Set(tri, output, Read(tri, input), tri.HighVoltage, tri.LowVoltage);
+                                else SetHighZ(tri, output);
+                            }
                             break;
                         case EvenParityGateComponent even:
-                            Set(even, "out", CountInputs(even, even.NumberOfInputs) % 2 == 0, 5, 0);
+                            Set(even, "out", CountInputs(even, even.NumberOfInputs, true) % 2 == 0, 5, 0);
                             break;
                         case OddParityGateComponent odd:
-                            Set(odd, "out", CountInputs(odd, odd.NumberOfInputs) % 2 != 0, 5, 0);
+                            Set(odd, "out", CountInputs(odd, odd.NumberOfInputs, true) % 2 != 0, 5, 0);
                             break;
                         case PLAComponent pla:
                             EvaluatePla(pla);
@@ -296,36 +356,64 @@ public static class DigitalLogicSimulator
                         case MultiplexerComponent mux:
                             int muxIndex = (int)ReadBus(mux, "sel", mux.SelectBits);
                             long muxWord = ReadBus(mux, $"in{muxIndex}", mux.BitWidth);
-                            bool muxEnabled = !mux.HasEnable || !HasConnected(mux, "en") || Read(mux, "en");
-                            for (int bit = 0; bit < mux.BitWidth; bit++) Set(mux, mux.BitWidth == 1 ? "out" : $"out_b{bit}", muxEnabled && ((muxWord >> bit) & 1) != 0, 5, 0);
+                            bool muxEnabled = !mux.HasEnable || Read(mux, "en");
+                            for (int bit = 0; bit < mux.BitWidth; bit++)
+                            {
+                                string output = BusPin(mux, "out", bit, mux.BitWidth, "_b");
+                                if (!muxEnabled && mux.ThreeStateOutputs) SetHighZ(mux, output);
+                                else Set(mux, output, muxEnabled && ((muxWord >> bit) & 1) != 0, 5, 0);
+                            }
                             break;
                         case DemultiplexerComponent demux:
                             int selected = (int)ReadBus(demux, "sel", demux.SelectBits);
                             long data = ReadBus(demux, "in", demux.BitWidth);
-                            bool demuxEnabled = !HasConnected(demux, "en") || Read(demux, "en");
+                            bool demuxEnabled = !demux.HasEnable || Read(demux, "en");
                             for (int output = 0; output < (1 << demux.SelectBits); output++)
                                 for (int bit = 0; bit < demux.BitWidth; bit++)
                                 {
                                     string outputPin = demux.BitWidth == 1 ? $"out{output}" : $"out{output}_b{bit}";
-                                    Set(demux, outputPin, demuxEnabled && selected == output && ((data >> bit) & 1) != 0, 5, 0);
+                                    if ((!demuxEnabled || selected != output) && demux.ThreeStateOutputs) SetHighZ(demux, outputPin);
+                                    else Set(demux, outputPin, demuxEnabled && selected == output && ((data >> bit) & 1) != 0, 5, 0);
                                 }
                             break;
                         case DecoderComponent decoder:
                             int decoded = (int)ReadBus(decoder, "sel", decoder.SelectBits);
-                            bool enabled = !decoder.HasEnable || !HasConnected(decoder, "en") || Read(decoder, "en");
-                            for (int i = 0; i < (1 << decoder.SelectBits); i++) Set(decoder, $"out{i}", enabled && decoded == i, 5, 0);
+                            bool enabled = !decoder.HasEnable || Read(decoder, "en");
+                            for (int i = 0; i < (1 << decoder.SelectBits); i++)
+                            {
+                                if (!enabled && decoder.ThreeStateOutputs) SetHighZ(decoder, $"out{i}");
+                                else Set(decoder, $"out{i}", enabled && decoded == i, 5, 0);
+                            }
                             break;
                         case PriorityEncoderComponent encoder:
                             int active = -1;
                             for (int i = 0; i < (1 << encoder.SelectBits); i++) if (Read(encoder, $"in{i}")) active = i;
-                            SetNumber(encoder, "EncodedValue", Math.Max(active, 0));
-                            for (int bit = 0; bit < encoder.SelectBits; bit++) Set(encoder, $"out{bit}", active >= 0 && ((active >> bit) & 1) != 0, 5, 0);
-                            Set(encoder, "any_active", active >= 0, 5, 0);
+                            bool encoderEnabled = Read(encoder, "en");
+                            SetNumber(encoder, "EncodedValue", encoderEnabled ? Math.Max(active, 0) : 0);
+                            for (int bit = 0; bit < encoder.SelectBits; bit++)
+                            {
+                                if ((encoderEnabled && active < 0) || (!encoderEnabled && encoder.ThreeStateOutputs)) SetHighZ(encoder, $"out{bit}");
+                                else Set(encoder, $"out{bit}", encoderEnabled && active >= 0 && ((active >> bit) & 1) != 0, 5, 0);
+                            }
+                            Set(encoder, "any_active", encoderEnabled && active >= 0, 5, 0);
+                            Set(encoder, "en_out", encoderEnabled && active < 0, 5, 0);
                             break;
                         case BitSelectorComponent selector:
                             int bitIndex = (int)ReadBus(selector, "sel", selector.SelectWidth);
                             long dataWord = ReadBus(selector, "data", selector.DataBusWidth);
-                            Set(selector, "out", bitIndex < selector.DataBusWidth && ((dataWord >> bitIndex) & 1) != 0, 5, 0);
+                            long selectedGroup = bitIndex * (long)selector.GroupWidth;
+                            for (int bit = 0; bit < selector.GroupWidth; bit++)
+                            {
+                                string output = selector.GroupWidth == 1 ? "out" : $"out_b{bit}";
+                                long sourceBit = selectedGroup + bit;
+                                Set(selector, output, sourceBit < selector.DataBusWidth && ((dataWord >> (int)sourceBit) & 1) != 0, 5, 0);
+                            }
+                            break;
+                        case RAMComponent ram:
+                            EvaluateRamRead(ram);
+                            break;
+                        case ROMComponent rom:
+                            EvaluateRomRead(rom);
                             break;
                         case LogicGateComponent logicGate:
                             EvaluateLogicGate(logicGate);
@@ -334,6 +422,54 @@ public static class DigitalLogicSimulator
                             EvaluateNamedGate(namedGate);
                             break;
                     }
+                }
+            }
+        }
+
+        private void PublishStoredOutputs()
+        {
+            foreach (var component in Components)
+            {
+                switch (component)
+                {
+                    case DFlipFlopComponent dff:
+                        Set(dff, "Q", dff.StateQ, dff.HighVoltage, dff.LowVoltage);
+                        Set(dff, "Q_bar", !dff.StateQ, dff.HighVoltage, dff.LowVoltage);
+                        break;
+                    case JKFlipFlopComponent jk:
+                        Set(jk, "Q", jk.StateQ, jk.HighVoltage, jk.LowVoltage);
+                        Set(jk, "Q_bar", !jk.StateQ, jk.HighVoltage, jk.LowVoltage);
+                        break;
+                    case SRFlipFlopComponent sr:
+                        if (Bool(sr, "_invalidState", false))
+                        {
+                            SetHighZ(sr, "Q");
+                            SetHighZ(sr, "Q_bar");
+                        }
+                        else
+                        {
+                            Set(sr, "Q", sr.StateQ, sr.HighVoltage, sr.LowVoltage);
+                            Set(sr, "Q_bar", !sr.StateQ, sr.HighVoltage, sr.LowVoltage);
+                        }
+                        break;
+                    case TFlipFlopComponent tff:
+                        Set(tff, "Q", tff.StateQ, tff.HighVoltage, tff.LowVoltage);
+                        Set(tff, "Q_bar", !tff.StateQ, tff.HighVoltage, tff.LowVoltage);
+                        break;
+                    case RegisterComponent register:
+                        for (int bit = 0; bit < register.BitWidth; bit++) Set(register, $"Q{bit}", ((register.Value >> bit) & 1) != 0, 5, 0);
+                        break;
+                    case CounterComponent counter:
+                        for (int bit = 0; bit < counter.BitWidth; bit++) Set(counter, $"Q{bit}", ((counter.Value >> bit) & 1) != 0, 5, 0);
+                        Set(counter, "carry", counter.CarryOut, 5, 0);
+                        break;
+                    case ShiftRegisterComponent shift:
+                        for (int bit = 0; bit < shift.Length; bit++) Set(shift, $"Q{bit}", ((shift.Value >> bit) & 1) != 0, 5, 0);
+                        Set(shift, "sout", ((shift.Value >> (shift.Length - 1)) & 1) != 0, 5, 0);
+                        break;
+                    case RandomComponent random:
+                        for (int bit = 0; bit < random.BitWidth; bit++) Set(random, $"Q{bit}", ((random.Value >> bit) & 1) != 0, 5, 0);
+                        break;
                 }
             }
         }
@@ -374,6 +510,7 @@ public static class DigitalLogicSimulator
             foreach (var pin in net.ConnectedPins)
             {
                 if (pin.ComponentId == component.Id || !_byId.TryGetValue(pin.ComponentId, out var source)) continue;
+                if (Bool(source, $"HighZ:{pin.PinId}", false)) continue;
                 if (IsOutputPin(source, pin.PinId) && OutputState(source, pin.PinId)) return true;
             }
             return false;
@@ -408,14 +545,45 @@ public static class DigitalLogicSimulator
         }
 
         private int CountInputs(ComponentNode component, int inputCount)
+            => CountInputs(component, inputCount, false);
+
+        private int CountInputs(ComponentNode component, int inputCount, bool applyNegation)
         {
             int count = 0;
             for (int i = 0; i < inputCount; i++)
             {
                 string pinId = component.GetPin($"in{i + 1}") != null ? $"in{i + 1}" : $"in{i}";
-                if (Read(component, pinId)) count++;
+                bool value = Read(component, pinId);
+                if (applyNegation && Bool(component, $"Negate:{pinId}", false)) value = !value;
+                if (value) count++;
             }
             return count;
+        }
+
+        private void EvaluateRamRead(RAMComponent ram)
+        {
+            int address = ram.AsynchronousRead ? (int)ReadBus(ram, "addr", ram.AddressBitWidth) : ram.ReadAddress;
+            bool outputEnabled = !ram.HasOutputEnable || Read(ram, "oe");
+            long word = ram.MemoryData.TryGetValue(address, out var storedWord) ? storedWord : 0;
+            for (int bit = 0; bit < ram.DataBitWidth; bit++)
+            {
+                string pinId = $"dout{bit}";
+                if (!outputEnabled) SetHighZ(ram, pinId);
+                else Set(ram, pinId, ((word >> bit) & 1) != 0, 5, 0);
+            }
+        }
+
+        private void EvaluateRomRead(ROMComponent rom)
+        {
+            bool selected = !rom.HasChipSelect || Read(rom, "sel");
+            int address = (int)ReadBus(rom, "addr", rom.AddressBitWidth);
+            long word = ReadRomWord(rom, address);
+            for (int bit = 0; bit < rom.DataBitWidth; bit++)
+            {
+                string pinId = $"dout{bit}";
+                if (!selected) SetHighZ(rom, pinId);
+                else Set(rom, pinId, ((word >> bit) & 1) != 0, 5, 0);
+            }
         }
 
         private void EvaluateLogicGate(LogicGateComponent gate)
@@ -455,18 +623,104 @@ public static class DigitalLogicSimulator
         {
             int inputWord = 0;
             for (int i = 0; i < pla.InputCount; i++) if (Read(pla, $"in{i}")) inputWord |= 1 << i;
-            string[] rows = pla.TruthTable.Split(new[] { ',', ';', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            long word = inputWord < rows.Length && long.TryParse(rows[inputWord], NumberStyles.Integer, CultureInfo.InvariantCulture, out long parsed) ? parsed : 0;
+            long word = 0;
+            bool matched = false;
+            foreach (var rawRow in pla.TruthTable.Split(new[] { '\r', '\n', ';' }, StringSplitOptions.RemoveEmptyEntries).Take(pla.AndTerms))
+            {
+                string[] sides = rawRow.Split(new[] { "->", "=", ":" }, 2, StringSplitOptions.TrimEntries);
+                if (sides.Length != 2)
+                {
+                    sides = rawRow.Split((char[]?)null, 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                }
+                if (sides.Length != 2) continue;
+                string pattern = new string(sides[0].Where(ch => !char.IsWhiteSpace(ch) && ch != ',').ToArray());
+                if (pattern.Length != pla.InputCount || !MatchesPlaPattern(pattern, inputWord)) continue;
+                word = ParsePlaOutput(sides[1]);
+                matched = true;
+                break;
+            }
+
+            // Backward-compatible truth-vector format: one decimal/hex output word per input index.
+            if (!matched)
+            {
+                string[] entries = pla.TruthTable.Split(new[] { ',', ';', '\r', '\n', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (inputWord < entries.Length) word = ParseWord(entries[inputWord]);
+            }
             for (int i = 0; i < pla.OutputCount; i++) Set(pla, $"out{i}", (word & (1L << i)) != 0, 5, 0);
+        }
+
+        private static bool MatchesPlaPattern(string pattern, int inputWord)
+        {
+            for (int i = 0; i < pattern.Length; i++)
+            {
+                char expected = char.ToLowerInvariant(pattern[i]);
+                if (expected is 'x' or '-') continue;
+                int bit = pattern.Length - 1 - i;
+                bool actual = ((inputWord >> bit) & 1) != 0;
+                if ((expected == '1') != actual) return false;
+                if (expected is not ('0' or '1')) return false;
+            }
+            return true;
+        }
+
+        private static long ParseWord(string text)
+        {
+            string value = text.Trim();
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return long.TryParse(value[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var hex) ? hex : 0;
+            return long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number)
+                ? number
+                : long.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long hexValue) ? hexValue : 0;
+        }
+
+        private static long ParsePlaOutput(string text)
+        {
+            string value = new string(text.Trim().Where(ch => !char.IsWhiteSpace(ch) && ch != ',').ToArray());
+            if (value.Length > 0 && value.All(ch => ch is '0' or '1') && value.Length <= 62)
+                return Convert.ToInt64(value, 2);
+            return ParseWord(value);
+        }
+
+        private static long ReadRomWord(ROMComponent rom, int address)
+        {
+            if (rom.MemoryData.TryGetValue(address, out var value)) return value;
+            string contents = rom.ContentsHex.Trim();
+            if (contents.Length == 0) return 0;
+            string[] tokens = contents.Split(new[] { ',', ';', '\r', '\n', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length == 1 && tokens[0].Length > (rom.DataBitWidth + 3) / 4)
+            {
+                string compact = tokens[0].StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? tokens[0][2..] : tokens[0];
+                int digits = Math.Max(1, (rom.DataBitWidth + 3) / 4);
+                tokens = Enumerable.Range(0, (compact.Length + digits - 1) / digits)
+                    .Select(index => compact.Substring(index * digits, Math.Min(digits, compact.Length - index * digits)))
+                    .ToArray();
+            }
+            return address >= 0 && address < tokens.Length ? ParseHexWord(tokens[address]) & Mask(rom.DataBitWidth) : 0;
+        }
+
+        private static long ParseHexWord(string text)
+        {
+            string value = text.Trim();
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) value = value[2..];
+            return long.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var word) ? word : 0;
+        }
+
+        private static string BusPin(ComponentNode component, string prefix, int bit, int width, string suffix = "")
+        {
+            if (width == 1 && component.GetPin(prefix) != null) return prefix;
+            string indexed = suffix.Length == 0 ? $"{prefix}{bit}" : $"{prefix}{suffix}{bit}";
+            return component.GetPin(indexed) != null ? indexed : $"{prefix}{bit}";
         }
     }
 
     private static long Mask(int width) => width >= 63 ? long.MaxValue : (1L << Math.Clamp(width, 1, 62)) - 1;
     private static void Set(ComponentNode component, string pinId, bool value, double highVoltage, double lowVoltage)
     {
+        component.CustomProperties[$"HighZ:{pinId}"] = false;
         component.CustomProperties[$"Output:{pinId}"] = value;
         component.CustomProperties[$"OutputVoltage:{pinId}"] = value ? highVoltage : lowVoltage;
     }
+    private static void SetHighZ(ComponentNode component, string pinId) => component.CustomProperties[$"HighZ:{pinId}"] = true;
     private static bool Bool(ComponentNode component, string key, bool fallback) => component.CustomProperties.TryGetValue(key, out var value) && bool.TryParse(value?.ToString(), out var parsed) ? parsed : fallback;
     private static double Number(ComponentNode component, string key, double fallback) => component.CustomProperties.TryGetValue(key, out var value) && double.TryParse(value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed) ? parsed : fallback;
     private static void SetBool(ComponentNode component, string key, bool value) => component.CustomProperties[key] = value;

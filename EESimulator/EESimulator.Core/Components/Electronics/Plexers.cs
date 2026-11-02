@@ -50,11 +50,18 @@ public class MultiplexerComponent : ElectronicComponent
         }
     }
 
+    public bool ThreeStateOutputs
+    {
+        get => CustomProperties.TryGetValue(nameof(ThreeStateOutputs), out var value) && Convert.ToBoolean(value);
+        set => CustomProperties[nameof(ThreeStateOutputs)] = value;
+    }
+
     public MultiplexerComponent()
     {
         SelectBits = 1;
         BitWidth = 1;
-        HasEnable = true;
+        HasEnable = false;
+        ThreeStateOutputs = false;
     }
 
     public MultiplexerComponent(string name, int selectBits = 1) : this()
@@ -118,10 +125,29 @@ public class DemultiplexerComponent : ElectronicComponent
         }
     }
 
+    public bool HasEnable
+    {
+        get => CustomProperties.TryGetValue(nameof(HasEnable), out var value) && Convert.ToBoolean(value);
+        set
+        {
+            CustomProperties[nameof(HasEnable)] = value;
+            RebuildPins();
+            NotifyModified(nameof(HasEnable));
+        }
+    }
+
+    public bool ThreeStateOutputs
+    {
+        get => CustomProperties.TryGetValue(nameof(ThreeStateOutputs), out var value) && Convert.ToBoolean(value);
+        set => CustomProperties[nameof(ThreeStateOutputs)] = value;
+    }
+
     public DemultiplexerComponent()
     {
         SelectBits = 1;
         BitWidth = 1;
+        HasEnable = false;
+        ThreeStateOutputs = false;
     }
 
     public DemultiplexerComponent(string name, int selectBits = 1) : this()
@@ -138,7 +164,7 @@ public class DemultiplexerComponent : ElectronicComponent
         for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin(width == 1 ? "in" : $"in_b{bit}", width == 1 ? "IN" : $"I{bit}", -24, DigitalPinLayout.Position(bit, width)));
         if (selectBits == 1) pins.Add(new ComponentPin("sel", "S", 0, 22));
         else for (int bit = 0; bit < selectBits; bit++) pins.Add(new ComponentPin($"sel{bit}", $"S{bit}", 0, 22));
-        pins.Add(new ComponentPin("en", "EN", 8, 22));
+        if (HasEnable) pins.Add(new ComponentPin("en", "EN", 8, 22));
         for (int output = 0; output < outputCount; output++)
             for (int bit = 0; bit < width; bit++)
             {
@@ -164,7 +190,7 @@ public class DecoderComponent : ElectronicComponent
 
     public int SelectBits
     {
-        get => ElectricalParameters.TryGetValue("SelectBits", out var val) && val >= 1 ? (int)val : 2;
+        get => ElectricalParameters.TryGetValue("SelectBits", out var val) && val >= 1 ? (int)val : 1;
         set
         {
             ElectricalParameters["SelectBits"] = Math.Clamp(value, 1, 4);
@@ -184,10 +210,17 @@ public class DecoderComponent : ElectronicComponent
         }
     }
 
+    public bool ThreeStateOutputs
+    {
+        get => CustomProperties.TryGetValue(nameof(ThreeStateOutputs), out var value) && Convert.ToBoolean(value);
+        set => CustomProperties[nameof(ThreeStateOutputs)] = value;
+    }
+
     public DecoderComponent()
     {
         SelectBits = 2;
         HasEnable = true;
+        ThreeStateOutputs = false;
     }
 
     public DecoderComponent(string name, int selectBits = 2) : this()
@@ -234,9 +267,16 @@ public class PriorityEncoderComponent : ElectronicComponent
         }
     }
 
+    public bool ThreeStateOutputs
+    {
+        get => CustomProperties.TryGetValue(nameof(ThreeStateOutputs), out var value) && Convert.ToBoolean(value);
+        set => CustomProperties[nameof(ThreeStateOutputs)] = value;
+    }
+
     public PriorityEncoderComponent()
     {
-        SelectBits = 2;
+        SelectBits = 3;
+        ThreeStateOutputs = false;
     }
 
     public PriorityEncoderComponent(string name, int selectBits = 2) : this()
@@ -253,6 +293,7 @@ public class PriorityEncoderComponent : ElectronicComponent
         for (int i = 0; i < inputs; i++) pins.Add(new ComponentPin($"in{i}", i.ToString(), -24, DigitalPinLayout.Position(i, inputs)));
         pins.Add(new ComponentPin("en", "EN", 0, 24));
         for (int i = 0; i < bits; i++) pins.Add(new ComponentPin($"out{i}", $"O{i}", 24, DigitalPinLayout.Position(i, bits)));
+        pins.Add(new ComponentPin("en_out", "EO", 24, 12));
         pins.Add(new ComponentPin("any_active", "GS", 24, 20));
         DigitalPinLayout.Replace(this, pins);
     }
@@ -293,10 +334,22 @@ public class BitSelectorComponent : ElectronicComponent
         }
     }
 
+    public int GroupWidth
+    {
+        get => ElectricalParameters.TryGetValue(nameof(GroupWidth), out var val) && val >= 1 ? (int)val : 1;
+        set
+        {
+            ElectricalParameters[nameof(GroupWidth)] = Math.Clamp(value, 1, 32);
+            RebuildPins();
+            NotifyModified(nameof(GroupWidth));
+        }
+    }
+
     public BitSelectorComponent()
     {
         DataBusWidth = 8;
         SelectWidth = 3;
+        GroupWidth = 1;
     }
 
     public BitSelectorComponent(string name, int dataWidth = 8, int selWidth = 3) : this()
@@ -313,7 +366,8 @@ public class BitSelectorComponent : ElectronicComponent
         var pins = new System.Collections.Generic.List<ComponentPin>();
         for (int i = 0; i < dataWidth; i++) pins.Add(new ComponentPin($"data{i}", $"D{i}", -24, DigitalPinLayout.Position(i, dataWidth)));
         for (int i = 0; i < selectWidth; i++) pins.Add(new ComponentPin($"sel{i}", $"S{i}", -10, DigitalPinLayout.Position(i, selectWidth)));
-        pins.Add(new ComponentPin("out", "OUT", 24, 0));
+        for (int bit = 0; bit < GroupWidth; bit++)
+            pins.Add(new ComponentPin(GroupWidth == 1 ? "out" : $"out_b{bit}", GroupWidth == 1 ? "OUT" : $"OUT{bit}", 24, DigitalPinLayout.Position(bit, GroupWidth)));
         DigitalPinLayout.Replace(this, pins);
     }
 }

@@ -1128,6 +1128,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     private Microsoft.Maui.Dispatching.IDispatcherTimer? _animTimer;
+    private bool _playbackSolveRunning;
 
     [RelayCommand]
     public void ToggleSimulationPlayback()
@@ -1148,6 +1149,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
                             DigitalLogicSimulator.Advance(Circuit, _animTimer.Interval.TotalSeconds);
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
                             CircuitChanged?.Invoke();
+                            if (!IsSimulating && !_playbackSolveRunning)
+                                _ = RefreshPlaybackSimulationAsync();
                         }
                     };
                 }
@@ -1163,6 +1166,26 @@ public partial class EEWorkspaceViewModel : ObservableObject
             StatusText = "⏸ Simulation Paused";
         }
         CircuitChanged?.Invoke();
+    }
+
+    private async Task RefreshPlaybackSimulationAsync()
+    {
+        if (_playbackSolveRunning || IsSimulating || !IsSimulationPlaying) return;
+        _playbackSolveRunning = true;
+        try
+        {
+            var settings = BuildSimulationSettings();
+            var results = await Task.Run(() => _simManager.Run(Circuit, settings));
+            ConsoleOutput = FormatResults(results);
+        }
+        catch (Exception ex)
+        {
+            ConsoleOutput = $"Live simulation failed: {ex.Message}";
+        }
+        finally
+        {
+            _playbackSolveRunning = false;
+        }
     }
 
     [RelayCommand]
@@ -2346,6 +2369,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     PythonApi.SetProperty(Unquote(args[0]), Unquote(args[1]), ParseD(args[2]));
                     return "[ok] property set";
 
+                case "set_custom_property" when args.Length >= 3:
+                    PythonApi.SetCustomProperty(Unquote(args[0]), Unquote(args[1]), ParseScriptValue(args[2]));
+                    CircuitChanged?.Invoke();
+                    return "[ok] custom property set";
+
+                case "set_memory_word" when args.Length >= 3:
+                    PythonApi.SetMemoryWord(Unquote(args[0]), (int)ParseD(args[1]), (long)ParseD(args[2]));
+                    CircuitChanged?.Invoke();
+                    return "[ok] memory word set";
+
                 case "set_live_probe" or "set_probe" when args.Length >= 2:
                     PythonApi.SetLiveProbe(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var lp) && lp);
                     CircuitChanged?.Invoke();
@@ -2674,6 +2707,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private static double ParseD(string s) =>
         double.TryParse(s.Trim(), System.Globalization.NumberStyles.Any,
             System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+
+    private static object ParseScriptValue(string raw)
+    {
+        string value = Unquote(raw);
+        if (bool.TryParse(value, out var boolean)) return boolean;
+        if (long.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var integer)) return integer;
+        if (double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var number)) return number;
+        return value;
+    }
 
     private static string FormatResults(SimulationResultsData r)
     {

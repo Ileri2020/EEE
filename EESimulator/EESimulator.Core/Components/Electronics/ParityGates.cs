@@ -22,7 +22,7 @@ public class EvenParityGateComponent : ElectronicComponent
         get => ElectricalParameters.TryGetValue("NumberOfInputs", out var val) && val >= 2 ? (int)val : 2;
         set
         {
-            ElectricalParameters["NumberOfInputs"] = Math.Clamp(value, 2, 8);
+            ElectricalParameters["NumberOfInputs"] = Math.Clamp(value, 2, 64);
             RebuildPins();
             NotifyModified(nameof(NumberOfInputs));
         }
@@ -69,7 +69,7 @@ public class OddParityGateComponent : ElectronicComponent
         get => ElectricalParameters.TryGetValue("NumberOfInputs", out var val) && val >= 2 ? (int)val : 2;
         set
         {
-            ElectricalParameters["NumberOfInputs"] = Math.Clamp(value, 2, 8);
+            ElectricalParameters["NumberOfInputs"] = Math.Clamp(value, 2, 64);
             RebuildPins();
             NotifyModified(nameof(NumberOfInputs));
         }

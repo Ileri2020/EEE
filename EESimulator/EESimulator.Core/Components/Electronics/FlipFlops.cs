@@ -73,6 +73,7 @@ public class DFlipFlopComponent : ElectronicComponent
         Pins.Add(new ComponentPin("Q_bar", "Q̄", 20, 10));
         Pins.Add(new ComponentPin("reset", "CLR", 0, 20));
         Pins.Add(new ComponentPin("set", "PRE", 0, -20));
+        Pins.Add(new ComponentPin("set", "PRE", 0, -20));
 
         StateQ = false;
         Trigger = ClockTriggerType.RisingEdge;
@@ -148,6 +149,7 @@ public class JKFlipFlopComponent : ElectronicComponent
         Pins.Add(new ComponentPin("Q", "Q", 20, -10));
         Pins.Add(new ComponentPin("Q_bar", "Q̄", 20, 10));
         Pins.Add(new ComponentPin("reset", "CLR", 0, 20));
+        Pins.Add(new ComponentPin("set", "PRE", 0, -20));
 
         StateQ = false;
         Trigger = ClockTriggerType.RisingEdge;
@@ -222,6 +224,8 @@ public class SRFlipFlopComponent : ElectronicComponent
         Pins.Add(new ComponentPin("R", "R", -20, 14));
         Pins.Add(new ComponentPin("Q", "Q", 20, -10));
         Pins.Add(new ComponentPin("Q_bar", "Q̄", 20, 10));
+        Pins.Add(new ComponentPin("reset", "CLR", 0, 20));
+        Pins.Add(new ComponentPin("set", "PRE", 0, -20));
 
         StateQ = false;
         Trigger = ClockTriggerType.RisingEdge;
@@ -296,6 +300,7 @@ public class TFlipFlopComponent : ElectronicComponent
         Pins.Add(new ComponentPin("Q", "Q", 20, -10));
         Pins.Add(new ComponentPin("Q_bar", "Q̄", 20, 10));
         Pins.Add(new ComponentPin("reset", "CLR", 0, 20));
+        Pins.Add(new ComponentPin("set", "PRE", 0, -20));
 
         StateQ = false;
         Trigger = ClockTriggerType.RisingEdge;

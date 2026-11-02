@@ -19,7 +19,7 @@ public class PLAComponent : ElectronicComponent
 
     public int InputCount
     {
-        get => ElectricalParameters.TryGetValue("InputCount", out var val) && val >= 1 ? (int)val : 4;
+        get => ElectricalParameters.TryGetValue("InputCount", out var val) && val >= 1 ? (int)val : 2;
         set
         {
             ElectricalParameters["InputCount"] = Math.Clamp(value, 1, 8);
@@ -30,7 +30,7 @@ public class PLAComponent : ElectronicComponent
 
     public int OutputCount
     {
-        get => ElectricalParameters.TryGetValue("OutputCount", out var val) && val >= 1 ? (int)val : 4;
+        get => ElectricalParameters.TryGetValue("OutputCount", out var val) && val >= 1 ? (int)val : 2;
         set
         {
             ElectricalParameters["OutputCount"] = Math.Clamp(value, 1, 8);
@@ -66,7 +66,7 @@ public class PLAComponent : ElectronicComponent
         AndTerms = 4;
     }
 
-    public PLAComponent(string name, int inCount = 4, int outCount = 4, int andTerms = 4) : this()
+    public PLAComponent(string name, int inCount = 2, int outCount = 2, int andTerms = 4) : this()
     {
         Name = name;
         Reference = name;

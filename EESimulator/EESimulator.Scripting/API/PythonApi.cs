@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 using EESimulator.Commands;
 using EESimulator.Commands.Commands;
 using EESimulator.Core.Components;
@@ -505,12 +507,41 @@ public class PythonApi
         _commandManager.ExecuteCommand(cmd);
     }
 
+    public void SetMemoryWord(string componentName, int address, long value)
+    {
+        var component = _circuit.FindChild<ComponentNode>(componentName);
+        switch (component)
+        {
+            case EESimulator.Core.Components.Electronics.RAMComponent ram when address >= 0:
+                ram.MemoryData[address] = value;
+                ram.NotifyModified(nameof(ram.MemoryData));
+                break;
+            case EESimulator.Core.Components.Electronics.ROMComponent rom when address >= 0:
+                rom.MemoryData[address] = value;
+                rom.NotifyModified(nameof(rom.MemoryData));
+                break;
+        }
+    }
+
     public void SetCustomProperty(string componentName, string propertyName, object value)
     {
         var comp = _circuit.FindChild<ComponentNode>(componentName);
         if (comp != null)
         {
-            comp.CustomProperties[propertyName] = value;
+            var property = comp.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+            if (property?.CanWrite == true && property.GetIndexParameters().Length == 0)
+            {
+                Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                object converted = targetType.IsEnum
+                    ? value is string enumText ? Enum.Parse(targetType, enumText, true) : Enum.ToObject(targetType, value)
+                    : targetType.IsInstanceOfType(value) ? value
+                    : Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+                property.SetValue(comp, converted);
+            }
+            else
+            {
+                comp.CustomProperties[propertyName] = value;
+            }
             comp.NotifyModified(propertyName);
         }
     }

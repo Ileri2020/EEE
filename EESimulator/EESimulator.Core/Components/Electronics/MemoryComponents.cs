@@ -39,9 +39,17 @@ public class RegisterComponent : ElectronicComponent
         }
     }
 
+    public ClockTriggerType Trigger
+    {
+        get => CustomProperties.TryGetValue(nameof(Trigger), out var value) && Enum.TryParse(value?.ToString(), true, out ClockTriggerType trigger)
+            ? trigger : ClockTriggerType.RisingEdge;
+        set => CustomProperties[nameof(Trigger)] = value;
+    }
+
     public RegisterComponent()
     {
         BitWidth = 8;
+        Trigger = ClockTriggerType.RisingEdge;
         Value = 0;
     }
 
@@ -99,6 +107,24 @@ public class CounterComponent : ElectronicComponent
         }
     }
 
+    public ClockTriggerType Trigger
+    {
+        get => CustomProperties.TryGetValue(nameof(Trigger), out var value) && Enum.TryParse(value?.ToString(), true, out ClockTriggerType trigger)
+            ? trigger : ClockTriggerType.RisingEdge;
+        set => CustomProperties[nameof(Trigger)] = value;
+    }
+
+    public string GoalAction
+    {
+        get => CustomProperties.TryGetValue(nameof(GoalAction), out var value) ? value?.ToString() ?? "Wrap" : "Wrap";
+        set
+        {
+            string action = value?.Trim() ?? "Wrap";
+            CustomProperties[nameof(GoalAction)] = action is "Stay" or "Continue" or "Load" ? action : "Wrap";
+            NotifyModified(nameof(GoalAction));
+        }
+    }
+
     public long Value
     {
         get => CustomProperties.TryGetValue("Value", out var val) && val is long l ? l : 0;
@@ -123,6 +149,8 @@ public class CounterComponent : ElectronicComponent
     {
         BitWidth = 8;
         Value = 0;
+        Trigger = ClockTriggerType.RisingEdge;
+        GoalAction = "Wrap";
     }
 
     public CounterComponent(string name, int bitWidth = 8) : this()
@@ -138,8 +166,10 @@ public class CounterComponent : ElectronicComponent
         var pins = new List<ComponentPin>
         {
             new("CLK", "CLK", -24, -18), new("en", "EN", -24, -6),
-            new("up_down", "DIR", -24, 6), new("clr", "CLR", -24, 18)
+            new("up_down", "DIR", -24, 6), new("clr", "CLR", -24, 18),
+            new("ld", "LD", -24, 24)
         };
+        for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"D{bit}", $"D{bit}", -12, DigitalPinLayout.Position(bit, width)));
         for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"Q{bit}", $"Q{bit}", 24, DigitalPinLayout.Position(bit, width)));
         pins.Add(new ComponentPin("carry", "CY", 12, 24));
         DigitalPinLayout.Replace(this, pins);
@@ -180,10 +210,30 @@ public class ShiftRegisterComponent : ElectronicComponent
         }
     }
 
+    public ClockTriggerType Trigger
+    {
+        get => CustomProperties.TryGetValue(nameof(Trigger), out var value) && Enum.TryParse(value?.ToString(), true, out ClockTriggerType trigger)
+            ? trigger : ClockTriggerType.RisingEdge;
+        set => CustomProperties[nameof(Trigger)] = value;
+    }
+
+    public bool HasParallelLoad
+    {
+        get => CustomProperties.TryGetValue(nameof(HasParallelLoad), out var value) && Convert.ToBoolean(value);
+        set
+        {
+            CustomProperties[nameof(HasParallelLoad)] = value;
+            RebuildPins();
+            NotifyModified(nameof(HasParallelLoad));
+        }
+    }
+
     public ShiftRegisterComponent()
     {
         Length = 8;
         Value = 0;
+        Trigger = ClockTriggerType.RisingEdge;
+        HasParallelLoad = true;
     }
 
     public ShiftRegisterComponent(string name, int length = 8) : this()
@@ -201,6 +251,11 @@ public class ShiftRegisterComponent : ElectronicComponent
             new("sin", "SI", -24, -18), new("CLK", "CLK", -24, -6),
             new("en", "EN", -24, 6), new("clr", "CLR", -24, 18)
         };
+        if (HasParallelLoad)
+        {
+            pins.Add(new ComponentPin("ld", "LD", 0, 24));
+            for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"D{bit}", $"D{bit}", -12, DigitalPinLayout.Position(bit, width)));
+        }
         for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"Q{bit}", $"Q{bit}", 24, DigitalPinLayout.Position(bit, width)));
         pins.Add(new ComponentPin("sout", "SO", 8, 24));
         DigitalPinLayout.Replace(this, pins);
@@ -244,10 +299,36 @@ public class RAMComponent : ElectronicComponent
 
     public Dictionary<int, long> MemoryData { get; } = new();
 
+    public bool HasOutputEnable
+    {
+        get => !CustomProperties.TryGetValue(nameof(HasOutputEnable), out var value) || Convert.ToBoolean(value);
+        set
+        {
+            CustomProperties[nameof(HasOutputEnable)] = value;
+            RebuildPins();
+            NotifyModified(nameof(HasOutputEnable));
+        }
+    }
+
+    public bool AsynchronousRead
+    {
+        get => CustomProperties.TryGetValue(nameof(AsynchronousRead), out var value) && Convert.ToBoolean(value);
+        set => CustomProperties[nameof(AsynchronousRead)] = value;
+    }
+
+    public int ReadAddress
+    {
+        get => CustomProperties.TryGetValue(nameof(ReadAddress), out var value) && int.TryParse(value?.ToString(), out var address) ? address : 0;
+        set => CustomProperties[nameof(ReadAddress)] = value;
+    }
+
     public RAMComponent()
     {
         AddressBitWidth = 8;
         DataBitWidth = 8;
+        HasOutputEnable = true;
+        AsynchronousRead = false;
+        ReadAddress = 0;
     }
 
     public RAMComponent(string name, int addrWidth = 8, int dataWidth = 8) : this()
@@ -265,6 +346,7 @@ public class RAMComponent : ElectronicComponent
         for (int bit = 0; bit < DataBitWidth; bit++) pins.Add(new ComponentPin($"din{bit}", $"D{bit}", -8, DigitalPinLayout.Position(bit, DataBitWidth)));
         pins.Add(new ComponentPin("clk", "CLK", 0, 24));
         pins.Add(new ComponentPin("we", "WE", -12, 24));
+        if (HasOutputEnable) pins.Add(new ComponentPin("oe", "OE", 12, 24));
         for (int bit = 0; bit < DataBitWidth; bit++) pins.Add(new ComponentPin($"dout{bit}", $"Q{bit}", 24, DigitalPinLayout.Position(bit, DataBitWidth)));
         DigitalPinLayout.Replace(this, pins);
     }
@@ -317,10 +399,22 @@ public class ROMComponent : ElectronicComponent
 
     public Dictionary<int, long> MemoryData { get; } = new();
 
+    public bool HasChipSelect
+    {
+        get => CustomProperties.TryGetValue(nameof(HasChipSelect), out var value) && Convert.ToBoolean(value);
+        set
+        {
+            CustomProperties[nameof(HasChipSelect)] = value;
+            RebuildPins();
+            NotifyModified(nameof(HasChipSelect));
+        }
+    }
+
     public ROMComponent()
     {
         AddressBitWidth = 8;
         DataBitWidth = 8;
+        HasChipSelect = false;
     }
 
     public ROMComponent(string name, int addrWidth = 8, int dataWidth = 8, string hexData = "") : this()
@@ -336,7 +430,7 @@ public class ROMComponent : ElectronicComponent
     {
         var pins = new List<ComponentPin>();
         for (int bit = 0; bit < AddressBitWidth; bit++) pins.Add(new ComponentPin($"addr{bit}", $"A{bit}", -24, DigitalPinLayout.Position(bit, AddressBitWidth)));
-        pins.Add(new ComponentPin("sel", "CS", 0, 24));
+        if (HasChipSelect) pins.Add(new ComponentPin("sel", "CS", 0, 24));
         for (int bit = 0; bit < DataBitWidth; bit++) pins.Add(new ComponentPin($"dout{bit}", $"Q{bit}", 24, DigitalPinLayout.Position(bit, DataBitWidth)));
         DigitalPinLayout.Replace(this, pins);
     }
@@ -386,11 +480,19 @@ public class RandomComponent : ElectronicComponent
         }
     }
 
+    public ClockTriggerType Trigger
+    {
+        get => CustomProperties.TryGetValue(nameof(Trigger), out var value) && Enum.TryParse(value?.ToString(), true, out ClockTriggerType trigger)
+            ? trigger : ClockTriggerType.RisingEdge;
+        set => CustomProperties[nameof(Trigger)] = value;
+    }
+
     public RandomComponent()
     {
         BitWidth = 8;
         Seed = 1;
         Value = 0;
+        Trigger = ClockTriggerType.RisingEdge;
     }
 
     public RandomComponent(string name, int bitWidth = 8, int seed = 1) : this()

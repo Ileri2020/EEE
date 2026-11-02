@@ -48,11 +48,24 @@ public class BufferComponent : ElectronicComponent
         }
     }
 
+    /// <summary>Output behavior: 01 drives both levels, 0Z floats high, and Z1 floats low.</summary>
+    public string OutputMode
+    {
+        get => CustomProperties.TryGetValue(nameof(OutputMode), out var value) ? value?.ToString() ?? "01" : "01";
+        set
+        {
+            string mode = value?.Trim().ToUpperInvariant() ?? "01";
+            CustomProperties[nameof(OutputMode)] = mode is "0Z" or "Z1" ? mode : "01";
+            NotifyModified(nameof(OutputMode));
+        }
+    }
+    
     public BufferComponent()
     {
         BitWidth = 1;
         HighVoltage = 5.0;
         LowVoltage = 0.0;
+        OutputMode = "01";
     }
 
     public BufferComponent(string name) : this()
