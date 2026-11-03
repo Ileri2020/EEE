@@ -139,6 +139,9 @@ public class AddComponentCommand : ICommand
             }
         }
 
+        if (CreatedComponent is EESimulator.Core.Components.Electrical.PowerSystemComponent powerSystemComponent)
+            powerSystemComponent.ValidateConfiguration();
+
         Circuit.AddChild(CreatedComponent);
         return true;
     }

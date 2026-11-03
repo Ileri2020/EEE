@@ -430,7 +430,7 @@
                                TextColor="#8B949E"
                                FontSize="12"/>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
                             <!-- Mobile Pan Mode On Startup -->
                             <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
                                 <Label Grid.Column="0" Text="Default to Pan Mode on Mobile" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
@@ -498,6 +498,48 @@
                                      <Label Text="AI drafts do not need login or this token. Create an EEE app token in your HCVP Account only if you want to publish community examples. Never paste a Gemini key or database password here."
                                            TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
+
+                            <Border Grid.Row="4" Grid.ColumnSpan="2" Padding="14" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="SIMULATION TIME SCALING" TextColor="#79C0FF" FontAttributes="Bold" FontSize="12"/>
+                                            <Label Text="Solver time remains numerically stable; device models receive scaled elapsed time." TextColor="#8B949E" FontSize="10"/>
+                                        </VerticalStackLayout>
+                                        <Switch Grid.Column="1" IsToggled="{Binding EnableTimeScaling}" VerticalOptions="Center"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                            <Label Text="SIMULATION TIME" TextColor="#8B949E" FontSize="9"/>
+                                            <Entry Text="{Binding SimulationTimeAmount}" Keyboard="Numeric" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                        </VerticalStackLayout>
+                                        <Picker Grid.Column="1" Title="Unit" ItemsSource="{Binding TimeUnits}" SelectedItem="{Binding SimulationTimeUnit}" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="3">
+                                            <Label Text="DEVICE TIME" TextColor="#8B949E" FontSize="9"/>
+                                            <Entry Text="{Binding DeviceTimeAmount}" Keyboard="Numeric" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                        </VerticalStackLayout>
+                                        <Picker Grid.Column="3" Title="Unit" ItemsSource="{Binding TimeUnits}" SelectedItem="{Binding DeviceTimeUnit}" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                    </Grid>
+                                    <Label Text="{Binding TimeScalingRatio, StringFormat='Device-time scale: {0:F4}×'}" TextColor="#56D364" FontSize="11" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout Spacing="3">
+                                            <Label Text="SOLVER STEP (s)" TextColor="#8B949E" FontSize="9"/>
+                                            <Entry Text="{Binding SimulationTimeStepSeconds}" Keyboard="Numeric" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                        </VerticalStackLayout>
+                                        <Switch Grid.Column="1" IsToggled="{Binding AutomaticTimeStepSelection}" VerticalOptions="End"/>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="3">
+                                            <Label Text="START TIME (s)" TextColor="#8B949E" FontSize="9"/>
+                                            <Entry Text="{Binding SimulationStartTimeSeconds}" Keyboard="Numeric" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="3" Spacing="3">
+                                            <Label Text="DURATION (s)" TextColor="#8B949E" FontSize="9"/>
+                                            <Entry Text="{Binding SimulationDurationSeconds}" Keyboard="Numeric" BackgroundColor="#161B22" TextColor="#C9D1D9"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Label Text="Battery SOC and PV irradiance profiles consume component/device elapsed time. The configured solver step is not multiplied by the acceleration ratio." TextColor="#8B949E" FontSize="10"/>
+                                </VerticalStackLayout>
+                            </Border>
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

@@ -21,6 +21,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace EEE.ViewModels;
@@ -204,7 +205,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsEditDialogVisible { get; set; } = false;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPowerSystemComponent))]
+    [NotifyPropertyChangedFor(nameof(IsNotPowerSystemComponent))]
     public partial ComponentNode? EditingComponent { get; set; }
+
+    public bool IsPowerSystemComponent => EditingComponent is PowerSystemComponent;
+    public bool IsNotPowerSystemComponent => !IsPowerSystemComponent;
+    public ObservableCollection<PowerSystemPropertyItem> PowerSystemProperties { get; } = new();
 
     /// <summary>The most recently selected component on the canvas (for toolbar actions like Rotate, Copy, Delete).</summary>
     [ObservableProperty]
@@ -658,10 +665,32 @@ public partial class EEWorkspaceViewModel : ObservableObject
         }),
         new ComponentPaletteGroup("📡 Transmission Lines", new[]
         {
+            new ComponentPaletteItem("SinglePhaseTransmissionLine", "T1", "RLGC", "#79C0FF", "Transmission Lines", "Single-phase line: short, medium, or long-line model", "transmissionline.svg"),
+            new ComponentPaletteItem("TwoPhaseTransmissionLine", "T2", "RLGC", "#79C0FF", "Transmission Lines", "True two-phase or split-phase three-wire line", "transmissionline.svg"),
+            new ComponentPaletteItem("ThreePhaseTransmissionLine", "T3", "RLGC", "#79C0FF", "Transmission Lines", "Three-phase line with explicit phase/neutral nodes", "transmissionline.svg"),
             new ComponentPaletteItem("TransmissionLine",      "T",  "Ω",   "#79C0FF", "Transmission", "Lossless Transmission Line", "transmissionline.svg"),
             new ComponentPaletteItem("LossyTransmissionLine", "TL", "RLGC","#FFA657", "Transmission", "Lossy Transmission Line",    "lossy_transmissionline.svg"),
             new ComponentPaletteItem("CoaxialCable",          "CX", "COAX","#79C0FF", "Transmission", "Coaxial Cable Line",         "coaxial.svg"),
             new ComponentPaletteItem("MicrostripLine",        "MS", "PCB", "#56D364", "Transmission", "PCB Microstrip Line",        "microstrip.svg"),
+        }),
+        new ComponentPaletteGroup("⚡ Electrical Machines", new[]
+        {
+            new ComponentPaletteItem("ACTransformer", "TR", "VA", "#D2A8FF", "Electrical Machines", "Single- or three-phase transformer equivalent circuit", "transformer.svg"),
+            new ComponentPaletteItem("SynchronousGenerator", "GEN", "VA", "#56D364", "Electrical Machines", "Steady-state synchronous generator", "generator.svg"),
+            new ComponentPaletteItem("InductionMotor", "MTR", "W", "#FFA657", "Electrical Machines", "Steady-state induction motor load", "motor.svg"),
+        }),
+        new ComponentPaletteGroup("🏠 Electrical Loads", new[]
+        {
+            new ComponentPaletteItem("ACBulb", "ACB", "W", "#F59E0B", "Electrical Loads", "Household AC bulb load", "bulb.svg"),
+            new ComponentPaletteItem("ACFan", "FAN", "W", "#79C0FF", "Electrical Loads", "Household AC fan motor load", "fan.svg"),
+        }),
+        new ComponentPaletteGroup("🌞 Sources & Energy", new[]
+        {
+            new ComponentPaletteItem("SolarPanel", "PV", "Wp", "#E3B341", "Sources & Energy", "Single-diode photovoltaic panel", "solarpanel.svg"),
+        }),
+        new ComponentPaletteGroup("🔋 Energy Storage", new[]
+        {
+            new ComponentPaletteItem("Battery", "BAT", "Ah", "#56D364", "Energy Storage", "SOC-dependent battery with internal resistance", "battery.svg"),
         }),
         new ComponentPaletteGroup("🔌 Semiconductors", new[]
         {
@@ -1448,10 +1477,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             var fromComponent = Circuit.FindChildById<ComponentNode>(SelectedConnection.FromComponentId);
             var toComponent = Circuit.FindChildById<ComponentNode>(SelectedConnection.ToComponentId);
-            var wireSignals = new[] { fromComponent, toComponent }.Where(component => component != null).Cast<ComponentNode>().Distinct().ToList();
-            if (wireSignals.Any(component => component.ShowWaveform))
+            var wireSignals = new[] { fromComponent, toComponent }.Where(source => source != null).Cast<ComponentNode>().Distinct().ToList();
+            if (wireSignals.Any(source => source.ShowWaveform))
             {
-                foreach (var component in wireSignals) component.ShowWaveform = false;
+                foreach (var source in wireSignals) source.ShowWaveform = false;
                 IsWaveformDrawerOpen = false;
                 CircuitChanged?.Invoke();
                 return;
@@ -1942,6 +1971,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private bool _simulationRefreshRequested;
     private bool _isApplyingScript;
     private DateTime _lastPlaybackSolveUtc = DateTime.MinValue;
+    private double _pendingSolverElapsedTimeSeconds;
+    private double _solverTimeSeconds;
+    private double _deviceTimeSeconds;
 
     [RelayCommand]
     public void ToggleSimulationPlayback()
@@ -1949,6 +1981,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
         IsSimulationPlaying = !IsSimulationPlaying;
         if (IsSimulationPlaying)
         {
+            if (_solverTimeSeconds <= 0)
+            {
+                _solverTimeSeconds = Preferences.Default.Get("Settings.SimulationStartTimeSeconds", 0.0);
+                _deviceTimeSeconds = _solverTimeSeconds * GetConfiguredDeviceTimeScale();
+            }
             if (_animTimer == null)
             {
                 _animTimer = Application.Current?.Dispatcher?.CreateTimer() ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
@@ -1959,7 +1996,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     {
                         if (IsSimulationPlaying)
                         {
-                            DigitalLogicSimulator.Advance(Circuit, _animTimer.Interval.TotalSeconds);
+                            double solverDelta = _animTimer.Interval.TotalSeconds;
+                            _pendingSolverElapsedTimeSeconds += solverDelta;
+                            _solverTimeSeconds += solverDelta;
+                            double scale = GetConfiguredDeviceTimeScale();
+                            _deviceTimeSeconds += solverDelta * scale;
+                            DigitalLogicSimulator.Advance(Circuit, solverDelta);
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
                             CircuitChanged?.Invoke();
                             if (!IsSimulating && !_playbackSolveRunning &&
@@ -1996,6 +2038,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
         try
         {
             var settings = BuildSimulationSettings();
+            settings.SolverElapsedTimeSeconds = _pendingSolverElapsedTimeSeconds;
+            _pendingSolverElapsedTimeSeconds = 0;
+            settings.DeviceTimeSeconds = _deviceTimeSeconds;
             var results = await Task.Run(() => _simManager.Run(Circuit, settings));
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = FormatResults(results);
@@ -2265,12 +2310,30 @@ public partial class EEWorkspaceViewModel : ObservableObject
             _ => AnalysisType.OperatingPoint
         };
 
+        double scale = GetConfiguredDeviceTimeScale();
+        bool scaleEnabled = Preferences.Default.Get("Settings.EnableTimeScaling", false);
+        bool automaticStep = Preferences.Default.Get("Settings.AutomaticTimeStepSelection", true);
+        double configuredStart = Preferences.Default.Get("Settings.SimulationStartTimeSeconds", 0.0);
+        double configuredDuration = Math.Max(Preferences.Default.Get("Settings.SimulationDurationSeconds", 60.0), 1e-6);
+        double configuredStep = Math.Max(Preferences.Default.Get("Settings.SimulationTimeStepSeconds", 0.04), 1e-6);
+        double solverStart = scaleEnabled ? configuredStart : SimTransientStartTime;
+        double solverStop = scaleEnabled ? configuredStart + configuredDuration :
+            (SimTransientStopTime > SimTransientStartTime ? SimTransientStopTime : SimTransientStartTime + 0.01);
+        double solverStep = scaleEnabled ? configuredStep : (SimTransientStepTime > 0 ? SimTransientStepTime : 1e-5);
+        if (automaticStep)
+            solverStep = Math.Min(solverStep, Math.Max((solverStop - solverStart) / 1000.0, 1e-6));
         return new SimulationSettings
         {
             Analysis = analysis,
-            StartTime = SimTransientStartTime,
-            StopTime = SimTransientStopTime > SimTransientStartTime ? SimTransientStopTime : SimTransientStartTime + 0.01,
-            StepTime = SimTransientStepTime > 0 ? SimTransientStepTime : 1e-5,
+            StartTime = solverStart,
+            StopTime = solverStop,
+            StepTime = solverStep,
+            TimeScalingEnabled = scaleEnabled,
+            DeviceTimeScale = scaleEnabled ? scale : 1.0,
+            SolverElapsedTimeSeconds = analysis == AnalysisType.Transient
+                ? Math.Max(0, SimTransientStopTime - SimTransientStartTime)
+                : 0,
+            DeviceTimeSeconds = _deviceTimeSeconds > 0 ? _deviceTimeSeconds : solverStart * scale,
             AcSweepType = SimAcSweepType ?? "Decade",
             AcPoints = SimAcPoints > 0 ? SimAcPoints : 10,
             AcStartFrequency = SimAcStartFrequency > 0 ? SimAcStartFrequency : 1.0,
@@ -2280,6 +2343,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
             DcStop = SimDcStop,
             DcStep = SimDcStep != 0 ? SimDcStep : 0.1
         };
+    }
+
+    private static double GetConfiguredDeviceTimeScale()
+    {
+        string simulationUnit = Preferences.Default.Get("Settings.SimulationTimeUnit", "seconds");
+        string deviceUnit = Preferences.Default.Get("Settings.DeviceTimeUnit", "hours");
+        double simulationAmount = Math.Max(Preferences.Default.Get("Settings.SimulationTimeAmount", 30.0), 1e-9);
+        double deviceAmount = Math.Max(Preferences.Default.Get("Settings.DeviceTimeAmount", 1.0), 1e-9);
+        return deviceAmount * SettingsViewModel.TimeUnitSeconds(deviceUnit) /
+               (simulationAmount * SettingsViewModel.TimeUnitSeconds(simulationUnit));
     }
 
     [RelayCommand]
@@ -2333,6 +2406,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
             var settings = BuildSimulationSettings();
             var results  = await Task.Run(() => _simManager.Run(Circuit, settings));
+            if (settings.Analysis == AnalysisType.Transient)
+            {
+                double scale = settings.TimeScalingEnabled ? settings.DeviceTimeScale : 1.0;
+                _solverTimeSeconds = settings.StopTime;
+                _deviceTimeSeconds = settings.DeviceTimeSeconds +
+                    Math.Max(0, settings.StopTime - settings.StartTime) * scale;
+            }
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             DispatchTriggeredUiEvents();
 
@@ -2653,6 +2733,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public void OpenEditDialog(ComponentNode comp)
     {
         EditingComponent = comp;
+        RefreshPowerSystemProperties(comp);
         EditName = comp.Reference;
         EditType = comp.ComponentType;
         EditShowLiveProbe = comp.ShowLiveProbe;
@@ -3043,6 +3124,69 @@ public partial class EEWorkspaceViewModel : ObservableObject
         }
 
         IsEditDialogVisible = true;
+    }
+
+    private void RefreshPowerSystemProperties(ComponentNode component)
+    {
+        PowerSystemProperties.Clear();
+        if (component is not PowerSystemComponent) return;
+
+        var type = component.GetType();
+        var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Where(property => property.GetIndexParameters().Length == 0 && property.GetMethod?.IsPublic == true &&
+                               property.Name is not ("ComponentType" or "StableTypeId" or "SpicePrefix" or "Category" or "ModelName" or "SymbolKey" or "IsSimulatable" or
+                                   "Description" or "Pins" or "Children" or "Parent" or "ElectricalParameters" or "CustomProperties" or "EventTriggers" or
+                                   "WaveformTime" or "WaveformVoltage" or "WaveformCurrent" or "WaveformNodeVoltages" or "Position" or "Id" or "Name" or "Reference" or
+                                   "NodeType" or "Tags" or "UserData" or "X" or "Y" or "Rotation" or "ScaleX" or "ScaleY" or "Enabled" or "Visible" or
+                                   "Locked" or "Selected" or "ShowLiveProbe" or "ShowWaveform" or "LiveVoltage" or "LiveCurrent" or "BreakingCurrent" or "IsBrokenDown"))
+            .OrderBy(property => property.SetMethod?.IsPublic == true ? 0 : 1)
+            .ThenBy(property => property.Name, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var property in properties)
+        {
+            try
+            {
+                object? value = property.GetValue(component);
+                PowerSystemProperties.Add(new PowerSystemPropertyItem
+                {
+                    Name = property.Name,
+                    TypeName = property.PropertyType.Name,
+                    Value = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+                    IsEditable = property.SetMethod?.IsPublic == true && property.PropertyType.IsPrimitive ||
+                                 property.SetMethod?.IsPublic == true && property.PropertyType == typeof(string)
+                });
+            }
+            catch
+            {
+                // Skip a property that cannot currently be evaluated for the inspector.
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void ApplyPowerSystemProperty(PowerSystemPropertyItem item)
+    {
+        if (EditingComponent is not PowerSystemComponent component || item == null || !item.IsEditable) return;
+        var property = component.GetType().GetProperty(item.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+        if (property?.SetMethod?.IsPublic != true) return;
+        try
+        {
+            object converted = property.PropertyType == typeof(string)
+                ? item.Value
+                : Convert.ChangeType(item.Value, property.PropertyType, System.Globalization.CultureInfo.InvariantCulture);
+            property.SetValue(component, converted);
+            component.ValidateConfiguration();
+            component.NotifyModified(item.Name);
+            RefreshPowerSystemProperties(component);
+            CircuitChanged?.Invoke();
+            RequestSimulationRefresh();
+            StatusText = $"Updated {component.Reference}.{item.Name}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Invalid {item.Name}: {ex.Message}";
+            RefreshPowerSystemProperties(component);
+        }
     }
 
     [RelayCommand]

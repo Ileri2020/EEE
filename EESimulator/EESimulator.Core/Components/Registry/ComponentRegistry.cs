@@ -241,6 +241,79 @@ public static class ComponentRegistry
             d.DefaultParameters["Delay"] = 1e-6;
         });
 
+        // ── Power systems, transmission lines, machines, loads, and storage ──
+        Register<SinglePhaseTransmissionLineComponent>("powerline.single-phase", "SinglePhaseTransmissionLine", "Transmission Lines", "TL1", d =>
+        {
+            d.Description = "Single-phase line with short/medium/long RLGC models";
+            d.Icon = "transmissionline.svg";
+            d.DefaultParameters[nameof(SinglePhaseTransmissionLineComponent.RatedVoltage)] = 230;
+            d.DefaultParameters[nameof(SinglePhaseTransmissionLineComponent.Frequency)] = 50;
+            d.DefaultParameters[nameof(SinglePhaseTransmissionLineComponent.LengthKm)] = 1;
+        });
+        Register<TwoPhaseTransmissionLineComponent>("powerline.two-phase", "TwoPhaseTransmissionLine", "Transmission Lines", "TL2", d =>
+        {
+            d.Description = "True two-phase or split-phase three-wire RLGC line";
+            d.Icon = "transmissionline.svg";
+            d.DefaultParameters[nameof(TwoPhaseTransmissionLineComponent.PhaseDisplacementDegrees)] = 90;
+        });
+        Register<ThreePhaseTransmissionLineComponent>("powerline.three-phase", "ThreePhaseTransmissionLine", "Transmission Lines", "TL3", d =>
+        {
+            d.Description = "Three-phase RLGC line with explicit phase and neutral terminals";
+            d.Icon = "transmissionline.svg";
+            d.DefaultParameters[nameof(ThreePhaseTransmissionLineComponent.RatedLineVoltage)] = 11000;
+        });
+        Register<ACTransformerComponent>("machine.ac-transformer", "ACTransformer", "Electrical Machines", "TR", d =>
+        {
+            d.Description = "Single-/three-phase transformer equivalent circuit";
+            d.Icon = "transformer.svg";
+            d.DefaultParameters[nameof(ACTransformerComponent.RatedPrimaryVoltage)] = 230;
+            d.DefaultParameters[nameof(ACTransformerComponent.RatedSecondaryVoltage)] = 115;
+            d.DefaultParameters[nameof(ACTransformerComponent.RatedApparentPower)] = 1000;
+        });
+        Register<SynchronousGeneratorComponent>("machine.synchronous-generator", "SynchronousGenerator", "Electrical Machines", "GEN", d =>
+        {
+            d.Description = "Steady-state synchronous generator";
+            d.Icon = "generator.svg";
+            d.DefaultParameters[nameof(SynchronousGeneratorComponent.RatedVoltage)] = 400;
+            d.DefaultParameters[nameof(SynchronousGeneratorComponent.RatedFrequency)] = 50;
+        });
+        Register<InductionMotorComponent>("machine.induction-motor", "InductionMotor", "Electrical Machines", "MTR", d =>
+        {
+            d.Description = "Steady-state induction motor equivalent load";
+            d.Icon = "motor.svg";
+            d.DefaultParameters[nameof(InductionMotorComponent.RatedVoltage)] = 400;
+            d.DefaultParameters[nameof(InductionMotorComponent.RatedPower)] = 1500;
+        });
+        Register<ACBulbComponent>("load.ac-bulb", "ACBulb", "Electrical Loads", "ACB", d =>
+        {
+            d.Description = "Household AC bulb resistive load";
+            d.Icon = "bulb.svg";
+            d.DefaultParameters[nameof(ACBulbComponent.RatedVoltage)] = 230;
+            d.DefaultParameters[nameof(ACBulbComponent.RatedPower)] = 60;
+        });
+        Register<ACFanComponent>("load.ac-fan", "ACFan", "Electrical Loads", "FAN", d =>
+        {
+            d.Description = "Household AC motor fan load";
+            d.Icon = "fan.svg";
+            d.DefaultParameters[nameof(ACFanComponent.RatedVoltage)] = 230;
+            d.DefaultParameters[nameof(ACFanComponent.RatedPower)] = 75;
+        });
+        Register<SolarPanelComponent>("source.solar-panel", "SolarPanel", "Sources & Energy", "PV", d =>
+        {
+            d.Description = "Photovoltaic single-diode panel source";
+            d.Icon = "solarpanel.svg";
+            d.DefaultParameters[nameof(SolarPanelComponent.MaximumPowerRating)] = 300;
+            d.DefaultParameters[nameof(SolarPanelComponent.OpenCircuitVoltage)] = 40;
+        });
+        Register<BatteryComponent>("storage.battery", "Battery", "Energy Storage", "BAT", d =>
+        {
+            d.Description = "Dynamic SOC-dependent battery equivalent circuit";
+            d.Icon = "battery.svg";
+            d.DefaultParameters[nameof(BatteryComponent.NominalVoltage)] = 12;
+            d.DefaultParameters[nameof(BatteryComponent.CapacityAh)] = 100;
+            d.DefaultParameters[nameof(BatteryComponent.InitialSocPercent)] = 80;
+        });
+
         // ── Electronics (Active & Semiconductors) ────────────────────────────
         Register<LEDComponent>("electronics.led", "LED", "Electronics", "LED", d =>
         {

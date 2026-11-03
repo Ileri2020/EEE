@@ -120,8 +120,50 @@ public static class ComponentSymbolDrawer
             case "LossyTransmissionLine": DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   DrawMicrostripLine(canvas); break;
+            case "SinglePhaseTransmissionLine": DrawDigitalBlock(canvas, "1φ LINE", "#79C0FF"); break;
+            case "TwoPhaseTransmissionLine": DrawDigitalBlock(canvas, "2φ LINE", "#79C0FF"); break;
+            case "ThreePhaseTransmissionLine": DrawDigitalBlock(canvas, "3φ LINE", "#79C0FF"); break;
+            case "ACTransformer": DrawTransformer(canvas); break;
+            case "SynchronousGenerator": DrawDigitalBlock(canvas, "GEN", "#56D364"); break;
+            case "InductionMotor": DrawDigitalBlock(canvas, "MTR", "#FFA657"); break;
+            case "ACBulb": DrawBulb(canvas, isOn); break;
+            case "ACFan": DrawDigitalBlock(canvas, "FAN", "#79C0FF"); break;
+            case "SolarPanel": DrawDigitalBlock(canvas, "PV", "#E3B341"); break;
+            case "Battery": DrawBattery(canvas); break;
             default:                 DrawGenericComponent(canvas, componentType); break;
         }
+    }
+
+    public static void DrawTransformer(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.StrokeSize = 2;
+        canvas.DrawLine(-22, -9, -10, -9);
+        canvas.DrawLine(-22, 9, -10, 9);
+        canvas.DrawLine(10, -9, 22, -9);
+        canvas.DrawLine(10, 9, 22, 9);
+        canvas.DrawArc(-14, -12, 12, 24, 270, 90, false, false);
+        canvas.DrawArc(2, -12, 12, 24, 90, 270, false, false);
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(-18, -9, 2);
+        canvas.FillCircle(18, -9, 2);
+    }
+
+    public static void DrawBattery(ICanvas canvas)
+        => DrawBattery(canvas, 0.75);
+
+    public static void DrawBattery(ICanvas canvas, double stateOfChargePercent)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2;
+        canvas.DrawRoundedRectangle(-15, -11, 30, 22, 3);
+        canvas.FillColor = Color.FromArgb("#56D364");
+        canvas.FillRectangle(15, -5, 4, 10);
+        float fillWidth = (float)(22 * Math.Clamp(stateOfChargePercent, 0, 100) / 100);
+        if (fillWidth > 0) canvas.FillRectangle(-11, -7, fillWidth, 14);
+        canvas.DrawLine(-8, 0, -2, 0);
+        canvas.DrawLine(-5, -3, -5, 3);
+        canvas.DrawLine(3, 0, 9, 0);
     }
 
     public static void DrawDigitalBlock(ICanvas canvas, string label, string color)

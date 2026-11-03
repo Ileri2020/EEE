@@ -1303,6 +1303,32 @@
 
                             <!-- ─── TAB 1: GENERAL & ELECTRICAL ─────────────── -->
                             <VerticalStackLayout Spacing="12" IsVisible="{Binding IsEditTabGeneral}">
+                                <Border IsVisible="{Binding IsPowerSystemComponent}" Padding="12" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="POWER-SYSTEM MODEL PROPERTIES" TextColor="#79C0FF" FontAttributes="Bold" FontSize="11"/>
+                                        <Label Text="Editable configuration is saved to the schematic. Calculated results are read-only." TextColor="#8B949E" FontSize="10"/>
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding PowerSystemProperties}" Spacing="4">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:PowerSystemPropertyItem">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="4,2">
+                                                        <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                                                            <Label Text="{Binding Name}" TextColor="#C9D1D9" FontSize="10"/>
+                                                            <Label Text="{Binding TypeName}" TextColor="#6E7681" FontSize="8"/>
+                                                        </VerticalStackLayout>
+                                                        <Entry Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" IsReadOnly="{Binding IsEditable, Converter={StaticResource InvertedBoolConverter}}"
+                                                               ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ApplyPowerSystemPropertyCommand}"
+                                                               ReturnCommandParameter="{Binding .}"
+                                                               WidthRequest="145" BackgroundColor="#161B22" TextColor="#C9D1D9" FontSize="10">
+                                                        </Entry>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Label Text="Edit text/number fields and press Enter to apply. Enums and operating schedules remain explicit string options." TextColor="#6E7681" FontSize="9"/>
+                                    </VerticalStackLayout>
+                                </Border>
+
                                 <!-- Eye (Probe) and Graph (Waveform) Icon Toggles -->
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,2,0,4">
                                     <Button Grid.Column="0"

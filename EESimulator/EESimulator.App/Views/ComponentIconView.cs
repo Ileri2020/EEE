@@ -129,6 +129,7 @@ public class ComponentIconView : GraphicsView, IDrawable
         {
             EESimulator.Core.Components.Electronics.LEDComponent led => led.IsOn,
             EESimulator.Core.Components.Electrical.BulbComponent bulb => bulb.IsOn,
+            EESimulator.Core.Components.Electrical.ACBulbComponent acBulb => acBulb.InitiallyOn && acBulb.ScheduleActive,
             EESimulator.Core.Components.Electronics.LogicInputComponent input => input.State,
             EESimulator.Core.Components.Electronics.LogicOutputComponent output => output.IsOn,
             EESimulator.Core.Components.Electronics.ClockComponent clock => clock.State,
@@ -158,6 +159,9 @@ public class ComponentIconView : GraphicsView, IDrawable
                 break;
             case EESimulator.Core.Components.Electronics.VideoComponent video:
                 ComponentSymbolDrawer.DrawVideo(canvas, video.CustomProperties.TryGetValue("RenderedRgb", out var videoRgb) ? Convert.ToInt32(videoRgb) : 0);
+                break;
+            case EESimulator.Core.Components.Electrical.BatteryComponent battery:
+                ComponentSymbolDrawer.DrawBattery(canvas, battery.StateOfChargePercent);
                 break;
             default:
                 ComponentSymbolDrawer.DrawSymbol(canvas, ComponentType, "", componentIsOn);

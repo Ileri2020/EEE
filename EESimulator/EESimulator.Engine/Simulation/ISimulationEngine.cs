@@ -21,6 +21,14 @@ public class SimulationSettings
     public double StopTime { get; set; } = 0.01;
     public double StepTime { get; set; } = 1e-5;
 
+    /// <summary>Scale elapsed solver seconds for slow device-level state updates.</summary>
+    public bool TimeScalingEnabled { get; set; }
+    public double DeviceTimeScale { get; set; } = 1.0;
+    /// <summary>Elapsed numerical time since the prior dynamic-state update.</summary>
+    public double SolverElapsedTimeSeconds { get; set; }
+    /// <summary>Accumulated effective component time used by schedules and environmental profiles.</summary>
+    public double DeviceTimeSeconds { get; set; }
+
     // AC Sweep parameters
     public string AcSweepType { get; set; } = "Decade"; // Decade, Octave, Linear
     public int AcPoints { get; set; } = 10;

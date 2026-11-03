@@ -279,6 +279,9 @@ public static class EeePlatformSerializer
                     comp.CustomProperties[kvp.Key] = kvp.Value;
                 }
 
+                if (comp is EESimulator.Core.Components.Electrical.PowerSystemComponent powerSystemComponent)
+                    powerSystemComponent.ValidateConfiguration();
+
                 if (comp is EESimulator.Core.Components.General.CustomCircuitComponent customCircuit)
                     customCircuit.RestorePorts();
 

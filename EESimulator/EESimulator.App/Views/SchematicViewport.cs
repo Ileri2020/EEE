@@ -1521,6 +1521,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         {
             EESimulator.Core.Components.Electronics.LEDComponent led => led.IsOn,
             EESimulator.Core.Components.Electrical.BulbComponent bulb => bulb.IsOn,
+            EESimulator.Core.Components.Electrical.ACBulbComponent acBulb => acBulb.InitiallyOn && acBulb.ScheduleActive,
             EESimulator.Core.Components.Electronics.LogicOutputComponent lout => lout.IsOn,
             EESimulator.Core.Components.Electronics.LogicInputComponent lin => lin.State,
             EESimulator.Core.Components.Electronics.ClockComponent clk => clk.State,
@@ -1660,6 +1661,16 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "LossyTransmissionLine": ComponentSymbolDrawer.DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     ComponentSymbolDrawer.DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;
+            case "SinglePhaseTransmissionLine": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "1φ LINE", "#79C0FF"); break;
+            case "TwoPhaseTransmissionLine": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "2φ LINE", "#79C0FF"); break;
+            case "ThreePhaseTransmissionLine": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "3φ LINE", "#79C0FF"); break;
+            case "ACTransformer": ComponentSymbolDrawer.DrawTransformer(canvas); break;
+            case "SynchronousGenerator": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "GEN", "#56D364"); break;
+            case "InductionMotor": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MTR", "#FFA657"); break;
+            case "ACBulb": ComponentSymbolDrawer.DrawBulb(canvas, isOn); break;
+            case "ACFan": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "FAN", "#79C0FF"); break;
+            case "SolarPanel": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PV", "#E3B341"); break;
+            case "Battery": ComponentSymbolDrawer.DrawBattery(canvas, comp is EESimulator.Core.Components.Electrical.BatteryComponent battery ? battery.StateOfChargePercent : 0); break;
             default:
                 if (comp is EESimulator.Core.Components.Electronics.TtlPackageComponent ttl)
                     ComponentSymbolDrawer.DrawTtlPackage(canvas, ttl.PartNumber, ttl.ShowInternalStructure);

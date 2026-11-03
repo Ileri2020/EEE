@@ -123,7 +123,49 @@ public partial class SettingsViewModel : ObservableObject
 
     public List<string> AvailableCategories { get; } = new()
     {
-        "All", "Electrical", "Electronics", "General"
+        "All", "Electrical", "Electronics", "General", "Transmission Lines", "Electrical Machines",
+        "Electrical Loads", "Sources & Energy", "Energy Storage"
+    };
+
+    [ObservableProperty] private bool _enableTimeScaling;
+    partial void OnEnableTimeScalingChanged(bool value) => PersistBool(nameof(EnableTimeScaling), value);
+
+    [ObservableProperty] private string _simulationTimeUnit = "seconds";
+    partial void OnSimulationTimeUnitChanged(string value) { PersistString(nameof(SimulationTimeUnit), value); OnPropertyChanged(nameof(TimeScalingRatio)); }
+
+    [ObservableProperty] private string _deviceTimeUnit = "hours";
+    partial void OnDeviceTimeUnitChanged(string value) { PersistString(nameof(DeviceTimeUnit), value); OnPropertyChanged(nameof(TimeScalingRatio)); }
+
+    [ObservableProperty] private double _simulationTimeAmount = 30;
+    partial void OnSimulationTimeAmountChanged(double value) { PersistDouble(nameof(SimulationTimeAmount), Math.Max(value, 1e-9)); OnPropertyChanged(nameof(TimeScalingRatio)); }
+
+    [ObservableProperty] private double _deviceTimeAmount = 1;
+    partial void OnDeviceTimeAmountChanged(double value) { PersistDouble(nameof(DeviceTimeAmount), Math.Max(value, 1e-9)); OnPropertyChanged(nameof(TimeScalingRatio)); }
+
+    [ObservableProperty] private double _simulationTimeStepSeconds = 0.04;
+    partial void OnSimulationTimeStepSecondsChanged(double value) => PersistDouble(nameof(SimulationTimeStepSeconds), Math.Max(value, 1e-6));
+
+    [ObservableProperty] private bool _automaticTimeStepSelection = true;
+    partial void OnAutomaticTimeStepSelectionChanged(bool value) => PersistBool(nameof(AutomaticTimeStepSelection), value);
+
+    [ObservableProperty] private double _simulationStartTimeSeconds;
+    partial void OnSimulationStartTimeSecondsChanged(double value) => PersistDouble(nameof(SimulationStartTimeSeconds), Math.Max(value, 0));
+
+    [ObservableProperty] private double _simulationDurationSeconds = 60;
+    partial void OnSimulationDurationSecondsChanged(double value) => PersistDouble(nameof(SimulationDurationSeconds), Math.Max(value, 1e-6));
+
+    public double TimeScalingRatio =>
+        Math.Max(DeviceTimeAmount, 1e-9) * TimeUnitSeconds(DeviceTimeUnit) /
+        (Math.Max(SimulationTimeAmount, 1e-9) * TimeUnitSeconds(SimulationTimeUnit));
+
+    public List<string> TimeUnits { get; } = new() { "seconds", "minutes", "hours", "days" };
+
+    public static double TimeUnitSeconds(string unit) => unit?.ToLowerInvariant() switch
+    {
+        "minute" or "minutes" or "min" => 60,
+        "hour" or "hours" or "hr" => 3600,
+        "day" or "days" => 86400,
+        _ => 1
     };
 
     [ObservableProperty]
@@ -318,6 +360,15 @@ public partial class SettingsViewModel : ObservableObject
         DefaultCategory            = Preferences.Default.Get($"Settings.{nameof(DefaultCategory)}",           "All");
         MobilePanModeOnStartup     = Preferences.Default.Get($"Settings.{nameof(MobilePanModeOnStartup)}",    true);
         MobileToolbarPosition      = Preferences.Default.Get($"Settings.{nameof(MobileToolbarPosition)}",     "Left Dock");
+        EnableTimeScaling = Preferences.Default.Get($"Settings.{nameof(EnableTimeScaling)}", false);
+        SimulationTimeUnit = Preferences.Default.Get($"Settings.{nameof(SimulationTimeUnit)}", "seconds");
+        DeviceTimeUnit = Preferences.Default.Get($"Settings.{nameof(DeviceTimeUnit)}", "hours");
+        SimulationTimeAmount = Preferences.Default.Get($"Settings.{nameof(SimulationTimeAmount)}", 30.0);
+        DeviceTimeAmount = Preferences.Default.Get($"Settings.{nameof(DeviceTimeAmount)}", 1.0);
+        SimulationTimeStepSeconds = Preferences.Default.Get($"Settings.{nameof(SimulationTimeStepSeconds)}", 0.04);
+        AutomaticTimeStepSelection = Preferences.Default.Get($"Settings.{nameof(AutomaticTimeStepSelection)}", true);
+        SimulationStartTimeSeconds = Preferences.Default.Get($"Settings.{nameof(SimulationStartTimeSeconds)}", 0.0);
+        SimulationDurationSeconds = Preferences.Default.Get($"Settings.{nameof(SimulationDurationSeconds)}", 60.0);
         _loadingRemoteApiBaseUrl = true;
         RemoteApiBaseUrl = EEE.Services.RemoteEeeApiClient.ApiBaseUrl;
         _loadingRemoteApiBaseUrl = false;

@@ -66,6 +66,10 @@ public class SpiceSharpAdapter : ISimulationEngine
             // 2. Instantiate SpiceSharp Circuit
             var spiceCircuit = new SpiceSharp.Circuit();
 
+            foreach (var panel in circuit.Components.OfType<SolarPanelComponent>())
+                panel.ApplyIrradianceProfile(settings.DeviceTimeSeconds);
+
+
             var componentsWithPins = new List<(ComponentNode Comp, string NodeA, string NodeB)>();
             var mutualInductances = new List<MutualInductanceComponent>();
 
@@ -86,6 +90,261 @@ public class SpiceSharpAdapter : ISimulationEngine
 
                 switch (comp)
                 {
+                    case SinglePhaseTransmissionLineComponent line:
+                    {
+                        AddLineBranch(spiceCircuit, line.Name, nodeA, nodeB,
+                            line.TotalResistance, line.InductancePerKm * line.LengthKm,
+                            line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm,
+                            line.ModelType is "Medium Line" or "Long Line", line.Frequency,
+                            line.ModelType == "Long Line");
+                        break;
+                    }
+
+                    case TwoPhaseTransmissionLineComponent line:
+                    {
+                        AddLineBranch(spiceCircuit, line.Name, nodeA, nodeB,
+                            line.ResistancePerKm * line.LengthKm, line.InductancePerKm * line.LengthKm,
+                            line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm, true, line.Frequency);
+                        if (line.Pins.Count >= 4)
+                        {
+                            string phaseBFrom = GetNetForPin(line.Id, line.Pins[2].Id);
+                            string phaseBTo = GetNetForPin(line.Id, line.Pins[3].Id);
+                            AddLineBranch(spiceCircuit, $"{line.Name}_phaseB", phaseBFrom, phaseBTo,
+                                line.ResistancePerKm * line.LengthKm, line.InductancePerKm * line.LengthKm,
+                                line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm, true, line.Frequency);
+                        }
+                            if (line.ConductorConfiguration == "SplitPhaseThreeWire" && line.Pins.Count >= 6)
+                            {
+                                string neutralFrom = GetNetForPin(line.Id, line.Pins[4].Id);
+                                string neutralTo = GetNetForPin(line.Id, line.Pins[5].Id);
+                                AddLineBranch(spiceCircuit, $"{line.Name}_neutral", neutralFrom, neutralTo,
+                                line.ResistancePerKm * line.LengthKm, line.InductancePerKm * line.LengthKm,
+                                line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm, true, line.Frequency);
+                            }
+                        break;
+                    }
+
+                    case ThreePhaseTransmissionLineComponent line:
+                    {
+                        for (int phase = 0; phase < 3; phase++)
+                        {
+                            string from = GetNetForPin(line.Id, line.Pins[phase].Id);
+                            string to = GetNetForPin(line.Id, line.Pins[phase + 3].Id);
+                            AddLineBranch(spiceCircuit, $"{line.Name}_phase{phase + 1}", from, to,
+                                line.ResistancePerKmPerPhase * line.LengthKm,
+                                line.InductancePerKmPerPhase * line.LengthKm,
+                                line.CapacitancePerKmPerPhase * line.LengthKm,
+                                line.ConductancePerKmPerPhase * line.LengthKm, line.ModelType != "Short", line.Frequency,
+                                line.ModelType == "Long");
+                        }
+                        if (line.Connection == "Four-wire" && line.Pins.Count >= 8)
+                        {
+                            string neutralFrom = GetNetForPin(line.Id, line.Pins[6].Id);
+                            string neutralTo = GetNetForPin(line.Id, line.Pins[7].Id);
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{line.Name}_neutral", neutralFrom, neutralTo,
+                                Math.Max(line.NeutralImpedance, 1e-6)));
+                        }
+                        break;
+                    }
+
+                    case ACBulbComponent bulb:
+                    {
+                        double resistance = Math.Max(bulb.EquivalentResistance, 1e-6);
+                        if (!bulb.InitiallyOn || !bulb.ScheduleActive) resistance = 1e12;
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(bulb.Name, nodeA, nodeB, resistance));
+                        break;
+                    }
+
+                    case ACFanComponent fan:
+                    {
+                        double activePower = Math.Max(fan.ElectricalInputPower, 1e-6);
+                        double resistance = fan.RatedVoltage * fan.RatedVoltage / activePower;
+                        if (!fan.InitiallyOn || !fan.ScheduleActive || fan.SelectedSpeed == 0) resistance = 1e12;
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(fan.Name, nodeA, nodeB, Math.Max(resistance, 1e-6)));
+                        break;
+                    }
+
+                    case InductionMotorComponent motor:
+                    {
+                        string neutral = motor.Pins.Count > 3 ? GetNetForPin(motor.Id, motor.Pins[3].Id) : "0";
+                        void AddMotorPhase(string phaseName, string phaseNode)
+                        {
+                            var impedance = motor.PerPhaseInputImpedance;
+                            string internalNode = $"{motor.Name}_{phaseName}_rl";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{motor.Name}_{phaseName}_R", phaseNode, internalNode,
+                                Math.Max(impedance.Real, 1e-6)));
+                            if (impedance.Imaginary > 1e-9)
+                                spiceCircuit.Add(new SpiceSharp.Components.Inductor($"{motor.Name}_{phaseName}_L", internalNode, neutral,
+                                    Math.Max(impedance.Imaginary / (2 * Math.PI * motor.Frequency), 1e-12)));
+                            else
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{motor.Name}_{phaseName}_link", internalNode, neutral, 1e-6));
+                        }
+                        AddMotorPhase("A", nodeA);
+                        for (int phase = 1; phase < Math.Min(3, motor.Pins.Count - 1); phase++)
+                            AddMotorPhase($"phase{phase + 1}", GetNetForPin(motor.Id, motor.Pins[phase].Id));
+                        break;
+                    }
+
+                    case BatteryComponent battery:
+                    {
+                        battery.ValidateConfiguration();
+                        bool batteryConnected = battery.InitialState == "Connected" &&
+                            PowerSystemComponent.IsScheduleActive(battery.OperatingSchedule, settings.DeviceTimeSeconds);
+                        string internalNode = $"{battery.Name}_cell_{battery.Id.ToString("N")[..8]}";
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(battery.Name, internalNode, nodeB,
+                            batteryConnected ? Math.Clamp(battery.OpenCircuitVoltage, battery.MinimumVoltage, battery.MaximumVoltage) : 0));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{battery.Name}_internalR", nodeA, internalNode,
+                            batteryConnected ? Math.Max(battery.TemperatureAdjustedResistance, 1e-6) : 1e12));
+                        break;
+                    }
+
+                    case SolarPanelComponent panel:
+                    {
+                        string internalNode = $"{panel.Name}_pv_{panel.Id.ToString("N")[..8]}";
+                        double temperatureFactor = Math.Max(0.0, 1 + panel.VocTemperatureCoefficient * (panel.CellTemperature - 25));
+                        double irradianceCurrent = Math.Max(0.0, panel.ShortCircuitCurrent * panel.SolarIrradiance / 1000.0 * panel.ParallelStrings);
+                        var model = new SpiceSharp.Components.DiodeModel($"{panel.Name}_pvmodel");
+                        model.Parameters.SaturationCurrent = 1e-10;
+                        model.Parameters.EmissionCoefficient = 1.2;
+                        spiceCircuit.Add(model);
+                        spiceCircuit.Add(new SpiceSharp.Components.Diode($"{panel.Name}_diode", internalNode, nodeB, $"{panel.Name}_pvmodel"));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{panel.Name}_series", nodeA, internalNode,
+                            Math.Max(panel.SeriesResistance, 1e-5)));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{panel.Name}_shunt", internalNode, nodeB,
+                            Math.Max(panel.ShuntResistance, 1e-5)));
+                        var photoSource = new SpiceSharp.Components.CurrentSource($"{panel.Name}_photocurrent", nodeB, internalNode,
+                            irradianceCurrent * temperatureFactor);
+                        var profileTimes = panel.IrradianceProfilePoints.Select(point => point.Time)
+                            .Concat(panel.TemperatureProfilePoints.Select(point => point.Time))
+                            .Where(deviceTime => deviceTime > settings.DeviceTimeSeconds &&
+                                deviceTime < settings.DeviceTimeSeconds + Math.Max(0, settings.StopTime - settings.StartTime) *
+                                    (settings.TimeScalingEnabled ? settings.DeviceTimeScale : 1.0))
+                            .Select(deviceTime => settings.StartTime +
+                                (deviceTime - settings.DeviceTimeSeconds) /
+                                (settings.TimeScalingEnabled ? Math.Max(settings.DeviceTimeScale, 1e-12) : 1.0));
+                        var solverTimes = new[] { settings.StartTime }
+                            .Concat(profileTimes)
+                            .Append(settings.StopTime)
+                            .Distinct()
+                            .OrderBy(time => time)
+                            .ToArray();
+                        if (solverTimes.Length >= 2 &&
+                            (panel.IrradianceProfilePoints.Count > 0 || panel.TemperatureProfilePoints.Count > 0))
+                        {
+                            var pvWaveform = new SpiceSharp.Components.Pwl();
+                            var points = new List<double>(solverTimes.Length * 2);
+                            double profileScale = settings.TimeScalingEnabled ? settings.DeviceTimeScale : 1.0;
+                            foreach (double solverTime in solverTimes)
+                            {
+                                double deviceTime = settings.DeviceTimeSeconds +
+                                    (solverTime - settings.StartTime) * profileScale;
+                                points.Add(solverTime);
+                                points.Add(panel.PhotocurrentAtDeviceTime(deviceTime));
+                            }
+                            pvWaveform.SetPoints(points.ToArray());
+                            photoSource.Parameters.Waveform = pvWaveform;
+                        }
+                        spiceCircuit.Add(photoSource);
+                        break;
+                    }
+
+                    case ACTransformerComponent transformer:
+                    {
+                        transformer.ValidateConfiguration();
+                        if (transformer.NumberOfPhases == 3)
+                        {
+                            string[] phases = { "A", "B", "C" };
+                            string primaryNeutral = GetNetForPin(transformer.Id, transformer.Pins[6].Id);
+                            string secondaryNeutral = GetNetForPin(transformer.Id, transformer.Pins[7].Id);
+                            bool primaryDelta = transformer.WindingConnection is "Delta-Delta" or "Delta-Y";
+                            bool secondaryDelta = transformer.WindingConnection is "Delta-Delta" or "Y-Delta";
+                            string suffix3 = transformer.Id.ToString("N")[..8];
+                            for (int phase = 0; phase < 3; phase++)
+                            {
+                                int next = (phase + 1) % 3;
+                                string primaryStart = GetNetForPin(transformer.Id, transformer.Pins[phase].Id);
+                                string primaryEnd = primaryDelta
+                                    ? GetNetForPin(transformer.Id, transformer.Pins[next].Id)
+                                    : primaryNeutral;
+                                string secondaryStart = GetNetForPin(transformer.Id, transformer.Pins[phase + 3].Id);
+                                string secondaryEnd = secondaryDelta
+                                    ? GetNetForPin(transformer.Id, transformer.Pins[next + 3].Id)
+                                    : secondaryNeutral;
+                                string primaryPhaseInternal = $"{transformer.Name}_pri{phase}_{suffix3}";
+                                string secondaryPhaseInternal = $"{transformer.Name}_sec{phase}_{suffix3}";
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                    $"{transformer.Name}_primaryR{phase}", primaryStart, primaryPhaseInternal,
+                                    Math.Max(transformer.PrimaryResistance, 1e-6)));
+                                spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                    $"{transformer.Name}_mag{phase}", primaryPhaseInternal, primaryEnd,
+                                    Math.Max(transformer.MagnetizingInductance, 1e-9)));
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                    $"{transformer.Name}_core{phase}", primaryPhaseInternal, primaryEnd,
+                                    Math.Max(transformer.CoreLossResistance, 1e-6)));
+                                spiceCircuit.Add(new SpiceSharp.Components.VoltageControlledVoltageSource(
+                                    $"{transformer.Name}_winding{phase}", secondaryPhaseInternal, secondaryEnd,
+                                    primaryPhaseInternal, primaryEnd,
+                                    (transformer.DotsAligned ? 1 : -1) / Math.Max(transformer.TurnsRatio, 1e-9)));
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                    $"{transformer.Name}_secondaryR{phase}", secondaryPhaseInternal, secondaryStart,
+                                    Math.Max(transformer.SecondaryResistance, 1e-6)));
+                                _ = phases[phase];
+                            }
+                            break;
+                        }
+
+                        string suffix = transformer.Id.ToString("N")[..8];
+                        string primaryInternal = $"{transformer.Name}_pri_{suffix}";
+                        string secondaryInternal = $"{transformer.Name}_sec_{suffix}";
+                        string secondaryReturnInternal = $"{transformer.Name}_sec_return_{suffix}";
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{transformer.Name}_primaryR", nodeA, primaryInternal,
+                            Math.Max(transformer.PrimaryResistance, 1e-6)));
+                        spiceCircuit.Add(new SpiceSharp.Components.Inductor($"{transformer.Name}_mag", primaryInternal, nodeB,
+                            Math.Max(transformer.MagnetizingInductance, 1e-9)));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{transformer.Name}_core", primaryInternal, nodeB,
+                            Math.Max(transformer.CoreLossResistance, 1e-6)));
+                        string secondaryPositive = GetNetForPin(transformer.Id, transformer.Pins[2].Id);
+                        string secondaryNegative = GetNetForPin(transformer.Id, transformer.Pins[3].Id);
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageControlledVoltageSource(
+                            transformer.Name, secondaryInternal, secondaryReturnInternal, primaryInternal, nodeB,
+                            (transformer.DotsAligned ? 1 : -1) / Math.Max(transformer.TurnsRatio, 1e-9)));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{transformer.Name}_secondaryR", secondaryInternal, secondaryPositive,
+                            Math.Max(transformer.SecondaryResistance, 1e-6)));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{transformer.Name}_secondaryReturnR", secondaryReturnInternal, secondaryNegative,
+                            Math.Max(transformer.SecondaryResistance, 1e-6)));
+                        break;
+                    }
+
+                    case SynchronousGeneratorComponent generator:
+                    {
+                        generator.ValidateConfiguration();
+                        string neutral = generator.Pins.Count > 3 ? GetNetForPin(generator.Id, generator.Pins[3].Id) : "0";
+                        double peakVoltage = generator.GeneratedEmf * Math.Sqrt(2);
+                        int phases = Math.Clamp(generator.NumberOfPhases, 1, 3);
+                        for (int phase = 0; phase < phases; phase++)
+                        {
+                            string phaseNode = GetNetForPin(generator.Id, generator.Pins[phase].Id);
+                            double angle = generator.InitialRotorAngle + (generator.PhaseSequence == "ACB" ? -1 : 1) * phase * 120;
+                            string sourceName = phase == 0 ? generator.Name : $"{generator.Name}_phase{phase + 1}";
+                            string internalNode = $"{sourceName}_emf_{generator.Id.ToString("N")[..8]}";
+                            var source = new SpiceSharp.Components.VoltageSource(sourceName, internalNode, neutral,
+                                generator.GeneratedEmf * Math.Cos(angle * Math.PI / 180));
+                            source.Parameters.Waveform = new SpiceSharp.Components.Sine(0, peakVoltage,
+                                generator.RatedFrequency, 0, 0, angle * Math.PI / 180.0);
+                            spiceCircuit.Add(source);
+                            string reactanceNode = $"{sourceName}_xd_{generator.Id.ToString("N")[..8]}";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{sourceName}_armatureR", internalNode, reactanceNode,
+                                Math.Max(generator.ArmatureResistance, 1e-6)));
+                            double synchronousReactance = Math.Max(generator.Xd, 0);
+                            if (synchronousReactance > 1e-9)
+                                spiceCircuit.Add(new SpiceSharp.Components.Inductor($"{sourceName}_armatureL", reactanceNode, phaseNode,
+                                    synchronousReactance / (2 * Math.PI * generator.RatedFrequency)));
+                            else
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{sourceName}_armatureLink", reactanceNode, phaseNode, 1e-6));
+                        }
+                        break;
+                    }
+
                     case ResistorComponent r:
                     {
                         double temperatureDelta = r.Temperature - 27.0;
@@ -864,6 +1123,30 @@ public class SpiceSharpAdapter : ISimulationEngine
                 }
             }
 
+            foreach (var battery in circuit.Components.OfType<BatteryComponent>())
+            {
+                // SpiceSharp's independent voltage-source branch current is positive
+                // into its positive terminal; invert it for our positive=discharge API.
+                battery.LiveCurrent = -battery.LiveCurrent;
+                battery.LiveCurrent = battery.LimitedCurrent;
+                battery.LiveVoltage = Math.Clamp(
+                    battery.OpenCircuitVoltage - battery.LiveCurrent * battery.InternalResistance,
+                    battery.MinimumVoltage,
+                    battery.MaximumVoltage);
+                battery.AdvanceDeviceTime(settings.SolverElapsedTimeSeconds,
+                    settings.TimeScalingEnabled ? settings.DeviceTimeScale : 1.0);
+                results.OperatingPointVoltages[$"V({battery.Name})"] = battery.LiveVoltage;
+                results.OperatingPointCurrents[$"I({battery.Name})"] = battery.LiveCurrent;
+            }
+
+            double deviceTimeScale = settings.TimeScalingEnabled ? settings.DeviceTimeScale : 1.0;
+            foreach (var bulb in circuit.Components.OfType<ACBulbComponent>())
+                bulb.AdvanceDeviceTime(settings.SolverElapsedTimeSeconds, deviceTimeScale);
+            foreach (var fan in circuit.Components.OfType<ACFanComponent>())
+                fan.AdvanceDeviceTime(settings.SolverElapsedTimeSeconds, deviceTimeScale);
+            foreach (var panel in circuit.Components.OfType<SolarPanelComponent>())
+                panel.ApplyIrradianceProfile(settings.DeviceTimeSeconds + settings.SolverElapsedTimeSeconds * deviceTimeScale);
+
             // Refresh logic outputs from the solved input nodes for probes and the next playback tick.
             DigitalLogicSimulator.EvaluateCombinational(circuit);
 
@@ -960,6 +1243,57 @@ public class SpiceSharpAdapter : ISimulationEngine
         }
     }
 
+    private static void AddLineBranch(
+        SpiceSharp.Circuit circuit,
+        string name,
+        string from,
+        string to,
+        double resistance,
+        double inductance,
+        double capacitance,
+        double conductance,
+        bool includeShunt,
+        double frequency,
+        bool distributedLongLine = false)
+    {
+        double omega = 2 * Math.PI * Math.Max(frequency, 0.01);
+        if (distributedLongLine && capacitance > 0)
+        {
+            var seriesZ = new System.Numerics.Complex(resistance, omega * inductance);
+            var shuntY = new System.Numerics.Complex(conductance, omega * capacitance);
+            var propagation = System.Numerics.Complex.Sqrt(seriesZ * shuntY);
+            var characteristic = System.Numerics.Complex.Sqrt(seriesZ / shuntY);
+            var distributedSeries = characteristic * System.Numerics.Complex.Sinh(propagation);
+            var distributedShunt = 2 / characteristic * System.Numerics.Complex.Tanh(propagation / 2);
+            resistance = Math.Max(distributedSeries.Real, 0);
+            inductance = Math.Max(distributedSeries.Imaginary / omega, 0);
+            conductance = Math.Max(distributedShunt.Real, 0);
+            capacitance = Math.Max(distributedShunt.Imaginary / omega, 0);
+        }
+        string internalNode = $"{name}_series_{Guid.NewGuid():N}";
+        circuit.Add(new SpiceSharp.Components.Resistor($"{name}_R", from, internalNode, Math.Max(resistance, 1e-6)));
+        if (inductance > 0)
+            circuit.Add(new SpiceSharp.Components.Inductor($"{name}_L", internalNode, to, Math.Max(inductance, 1e-12)));
+        else
+            circuit.Add(new SpiceSharp.Components.Resistor($"{name}_link", internalNode, to, 1e-6));
+
+        if (!includeShunt) return;
+        // Nominal-pi approximation: split total shunt admittance equally between
+        // both ends. The available schematic component exposes a single line pair,
+        // so the shunt branches use Spice ground as the line reference.
+        if (capacitance > 0)
+        {
+            circuit.Add(new SpiceSharp.Components.Capacitor($"{name}_Cfrom", from, "0", capacitance / 2));
+            circuit.Add(new SpiceSharp.Components.Capacitor($"{name}_Cto", to, "0", capacitance / 2));
+        }
+        if (conductance > 0)
+        {
+            double shuntResistance = 2 / conductance;
+            circuit.Add(new SpiceSharp.Components.Resistor($"{name}_Gfrom", from, "0", shuntResistance));
+            circuit.Add(new SpiceSharp.Components.Resistor($"{name}_Gto", to, "0", shuntResistance));
+        }
+    }
+
     private static void CaptureTransientWaveforms(
         List<ComponentNode> components,
         SpiceSharp.Circuit spiceCircuit,
@@ -971,9 +1305,9 @@ public class SpiceSharpAdapter : ISimulationEngine
         double duration = stop - start;
         double requestedStep = settings.StepTime > 0 ? settings.StepTime : duration / 500.0;
         double maxStep = Math.Clamp(requestedStep, duration / 2000.0, duration / 2.0);
-        var transient = new Transient("EESimulator_Waveform", maxStep, stop)
+        var transient = new Transient("EESimulator_Waveform", maxStep, stop, maxStep)
         {
-            TimeParameters = { StartTime = start, MaxStep = maxStep }
+            TimeParameters = { StartTime = start }
         };
 
         string NodeFor(ComponentNode component, int pinIndex) =>
