@@ -5,10 +5,8 @@ public partial class AppShell : Shell
     public AppShell(WorkspacePage workspacePage)
     {
         InitializeComponent();
-        // WorkspacePage is already declared as ShellContent in XAML,
-        // but we also inject and add it here for DI resolution.
-        Routing.RegisterRoute("workspace", typeof(WorkspacePage));
-        Routing.RegisterRoute("settings", typeof(SettingsPage));
-        Routing.RegisterRoute("help", typeof(HelpPage));
+        // Workspace, Settings, Help, and Examples are root ShellContent routes
+        // declared in AppShell.xaml; registering them again as detail routes
+        // makes absolute navigation ambiguous.
     }
 }

@@ -178,7 +178,7 @@ public static class ExampleCircuitService
     { ""Id"": ""22222222-2222-2222-2222-222222220018"", ""FromComponentId"": ""11111111-1111-1111-1111-111111110011"", ""FromPin"": ""pin2"", ""ToComponentId"": ""11111111-1111-1111-1111-111111110013"", ""ToPin"": ""pin1"", ""NetName"": ""STAGE2_NET"", ""Resistance"": 0.0 },
     { ""Id"": ""22222222-2222-2222-2222-222222220019"", ""FromComponentId"": ""11111111-1111-1111-1111-111111110013"", ""FromPin"": ""pin2"", ""ToComponentId"": ""11111111-1111-1111-1111-111111110014"", ""ToPin"": ""pin1"", ""NetName"": ""STAGE3_NET"", ""Resistance"": 0.0 },
     { ""Id"": ""22222222-2222-2222-2222-222222220020"", ""FromComponentId"": ""11111111-1111-1111-1111-111111110014"", ""FromPin"": ""pin2"", ""ToComponentId"": ""11111111-1111-1111-1111-111111110002"", ""ToPin"": ""gnd"", ""NetName"": ""0"", ""Resistance"": 0.0 },
-    { ""Id"": ""22222222-2222-2222-2222-222222220021"", ""FromComponentId"": ""11111111-1111-1111-1111-111111110013"", ""FromPin"": ""pin2"", ""ToComponentId"": ""11111111-1111-1111-1111-111111110005"", ""ToPin"": ""base"", ""NetName"": ""FEEDBACK_NET"", ""Resistance"": 0.0 }
+    { ""Id"": ""22222222-2222-2222-2222-222222220021"", ""FromComponentId"": ""11111111-1111-1111-1111-111111110013"", ""FromPin"": ""pin2"", ""ToComponentId"": ""11111111-1111-1111-1111-111111110005"", ""ToPin"": ""base"", ""NetName"": ""STAGE3_NET"", ""Resistance"": 0.0 }
   ]
 }"
         });

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Maui.Storage;
 using EESimulator.Commands;
 using EESimulator.Commands.Commands;
 using EESimulator.Core.Models;
@@ -14,6 +15,7 @@ using EESimulator.Engine.Simulation;
 using EESimulator.Formats;
 using EEE.Services;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -741,6 +743,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     /// <summary>Raised when the circuit changes so the canvas can Invalidate immediately.</summary>
     public event Action? CircuitChanged;
+    public event Action? ViewportRecenterRequested;
 
     // ── Constructor ──────────────────────────────────────────────────────────
     public EEWorkspaceViewModel(RemoteEeeApiClient remoteApi)
@@ -919,6 +922,32 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private void SelectTool(string tool) => ActiveTool = tool;
 
     [RelayCommand]
+    private void RecenterViewport()
+    {
+        if (!Circuit.FindChildren<ComponentNode>().Any(component => component is not WireComponent))
+        {
+            StatusText = "No circuit components to center";
+            return;
+        }
+
+        ViewportRecenterRequested?.Invoke();
+        StatusText = "Centered on the circuit";
+    }
+
+    public void CommitComponentMove(ComponentNode component, double oldX, double oldY, double newX, double newY)
+    {
+        if (Math.Abs(oldX - newX) < 0.01 && Math.Abs(oldY - newY) < 0.01) return;
+
+        component.X = oldX;
+        component.Y = oldY;
+        CommandManager.ExecuteCommand(new MoveComponentCommand(Circuit, component.Name, newX, newY)
+        {
+            Origin = CommandOrigin.Schematic
+        });
+        CircuitChanged?.Invoke();
+    }
+
+    [RelayCommand]
     private void ToggleHelp() => IsHelpVisible = !IsHelpVisible;
 
     [RelayCommand]
@@ -926,11 +955,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         try
         {
-            await Shell.Current.GoToAsync("settings");
+            await Shell.Current.GoToAsync("//settings");
         }
-        catch
+        catch (Exception ex)
         {
-            StatusText = "Settings opened";
+            StatusText = $"Could not open Settings: {ex.Message}";
         }
     }
 
@@ -1010,6 +1039,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     public void SaveProject()
     {
+#if ANDROID
+        // Android app-private paths are not user-selected shared-storage locations.
+        // Re-open the system folder picker for each save rather than silently writing
+        // to an inaccessible app directory.
+        if (DeviceInfo.Platform == DevicePlatform.Android)
+        {
+            SaveProjectAs();
+            return;
+        }
+#endif
         if (string.IsNullOrWhiteSpace(CurrentFilePath))
         {
             SaveProjectAs();
@@ -1030,6 +1069,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     public void SaveProjectAs()
     {
+#if ANDROID
+        if (DeviceInfo.Platform == DevicePlatform.Android)
+            SaveDestinationFolder = "Choose a destination on your device when you save";
+        else
+#endif
         if (string.IsNullOrWhiteSpace(SaveDestinationFolder))
             SaveDestinationFolder = GetDefaultSaveDirectory();
 
@@ -1054,7 +1098,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void ConfirmSaveAs()
+    public async Task ConfirmSaveAs()
     {
         if (string.IsNullOrWhiteSpace(SaveFileName))
         {
@@ -1080,6 +1124,39 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
         try
         {
+#if ANDROID
+            if (DeviceInfo.Platform == DevicePlatform.Android)
+            {
+                string temporaryPath = System.IO.Path.Combine(
+                    FileSystem.CacheDirectory,
+                    $"{Guid.NewGuid():N}{ext}");
+                try
+                {
+                    SaveToPath(temporaryPath);
+                    await using var stream = System.IO.File.OpenRead(temporaryPath);
+                    var result = await FileSaver.Default.SaveAsync(
+                        cleanName + ext,
+                        stream,
+                        System.Threading.CancellationToken.None);
+                    if (!result.IsSuccessful)
+                    {
+                        StatusText = result.Exception?.Message ?? "Save cancelled.";
+                        return;
+                    }
+
+                    CurrentFilePath = null;
+                    ProjectName = cleanName + ext;
+                    IsSaveAsModalVisible = false;
+                    StatusText = $"Saved locally: {result.FilePath}";
+                    return;
+                }
+                finally
+                {
+                    if (System.IO.File.Exists(temporaryPath))
+                        System.IO.File.Delete(temporaryPath);
+                }
+            }
+#endif
             SaveToPath(fullPath);
             CurrentFilePath = fullPath;
             ProjectName = System.IO.Path.GetFileName(fullPath);
@@ -1161,6 +1238,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
         comp.Rotation = (comp.Rotation + 90.0) % 360.0;
         StatusText = $"Rotated {comp.Reference} → {comp.Rotation:F0}°";
         CircuitChanged?.Invoke();
+    }
+
+    [RelayCommand]
+    private void EditSelectedComponent()
+    {
+        if (SelectedComponent != null)
+            OpenEditDialog(SelectedComponent);
     }
 
     [RelayCommand]
@@ -3606,7 +3690,7 @@ public partial class CustomCircuitPortDraft : ObservableObject
     public double RelativeY { get; }
 
     [ObservableProperty]
-    private string _name = string.Empty;
+    public partial string Name { get; set; } = string.Empty;
 
     public CustomCircuitPortDraft(Guid innerComponentId, string innerPinId, string componentReference,
         string originalPinName, string name, double relativeX, double relativeY)
@@ -3615,7 +3699,7 @@ public partial class CustomCircuitPortDraft : ObservableObject
         InnerPinId = innerPinId;
         ComponentReference = componentReference;
         OriginalPinName = originalPinName;
-        _name = name;
+        Name = name;
         RelativeX = relativeX;
         RelativeY = relativeY;
     }

@@ -10,18 +10,17 @@ public partial class SimulationEventTrigger : ObservableObject
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
-    [ObservableProperty] private string _name = "Event";
-    [ObservableProperty] private string _measurement = "Voltage";
-    [ObservableProperty] private string _comparison = ">=";
-    [ObservableProperty] private double _threshold;
-    [ObservableProperty] private string _target = "Chat bubble";
-    [ObservableProperty] private string _message = "Event triggered";
-    [ObservableProperty] private string _mode = "Latched";
+    [ObservableProperty] public partial string Name { get; set; } = "Event";
+    [ObservableProperty] public partial string Measurement { get; set; } = "Voltage";
+    [ObservableProperty] public partial string Comparison { get; set; } = ">=";
+    [ObservableProperty] public partial double Threshold { get; set; }
+    [ObservableProperty] public partial string Target { get; set; } = "Chat bubble";
+    [ObservableProperty] public partial string Message { get; set; } = "Event triggered";
+    [ObservableProperty] public partial string Mode { get; set; } = "Latched";
 
-    [System.Text.Json.Serialization.JsonIgnore]
     [ObservableProperty]
-    [property: JsonIgnore]
-    private bool _isFired;
+    [JsonIgnore]
+    public partial bool IsFired { get; set; }
 
     [JsonIgnore] public IReadOnlyList<string> MeasurementOptions { get; } = new[] { "Voltage", "Current", "State" };
     [JsonIgnore] public IReadOnlyList<string> ComparisonOptions { get; } = new[] { ">", "<", ">=", "<=", "=", "!=" };

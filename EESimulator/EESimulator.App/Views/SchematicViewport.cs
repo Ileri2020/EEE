@@ -61,12 +61,15 @@ public class SchematicViewport : GraphicsView, IDrawable
     private const float MinZoom = 0.2f;
     private const float MaxZoom = 5.0f;
     private float _lastPanX, _lastPanY;
+    private float _pinchStartZoom = 1.0f;
     private const float GridSize = 20f;
 
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<ComponentNode>? ComponentSelected;
     public event EventHandler<(ComponentNode Component, ComponentPin Pin)>? PinSelected;
     public event EventHandler<ComponentNode>? ComponentContextRequested;
+    public event EventHandler<ComponentNode>? ComponentLongPressRequested;
+    public event EventHandler<(ComponentNode Component, double OldX, double OldY, double NewX, double NewY)>? ComponentMoveCommitted;
     public event EventHandler<ComponentNode>? ComponentRotateRequested;
     public event EventHandler<(ComponentNode From, ComponentPin FromPin,
                                ComponentNode To,   ComponentPin ToPin)>? WireConnected;
@@ -101,6 +104,10 @@ public class SchematicViewport : GraphicsView, IDrawable
     // Component drag/move
     private bool   _isMovingComponent;
     private PointF _lastMoveScreen;   // screen coords at last move sample
+    private float _componentDragStartX, _componentDragStartY;
+    private float _componentDragStartTotalX, _componentDragStartTotalY;
+    private float _lastPanTotalX, _lastPanTotalY;
+    private bool _componentDragMoved;
 
     // Wire draw
     private bool           _isDrawingWire;
@@ -389,6 +396,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             _pressedComp.X += (sx - _lastMoveScreen.X) / _zoom;
             _pressedComp.Y += (sy - _lastMoveScreen.Y) / _zoom;
             _lastMoveScreen  = new PointF(sx, sy);
+            _componentDragMoved = true;
             Invalidate();
         }
     }
@@ -424,7 +432,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             TryCompleteWire(ToWorld((float)p.Position.X, (float)p.Position.Y));
             e.Handled = true;
         }
-        _isMovingComponent = false;
+        FinishComponentDrag();
     }
 #endif
 
@@ -435,52 +443,70 @@ public class SchematicViewport : GraphicsView, IDrawable
         {
             case GestureStatus.Started:
                 // Cancel pending long-press unless already moving a component
-                if (!_isMovingComponent)
+                if (!_isMovingComponent && _pressedComp == null)
                 {
                     _longPressTimer?.Dispose();
                     _longPressTimer = null;
-                    _pressedComp    = null;
                 }
                 _lastPanX = _panX;
                 _lastPanY = _panY;
+                _lastPanTotalX = 0;
+                _lastPanTotalY = 0;
+                if (_pressedComp != null)
+                {
+                    _componentDragStartX = (float)_pressedComp.X;
+                    _componentDragStartY = (float)_pressedComp.Y;
+                    _componentDragStartTotalX = 0;
+                    _componentDragStartTotalY = 0;
+                    _componentDragMoved = false;
+                }
                 break;
 
             case GestureStatus.Running:
                 if (_isMovingComponent && _pressedComp != null)
                 {
-                    // Route pan delta into component position
-                    float wx = _lastPanX + (float)e.TotalX;
-                    float wy = _lastPanY + (float)e.TotalY;
-                    _pressedComp.X += (wx - _lastPanX) / _zoom;
-                    _pressedComp.Y += (wy - _lastPanY) / _zoom;
-                    _lastPanX = wx;
-                    _lastPanY = wy;
+                    _pressedComp.X = _componentDragStartX + ((float)e.TotalX - _componentDragStartTotalX) / _zoom;
+                    _pressedComp.Y = _componentDragStartY + ((float)e.TotalY - _componentDragStartTotalY) / _zoom;
+                    _componentDragMoved = true;
                     Invalidate();
                 }
                 else if (_isDrawingWire)
                 {
                     // nothing — wire cursor is updated via PointerMoved
                 }
-                else if (IsMobilePanMode || DeviceInfo.Platform == DevicePlatform.WinUI)
+                else if (IsMobilePanMode || DeviceInfo.Idiom == DeviceIdiom.Phone || DeviceInfo.Platform == DevicePlatform.WinUI)
                 {
                     _panX = _lastPanX + (float)e.TotalX;
                     _panY = _lastPanY + (float)e.TotalY;
                     Invalidate();
                 }
+                _lastPanTotalX = (float)e.TotalX;
+                _lastPanTotalY = (float)e.TotalY;
                 break;
 
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
-                _isMovingComponent = false;
+                FinishComponentDrag();
                 break;
         }
     }
 
     private void OnPinch(object? sender, PinchGestureUpdatedEventArgs e)
     {
+        if (e.Status == GestureStatus.Started)
+        {
+            _pinchStartZoom = _zoom;
+            return;
+        }
+
         if (e.Status == GestureStatus.Running && e.Scale > 0.05 && e.Scale < 20.0)
         {
-            _zoom = Math.Clamp(_zoom * (float)e.Scale, MinZoom, MaxZoom);
+            float originX = (float)e.ScaleOrigin.X * (float)Width;
+            float originY = (float)e.ScaleOrigin.Y * (float)Height;
+            var worldAtOrigin = ToWorld(originX, originY);
+            _zoom = Math.Clamp(_pinchStartZoom * (float)e.Scale, MinZoom, MaxZoom);
+            _panX = originX - worldAtOrigin.X * _zoom;
+            _panY = originY - worldAtOrigin.Y * _zoom;
             Invalidate();
         }
     }
@@ -491,6 +517,22 @@ public class SchematicViewport : GraphicsView, IDrawable
         if (pos == null || Circuit == null) return;
 
         var w = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
+
+        if (ActiveTool.Equals("ZoomIn", StringComparison.OrdinalIgnoreCase))
+        {
+            ZoomAt((float)pos.Value.X, (float)pos.Value.Y, 1.25f);
+            return;
+        }
+        if (ActiveTool.Equals("ZoomOut", StringComparison.OrdinalIgnoreCase))
+        {
+            ZoomAt((float)pos.Value.X, (float)pos.Value.Y, 1f / 1.25f);
+            return;
+        }
+        if (ActiveTool.Equals("FitAll", StringComparison.OrdinalIgnoreCase))
+        {
+            RecenterToCircuit();
+            return;
+        }
 
         // When cut wire tool is active in main sidebar, touching anywhere on a wire turns it into a node
         if (ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase))
@@ -533,6 +575,11 @@ public class SchematicViewport : GraphicsView, IDrawable
         _selectedPin       = null;
         _selectedComponent = HitTest(w);
         UpdateRotateHandle();
+        if (_selectedComponent == null)
+        {
+            Invalidate();
+            return;
+        }
         if (_selectedComponent is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
         {
             lin.Toggle();
@@ -565,6 +612,10 @@ public class SchematicViewport : GraphicsView, IDrawable
             _selectedComponent = comp;
             Invalidate();
             ComponentContextRequested?.Invoke(this, comp);
+        }
+        else
+        {
+            ZoomAt((float)pos.Value.X, (float)pos.Value.Y, 1.5f);
         }
     }
 
@@ -652,7 +703,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             return;
         }
 
-        // ── Component long-press: always open edit dialog on mobile; move on desktop ─
+        // ── Component long-press: hold, then drag to move; release opens component actions ─
         _pressedPin  = null;
         _pressedComp = HitTest(w);
         if (_pressedComp != null)
@@ -682,16 +733,15 @@ public class SchematicViewport : GraphicsView, IDrawable
                         _pressedComp = null;
                         ComponentContextRequested?.Invoke(this, comp);
                     }
-                    else if (DeviceInfo.Platform != DevicePlatform.WinUI)
-                    {
-                        // Mobile: long-press on component body → open edit dialog always
-                        _pressedComp = null;
-                        ComponentContextRequested?.Invoke(this, comp);
-                    }
                     else
                     {
-                        // Desktop pan mode: long-press → move component
+                        // Touch and desktop pan mode: long-press → drag component.
                         _isMovingComponent = true;
+                        _componentDragStartX = (float)comp.X;
+                        _componentDragStartY = (float)comp.Y;
+                        _componentDragStartTotalX = _lastPanTotalX;
+                        _componentDragStartTotalY = _lastPanTotalY;
+                        _componentDragMoved = false;
                     }
                     Invalidate();
                 });
@@ -754,13 +804,63 @@ public class SchematicViewport : GraphicsView, IDrawable
             return;
         }
 
-        _isMovingComponent = false;
+        FinishComponentDrag();
         _pressedComp       = null;
         _pressedPin        = null;
     }
 
+    private void FinishComponentDrag()
+    {
+        if (!_isMovingComponent || _pressedComp == null) return;
+
+        var component = _pressedComp;
+        _isMovingComponent = false;
+        if (_componentDragMoved)
+        {
+            ComponentMoveCommitted?.Invoke(this, (
+                component,
+                _componentDragStartX,
+                _componentDragStartY,
+                component.X,
+                component.Y));
+        }
+        else
+        {
+            if (DeviceInfo.Idiom == DeviceIdiom.Phone)
+                ComponentLongPressRequested?.Invoke(this, component);
+            else
+                ComponentContextRequested?.Invoke(this, component);
+        }
+        _componentDragMoved = false;
+    }
+
     // ── Coordinate helper ─────────────────────────────────────────────────────
     private PointF ToWorld(float sx, float sy) => new((sx - _panX) / _zoom, (sy - _panY) / _zoom);
+
+    private void ZoomAt(float screenX, float screenY, float factor)
+    {
+        var worldPoint = ToWorld(screenX, screenY);
+        _zoom = Math.Clamp(_zoom * factor, MinZoom, MaxZoom);
+        _panX = screenX - worldPoint.X * _zoom;
+        _panY = screenY - worldPoint.Y * _zoom;
+        Invalidate();
+    }
+
+    /// <summary>Centers the viewport on the mean position of placed circuit components.</summary>
+    public void RecenterToCircuit()
+    {
+        if (Circuit == null) return;
+        var components = Circuit.FindChildren<ComponentNode>()
+            .Where(component => component is not WireComponent)
+            .ToList();
+        if (components.Count == 0) return;
+
+        float centerX = (float)components.Average(component => component.X);
+        float centerY = (float)components.Average(component => component.Y);
+        _panX = (float)Width / 2f - centerX * _zoom;
+        _panY = (float)Height / 2f - centerY * _zoom;
+        Invalidate();
+    }
 
     // ── Hit test ─────────────────────────────────────────────────────────────
     private (ComponentNode Component, ComponentPin Pin)? HitTestPin(PointF p) => HitTestPin(p.X, p.Y);

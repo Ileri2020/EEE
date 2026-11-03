@@ -97,6 +97,10 @@ public static class CustomCircuitLibrary
         try
         {
             var document = XDocument.Parse(svg, LoadOptions.None);
+            var root = document.Root;
+            if (root == null)
+                throw new ArgumentException("The SVG must have a root <svg> element.", nameof(svg));
+
             var allowedElements = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 { "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "text", "title" };
             var allowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -104,9 +108,9 @@ public static class CustomCircuitLibrary
                 "xmlns", "viewBox", "width", "height", "x", "y", "x1", "x2", "y1", "y2", "cx", "cy", "r", "rx", "ry",
                 "d", "points", "fill", "fill-rule", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "font-size", "text-anchor"
             };
-            if (!string.Equals(document.Root?.Name.LocalName, "svg", StringComparison.OrdinalIgnoreCase) ||
-                document.Root.DescendantsAndSelf().Any(element => !allowedElements.Contains(element.Name.LocalName)) ||
-                document.Root.DescendantsAndSelf().Attributes().Any(attribute => !allowedAttributes.Contains(attribute.Name.LocalName) ||
+            if (!string.Equals(root.Name.LocalName, "svg", StringComparison.OrdinalIgnoreCase) ||
+                root.DescendantsAndSelf().Any(element => !allowedElements.Contains(element.Name.LocalName)) ||
+                root.DescendantsAndSelf().Attributes().Any(attribute => !allowedAttributes.Contains(attribute.Name.LocalName) ||
                     attribute.Value.Contains("url(", StringComparison.OrdinalIgnoreCase) ||
                     attribute.Value.Contains("javascript:", StringComparison.OrdinalIgnoreCase) ||
                     attribute.Value.Contains("http://", StringComparison.OrdinalIgnoreCase) && !attribute.Value.Equals("http://www.w3.org/2000/svg", StringComparison.OrdinalIgnoreCase) ||

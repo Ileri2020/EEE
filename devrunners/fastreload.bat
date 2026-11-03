@@ -25,9 +25,9 @@ if /i "%~1"=="--help" (
 	popd
 	exit /b %RESULT%
 )
-echo Starting .NET watch for Windows. Press Ctrl+C to stop.
-set "ArtifactsPath=%OUTPUT_DIR%"
-"%DOTNET%" watch --project "%PROJECT%" run --framework "%FRAMEWORK%" %*
+echo Building and launching the Windows app with automatic restart on code changes.
+echo Press Ctrl+C to stop the app and file watcher.
+"%DOTNET%" watch --no-hot-reload --project "%PROJECT%" --framework "%FRAMEWORK%" --artifacts-path "%OUTPUT_DIR%" run %*
 set "RESULT=%ERRORLEVEL%"
 popd
 exit /b %RESULT%

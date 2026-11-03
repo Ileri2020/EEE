@@ -36,6 +36,7 @@ public partial class ControlActionBinding : ObservableObject
 /// </summary>
 public partial class SettingsViewModel : ObservableObject
 {
+    private bool _loadingRemoteApiBaseUrl;
     // ─── Settings Tab Navigation ──────────────────────────────────────────────
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTabControls))]
@@ -140,6 +141,7 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnRemoteApiBaseUrlChanged(string value)
     {
+        if (_loadingRemoteApiBaseUrl) return;
         var normalized = (value ?? string.Empty).Trim().TrimEnd('/');
         Preferences.Default.Set("Settings.RemoteApiBaseUrl", normalized);
         EEE.Services.RemoteEeeApiClient.ApiBaseUrl = normalized;
@@ -296,7 +298,9 @@ public partial class SettingsViewModel : ObservableObject
         DefaultCategory            = Preferences.Default.Get($"Settings.{nameof(DefaultCategory)}",           "All");
         MobilePanModeOnStartup     = Preferences.Default.Get($"Settings.{nameof(MobilePanModeOnStartup)}",    true);
         MobileToolbarPosition      = Preferences.Default.Get($"Settings.{nameof(MobileToolbarPosition)}",     "Left Dock");
-        RemoteApiBaseUrl           = Preferences.Default.Get("Settings.RemoteApiBaseUrl", string.Empty);
+        _loadingRemoteApiBaseUrl = true;
+        RemoteApiBaseUrl = EEE.Services.RemoteEeeApiClient.ApiBaseUrl;
+        _loadingRemoteApiBaseUrl = false;
     }
 
     // ─── Control Bindings ─────────────────────────────────────────────────────

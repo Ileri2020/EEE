@@ -12,6 +12,7 @@ using EESimulator.Core.Components.Registry;
 using EESimulator.Engine.Simulation;
 using EESimulator.Core.Models;
 using EESimulator.Formats;
+using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
 
 namespace EEE.Services;
@@ -29,11 +30,41 @@ public sealed class RemoteEeeApiClient
 
     public static string ApiBaseUrl
     {
-        get => Preferences.Default.Get(ApiBaseUrlPreference, string.Empty).Trim().TrimEnd('/');
+        get
+        {
+            var configured = Preferences.Default.Get(ApiBaseUrlPreference, string.Empty).Trim().TrimEnd('/');
+            return string.IsNullOrWhiteSpace(configured) ? GetDevelopmentApiBaseUrl() : configured;
+        }
         set => Preferences.Default.Set(ApiBaseUrlPreference, (value ?? string.Empty).Trim().TrimEnd('/'));
     }
 
-    public bool IsConfigured => Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+    public bool IsConfigured
+    {
+        get
+        {
+            if (!Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out var uri)) return false;
+            if (uri.Scheme == Uri.UriSchemeHttps) return true;
+#if DEBUG
+            return uri.Scheme == Uri.UriSchemeHttp &&
+                   (uri.IsLoopback || string.Equals(uri.Host, "10.0.2.2", StringComparison.OrdinalIgnoreCase));
+#else
+            return false;
+#endif
+        }
+    }
+
+    private static string GetDevelopmentApiBaseUrl()
+    {
+#if DEBUG
+        return DeviceInfo.Platform == DevicePlatform.Android
+            ? "http://10.0.2.2:3000"
+            : DeviceInfo.Platform == DevicePlatform.WinUI
+                ? "http://localhost:3000"
+                : string.Empty;
+#else
+        return string.Empty;
+#endif
+    }
 
     public async Task<IReadOnlyList<CircuitExampleItem>> GetCommunityExamplesAsync()
     {

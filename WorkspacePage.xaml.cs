@@ -18,6 +18,9 @@ public partial class WorkspacePage : ContentPage
         // Wire canvas selection events to ViewModel
         SchematicCanvas.ComponentSelected += (_, comp) =>
             vm.OnComponentSelected(comp);
+        vm.ViewportRecenterRequested += SchematicCanvas.RecenterToCircuit;
+        SchematicCanvas.ComponentMoveCommitted += (_, move) =>
+            vm.CommitComponentMove(move.Component, move.OldX, move.OldY, move.NewX, move.NewY);
 
         // Wire pin/node selection event
         SchematicCanvas.PinSelected += (_, tuple) =>
@@ -26,6 +29,32 @@ public partial class WorkspacePage : ContentPage
         // Wire right-click / long-press context event to open Edit Dialog
         SchematicCanvas.ComponentContextRequested += (_, comp) =>
             vm.OpenEditDialog(comp);
+        SchematicCanvas.ComponentLongPressRequested += async (_, comp) =>
+        {
+            vm.SelectedComponent = comp;
+            var action = await DisplayActionSheet(
+                comp.Reference,
+                "Cancel",
+                "Delete",
+                "Properties",
+                "Duplicate",
+                "Rotate 90°");
+            switch (action)
+            {
+                case "Properties":
+                    vm.OpenEditDialog(comp);
+                    break;
+                case "Duplicate":
+                    vm.CopySelectedComponent();
+                    break;
+                case "Rotate 90°":
+                    vm.RotateSelectedComponentCommand.Execute(null);
+                    break;
+                case "Delete":
+                    vm.DeleteSelectedComponent();
+                    break;
+            }
+        };
 
         // Wire rotate handle click → rotate component and redraw
         SchematicCanvas.ComponentRotateRequested += (_, comp) =>
