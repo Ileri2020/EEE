@@ -5,7 +5,8 @@ set "PROJECT_DIR=%~dp0.."
 for %%I in ("%PROJECT_DIR%") do set "PROJECT_DIR=%%~fI"
 set "PROJECT=%PROJECT_DIR%\EEE.csproj"
 set "FRAMEWORK=net10.0-windows10.0.19041.0"
-set "OUTPUT_DIR=%PROJECT_DIR%\Platforms\dist"
+rem Keep watch builds separate from the published output and any EEE.dll loaded by other tools.
+set "OUTPUT_DIR=%PROJECT_DIR%\Platforms\dist\watch"
 set "DOTNET=%ProgramFiles%\dotnet\dotnet.exe"
 if not exist "%DOTNET%" set "DOTNET=dotnet"
 if /i "%DOTNET%"=="dotnet" if not exist "%SystemRoot%\System32\where.exe" (
@@ -40,6 +41,7 @@ exit /b %RESULT%
 
 :android
 set "FRAMEWORK=net10.0-android"
+set "OUTPUT_DIR=%PROJECT_DIR%\Platforms\dist"
 if not defined ANDROID_HOME set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
 if not defined ANDROID_SDK_ROOT set "ANDROID_SDK_ROOT=%ANDROID_HOME%"
 set "ADB=%ANDROID_SDK_ROOT%\platform-tools\adb.exe"

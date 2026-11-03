@@ -1447,6 +1447,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public void CancelCreateCircuitComponent() => IsCreateCircuitComponentDialogVisible = false;
 
     [RelayCommand]
+    private Task CreateSelectedCircuitComponentLocallyAsync()
+        => CreateSelectedCircuitComponentAsync(publishOnline: false);
+
+    [RelayCommand]
+    private Task CreateSelectedCircuitComponentAndPublishAsync()
+        => CreateSelectedCircuitComponentAsync(publishOnline: true);
+
     public async Task CreateSelectedCircuitComponentAsync(bool publishOnline)
     {
         if (SelectedComponent == null) return;

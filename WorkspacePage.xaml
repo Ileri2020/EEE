@@ -2674,9 +2674,9 @@
                     </ScrollView>
                     <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="12,10" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                         <Button Grid.Column="1" Text="Save Locally" Style="{StaticResource ToolBtn}"
-                                Command="{Binding CreateSelectedCircuitComponentCommand}" CommandParameter="False"/>
+                            Command="{Binding CreateSelectedCircuitComponentLocallyCommand}"/>
                         <Button Grid.Column="2" Text="Save Local + Online" Style="{StaticResource AccentBtn}"
-                                Command="{Binding CreateSelectedCircuitComponentCommand}" CommandParameter="True"/>
+                            Command="{Binding CreateSelectedCircuitComponentAndPublishCommand}"/>
                     </Grid>
                 </Grid>
             </Border>
