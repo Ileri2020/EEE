@@ -36,13 +36,13 @@ internal static class SchematicWireRouter
         var end = GetPinWorldPosition(toComponent, toPin);
         if (routingPoints is { Count: > 0 })
         {
-            var obstacles = GetObstacles(allComponents, fromComponent, toComponent);
+            var routingObstacles = GetObstacles(allComponents, fromComponent, toComponent);
             var points = new List<PointF> { start };
             points.AddRange(routingPoints.Select(point => new PointF((float)point.X, (float)point.Y)));
             points.Add(end);
             var routed = new List<List<PointF>>();
             for (int index = 0; index < points.Count - 1; index++)
-                routed.Add(FindOrthogonalPath(points[index], points[index + 1], obstacles));
+                routed.Add(FindOrthogonalPath(points[index], points[index + 1], routingObstacles));
             return CombinePaths(routed.ToArray());
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
