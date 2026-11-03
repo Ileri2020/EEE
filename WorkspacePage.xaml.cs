@@ -32,7 +32,7 @@ public partial class WorkspacePage : ContentPage
         SchematicCanvas.ComponentLongPressRequested += async (_, comp) =>
         {
             vm.SelectedComponent = comp;
-            var action = await DisplayActionSheet(
+            var action = await DisplayActionSheetAsync(
                 comp.Reference,
                 "Cancel",
                 "Delete",
