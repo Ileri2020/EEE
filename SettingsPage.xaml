@@ -466,14 +466,17 @@
 
                                 <!-- Secured server endpoint; API credentials are never stored in the app -->
                                 <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
-                                    <Label Text="EESIMULATOR API URL (HTTPS)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                    <Label Text="HCVP API BASE URL" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Entry Text="{Binding RemoteApiBaseUrl}"
-                                        Placeholder="https://your-secure-eee-api.example"
+                                        Placeholder="https://your-hcvp-host"
                                         Keyboard="Url"
                                         BackgroundColor="#0D1117"
                                         TextColor="#C9D1D9"
                                         PlaceholderColor="#484F58"/>
-                                    <Label Text="The API server handles MongoDB and Gemini credentials. Do not put secret keys in this app or URL."
+                                    <Button Text="Open HCVP Account" Style="{StaticResource StandardBtn}"
+                                            HorizontalOptions="Start"
+                                            Command="{Binding OpenHcvpAccountCommand}"/>
+                                    <Label Text="HCVP stores your account and encrypted Gemini key. Do not put provider keys in this app or URL. Production requires HTTPS."
                                         TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 

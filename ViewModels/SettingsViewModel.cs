@@ -187,6 +187,26 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private async Task OpenHcvpAccountAsync()
+    {
+        var baseUrl = EEE.Services.RemoteEeeApiClient.ApiBaseUrl;
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+        {
+            ShowToast("Set the HCVP API base URL first.");
+            return;
+        }
+
+        try
+        {
+            await Microsoft.Maui.ApplicationModel.Launcher.Default.OpenAsync(new Uri(uri, "/account"));
+        }
+        catch (Exception ex)
+        {
+            ShowToast($"Could not open HCVP account: {ex.Message}");
+        }
+    }
+
     public List<string> ToolbarPositions { get; } = new()
     {
         "Left Dock", "Bottom Bar", "Floating"

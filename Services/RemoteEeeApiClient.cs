@@ -428,7 +428,7 @@ public sealed class RemoteEeeApiClient
     private void EnsureConfigured()
     {
         if (!IsConfigured)
-            throw new InvalidOperationException("Configure an HTTPS EESimulator API URL in Settings before using online examples or AI.");
+            throw new InvalidOperationException("Configure the HCVP HTTPS API URL in Settings before using online examples or AI.");
     }
 
     private static async Task<HttpRequestMessage> CreateAuthorizedPostAsync<T>(string relativePath, T body)

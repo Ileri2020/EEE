@@ -60,7 +60,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial string AiSchemaPrompt { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string AiSchemaStatus { get; set; } = "AI drafts use the HTTPS API configured in Settings.";
+    public partial string AiSchemaStatus { get; set; } = "AI drafts use your HCVP account's encrypted Gemini key.";
 
     [ObservableProperty]
     public partial bool IsAiSchemaRequestInProgress { get; set; }
@@ -1521,7 +1521,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 try
                 {
                     if (!_remoteApi.IsConfigured)
-                        throw new InvalidOperationException("Configure an HTTPS API URL and user access token in Settings first.");
+                        throw new InvalidOperationException("Configure the HCVP HTTPS API URL, sign in on its Account page, and add your EEE app token in Settings first.");
                     await _remoteApi.PublishExampleAsync(subCircuit, name, "Custom Components", definition.SvgIcon);
                     onlineStatus = " Published online.";
                 }
