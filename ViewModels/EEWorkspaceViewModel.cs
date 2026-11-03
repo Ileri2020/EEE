@@ -70,13 +70,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
+    [NotifyPropertyChangedFor(nameof(IsMobileSchematicViewActive))]
     public partial bool IsScriptViewActive { get; set; } = false;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
+    [NotifyPropertyChangedFor(nameof(IsMobileSchematicViewActive))]
     public partial bool IsAnalyticsViewActive { get; set; }
 
     public bool IsSchematicViewActive => !IsScriptViewActive && !IsAnalyticsViewActive;
+    public bool IsMobileSchematicViewActive => DeviceInfo.Idiom == DeviceIdiom.Phone && IsSchematicViewActive;
 
     public ObservableCollection<string> AnalyticsModes { get; } = new()
     {

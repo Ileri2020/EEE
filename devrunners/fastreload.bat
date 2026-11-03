@@ -18,8 +18,14 @@ if not exist "%PROJECT%" (
 	exit /b 1
 )
 
+if /i "%~1"=="android" goto :android
+
 pushd "%PROJECT_DIR%"
 if /i "%~1"=="--help" (
+	echo Usage: fastreload.bat [android [device-id]]
+	echo   No argument: watch and launch the Windows app.
+	echo   android:     deploy/watch the Android app and open a crash-log window.
+	echo   device-id:   optional serial from adb devices when multiple phones are connected.
 	"%DOTNET%" watch --help
 	set "RESULT=%ERRORLEVEL%"
 	popd
@@ -28,6 +34,51 @@ if /i "%~1"=="--help" (
 echo Building and launching the Windows app with automatic restart on code changes.
 echo Press Ctrl+C to stop the app and file watcher.
 "%DOTNET%" watch --no-hot-reload --project "%PROJECT%" --framework "%FRAMEWORK%" --artifacts-path "%OUTPUT_DIR%" run %*
+set "RESULT=%ERRORLEVEL%"
+popd
+exit /b %RESULT%
+
+:android
+set "FRAMEWORK=net10.0-android"
+if not defined ANDROID_HOME set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
+if not defined ANDROID_SDK_ROOT set "ANDROID_SDK_ROOT=%ANDROID_HOME%"
+set "ADB=%ANDROID_SDK_ROOT%\platform-tools\adb.exe"
+if not exist "%ADB%" set "ADB=%ANDROID_HOME%\platform-tools\adb.exe"
+if not exist "%ADB%" (
+	echo ERROR: Android Debug Bridge was not found. Install Android SDK Platform-Tools.
+	exit /b 1
+)
+if not defined JAVA_HOME if exist "%ProgramFiles%\Java\jdk-21\bin\java.exe" set "JAVA_HOME=%ProgramFiles%\Java\jdk-21"
+if not defined JAVA_HOME if exist "%ProgramFiles%\Java\jdk-17\bin\java.exe" set "JAVA_HOME=%ProgramFiles%\Java\jdk-17"
+if not defined JAVA_HOME (
+	echo ERROR: Android build requires JDK 17 or newer. Set JAVA_HOME and retry.
+	exit /b 1
+)
+if not exist "%ANDROID_SDK_ROOT%\platforms\android-36\android.jar" (
+	echo ERROR: Android SDK Platform 36 was not found at "%ANDROID_SDK_ROOT%".
+	echo Install Android SDK Platform 36 and Build Tools 36.0.0, then retry.
+	exit /b 1
+)
+
+set "DEVICE=%~2"
+if not defined DEVICE (
+	for /f "skip=1 tokens=1,2" %%A in ('"%ADB%" devices') do (
+		if "%%B"=="device" if not defined DEVICE set "DEVICE=%%A"
+	)
+)
+if not defined DEVICE (
+	echo ERROR: No authorized Android device found.
+	echo Connect your phone by USB, enable Developer options and USB debugging, then accept the authorization prompt.
+	"%ADB%" devices -l
+	exit /b 1
+)
+
+echo Deploying EESimulator to Android device %DEVICE%.
+echo A second terminal will show Android error logs if startup fails.
+"%ADB%" -s "%DEVICE%" logcat -c
+start "EEE Android crash log" "%ComSpec%" /k ""%ADB%" -s "%DEVICE%" logcat -v time *:E"
+pushd "%PROJECT_DIR%"
+"%DOTNET%" watch --no-hot-reload --project "%PROJECT%" --framework "%FRAMEWORK%" --device "%DEVICE%" --artifacts-path "%OUTPUT_DIR%" run
 set "RESULT=%ERRORLEVEL%"
 popd
 exit /b %RESULT%
