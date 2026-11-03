@@ -180,7 +180,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsSidebarVisible { get; set; } = true;
 
     [ObservableProperty]
-    public partial bool IsControlSidebarVisible { get; set; } = true;
+    public partial bool IsControlSidebarVisible { get; set; } = false;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PlayPauseButtonText))]
@@ -209,9 +209,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
     /// <summary>The most recently selected component on the canvas (for toolbar actions like Rotate, Copy, Delete).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedComponent))]
+    [NotifyPropertyChangedFor(nameof(HasSelection))]
     public partial ComponentNode? SelectedComponent { get; set; }
 
     public bool HasSelectedComponent => SelectedComponent != null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    public partial ConnectionNode? SelectedConnection { get; set; }
+
+    public bool HasSelection => SelectedComponent != null || SelectedConnection != null;
 
     [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
     [ObservableProperty] public partial double EditBreakingCurrent { get; set; } = 1.0;
@@ -465,6 +472,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     public partial ComponentNode? WaveformComponent { get; set; }
+
+    public ObservableCollection<WaveformSignal> WaveformSignals { get; } = new();
+
+    [ObservableProperty]
+    public partial bool IsWaveformTracePickerVisible { get; set; }
+
+    [ObservableProperty]
+    public partial ComponentNode? WaveformTracePickerComponent { get; set; }
 
     // Help modal state
     [ObservableProperty]
@@ -1071,6 +1086,23 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task SaveProjectToServerAsync()
+    {
+        try
+        {
+            StatusText = "Saving project to the server…";
+            var result = await _remoteApi.SaveProjectAsync(Circuit, System.IO.Path.GetFileNameWithoutExtension(ProjectName));
+            StatusText = string.IsNullOrWhiteSpace(result.Id)
+                ? "Project saved to the server."
+                : $"Project saved to the server (ID: {result.Id}).";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Server save failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     public void SaveProjectAs()
     {
 #if ANDROID
@@ -1177,55 +1209,66 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         try
         {
-            string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            if (string.IsNullOrWhiteSpace(docs) || !System.IO.Directory.Exists(docs))
-            {
-                docs = FileSystem.AppDataDirectory;
-            }
-            string path = System.IO.Path.Combine(docs, "EESimulator");
-            if (!System.IO.Directory.Exists(path))
-            {
-                System.IO.Directory.CreateDirectory(path);
-            }
+            // Use an app-owned location that is writable on Windows regardless of
+            // Documents redirection, OneDrive policies, or the current working folder.
+            string path = System.IO.Path.Combine(FileSystem.AppDataDirectory, "Projects");
+            System.IO.Directory.CreateDirectory(path);
             return path;
         }
         catch
         {
-            return FileSystem.AppDataDirectory;
+            string fallback = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "EESimulator", "Projects");
+            System.IO.Directory.CreateDirectory(fallback);
+            return fallback;
         }
     }
 
     private void SaveToPath(string filePath)
     {
-        var dir = System.IO.Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
-        {
-            System.IO.Directory.CreateDirectory(dir);
-        }
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("Choose a valid project file path.", nameof(filePath));
 
-        string ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
-        switch (ext)
+        string fullPath = System.IO.Path.GetFullPath(filePath);
+        string? dir = System.IO.Path.GetDirectoryName(fullPath);
+        if (string.IsNullOrWhiteSpace(dir))
+            throw new IOException("The selected path has no parent directory.");
+        System.IO.Directory.CreateDirectory(dir);
+
+        string ext = System.IO.Path.GetExtension(fullPath).ToLowerInvariant();
+        string tempPath = System.IO.Path.Combine(dir,
+            $".{System.IO.Path.GetFileNameWithoutExtension(fullPath)}.{Guid.NewGuid():N}.tmp{ext}");
+        try
         {
-            case ".eee":
-                EeePlatformSerializer.SaveToFile(Circuit, filePath);
-                break;
-            case ".eesim":
-            case ".json":
-                EesimSerializer.SaveToFile(Circuit, filePath);
-                break;
-            case ".kicad_sch":
-                KiCadExporter.SaveToFile(Circuit, filePath);
-                break;
-            case ".cir":
-            case ".sp":
-                System.IO.File.WriteAllText(filePath, SpiceNetlistExporter.ExportToSpice(Circuit, BuildSimulationSettings()));
-                break;
-            case ".py":
-                System.IO.File.WriteAllText(filePath, PythonCodeGenerator.GenerateFullScript(Circuit));
-                break;
-            default:
-                EeePlatformSerializer.SaveToFile(Circuit, filePath);
-                break;
+            switch (ext)
+            {
+                case ".eee":
+                    EeePlatformSerializer.SaveToFile(Circuit, tempPath);
+                    break;
+                case ".eesim":
+                case ".json":
+                    EesimSerializer.SaveToFile(Circuit, tempPath);
+                    break;
+                case ".kicad_sch":
+                    KiCadExporter.SaveToFile(Circuit, tempPath);
+                    break;
+                case ".cir":
+                case ".sp":
+                    System.IO.File.WriteAllText(tempPath, SpiceNetlistExporter.ExportToSpice(Circuit, BuildSimulationSettings()));
+                    break;
+                case ".py":
+                    System.IO.File.WriteAllText(tempPath, PythonCodeGenerator.GenerateFullScript(Circuit));
+                    break;
+                default:
+                    EeePlatformSerializer.SaveToFile(Circuit, tempPath);
+                    break;
+            }
+
+            System.IO.File.Move(tempPath, fullPath, overwrite: true);
+        }
+        finally
+        {
+            if (System.IO.File.Exists(tempPath))
+                System.IO.File.Delete(tempPath);
         }
     }
 
@@ -1233,6 +1276,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     private void RotateSelectedComponent()
     {
+        if (SelectedConnection != null)
+        {
+            RotateSelectedConnectionRoute();
+            return;
+        }
         var comp = SelectedComponent;
         if (comp == null)
         {
@@ -1295,6 +1343,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     public void DeleteSelectedComponent()
     {
+        if (SelectedConnection != null)
+        {
+            var connection = SelectedConnection;
+            Circuit.RemoveChild(connection);
+            SelectedConnection = null;
+            CircuitChanged?.Invoke();
+            StatusText = $"Deleted wire {connection.NetName}";
+            return;
+        }
         if (SelectedComponent == null)
         {
             StatusText = "No component selected to delete";
@@ -1309,8 +1366,59 @@ public partial class EEWorkspaceViewModel : ObservableObject
         CommandManager.ExecuteCommand(cmd);
 
         SelectedComponent = null;
+        SelectedConnection = null;
         CircuitChanged?.Invoke();
         StatusText = $"Deleted {comp.Reference}";
+    }
+
+    private void RotateSelectedConnectionRoute()
+    {
+        var connection = SelectedConnection;
+        if (connection == null) return;
+        var from = Circuit.FindChildById<ComponentNode>(connection.FromComponentId);
+        var to = Circuit.FindChildById<ComponentNode>(connection.ToComponentId);
+        var fromPin = from?.GetPin(connection.FromPin);
+        var toPin = to?.GetPin(connection.ToPin);
+        if (from == null || to == null || fromPin == null || toPin == null)
+        {
+            StatusText = "Cannot rotate this wire because one of its endpoint nodes is missing.";
+            return;
+        }
+
+        static Point2D PinWorldPosition(ComponentNode component, ComponentPin pin)
+        {
+            double localX = pin.RelativeX * (component.ScaleX > 0 ? component.ScaleX : 1.0);
+            double localY = pin.RelativeY * (component.ScaleY > 0 ? component.ScaleY : 1.0);
+            double radians = component.Rotation * Math.PI / 180.0;
+            return new Point2D(
+                component.X + localX * Math.Cos(radians) - localY * Math.Sin(radians),
+                component.Y + localX * Math.Sin(radians) + localY * Math.Cos(radians));
+        }
+        var fromPosition = PinWorldPosition(from, fromPin);
+        var toPosition = PinWorldPosition(to, toPin);
+        double x1 = fromPosition.X;
+        double y1 = fromPosition.Y;
+        double x2 = toPosition.X;
+        double y2 = toPosition.Y;
+        double centerX = (x1 + x2) / 2.0;
+        double centerY = (y1 + y2) / 2.0;
+        if (connection.RoutingPoints.Count == 0)
+        {
+            double middleX = (x1 + x2) / 2.0;
+            connection.RoutingPoints.Add(new Point2D(middleX, y1));
+            connection.RoutingPoints.Add(new Point2D(middleX, y2));
+        }
+
+        for (int index = 0; index < connection.RoutingPoints.Count; index++)
+        {
+            var point = connection.RoutingPoints[index];
+            double dx = point.X - centerX;
+            double dy = point.Y - centerY;
+            connection.RoutingPoints[index] = new Point2D(centerX - dy, centerY + dx);
+        }
+        connection.NotifyModified(nameof(connection.RoutingPoints));
+        CircuitChanged?.Invoke();
+        StatusText = $"Rotated wire route {connection.NetName} 90°; endpoint nodes remain connected";
     }
 
     [RelayCommand]
@@ -1336,24 +1444,134 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     public void ToggleSelectedWaveform()
     {
+        if (SelectedConnection != null)
+        {
+            var fromComponent = Circuit.FindChildById<ComponentNode>(SelectedConnection.FromComponentId);
+            var toComponent = Circuit.FindChildById<ComponentNode>(SelectedConnection.ToComponentId);
+            var wireSignals = new[] { fromComponent, toComponent }.Where(component => component != null).Cast<ComponentNode>().Distinct().ToList();
+            if (wireSignals.Any(component => component.ShowWaveform))
+            {
+                foreach (var component in wireSignals) component.ShowWaveform = false;
+                IsWaveformDrawerOpen = false;
+                CircuitChanged?.Invoke();
+                return;
+            }
+            PrepareConnectionWaveform(SelectedConnection);
+            return;
+        }
+
         var component = SelectedComponent;
         if (component == null) return;
 
-        component.ShowWaveform = !component.ShowWaveform;
         if (component.ShowWaveform)
         {
-            WaveformComponent = component;
-            IsWaveformDrawerOpen = true;
-            StatusText = $"Waveform enabled for {component.Reference}";
-        }
-        else if (WaveformComponent == component)
-        {
-            WaveformComponent = null;
-            IsWaveformDrawerOpen = false;
+            component.ShowWaveform = false;
+            if (WaveformComponent == component)
+                IsWaveformDrawerOpen = false;
             StatusText = $"Waveform disabled for {component.Reference}";
+        }
+        else
+        {
+            ConfigureWaveformForComponent(component, showTerminalPicker: true);
         }
         CircuitChanged?.Invoke();
     }
+
+    private void ConfigureWaveformForComponent(ComponentNode component, bool showTerminalPicker)
+    {
+        WaveformSignals.Clear();
+        WaveformTracePickerComponent = component;
+
+        if (component.Pins.Count > 2)
+        {
+            foreach (var pin in component.Pins)
+                WaveformSignals.Add(new WaveformSignal(component, pin.Id,
+                    $"{pin.Name} ({pin.Id}) voltage", WaveformSignalKind.PinVoltage));
+
+            if (showTerminalPicker)
+            {
+                IsWaveformTracePickerVisible = true;
+                return;
+            }
+        }
+        else if (component.Pins.Count == 2)
+        {
+            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
+                "Component voltage", WaveformSignalKind.ComponentVoltage));
+            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
+                "Component current", WaveformSignalKind.ComponentCurrent));
+        }
+        else if (component.Pins.Count == 1)
+        {
+            var pin = component.Pins[0];
+            WaveformSignals.Add(new WaveformSignal(component, pin.Id,
+                $"{pin.Name} ({pin.Id}) voltage", WaveformSignalKind.PinVoltage));
+        }
+        else
+        {
+            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
+                "Component voltage", WaveformSignalKind.ComponentVoltage));
+            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
+                "Component current", WaveformSignalKind.ComponentCurrent));
+        }
+
+        EnableWaveformForComponent(component);
+    }
+
+    private void PrepareConnectionWaveform(ConnectionNode connection)
+    {
+        var from = Circuit.FindChildById<ComponentNode>(connection.FromComponentId);
+        var to = Circuit.FindChildById<ComponentNode>(connection.ToComponentId);
+        var fromPin = from?.GetPin(connection.FromPin);
+        var toPin = to?.GetPin(connection.ToPin);
+        if (from == null || to == null || fromPin == null || toPin == null)
+        {
+            StatusText = "Cannot plot this wire because an endpoint node is missing.";
+            return;
+        }
+
+        WaveformSignals.Clear();
+        WaveformTracePickerComponent = from;
+        WaveformSignals.Add(new WaveformSignal(from, fromPin.Id, $"{connection.NetName}: {from.Reference}:{fromPin.Name}", WaveformSignalKind.PinVoltage));
+        WaveformSignals.Add(new WaveformSignal(to, toPin.Id, $"{connection.NetName}: {to.Reference}:{toPin.Name}", WaveformSignalKind.PinVoltage));
+        IsWaveformTracePickerVisible = true;
+    }
+
+    private void EnableWaveformForComponent(ComponentNode component)
+    {
+        component.ShowWaveform = true;
+        foreach (var source in WaveformSignals.Where(signal => signal.IsSelected).Select(signal => signal.Component).Distinct())
+            source.ShowWaveform = true;
+        WaveformComponent = component;
+        IsWaveformDrawerOpen = true;
+        IsWaveformTracePickerVisible = false;
+        StatusText = $"Waveform enabled for {component.Reference}: {WaveformSignals.Count(signal => signal.IsSelected)} trace(s)";
+        CircuitChanged?.Invoke();
+        RequestSimulationRefresh();
+    }
+
+    [RelayCommand]
+    public void SetAllWaveformSignals(bool selected)
+    {
+        foreach (var signal in WaveformSignals)
+            signal.IsSelected = selected;
+    }
+
+    [RelayCommand]
+    public void ConfirmWaveformTraceSelection()
+    {
+        var component = WaveformTracePickerComponent;
+        if (component == null) return;
+        if (!WaveformSignals.Any(signal => signal.IsSelected))
+        {
+            StatusText = "Select at least one terminal waveform.";
+            return;
+        }
+        EnableWaveformForComponent(component);
+    }
+
+    [RelayCommand]
+    public void CancelWaveformTraceSelection() => IsWaveformTracePickerVisible = false;
 
     [RelayCommand]
     public void ApplyDescriptionSidebarChanges()
@@ -1374,6 +1592,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         SelectedComponent.ShowWaveform = EditShowWaveform;
         SelectedComponent.NotifyModified(SelectedComponent.Reference);
         CircuitChanged?.Invoke();
+        RequestSimulationRefresh();
         StatusText = $"Updated description & properties for {SelectedComponent.Reference}";
     }
 
@@ -1720,6 +1939,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     private Microsoft.Maui.Dispatching.IDispatcherTimer? _animTimer;
     private bool _playbackSolveRunning;
+    private bool _simulationRefreshRequested;
+    private bool _isApplyingScript;
+    private DateTime _lastPlaybackSolveUtc = DateTime.MinValue;
 
     [RelayCommand]
     public void ToggleSimulationPlayback()
@@ -1740,7 +1962,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
                             DigitalLogicSimulator.Advance(Circuit, _animTimer.Interval.TotalSeconds);
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
                             CircuitChanged?.Invoke();
-                            if (!IsSimulating && !_playbackSolveRunning)
+                            if (!IsSimulating && !_playbackSolveRunning &&
+                                DateTime.UtcNow - _lastPlaybackSolveUtc >= TimeSpan.FromMilliseconds(250))
                                 _ = RefreshPlaybackSimulationAsync();
                         }
                     };
@@ -1761,8 +1984,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     private async Task RefreshPlaybackSimulationAsync()
     {
-        if (_playbackSolveRunning || IsSimulating || !IsSimulationPlaying) return;
+        if (_playbackSolveRunning || IsSimulating || !IsSimulationPlaying)
+        {
+            _simulationRefreshRequested = true;
+            return;
+        }
+        _simulationRefreshRequested = false;
         _playbackSolveRunning = true;
+        IsSimulating = true;
+        _lastPlaybackSolveUtc = DateTime.UtcNow;
         try
         {
             var settings = BuildSimulationSettings();
@@ -1771,6 +2001,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             ConsoleOutput = FormatResults(results);
             DispatchTriggeredUiEvents();
             OnPropertyChanged(nameof(SelectedComponent));
+            CircuitChanged?.Invoke();
         }
         catch (Exception ex)
         {
@@ -1779,7 +2010,29 @@ public partial class EEWorkspaceViewModel : ObservableObject
         finally
         {
             _playbackSolveRunning = false;
+            IsSimulating = false;
+            if (_simulationRefreshRequested)
+            {
+                _simulationRefreshRequested = false;
+                if (IsSimulationPlaying)
+                    _ = RefreshPlaybackSimulationAsync();
+                else
+                    _ = SimulateAsync();
+            }
         }
+    }
+
+    private void RequestSimulationRefresh()
+    {
+        _simulationRefreshRequested = true;
+        if (_isApplyingScript) return;
+        if (IsSimulationPlaying)
+        {
+            if (!_playbackSolveRunning && !IsSimulating)
+                _ = RefreshPlaybackSimulationAsync();
+            return;
+        }
+        _ = SimulateAsync();
     }
 
     [RelayCommand]
@@ -1926,6 +2179,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     private async Task RunScriptAsync()
     {
+        if (IsSimulating || _playbackSolveRunning)
+        {
+            StatusText = "Wait for the current simulation step to finish before running a script.";
+            return;
+        }
+
+        _isApplyingScript = true;
         try
         {
             StatusText    = "Running script…";
@@ -1952,6 +2212,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             }
 
             var commandOutput = ConsoleOutput;
+            _simulationRefreshRequested = false;
             IsSimulating = true;
             StatusText = scriptHadErrors
                 ? "Script had errors. Simulating the resulting circuit state for AI feedback…"
@@ -1980,6 +2241,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             IsSimulating = false;
             OnPropertyChanged(nameof(SelectedComponent));
+            _isApplyingScript = false;
+            if (_simulationRefreshRequested)
+            {
+                _simulationRefreshRequested = false;
+                if (IsSimulationPlaying)
+                    _ = RefreshPlaybackSimulationAsync();
+                else
+                    _ = SimulateAsync();
+            }
         }
 
         await Task.CompletedTask;
@@ -2049,6 +2319,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     private async Task SimulateAsync()
     {
+        if (_playbackSolveRunning || IsSimulating)
+        {
+            _simulationRefreshRequested = true;
+            return;
+        }
+        _simulationRefreshRequested = false;
         try
         {
             IsSimulating  = true;
@@ -2077,6 +2353,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             IsSimulating = false;
             OnPropertyChanged(nameof(SelectedComponent));
+            CircuitChanged?.Invoke();
+            if (_simulationRefreshRequested)
+            {
+                _simulationRefreshRequested = false;
+                if (IsSimulationPlaying)
+                    _ = RefreshPlaybackSimulationAsync();
+                else
+                    _ = SimulateAsync();
+            }
         }
     }
 
@@ -2138,6 +2423,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     // Called by the canvas when user clicks a component
     public void OnComponentSelected(ComponentNode comp)
     {
+        SelectedConnection = null;
         SelectedComponent = comp;
         SelectedComponentEventTriggers.Clear();
         foreach (var trigger in comp.EventTriggers)
@@ -2156,6 +2442,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
         string paramStr = param.Key != null ? $"{param.Key}={param.Value:G4}" : "";
         ActiveComponentInfo = $"{comp.Reference}  [{comp.ComponentType}]  ({comp.X:F0}, {comp.Y:F0})  {paramStr}";
         StatusText = $"Selected {comp.Reference} [{comp.ComponentType}]";
+    }
+
+    public void OnConnectionSelected(ConnectionNode connection)
+    {
+        SelectedComponent = null;
+        SelectedConnection = connection;
+        ActiveComponentInfo = $"Wire {connection.NetName}: {connection.FromPin} → {connection.ToPin}";
+        StatusText = $"Selected wire {connection.NetName}";
     }
 
     [RelayCommand]
@@ -2215,6 +2509,79 @@ public partial class EEWorkspaceViewModel : ObservableObject
         DispatchUiEvent(match.Component, match.Trigger.Name, match.Trigger.Target, message ?? match.Trigger.Message, match.Trigger.Id);
     }
 
+    private void ToggleNamedUiEvent(string eventName)
+    {
+        var match = Circuit.Components.SelectMany(component => component.EventTriggers
+                .Select(trigger => (Component: component, Trigger: trigger)))
+            .FirstOrDefault(item => item.Trigger.Name.Equals(eventName, StringComparison.OrdinalIgnoreCase) ||
+                                    item.Trigger.Id.Equals(eventName, StringComparison.OrdinalIgnoreCase));
+        if (match.Trigger == null)
+        {
+            FireNamedUiEvent(eventName);
+            return;
+        }
+
+        if (!match.Trigger.IsFired)
+        {
+            FireNamedUiEvent(eventName);
+            return;
+        }
+
+        match.Trigger.IsFired = false;
+        if (_simulationEventOwnersByTarget.TryGetValue(match.Trigger.Target, out var owner) &&
+            owner.Equals(match.Trigger.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            _simulationEventOwnersByTarget.Remove(match.Trigger.Target);
+            switch (match.Trigger.Target)
+            {
+                case "Dialog": IsSimulationEventDialogVisible = false; break;
+                case "Waveform drawer": IsWaveformDrawerOpen = false; break;
+                case "Description sidebar": IsDescriptionSidebarVisible = false; break;
+                case "Control sidebar": IsControlSidebarVisible = false; break;
+                case "Chat bubble": IsSimulationEventChatVisible = false; break;
+            }
+        }
+        _activeSimulationEventIds.Remove(match.Trigger.Id);
+        StatusText = $"UI event '{match.Trigger.Name}' toggled off";
+    }
+
+    private ComponentNode? FindComponentTarget(string target)
+    {
+        string componentName = target.Split(':', 2)[0].Trim();
+        return Circuit.Components.FirstOrDefault(component =>
+            component.Name.Equals(componentName, StringComparison.OrdinalIgnoreCase) ||
+            component.Reference.Equals(componentName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void SetWaveformTarget(string target, bool enabled)
+    {
+        var component = FindComponentTarget(target);
+        if (component == null)
+            throw new InvalidOperationException($"Component or node '{target}' was not found.");
+
+        string[] targetParts = target.Split(':', 2);
+        if (targetParts.Length == 2 && component.GetPin(targetParts[1]) == null)
+            throw new InvalidOperationException($"Node '{targetParts[1]}' does not exist on {component.Reference}.");
+
+        if (enabled)
+        {
+            ConfigureWaveformForComponent(component, showTerminalPicker: false);
+            if (targetParts.Length == 2)
+            {
+                var pin = component.GetPin(targetParts[1]);
+                WaveformSignals.Clear();
+                WaveformSignals.Add(new WaveformSignal(component, pin!.Id,
+                    $"{component.Reference}:{pin.Name} voltage", WaveformSignalKind.PinVoltage));
+            }
+        }
+        else
+        {
+            PythonApi.SetWaveform(component.Name, false);
+            if (WaveformComponent == component)
+                IsWaveformDrawerOpen = false;
+        }
+    }
+
     private void DispatchTriggeredUiEvents()
     {
         var activeEvents = ComponentEventEvaluator.Evaluate(Circuit);
@@ -2250,8 +2617,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 IsSimulationEventDialogVisible = true;
                 break;
             case "Waveform drawer":
-                WaveformComponent ??= SelectedComponent;
-                IsWaveformDrawerOpen = true;
+                var targetComponent = WaveformComponent ?? SelectedComponent;
+                if (targetComponent != null)
+                    ConfigureWaveformForComponent(targetComponent, showTerminalPicker: false);
+                else
+                    IsWaveformDrawerOpen = true;
                 break;
             case "Description sidebar":
                 IsDescriptionSidebarVisible = true;
@@ -2700,8 +3070,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             EditingComponent.ShowWaveform = EditShowWaveform;
             if (EditShowWaveform)
             {
-                WaveformComponent = EditingComponent;
-                IsWaveformDrawerOpen = true;
+                ConfigureWaveformForComponent(EditingComponent, showTerminalPicker: false);
             }
         }
     }
@@ -3030,8 +3399,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
         if (EditShowWaveform)
         {
-            WaveformComponent = EditingComponent;
-            IsWaveformDrawerOpen = true;
+            ConfigureWaveformForComponent(EditingComponent, showTerminalPicker: false);
         }
 
         EditingComponent.NotifyModified(EditingComponent.Reference);
@@ -3226,9 +3594,17 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     return $"[ok] live probe on {Unquote(args[0])} set to {args[1]}";
 
                 case "set_waveform" when args.Length >= 2:
-                    PythonApi.SetWaveform(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var sw) && sw);
+                    SetWaveformTarget(Unquote(args[0]), bool.TryParse(Unquote(args[1]), out var sw) && sw);
                     CircuitChanged?.Invoke();
-                    return $"[ok] waveform on {Unquote(args[0])} set to {args[1]}";
+                    return $"[ok] waveform for {Unquote(args[0])} set to {args[1]}";
+
+                case "toggle_waveform" when args.Length >= 1:
+                    string waveformTarget = Unquote(args[0]);
+                    var waveformComponent = FindComponentTarget(waveformTarget);
+                    if (waveformComponent == null) return $"[error] component or node '{waveformTarget}' not found";
+                    SetWaveformTarget(waveformTarget, !waveformComponent.ShowWaveform);
+                    CircuitChanged?.Invoke();
+                    return $"[ok] waveform for {waveformTarget} toggled";
 
                 case "rename_pin" when args.Length >= 3:
                     PythonApi.RenamePin(Unquote(args[0]), Unquote(args[1]), Unquote(args[2]));
@@ -3258,6 +3634,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     string? firedEventMessage = args.Length > 1 ? Unquote(args[1]) : null;
                     FireNamedUiEvent(firedEventName, firedEventMessage);
                     return $"[ok] UI event '{firedEventName}' fired";
+
+                case "toggle_event" or "ui.toggle_event" when args.Length >= 1:
+                    ToggleNamedUiEvent(Unquote(args[0]));
+                    return $"[ok] UI event '{Unquote(args[0])}' toggled";
 
                 // UI Hierarchy Operations (RootNode script interface)
                 case "ui.open_dialog" or "ui.dialog.open":
@@ -3623,6 +4003,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
             sb.AppendLine($"  {kv.Key}: {kv.Value:G4} A");
         if (r.OperatingPointVoltages.Count == 0 && r.OperatingPointCurrents.Count == 0)
             sb.AppendLine("  (No results — check circuit connectivity)");
+        if (r.Message.Contains("Transient waveform capture failed", StringComparison.OrdinalIgnoreCase))
+            sb.AppendLine($"\n{r.Message}");
         return sb.ToString();
     }
 }

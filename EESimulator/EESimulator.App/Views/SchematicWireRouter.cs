@@ -29,10 +29,22 @@ internal static class SchematicWireRouter
         ComponentPin fromPin,
         ComponentNode toComponent,
         ComponentPin toPin,
-        IEnumerable<ComponentNode> allComponents)
+        IEnumerable<ComponentNode> allComponents,
+        IReadOnlyList<Point2D>? routingPoints = null)
     {
         var start = GetPinWorldPosition(fromComponent, fromPin);
         var end = GetPinWorldPosition(toComponent, toPin);
+        if (routingPoints is { Count: > 0 })
+        {
+            var obstacles = GetObstacles(allComponents, fromComponent, toComponent);
+            var points = new List<PointF> { start };
+            points.AddRange(routingPoints.Select(point => new PointF((float)point.X, (float)point.Y)));
+            points.Add(end);
+            var routed = new List<List<PointF>>();
+            for (int index = 0; index < points.Count - 1; index++)
+                routed.Add(FindOrthogonalPath(points[index], points[index + 1], obstacles));
+            return CombinePaths(routed.ToArray());
+        }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);

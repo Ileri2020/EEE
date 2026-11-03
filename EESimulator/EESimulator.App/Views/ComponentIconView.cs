@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using EESimulator.Core.Models;
 
 namespace EESimulator.App.Views;
 
@@ -26,6 +27,11 @@ public class ComponentIconView : GraphicsView, IDrawable
             false,
             propertyChanged: (b, _, __) => ((ComponentIconView)b).Invalidate());
 
+    public static readonly BindableProperty ComponentProperty =
+        BindableProperty.Create(nameof(Component), typeof(ComponentNode), typeof(ComponentIconView), null,
+            propertyChanged: (b, oldValue, newValue) => ((ComponentIconView)b).OnComponentChanged(
+                oldValue as ComponentNode, newValue as ComponentNode));
+
     public string ComponentType
     {
         get => (string)GetValue(ComponentTypeProperty);
@@ -36,6 +42,12 @@ public class ComponentIconView : GraphicsView, IDrawable
     {
         get => (bool)GetValue(IsOnProperty);
         set => SetValue(IsOnProperty, value);
+    }
+
+    public ComponentNode? Component
+    {
+        get => (ComponentNode?)GetValue(ComponentProperty);
+        set => SetValue(ComponentProperty, value);
     }
 
     public ComponentIconView()
@@ -76,6 +88,21 @@ public class ComponentIconView : GraphicsView, IDrawable
 #endif
     }
 
+    private void OnComponentChanged(ComponentNode? oldComponent, ComponentNode? newComponent)
+    {
+        if (oldComponent != null) oldComponent.OnModified -= OnComponentModified;
+        if (newComponent != null) newComponent.OnModified += OnComponentModified;
+        Invalidate();
+    }
+
+    private void OnComponentModified(object? sender, NodeModifiedEventArgs e)
+    {
+        if (Dispatcher.IsDispatchRequired)
+            Dispatcher.Dispatch(Invalidate);
+        else
+            Invalidate();
+    }
+
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
         if (string.IsNullOrEmpty(ComponentType))
@@ -98,7 +125,44 @@ public class ComponentIconView : GraphicsView, IDrawable
         float scale  = Math.Min(scaleX, scaleY);
         canvas.Scale(scale, scale);
 
-        ComponentSymbolDrawer.DrawSymbol(canvas, ComponentType, "", IsOn);
+        bool componentIsOn = Component switch
+        {
+            EESimulator.Core.Components.Electronics.LEDComponent led => led.IsOn,
+            EESimulator.Core.Components.Electrical.BulbComponent bulb => bulb.IsOn,
+            EESimulator.Core.Components.Electronics.LogicInputComponent input => input.State,
+            EESimulator.Core.Components.Electronics.LogicOutputComponent output => output.IsOn,
+            EESimulator.Core.Components.Electronics.ClockComponent clock => clock.State,
+            EESimulator.Core.Components.Electronics.PinComponent pin => pin.Value > 0,
+            EESimulator.Core.Components.Electronics.ConstantComponent constant => constant.Value > 0,
+            _ => IsOn
+        };
+        switch (Component)
+        {
+            case EESimulator.Core.Components.Electronics.SevenSegmentComponent seven:
+                ComponentSymbolDrawer.DrawSevenSegment(canvas, seven.CustomProperties.TryGetValue("RenderedSegments", out var segments) ? Convert.ToInt32(segments) : 0);
+                break;
+            case EESimulator.Core.Components.Electronics.HexDigitComponent hex:
+                ComponentSymbolDrawer.DrawHexDigit(canvas, hex.CustomProperties.TryGetValue("RenderedValue", out var hexValue) ? Convert.ToInt32(hexValue) : 0);
+                break;
+            case EESimulator.Core.Components.Electronics.LedBarComponent bar:
+                ComponentSymbolDrawer.DrawLedBar(canvas, bar.CustomProperties.TryGetValue("RenderedValue", out var barValue) ? Convert.ToInt64(barValue) : 0, bar.LedCount);
+                break;
+            case EESimulator.Core.Components.Electronics.RgbLedComponent rgb:
+                ComponentSymbolDrawer.DrawRgbLed(canvas, rgb.CustomProperties.TryGetValue("RenderedRgb", out var rgbValue) ? Convert.ToInt32(rgbValue) : 0);
+                break;
+            case EESimulator.Core.Components.Electronics.DotMatrixComponent matrix:
+                ComponentSymbolDrawer.DrawDotMatrix(canvas,
+                    matrix.CustomProperties.TryGetValue("RenderedRows", out var rows) ? Convert.ToInt64(rows) : 0,
+                    matrix.CustomProperties.TryGetValue("RenderedColumns", out var columns) ? Convert.ToInt64(columns) : 0,
+                    matrix.Rows, matrix.Columns);
+                break;
+            case EESimulator.Core.Components.Electronics.VideoComponent video:
+                ComponentSymbolDrawer.DrawVideo(canvas, video.CustomProperties.TryGetValue("RenderedRgb", out var videoRgb) ? Convert.ToInt32(videoRgb) : 0);
+                break;
+            default:
+                ComponentSymbolDrawer.DrawSymbol(canvas, ComponentType, "", componentIsOn);
+                break;
+        }
 
         canvas.RestoreState();
     }

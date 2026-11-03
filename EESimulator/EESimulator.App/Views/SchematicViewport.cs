@@ -66,6 +66,7 @@ public class SchematicViewport : GraphicsView, IDrawable
 
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<ComponentNode>? ComponentSelected;
+    public event EventHandler<ConnectionNode>? ConnectionSelected;
     public event EventHandler<(ComponentNode Component, ComponentPin Pin)>? PinSelected;
     public event EventHandler<ComponentNode>? ComponentContextRequested;
     public event EventHandler<ComponentNode>? ComponentLongPressRequested;
@@ -80,7 +81,9 @@ public class SchematicViewport : GraphicsView, IDrawable
 
     // Interaction state ────────────────────────────────────────────────────
     private ComponentNode? _selectedComponent;
+    private ConnectionNode? _selectedConnection;
     private (ComponentNode Component, ComponentPin Pin)? _selectedPin;
+    private readonly List<RectF> _liveMeasurementBadgeBounds = new();
 
     // Rotate handle: rendered at right edge of selection box
     private const float RotateHandleOffsetX = 36f; // world units from component centre
@@ -564,6 +567,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         var pin = HitTestPin(w);
         if (pin != null)
         {
+            _selectedConnection = null;
             _selectedPin       = pin;
             _selectedComponent = pin.Value.Component;
             UpdateRotateHandle();
@@ -572,8 +576,20 @@ public class SchematicViewport : GraphicsView, IDrawable
             ComponentSelected?.Invoke(this, pin.Value.Component);
             return;
         }
+        var selectedConnection = HitTestConnection(w);
+        if (selectedConnection != null)
+        {
+            _selectedPin = null;
+            _selectedComponent = null;
+            _selectedConnection = selectedConnection;
+            _rotateHandleVisible = false;
+            ConnectionSelected?.Invoke(this, selectedConnection);
+            Invalidate();
+            return;
+        }
         _selectedPin       = null;
         _selectedComponent = HitTest(w);
+        _selectedConnection = null;
         UpdateRotateHandle();
         if (_selectedComponent == null)
         {
@@ -903,6 +919,26 @@ public class SchematicViewport : GraphicsView, IDrawable
 
     private ComponentNode? HitTest(PointF p) => HitTest(p.X, p.Y);
 
+    private ConnectionNode? HitTestConnection(PointF point)
+    {
+        if (Circuit == null) return null;
+        var components = Circuit.FindChildren<ComponentNode>().ToList();
+        foreach (var connection in Circuit.FindChildren<ConnectionNode>().Reverse())
+        {
+            var from = Circuit.FindChildById<ComponentNode>(connection.FromComponentId);
+            var to = Circuit.FindChildById<ComponentNode>(connection.ToComponentId);
+            var fromPin = from?.GetPin(connection.FromPin);
+            var toPin = to?.GetPin(connection.ToPin);
+            if (from == null || to == null || fromPin == null || toPin == null) continue;
+
+            var path = SchematicWireRouter.RouteConnection(from, fromPin, to, toPin, components, connection.RoutingPoints);
+            for (int index = 0; index < path.Count - 1; index++)
+                if (DistanceToSegment(point, path[index], path[index + 1]) <= 9f)
+                    return connection;
+        }
+        return null;
+    }
+
     private ComponentNode? HitTest(float wx, float wy)
     {
         if (Circuit == null) return null;
@@ -1201,12 +1237,12 @@ public class SchematicViewport : GraphicsView, IDrawable
     {
         if (Circuit == null) return;
         var components = Circuit.FindChildren<ComponentNode>().ToList();
-        var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, int ElectronDirection)>();
+        var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, ConnectionNode? Connection, int ElectronDirection)>();
 
         foreach (var wire in components.OfType<WireComponent>())
         {
             var path = SchematicWireRouter.RouteWireComponent(wire, components);
-            routedWires.Add((path, wire, wire.LiveCurrent > 0 ? -1 : wire.LiveCurrent < 0 ? 1 : 0));
+            routedWires.Add((path, wire, null, wire.LiveCurrent > 0 ? -1 : wire.LiveCurrent < 0 ? 1 : 0));
         }
 
         foreach (var conn in Circuit.FindChildren<ConnectionNode>())
@@ -1218,8 +1254,8 @@ public class SchematicViewport : GraphicsView, IDrawable
             var toPin = toComp.GetPin(conn.ToPin);
             if (fromPin == null || toPin == null) continue;
 
-            var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components);
-            routedWires.Add((path, null, GetElectronDirection(fromComp, fromPin, toComp, toPin)));
+            var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
+            routedWires.Add((path, null, conn, GetElectronDirection(fromComp, fromPin, toComp, toPin)));
         }
 
         for (int index = 0; index < routedWires.Count; index++)
@@ -1227,10 +1263,17 @@ public class SchematicViewport : GraphicsView, IDrawable
             var wire = routedWires[index];
             var previousPaths = routedWires.Take(index).Select(item => item.Path).ToList();
             DrawRoutedWire(canvas, wire.Path, previousPaths);
+            if (wire.Connection == _selectedConnection)
+            {
+                canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+                canvas.StrokeSize = 4f;
+                for (int segment = 0; segment < wire.Path.Count - 1; segment++)
+                    canvas.DrawLine(wire.Path[segment], wire.Path[segment + 1]);
+            }
             if (IsSimulationPlaying && wire.ElectronDirection != 0)
                 DrawElectricityDots(canvas, wire.Path, wire.ElectronDirection);
 
-            if (wire.Owner is WireComponent owner && owner.ShowLiveProbe)
+            if (wire.Owner is WireComponent owner && (owner.ShowLiveProbe || LiveMeasurementsVisible))
                 DrawWireMeasurement(canvas, owner, wire.Path);
         }
     }
@@ -1399,6 +1442,7 @@ public class SchematicViewport : GraphicsView, IDrawable
     private void DrawComponents(ICanvas canvas)
     {
         if (Circuit == null) return;
+        _liveMeasurementBadgeBounds.Clear();
         foreach (var comp in Circuit.FindChildren<ComponentNode>())
         {
             bool selected = comp == _selectedComponent;
@@ -1632,24 +1676,6 @@ public class SchematicViewport : GraphicsView, IDrawable
         canvas.DrawString(comp.Reference.Length > 0 ? comp.Reference : comp.Name,
             -30, 22, 60, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
 
-        // Live probe HUD (Eye icon probe enabled)
-        if ((comp.ShowLiveProbe || LiveMeasurementsVisible) && comp.ComponentType != "Wire")
-        {
-            float badgeX = 26;
-            float badgeY = -18;
-            canvas.FillColor = Color.FromArgb("#161B22");
-            canvas.FillRoundedRectangle(badgeX, badgeY, 80, 28, 4);
-            canvas.StrokeColor = Color.FromArgb("#56D364");
-            canvas.StrokeSize = 1.2f;
-            canvas.DrawRoundedRectangle(badgeX, badgeY, 80, 28, 4);
-
-            canvas.FontColor = Color.FromArgb("#56D364");
-            canvas.FontSize = 8.5f;
-            canvas.DrawString($"👁 {comp.LiveVoltage:F2} V", badgeX + 4, badgeY + 2, 72, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
-            canvas.FontColor = Color.FromArgb("#79C0FF");
-            canvas.DrawString($"  {comp.LiveCurrent * 1000:F1} mA", badgeX + 4, badgeY + 14, 72, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
-        }
-
         // Waveform indicator (Graph icon enabled)
         if (comp.ShowWaveform)
         {
@@ -1699,6 +1725,101 @@ public class SchematicViewport : GraphicsView, IDrawable
         }
 
         canvas.RestoreState();
+
+        // Draw measurement badges unrotated and outside the component body. Try
+        // nearby positions and skip occupied component, wire, and badge regions.
+        if ((comp.ShowLiveProbe || LiveMeasurementsVisible) && comp.ComponentType != "Wire")
+            DrawLiveMeasurementBadge(canvas, comp);
+    }
+
+    private void DrawLiveMeasurementBadge(ICanvas canvas, ComponentNode component)
+    {
+        const float width = 84f;
+        const float height = 30f;
+        var candidates = new[]
+        {
+            new RectF((float)component.X + 38, (float)component.Y - 34, width, height),
+            new RectF((float)component.X - width - 38, (float)component.Y - 34, width, height),
+            new RectF((float)component.X - width / 2, (float)component.Y - 66, width, height),
+            new RectF((float)component.X - width / 2, (float)component.Y + 38, width, height),
+            new RectF((float)component.X + 38, (float)component.Y + 38, width, height),
+            new RectF((float)component.X - width - 38, (float)component.Y + 38, width, height)
+        };
+
+        var components = Circuit?.FindChildren<ComponentNode>().ToList() ?? new List<ComponentNode>();
+        RectF badge = candidates.FirstOrDefault(candidate => !IsMeasurementBadgeBlocked(candidate, component, components));
+        if (badge.Width <= 0 || badge.Height <= 0)
+            badge = candidates[0];
+        _liveMeasurementBadgeBounds.Add(badge);
+
+        canvas.SaveState();
+        canvas.Translate(badge.Left, badge.Top);
+        canvas.FillColor = Color.FromArgb("#E6161B22");
+        canvas.FillRoundedRectangle(0, 0, width, height, 4);
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawRoundedRectangle(0, 0, width, height, 4);
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.FontSize = 8.5f;
+        canvas.DrawString($"👁 {component.LiveVoltage:F2} V", 4, 2, 76, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString($"{component.LiveCurrent * 1000:F1} mA", 4, 15, 76, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.RestoreState();
+    }
+
+    private bool IsMeasurementBadgeBlocked(RectF badge, ComponentNode target, List<ComponentNode> components)
+    {
+        if (_liveMeasurementBadgeBounds.Any(existing => RectanglesOverlap(existing, badge)))
+            return true;
+
+        foreach (var component in components)
+        {
+            if (ReferenceEquals(component, target) || component is WireComponent) continue;
+            float halfX = 28f * (float)(component.ScaleX > 0 ? component.ScaleX : 1.0);
+            float halfY = 28f * (float)(component.ScaleY > 0 ? component.ScaleY : 1.0);
+            var body = new RectF((float)component.X - halfX, (float)component.Y - halfY, halfX * 2, halfY * 2);
+            if (RectanglesOverlap(body, badge)) return true;
+        }
+
+        if (Circuit != null)
+        {
+            foreach (var wire in components.OfType<WireComponent>())
+            {
+                var path = SchematicWireRouter.RouteWireComponent(wire, components);
+                if (PathIntersectsRectangle(path, badge)) return true;
+            }
+            foreach (var connection in Circuit.FindChildren<ConnectionNode>())
+            {
+                var from = Circuit.FindChildById<ComponentNode>(connection.FromComponentId);
+                var to = Circuit.FindChildById<ComponentNode>(connection.ToComponentId);
+                var fromPin = from?.GetPin(connection.FromPin);
+                var toPin = to?.GetPin(connection.ToPin);
+                if (from != null && to != null && fromPin != null && toPin != null &&
+                    PathIntersectsRectangle(SchematicWireRouter.RouteConnection(from, fromPin, to, toPin, components, connection.RoutingPoints), badge))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool RectanglesOverlap(RectF a, RectF b) =>
+        a.Left < b.Right && a.Right > b.Left && a.Top < b.Bottom && a.Bottom > b.Top;
+
+    private static bool PathIntersectsRectangle(List<PointF> path, RectF rectangle)
+    {
+        for (int index = 0; index < path.Count - 1; index++)
+        {
+            var a = path[index];
+            var b = path[index + 1];
+            if (MathF.Abs(a.Y - b.Y) < 0.01f)
+            {
+                if (a.Y >= rectangle.Top && a.Y <= rectangle.Bottom &&
+                    Math.Max(Math.Min(a.X, b.X), rectangle.Left) <= Math.Min(Math.Max(a.X, b.X), rectangle.Right)) return true;
+            }
+            else if (MathF.Abs(a.X - b.X) < 0.01f && a.X >= rectangle.Left && a.X <= rectangle.Right &&
+                     Math.Max(Math.Min(a.Y, b.Y), rectangle.Top) <= Math.Min(Math.Max(a.Y, b.Y), rectangle.Bottom)) return true;
+        }
+        return false;
     }
 
 

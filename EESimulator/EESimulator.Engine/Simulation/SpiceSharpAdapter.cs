@@ -871,7 +871,21 @@ public class SpiceSharpAdapter : ISimulationEngine
             var waveComps = circuit.Components.Where(c => c.ShowWaveform).ToList();
             if (waveComps.Count > 0)
             {
-                GenerateWaveforms(waveComps, settings);
+                try
+                {
+                    CaptureTransientWaveforms(waveComps, spiceCircuit, GetNetForPin, settings);
+                }
+                catch (Exception waveformException)
+                {
+                    foreach (var component in waveComps)
+                    {
+                        component.WaveformTime.Clear();
+                        component.WaveformVoltage.Clear();
+                        component.WaveformCurrent.Clear();
+                        component.WaveformNodeVoltages.Clear();
+                    }
+                    results.Message += $"\nTransient waveform capture failed: {waveformException.Message}";
+                }
             }
 
             results.Success = true;
@@ -946,76 +960,89 @@ public class SpiceSharpAdapter : ISimulationEngine
         }
     }
 
-    private static void GenerateWaveforms(List<ComponentNode> components, SimulationSettings? settings = null)
+    private static void CaptureTransientWaveforms(
+        List<ComponentNode> components,
+        SpiceSharp.Circuit spiceCircuit,
+        Func<Guid, string, string> getNetForPin,
+        SimulationSettings settings)
     {
-        double duration = (settings != null && settings.StopTime > settings.StartTime) ? (settings.StopTime - settings.StartTime) : 0.02;
-        int steps = 120;
-        if (settings != null && settings.StepTime > 0)
+        double start = Math.Max(0.0, settings.StartTime);
+        double stop = settings.StopTime > start ? settings.StopTime : start + 0.02;
+        double duration = stop - start;
+        double requestedStep = settings.StepTime > 0 ? settings.StepTime : duration / 500.0;
+        double maxStep = Math.Clamp(requestedStep, duration / 2000.0, duration / 2.0);
+        var transient = new Transient("EESimulator_Waveform", maxStep, stop)
         {
-            steps = (int)Math.Clamp(duration / settings.StepTime, 50, 500);
-        }
-        double dt = duration / steps;
+            TimeParameters = { StartTime = start, MaxStep = maxStep }
+        };
 
-        foreach (var comp in components)
+        string NodeFor(ComponentNode component, int pinIndex) =>
+            component.Pins.Count > pinIndex ? getNetForPin(component.Id, component.Pins[pinIndex].Id) : "0";
+        RealVoltageExport? VoltageAt(string node) => node == "0" ? null : new RealVoltageExport(transient, node);
+
+        var captures = components.Select(component =>
         {
-            comp.WaveformTime.Clear();
-            comp.WaveformVoltage.Clear();
-            comp.WaveformCurrent.Clear();
-
-            double baseV = Math.Abs(comp.LiveVoltage) > 1e-12 ? comp.LiveVoltage : 5.0;
-            double baseI = Math.Abs(comp.LiveCurrent) > 1e-12 ? comp.LiveCurrent : 0.005;
-
-            // Check if source has customized waveform parameters
-            string wfType = "DC";
-            double freq = 50.0;
-            double amp = baseV;
-            if (comp is VoltageSourceComponent vcomp)
+            List<(string Id, RealVoltageExport? Export)> pins;
+            lock (component)
             {
-                wfType = vcomp.WaveformType.ToUpperInvariant();
-                freq = vcomp.SineFrequency > 0 ? vcomp.SineFrequency : 50.0;
-                amp = vcomp.SineAmplitude > 0 ? vcomp.SineAmplitude : baseV;
-            }
-            else if (comp is CurrentSourceComponent icomp)
-            {
-                wfType = icomp.WaveformType.ToUpperInvariant();
-                freq = icomp.SineFrequency > 0 ? icomp.SineFrequency : 50.0;
-                amp = icomp.SineAmplitude > 0 ? icomp.SineAmplitude : baseI;
-            }
-            else if (comp is ClockComponent clkComp)
-            {
-                wfType = "PULSE";
-                freq = clkComp.Frequency > 0 ? clkComp.Frequency : 1000.0;
-                amp = clkComp.HighVoltage;
-            }
-
-            for (int i = 0; i <= steps; i++)
-            {
-                double t = i * dt;
-                double v = baseV;
-                double curr = baseI;
-
-                switch (wfType)
+                component.WaveformTime.Clear();
+                component.WaveformVoltage.Clear();
+                component.WaveformCurrent.Clear();
+                component.WaveformNodeVoltages.Clear();
+                pins = component.Pins.Select(pin =>
                 {
-                    case "SINE":
-                        v = amp * Math.Sin(2 * Math.PI * freq * t);
-                        curr = (amp / 1000.0) * Math.Sin(2 * Math.PI * freq * t);
-                        break;
-                    case "PULSE":
-                        double period = 1.0 / (freq > 0 ? freq : 50.0);
-                        double phase = (t % period) / period;
-                        v = phase < 0.5 ? amp : 0.0;
-                        curr = phase < 0.5 ? (amp / 1000.0) : 0.0;
-                        break;
-                    default:
-                        // Superimposed ripple on DC value
-                        v = baseV + (baseV * 0.1) * Math.Sin(2 * Math.PI * 50 * t);
-                        curr = baseI + (baseI * 0.1) * Math.Sin(2 * Math.PI * 50 * t);
-                        break;
-                }
+                    component.WaveformNodeVoltages[pin.Id] = new List<double>();
+                    string net = getNetForPin(component.Id, pin.Id);
+                    return (pin.Id, Export: VoltageAt(net));
+                }).ToList();
+            }
 
-                comp.WaveformTime.Add(t);
-                comp.WaveformVoltage.Add(v);
-                comp.WaveformCurrent.Add(curr);
+            return (
+                Component: component,
+                Pins: pins,
+                VoltageA: VoltageAt(NodeFor(component, 0)),
+                VoltageB: VoltageAt(NodeFor(component, 1)),
+                Current: new RealCurrentExport(transient, component.Name));
+        }).ToList();
+
+        foreach (int _ in transient.Run(spiceCircuit, Transient.ExportTransient))
+        {
+            double time = transient.Time;
+            foreach (var capture in captures)
+            {
+                double Value(RealVoltageExport? export) => export?.Value ?? 0.0;
+                lock (capture.Component)
+                {
+                    capture.Component.WaveformTime.Add(time);
+                    capture.Component.WaveformVoltage.Add(Value(capture.VoltageA) - Value(capture.VoltageB));
+                    capture.Component.WaveformCurrent.Add(capture.Current.Value);
+                    foreach (var pin in capture.Pins)
+                        capture.Component.WaveformNodeVoltages[pin.Id].Add(Value(pin.Export));
+                }
+            }
+        }
+
+        foreach (var capture in captures)
+        {
+            lock (capture.Component)
+            {
+                if (capture.Component.WaveformTime.Count == 0) continue;
+                capture.Component.LiveVoltage = capture.Component.WaveformVoltage[^1];
+                capture.Component.LiveCurrent = capture.Component.WaveformCurrent[^1];
+                double drop = Math.Abs(capture.Component.LiveVoltage);
+                if (capture.Component is LEDComponent led)
+                    led.IsOn = drop >= Math.Min(led.ForwardVoltage * 0.75, 1.5) || Math.Abs(led.LiveCurrent) >= 0.001;
+                else if (capture.Component is BulbComponent bulb)
+                {
+                    bulb.Brightness = Math.Clamp(drop / Math.Max(bulb.RatedVoltage, 0.1), 0.0, 1.0);
+                    bulb.IsOn = drop >= bulb.ThresholdVoltage || Math.Abs(bulb.LiveCurrent) >= 0.02;
+                }
+                else if (capture.Component is LogicOutputComponent logicOutput && capture.Pins.Count > 0)
+                {
+                    double terminalVoltage = capture.Pins[0].Export?.Value ?? 0.0;
+                    logicOutput.LiveVoltage = terminalVoltage;
+                    logicOutput.IsOn = terminalVoltage >= logicOutput.Threshold;
+                }
             }
         }
     }
@@ -1079,8 +1106,6 @@ public class SpiceSharpAdapter : ISimulationEngine
             foreach (var source in circuit.Components.OfType<VoltageSourceComponent>())
                 source.LiveCurrent = -current;
         }
-
-        GenerateWaveforms(circuit.Components.Where(c => c.ShowWaveform).ToList());
 
         results.Success = true;
         results.Message = $"Simulation solved (Linear/Nodal): {ex.Message}";

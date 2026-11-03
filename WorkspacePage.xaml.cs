@@ -18,6 +18,8 @@ public partial class WorkspacePage : ContentPage
         // Wire canvas selection events to ViewModel
         SchematicCanvas.ComponentSelected += (_, comp) =>
             vm.OnComponentSelected(comp);
+        SchematicCanvas.ConnectionSelected += (_, connection) =>
+            vm.OnConnectionSelected(connection);
         vm.ViewportRecenterRequested += SchematicCanvas.RecenterToCircuit;
         SchematicCanvas.ComponentMoveCommitted += (_, move) =>
             vm.CommitComponentMove(move.Component, move.OldX, move.OldY, move.NewX, move.NewY);
@@ -97,6 +99,8 @@ public partial class WorkspacePage : ContentPage
                 SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
                 SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
                 SchematicCanvas.Invalidate();
+                WaveformCanvas.Invalidate();
+                SelectedComponentIcon.Invalidate();
             });
 
         // Initialize ActiveTool

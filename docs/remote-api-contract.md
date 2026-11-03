@@ -9,6 +9,13 @@ The MAUI application has no MongoDB or Gemini credentials. Configure an **HTTPS*
 
 The app's “Community” action refreshes and downloads the returned public examples. “Share Circuit” posts the current circuit. The app does not expose MongoDB credentials or grant database access to clients.
 
+## Private project saves
+
+- `POST /api/projects` accepts `{ "title": "...", "description": "...", "contentJson": "..." }` and returns `{ "id": "...", "title": "...", "ownerName": null, "savedAt": "..." }`.
+- Authentication is optional. When a valid bearer token is supplied, the HCVP server derives the account ID from the verified token; otherwise a valid same-origin HCVP browser session may provide the account identity. Never trust an owner/account ID sent in the request body. Without either identity, save the project as an anonymous record with no account association.
+- Validate and size-limit `contentJson`, store it in the server database, and avoid returning it from public example listings. Anonymous save abuse should be mitigated with rate limits and request limits. The MAUI client now sends this request from its cloud-save action, attaching a saved token when available.
+- HCVP implements this route in `app/api/projects/route.ts` and stores records in its `SavedEeeProject` MongoDB model. The MAUI cloud-save client attaches the saved EEE token when available; anonymous requests do not need one.
+
 ## AI script drafts
 
 - `POST /api/ai/schema-script` requires the same user bearer token. The request contains `systemInstructions`, `prompt`, `currentScript`, truncated `lastScriptExecutionOutput` (latest command errors and simulation output), sanitized `currentCircuitJson`, `availableComponents`, `currentSchematicState`, `latestSimulation`, and optional `requestedComponentDetails`.
