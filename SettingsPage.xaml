@@ -476,16 +476,16 @@
                                     <Button Text="Open HCVP Account" Style="{StaticResource StandardBtn}"
                                             HorizontalOptions="Start"
                                             Command="{Binding OpenHcvpAccountCommand}"/>
-                                    <Label Text="HCVP stores your account and encrypted Gemini key. Do not put provider keys in this app or URL. Production requires HTTPS."
+                                    <Label Text="AI drafts use the Gemini key configured privately on the HCVP server and work without signing in. Production requires HTTPS."
                                         TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 
                                 <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
-                                    <Label Text="USER ACCESS TOKEN" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                    <Label Text="EEE APP TOKEN (OPTIONAL — PUBLISHING ONLY)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                         <Entry Grid.Column="0"
                                                Text="{Binding RemoteApiAccessTokenDraft}"
-                                               Placeholder="Token issued by your API sign-in"
+                                               Placeholder="Only needed to publish community examples"
                                                IsPassword="True"
                                                BackgroundColor="#0D1117"
                                                TextColor="#C9D1D9"
@@ -495,7 +495,7 @@
                                         <Button Grid.Column="2" Text="Clear" Style="{StaticResource ToolBtn}"
                                                 Command="{Binding ClearRemoteApiAccessTokenCommand}"/>
                                     </Grid>
-                                    <Label Text="This is a user login token stored in device secure storage; never paste a database password or Gemini API key here."
+                                     <Label Text="AI drafts do not need login or this token. Create an EEE app token in your HCVP Account only if you want to publish community examples. Never paste a Gemini key or database password here."
                                            TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
                         </Grid>

@@ -28,7 +28,7 @@ public partial class HelpPage : ContentPage
         try
         {
             if (Shell.Current != null)
-                await Shell.Current.GoToAsync("settings");
+                await Shell.Current.GoToAsync("settings-detail");
         }
         catch
         {

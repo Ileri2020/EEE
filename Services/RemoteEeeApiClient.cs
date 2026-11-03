@@ -18,8 +18,8 @@ using Microsoft.Maui.Storage;
 namespace EEE.Services;
 
 /// <summary>
-/// Optional HTTPS client for a separately hosted EESimulator API. Credentials and AI provider
-/// keys belong on that server; this MAUI client intentionally contains no provider secrets.
+/// Optional HTTPS client for the HCVP-hosted EESimulator API. Gemini requests use a
+/// server-side key; the provider key is never sent to or stored in this MAUI client.
 /// </summary>
 public sealed class RemoteEeeApiClient
 {
@@ -96,7 +96,7 @@ public sealed class RemoteEeeApiClient
         return ToExample(result);
     }
 
-    /// <summary>Asks the secured server to produce a Python script draft; never executes the response.</summary>
+    /// <summary>Asks HCVP to produce a Python script draft; never executes the response.</summary>
     public async Task<AiSchemaScriptDraft> GenerateSchemaScriptAsync(
         string prompt,
         string currentScript,
@@ -173,7 +173,25 @@ public sealed class RemoteEeeApiClient
 
     private async Task<AiSchemaScriptDraft> SendAiSchemaRequestAsync(GenerateSchemaScriptRequest request)
     {
-        using var httpRequest = await CreateAuthorizedPostAsync("api/ai/schema-script", request);
+        using var httpRequest = new HttpRequestMessage(
+            HttpMethod.Post,
+            new Uri(new Uri(ApiBaseUrl + "/"), "api/ai/schema-script"))
+        {
+            Content = JsonContent.Create(request, options: JsonOptions)
+        };
+        // A saved HCVP app token selects the user's encrypted personal Gemini key.
+        // Without one, HCVP serves drafts using its server-side environment key.
+        try
+        {
+            var token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
+            if (!string.IsNullOrWhiteSpace(token))
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        catch
+        {
+            // Secure storage is optional for public AI requests; HCVP falls back to
+            // its server key when no user token can be read.
+        }
         using var response = await _httpClient.SendAsync(httpRequest);
         await EnsureSuccessAsync(response);
         return await response.Content.ReadFromJsonAsync<AiSchemaScriptDraft>(JsonOptions)
@@ -435,7 +453,8 @@ public sealed class RemoteEeeApiClient
     {
         var token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
         if (string.IsNullOrWhiteSpace(token))
-            throw new InvalidOperationException("Save a user access token in Settings before publishing or requesting AI drafts.");
+            throw new InvalidOperationException(
+                "Publishing community examples requires an EEE app token. Create one in your HCVP Account and save it under Settings → User Access Token. AI drafts do not require this token.");
 
         var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(ApiBaseUrl + "/"), relativePath))
         {

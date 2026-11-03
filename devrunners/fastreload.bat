@@ -5,8 +5,8 @@ set "PROJECT_DIR=%~dp0.."
 for %%I in ("%PROJECT_DIR%") do set "PROJECT_DIR=%%~fI"
 set "PROJECT=%PROJECT_DIR%\EEE.csproj"
 set "FRAMEWORK=net10.0-windows10.0.19041.0"
-rem Keep watch builds separate from the published output and any EEE.dll loaded by other tools.
-set "OUTPUT_DIR=%PROJECT_DIR%\Platforms\dist\watch"
+rem Keep watch outputs outside the source tree so resource generation cannot overflow dotnet-watch.
+set "OUTPUT_DIR=%LOCALAPPDATA%\EEE\watch-artifacts"
 set "DOTNET=%ProgramFiles%\dotnet\dotnet.exe"
 if not exist "%DOTNET%" set "DOTNET=dotnet"
 if /i "%DOTNET%"=="dotnet" if not exist "%SystemRoot%\System32\where.exe" (
@@ -34,6 +34,7 @@ if /i "%~1"=="--help" (
 )
 echo Building and launching the Windows app with automatic restart on code changes.
 echo Press Ctrl+C to stop the app and file watcher.
+set "DOTNET_USE_POLLING_FILE_WATCHER=1"
 "%DOTNET%" watch --no-hot-reload --project "%PROJECT%" --framework "%FRAMEWORK%" --artifacts-path "%OUTPUT_DIR%" run %*
 set "RESULT=%ERRORLEVEL%"
 popd

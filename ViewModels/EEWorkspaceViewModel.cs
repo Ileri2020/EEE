@@ -60,7 +60,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial string AiSchemaPrompt { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string AiSchemaStatus { get; set; } = "AI drafts use your HCVP account's encrypted Gemini key.";
+    public partial string AiSchemaStatus { get; set; } = "AI drafts use the HCVP server Gemini key; sign-in is not required.";
 
     [ObservableProperty]
     public partial bool IsAiSchemaRequestInProgress { get; set; }
@@ -958,7 +958,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         try
         {
-            await Shell.Current.GoToAsync("//settings");
+            await Shell.Current.GoToAsync("settings-detail");
+            StatusText = "Settings opened";
         }
         catch (Exception ex)
         {
@@ -1531,7 +1532,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 try
                 {
                     if (!_remoteApi.IsConfigured)
-                        throw new InvalidOperationException("Configure the HCVP HTTPS API URL, sign in on its Account page, and add your EEE app token in Settings first.");
+                        throw new InvalidOperationException("Configure the HCVP HTTPS API URL in Settings. AI drafts do not require sign-in or an app token.");
                     await _remoteApi.PublishExampleAsync(subCircuit, name, "Custom Components", definition.SvgIcon);
                     onlineStatus = " Published online.";
                 }
