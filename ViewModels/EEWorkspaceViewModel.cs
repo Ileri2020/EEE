@@ -3635,7 +3635,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         // Strip variable assignment if present: e.g. "TL1 = circuit.add_..." or "v1 = eesim.add_..."
         int eqIdx = line.IndexOf('=');
-        if (eqIdx > 0 && !line[..eqIdx].Contains('(') && !line[..eqIdx].Contains('"') && !line[..eqIdx].Contains('''))
+        if (eqIdx > 0 && !line[..eqIdx].Contains('(') && !line[..eqIdx].Contains('"') && !line[..eqIdx].Contains('\''))
         {
             line = line[(eqIdx + 1)..].Trim();
         }
