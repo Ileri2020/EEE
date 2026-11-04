@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
 
 namespace EEE.ViewModels;
 
@@ -10,4 +11,6 @@ public partial class PowerSystemPropertyItem : ObservableObject
 
     [ObservableProperty]
     public partial string Value { get; set; } = string.Empty;
+
+    public ICommand? ReturnCommand { get; set; }
 }

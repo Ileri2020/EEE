@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -28 64 56" width="64" height="56">
+  <!-- Three-Phase Transmission Line -->
+  <!-- Phase A leads -->
+  <line x1="-30" y1="-14" x2="-18" y2="-14" stroke="#79C0FF" stroke-width="2" stroke-linecap="round"/>
+  <!-- Phase B leads -->
+  <line x1="-30" y1="0" x2="-18" y2="0" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <!-- Phase C leads -->
+  <line x1="-30" y1="14" x2="-18" y2="14" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <!-- Phase A right leads -->
+  <line x1="18" y1="-14" x2="30" y2="-14" stroke="#79C0FF" stroke-width="2" stroke-linecap="round"/>
+  <!-- Phase B right leads -->
+  <line x1="18" y1="0" x2="30" y2="0" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
+  <!-- Phase C right leads -->
+  <line x1="18" y1="14" x2="30" y2="14" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
+  <!-- Body box -->
+  <rect x="-18" y="-22" width="36" height="44" rx="3" ry="3" fill="#161B22" stroke="#79C0FF" stroke-width="1.5"/>
+  <!-- Phase labels A B C -->
+  <text x="0" y="-10" font-size="4.5" fill="#79C0FF" text-anchor="middle" font-family="monospace">A</text>
+  <text x="0" y="4" font-size="4.5" fill="#56D364" text-anchor="middle" font-family="monospace">B</text>
+  <text x="0" y="18" font-size="4.5" fill="#D2A8FF" text-anchor="middle" font-family="monospace">C</text>
+  <!-- 3φ label -->
+  <text x="0" y="-14" font-size="4" fill="#79C0FF" text-anchor="middle" font-family="monospace">3φ LINE</text>
+  <!-- Terminal dots -->
+  <circle cx="-30" cy="-14" r="2.5" fill="#58A6FF"/>
+  <circle cx="-30" cy="0" r="2.5" fill="#58A6FF"/>
+  <circle cx="-30" cy="14" r="2.5" fill="#58A6FF"/>
+  <circle cx="30" cy="-14" r="2.5" fill="#58A6FF"/>
+  <circle cx="30" cy="0" r="2.5" fill="#58A6FF"/>
+  <circle cx="30" cy="14" r="2.5" fill="#58A6FF"/>
+</svg>
+

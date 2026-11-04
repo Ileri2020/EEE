@@ -120,15 +120,15 @@ public static class ComponentSymbolDrawer
             case "LossyTransmissionLine": DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   DrawMicrostripLine(canvas); break;
-            case "SinglePhaseTransmissionLine": DrawDigitalBlock(canvas, "1φ LINE", "#79C0FF"); break;
-            case "TwoPhaseTransmissionLine": DrawDigitalBlock(canvas, "2φ LINE", "#79C0FF"); break;
-            case "ThreePhaseTransmissionLine": DrawDigitalBlock(canvas, "3φ LINE", "#79C0FF"); break;
+            case "SinglePhaseTransmissionLine": DrawSinglePhaseTransmissionLine(canvas); break;
+            case "TwoPhaseTransmissionLine": DrawTwoPhaseTransmissionLine(canvas); break;
+            case "ThreePhaseTransmissionLine": DrawThreePhaseTransmissionLine(canvas); break;
             case "ACTransformer": DrawTransformer(canvas); break;
-            case "SynchronousGenerator": DrawDigitalBlock(canvas, "GEN", "#56D364"); break;
-            case "InductionMotor": DrawDigitalBlock(canvas, "MTR", "#FFA657"); break;
-            case "ACBulb": DrawBulb(canvas, isOn); break;
-            case "ACFan": DrawDigitalBlock(canvas, "FAN", "#79C0FF"); break;
-            case "SolarPanel": DrawDigitalBlock(canvas, "PV", "#E3B341"); break;
+            case "SynchronousGenerator": DrawSynchronousGenerator(canvas); break;
+            case "InductionMotor": DrawInductionMotor(canvas); break;
+            case "ACBulb": DrawAcBulb(canvas, isOn); break;
+            case "ACFan": DrawAcFan(canvas, isOn); break;
+            case "SolarPanel": DrawSolarPanel(canvas); break;
             case "Battery": DrawBattery(canvas); break;
             default:                 DrawGenericComponent(canvas, componentType); break;
         }
@@ -1336,6 +1336,272 @@ public static class ComponentSymbolDrawer
         canvas.StrokeColor = Color.FromArgb("#8B949E");
         canvas.StrokeSize = 2f;
         canvas.DrawLine(-12, 9, 12, 9);
+    }
+
+    // ── Power Systems Symbols ──────────────────────────────────────────────
+
+    /// <summary>Single-phase transmission line: π-section schematic symbol.</summary>
+    public static void DrawSinglePhaseTransmissionLine(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 2f;
+        // Left and right leads
+        canvas.DrawLine(-22, 0, -14, 0);
+        canvas.DrawLine(14, 0, 22, 0);
+        // Body outline
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(-14, -12, 28, 24, 3);
+        canvas.DrawRoundedRectangle(-14, -12, 28, 24, 3);
+        // Series impedance zigzag inside body
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.5f;
+        var pts = new float[] { -10, 0, -7, -6, -3, 6, 1, -6, 5, 6, 9, -6, 12, 0 };
+        for (int i = 0; i < pts.Length - 2; i += 2)
+            canvas.DrawLine(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]);
+        // "1φ" text label at bottom of body
+        canvas.FontSize = 5.5f;
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString("1φ", -4, 6, 8, 8, HorizontalAlignment.Center, VerticalAlignment.Top);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, 0, 2.5f);
+        canvas.FillCircle(22, 0, 2.5f);
+    }
+
+    /// <summary>Two-phase transmission line with separate A/B phase conductors.</summary>
+    public static void DrawTwoPhaseTransmissionLine(ICanvas canvas)
+    {
+        canvas.StrokeSize = 2f;
+        // Phase A leads
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawLine(-22, -10, -14, -10);
+        canvas.DrawLine(14, -10, 22, -10);
+        // Phase B leads
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.DrawLine(-22, 10, -14, 10);
+        canvas.DrawLine(14, 10, 22, 10);
+        // Body box
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(-14, -18, 28, 36, 3);
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawRoundedRectangle(-14, -18, 28, 36, 3);
+        // Phase labels inside box
+        canvas.FontSize = 6f;
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString("A", -5, -13, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.FontColor = Color.FromArgb("#D2A8FF");
+        canvas.DrawString("B", -5, 3, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.FontSize = 5f;
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString("2φ", -4, 10, 8, 8, HorizontalAlignment.Center, VerticalAlignment.Top);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, -10, 2.5f);
+        canvas.FillCircle(-22, 10, 2.5f);
+        canvas.FillCircle(22, -10, 2.5f);
+        canvas.FillCircle(22, 10, 2.5f);
+    }
+
+    /// <summary>Three-phase transmission line with A/B/C phase conductors.</summary>
+    public static void DrawThreePhaseTransmissionLine(ICanvas canvas)
+    {
+        canvas.StrokeSize = 2f;
+        // Phase A leads
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawLine(-22, -14, -14, -14);
+        canvas.DrawLine(14, -14, 22, -14);
+        // Phase B leads
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.DrawLine(-22, 0, -14, 0);
+        canvas.DrawLine(14, 0, 22, 0);
+        // Phase C leads
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.DrawLine(-22, 14, -14, 14);
+        canvas.DrawLine(14, 14, 22, 14);
+        // Body box
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(-14, -20, 28, 40, 3);
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawRoundedRectangle(-14, -20, 28, 40, 3);
+        // Phase labels
+        canvas.FontSize = 6f;
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString("A", -4, -18, 8, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.DrawString("B", -4, -4, 8, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.FontColor = Color.FromArgb("#D2A8FF");
+        canvas.DrawString("C", -4, 10, 8, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
+        // 3φ label top
+        canvas.FontSize = 5f;
+        canvas.FontColor = Color.FromArgb("#79C0FF");
+        canvas.DrawString("3φ", -4, -20, 8, 6, HorizontalAlignment.Center, VerticalAlignment.Top);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, -14, 2.5f);
+        canvas.FillCircle(-22, 0, 2.5f);
+        canvas.FillCircle(-22, 14, 2.5f);
+        canvas.FillCircle(22, -14, 2.5f);
+        canvas.FillCircle(22, 0, 2.5f);
+        canvas.FillCircle(22, 14, 2.5f);
+    }
+
+    /// <summary>Synchronous generator: circle with 'G' and phase terminals.</summary>
+    public static void DrawSynchronousGenerator(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2f;
+        // Phase A, B, C leads (left)
+        canvas.DrawLine(-22, -14, -14, -14);
+        canvas.DrawLine(-22, 0, -14, 0);
+        canvas.DrawLine(-22, 14, -14, 14);
+        // Neutral lead (right)
+        canvas.DrawLine(14, 0, 22, 0);
+        // Generator circle
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillCircle(0, 0, 14);
+        canvas.DrawCircle(0, 0, 14);
+        // 'G' label
+        canvas.FontSize = 12f;
+        canvas.FontColor = Color.FromArgb("#56D364");
+        canvas.DrawString("G", -7, -8, 14, 14, HorizontalAlignment.Center, VerticalAlignment.Center);
+        // Sine wave accent
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1f;
+        canvas.DrawArc(-6, 4, 12, 6, 0, 180, false, false);
+        // Dot convention on Phase A
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(-14, -14, 2f);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, -14, 2.5f);
+        canvas.FillCircle(-22, 0, 2.5f);
+        canvas.FillCircle(-22, 14, 2.5f);
+        canvas.FillCircle(22, 0, 2.5f);
+    }
+
+    /// <summary>Induction motor: double-ring circle with 'M' and phase terminals.</summary>
+    public static void DrawInductionMotor(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#FFA657");
+        canvas.StrokeSize = 2f;
+        // Phase leads left
+        canvas.DrawLine(-22, -14, -14, -14);
+        canvas.DrawLine(-22, 0, -14, 0);
+        canvas.DrawLine(-22, 14, -14, 14);
+        // Neutral lead right
+        canvas.DrawLine(14, 0, 22, 0);
+        // Outer motor circle
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillCircle(0, 0, 14);
+        canvas.DrawCircle(0, 0, 14);
+        // Inner rotor ring
+        canvas.StrokeSize = 0.75f;
+        canvas.StrokeColor = Color.FromArgb("#FFA657");
+        canvas.DrawCircle(0, 0, 10);
+        canvas.StrokeSize = 2f;
+        // 'M' label
+        canvas.FontSize = 12f;
+        canvas.FontColor = Color.FromArgb("#FFA657");
+        canvas.DrawString("M", -7, -8, 14, 14, HorizontalAlignment.Center, VerticalAlignment.Center);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, -14, 2.5f);
+        canvas.FillCircle(-22, 0, 2.5f);
+        canvas.FillCircle(-22, 14, 2.5f);
+        canvas.FillCircle(22, 0, 2.5f);
+    }
+
+    /// <summary>AC bulb: circle body with filament cross, AC tilde, and lead wires.</summary>
+    public static void DrawAcBulb(ICanvas canvas, bool isOn)
+    {
+        var bodyColor = isOn ? Color.FromArgb("#E3B341") : Color.FromArgb("#8B949E");
+        canvas.StrokeColor = bodyColor;
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-22, 0, -12, 0);
+        canvas.DrawLine(12, 0, 22, 0);
+        // Bulb circle
+        canvas.FillColor = isOn ? Color.FromArgb("#1A1200") : Color.FromArgb("#161B22");
+        canvas.FillCircle(0, 0, 12);
+        canvas.DrawCircle(0, 0, 12);
+        // Filament X cross
+        canvas.StrokeSize = 1.75f;
+        canvas.DrawLine(-6, -6, 6, 6);
+        canvas.DrawLine(6, -6, -6, 6);
+        // AC ~ symbol below
+        canvas.StrokeSize = 1.25f;
+        canvas.DrawArc(-5, 7, 10, 5, 0, 180, false, false);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, 0, 2.5f);
+        canvas.FillCircle(22, 0, 2.5f);
+    }
+
+    /// <summary>AC fan: circle with 4-blade rotor, hub, and lead wires.</summary>
+    public static void DrawAcFan(ICanvas canvas, bool isOn)
+    {
+        var color = isOn ? Color.FromArgb("#79C0FF") : Color.FromArgb("#8B949E");
+        canvas.StrokeColor = color;
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-22, 0, -12, 0);
+        canvas.DrawLine(12, 0, 22, 0);
+        // Fan circle
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillCircle(0, 0, 12);
+        canvas.DrawCircle(0, 0, 12);
+        // Four blades as arcs around center
+        canvas.FillColor = color;
+        canvas.StrokeSize = 0f;
+        // Blade 1 (top)
+        canvas.DrawArc(-4, -11, 8, 11, 0, 180, true, false);
+        // Blade 2 (right)
+        canvas.DrawArc(3, -4, 11, 8, 90, 270, true, false);
+        // Blade 3 (bottom)
+        canvas.DrawArc(-4, 0, 8, 11, 180, 360, true, false);
+        // Blade 4 (left)
+        canvas.DrawArc(-14, -4, 11, 8, 270, 90, true, false);
+        // Hub circle
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.StrokeColor = color;
+        canvas.StrokeSize = 1.5f;
+        canvas.FillCircle(0, 0, 3);
+        canvas.DrawCircle(0, 0, 3);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(-22, 0, 2.5f);
+        canvas.FillCircle(22, 0, 2.5f);
+    }
+
+    /// <summary>Solar panel: rectangular grid body with sun icon and DC terminals.</summary>
+    public static void DrawSolarPanel(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.StrokeSize = 2f;
+        // Top (+) and bottom (-) leads
+        canvas.DrawLine(0, -20, 0, -12);
+        canvas.DrawLine(0, 12, 0, 20);
+        // Panel body
+        canvas.FillColor = Color.FromArgb("#0D2137");
+        canvas.FillRoundedRectangle(-14, -12, 28, 24, 2);
+        canvas.DrawRoundedRectangle(-14, -12, 28, 24, 2);
+        // Cell grid lines (3 columns × 2 rows)
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.StrokeSize = 0.75f;
+        canvas.DrawLine(-5, -12, -5, 12);
+        canvas.DrawLine(5, -12, 5, 12);
+        canvas.DrawLine(-14, -3, 14, -3);
+        canvas.DrawLine(-14, 5, 14, 5);
+        // + terminal label
+        canvas.FontSize = 7f;
+        canvas.FontColor = Color.FromArgb("#E3B341");
+        canvas.DrawString("+", -3, -20, 6, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.DrawString("−", -3, 14, 6, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
+        // Sun dot top-right corner
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(18, -16, 3.5f);
+        // Pin dots
+        canvas.FillColor = Color.FromArgb("#58A6FF");
+        canvas.FillCircle(0, -20, 2.5f);
+        canvas.FillCircle(0, 20, 2.5f);
     }
 }
 

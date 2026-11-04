@@ -1086,7 +1086,7 @@
                                 <!-- Reference / Name -->
                                 <VerticalStackLayout Spacing="3">
                                     <Label Text="REFERENCE / NAME" TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
-                                    <Entry Text="{Binding EditName}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12" HeightRequest="34"/>
+                                    <Entry Text="{Binding EditName}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
                                 </VerticalStackLayout>
 
                                 <!-- Description & Notes (Editable!) -->
@@ -1103,13 +1103,13 @@
                                 <!-- Primary Parameter -->
                                 <VerticalStackLayout Spacing="3">
                                     <Label Text="{Binding EditParamName}" TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
-                                    <Entry Text="{Binding EditParamValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12" HeightRequest="34"/>
+                                    <Entry Text="{Binding EditParamValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
                                 </VerticalStackLayout>
 
                                 <!-- Max Breaking Current (Editable!) -->
                                 <VerticalStackLayout Spacing="3">
                                     <Label Text="MAX BREAKING CURRENT (A)" TextColor="#F85149" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
-                                    <Entry Text="{Binding EditBreakingCurrent}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#FF7B72" FontSize="12" HeightRequest="34"/>
+                                    <Entry Text="{Binding EditBreakingCurrent}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#FF7B72" FontSize="13"/>
                                 </VerticalStackLayout>
 
                                 <!-- Live Measurements Panel -->
@@ -1317,8 +1317,7 @@
                                                             <Label Text="{Binding TypeName}" TextColor="#6E7681" FontSize="8"/>
                                                         </VerticalStackLayout>
                                                         <Entry Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" IsReadOnly="{Binding IsEditable, Converter={StaticResource InvertedBoolConverter}}"
-                                                               ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ApplyPowerSystemPropertyCommand}"
-                                                               ReturnCommandParameter="{Binding .}"
+                                                               ReturnCommand="{Binding ReturnCommand}"
                                                                WidthRequest="145" BackgroundColor="#161B22" TextColor="#C9D1D9" FontSize="10">
                                                         </Entry>
                                                     </Grid>
@@ -1363,8 +1362,7 @@
 
                                 <!-- Max Breaking Current (device breakdown threshold) -->
                                 <VerticalStackLayout Spacing="4">
-                                    <Label Text="MAX BREAKING CURRENT (A) [Overload Warning Threshold]"
-                                           TextColor="#F85149" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Label Text="MAX BREAKING CURRENT (A)" TextColor="#F85149" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
                                     <Entry Text="{Binding EditBreakingCurrent}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#FF7B72" FontSize="13"/>
                                 </VerticalStackLayout>
 
@@ -1372,7 +1370,12 @@
                                 <VerticalStackLayout Spacing="4">
                                     <Label Text="DESCRIPTION &amp; NOTES"
                                            TextColor="#E3B341" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
-                                    <Editor Text="{Binding EditDescription}" HeightRequest="60" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    <Editor Text="{Binding EditDescription}"
+                                            HeightRequest="60"
+                                            BackgroundColor="#0D1117"
+                                            TextColor="#C9D1D9"
+                                            FontSize="12"
+                                            Placeholder="Enter component description or engineering notes…"/>
                                 </VerticalStackLayout>
 
                                 <!-- Wire Parasitic Resistance -->
@@ -2377,7 +2380,8 @@
                     HorizontalOptions="Center"
                     BackgroundColor="#161B22"
                     Stroke="#30363D"
-                    StrokeThickness="1">
+                    StrokeThickness="1"
+                    Margin="16">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14"/>
                 </Border.StrokeShape>

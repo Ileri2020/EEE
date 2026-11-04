@@ -245,7 +245,7 @@ public static class ComponentRegistry
         Register<SinglePhaseTransmissionLineComponent>("powerline.single-phase", "SinglePhaseTransmissionLine", "Transmission Lines", "TL1", d =>
         {
             d.Description = "Single-phase line with short/medium/long RLGC models";
-            d.Icon = "transmissionline.svg";
+            d.Icon = "single_phase_line.svg";
             d.DefaultParameters[nameof(SinglePhaseTransmissionLineComponent.RatedVoltage)] = 230;
             d.DefaultParameters[nameof(SinglePhaseTransmissionLineComponent.Frequency)] = 50;
             d.DefaultParameters[nameof(SinglePhaseTransmissionLineComponent.LengthKm)] = 1;
@@ -253,13 +253,13 @@ public static class ComponentRegistry
         Register<TwoPhaseTransmissionLineComponent>("powerline.two-phase", "TwoPhaseTransmissionLine", "Transmission Lines", "TL2", d =>
         {
             d.Description = "True two-phase or split-phase three-wire RLGC line";
-            d.Icon = "transmissionline.svg";
+            d.Icon = "two_phase_line.svg";
             d.DefaultParameters[nameof(TwoPhaseTransmissionLineComponent.PhaseDisplacementDegrees)] = 90;
         });
         Register<ThreePhaseTransmissionLineComponent>("powerline.three-phase", "ThreePhaseTransmissionLine", "Transmission Lines", "TL3", d =>
         {
             d.Description = "Three-phase RLGC line with explicit phase and neutral terminals";
-            d.Icon = "transmissionline.svg";
+            d.Icon = "three_phase_line.svg";
             d.DefaultParameters[nameof(ThreePhaseTransmissionLineComponent.RatedLineVoltage)] = 11000;
         });
         Register<ACTransformerComponent>("machine.ac-transformer", "ACTransformer", "Electrical Machines", "TR", d =>
@@ -287,21 +287,21 @@ public static class ComponentRegistry
         Register<ACBulbComponent>("load.ac-bulb", "ACBulb", "Electrical Loads", "ACB", d =>
         {
             d.Description = "Household AC bulb resistive load";
-            d.Icon = "bulb.svg";
+            d.Icon = "ac_bulb.svg";
             d.DefaultParameters[nameof(ACBulbComponent.RatedVoltage)] = 230;
             d.DefaultParameters[nameof(ACBulbComponent.RatedPower)] = 60;
         });
         Register<ACFanComponent>("load.ac-fan", "ACFan", "Electrical Loads", "FAN", d =>
         {
             d.Description = "Household AC motor fan load";
-            d.Icon = "fan.svg";
+            d.Icon = "ac_fan.svg";
             d.DefaultParameters[nameof(ACFanComponent.RatedVoltage)] = 230;
             d.DefaultParameters[nameof(ACFanComponent.RatedPower)] = 75;
         });
         Register<SolarPanelComponent>("source.solar-panel", "SolarPanel", "Sources & Energy", "PV", d =>
         {
             d.Description = "Photovoltaic single-diode panel source";
-            d.Icon = "solarpanel.svg";
+            d.Icon = "solar_panel.svg";
             d.DefaultParameters[nameof(SolarPanelComponent.MaximumPowerRating)] = 300;
             d.DefaultParameters[nameof(SolarPanelComponent.OpenCircuitVoltage)] = 40;
         });

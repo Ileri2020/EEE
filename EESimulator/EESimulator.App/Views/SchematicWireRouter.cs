@@ -36,24 +36,24 @@ internal static class SchematicWireRouter
         var end = GetPinWorldPosition(toComponent, toPin);
         if (routingPoints is { Count: > 0 })
         {
-            var routingObstacles = GetObstacles(allComponents, fromComponent, toComponent);
+            var routedPathObstacles = GetObstacles(allComponents, fromComponent, toComponent);
             var points = new List<PointF> { start };
             points.AddRange(routingPoints.Select(point => new PointF((float)point.X, (float)point.Y)));
             points.Add(end);
             var routed = new List<List<PointF>>();
             for (int index = 0; index < points.Count - 1; index++)
-                routed.Add(FindOrthogonalPath(points[index], points[index + 1], routingObstacles));
+                routed.Add(FindOrthogonalPath(points[index], points[index + 1], routedPathObstacles));
             return CombinePaths(routed.ToArray());
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
-        var obstacles = GetObstacles(allComponents, fromComponent, toComponent);
+        var connectionObstacles = GetObstacles(allComponents, fromComponent, toComponent);
         return CombinePaths(
-            FindOrthogonalPath(start, startLead, obstacles),
-            FindOrthogonalPath(startLead, endLead, obstacles),
-            FindOrthogonalPath(endLead, end, obstacles));
+            FindOrthogonalPath(start, startLead, connectionObstacles),
+            FindOrthogonalPath(startLead, endLead, connectionObstacles),
+            FindOrthogonalPath(endLead, end, connectionObstacles));
     }
 
     public static List<PointF> RouteWireComponent(WireComponent wire, IEnumerable<ComponentNode> allComponents)
@@ -69,11 +69,11 @@ internal static class SchematicWireRouter
         var endDirection = GetPinOutwardDirection(wire, endPin, start);
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
-        var obstacles = GetObstacles(allComponents, wire);
+        var wireObstacles = GetObstacles(allComponents, wire);
         return CombinePaths(
-            FindOrthogonalPath(start, startLead, obstacles),
-            FindOrthogonalPath(startLead, endLead, obstacles),
-            FindOrthogonalPath(endLead, end, obstacles));
+            FindOrthogonalPath(start, startLead, wireObstacles),
+            FindOrthogonalPath(startLead, endLead, wireObstacles),
+            FindOrthogonalPath(endLead, end, wireObstacles));
     }
 
     private static PointF TransformLocal(ComponentNode component, float x, float y)
