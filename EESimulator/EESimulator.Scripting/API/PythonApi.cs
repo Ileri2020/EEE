@@ -932,6 +932,96 @@ public class PythonApi
     {
         OnViewToggleRequested?.Invoke();
     }
+
+    public void AddSinglePhaseTransmissionLine(string name, double x, double y, double ratedVoltage = 230, double frequency = 50, double lengthKm = 1, double resistancePerKm = 0.2, double inductancePerKm = 1e-3, double capacitancePerKm = 10e-9, double conductancePerKm = 0, string modelType = "Short Line")
+    {
+        AddComponent("singlephasetransmissionline", name, x, y, ratedVoltage);
+        SetComponentProperty(name, "Frequency", frequency);
+        SetComponentProperty(name, "LengthKm", lengthKm);
+        SetComponentProperty(name, "ResistancePerKm", resistancePerKm);
+        SetComponentProperty(name, "InductancePerKm", inductancePerKm);
+        SetComponentProperty(name, "CapacitancePerKm", capacitancePerKm);
+        SetComponentProperty(name, "ConductancePerKm", conductancePerKm);
+        SetComponentProperty(name, "ModelType", modelType);
+    }
+
+    public void AddTwoPhaseTransmissionLine(string name, double x, double y, double ratedVoltage = 240, double frequency = 60, double lengthKm = 1, double phaseDisplacement = 90, string configuration = "TrueTwoPhase")
+    {
+        AddComponent("twophasetransmissionline", name, x, y, ratedVoltage);
+        SetComponentProperty(name, "Frequency", frequency);
+        SetComponentProperty(name, "LengthKm", lengthKm);
+        SetComponentProperty(name, "PhaseDisplacementDegrees", phaseDisplacement);
+        SetComponentProperty(name, "ConductorConfiguration", configuration);
+    }
+
+    public void AddThreePhaseTransmissionLine(string name, double x, double y, double ratedLineVoltage = 11000, double frequency = 50, double lengthKm = 1, string phaseSequence = "ABC", string connection = "Three-wire", string modelType = "Short")
+    {
+        AddComponent("threephasetransmissionline", name, x, y, ratedLineVoltage);
+        SetComponentProperty(name, "Frequency", frequency);
+        SetComponentProperty(name, "LengthKm", lengthKm);
+        SetComponentProperty(name, "PhaseSequence", phaseSequence);
+        SetComponentProperty(name, "Connection", connection);
+        SetComponentProperty(name, "ModelType", modelType);
+    }
+
+    public void AddACTransformer(string name, double x, double y, double primaryVoltage = 230, double secondaryVoltage = 115, double apparentPower = 1000, double frequency = 50, string connection = "Single-phase")
+    {
+        AddComponent("actransformer", name, x, y, primaryVoltage);
+        SetComponentProperty(name, "RatedSecondaryVoltage", secondaryVoltage);
+        SetComponentProperty(name, "RatedApparentPower", apparentPower);
+        SetComponentProperty(name, "Frequency", frequency);
+        SetComponentProperty(name, "WindingConnection", connection);
+    }
+
+    public void AddSynchronousGenerator(string name, double x, double y, double ratedVoltage = 400, double ratedFrequency = 50, double ratedPower = 10000, int phases = 3, int poles = 4)
+    {
+        AddComponent("synchronousgenerator", name, x, y, ratedVoltage);
+        SetComponentProperty(name, "RatedFrequency", ratedFrequency);
+        SetComponentProperty(name, "RatedApparentPower", ratedPower);
+        SetComponentProperty(name, "NumberOfPhases", phases);
+        SetComponentProperty(name, "NumberOfPoles", poles);
+    }
+
+    public void AddInductionMotor(string name, double x, double y, double ratedVoltage = 400, double ratedPower = 1500, double frequency = 50, int poles = 4)
+    {
+        AddComponent("inductionmotor", name, x, y, ratedVoltage);
+        SetComponentProperty(name, "RatedPower", ratedPower);
+        SetComponentProperty(name, "Frequency", frequency);
+        SetComponentProperty(name, "NumberOfPoles", poles);
+    }
+
+    public void AddACBulb(string name, double x, double y, double ratedVoltage = 230, double ratedPower = 60, bool initiallyOn = true, double dimmingPercent = 100)
+    {
+        AddComponent("acbulb", name, x, y, ratedVoltage);
+        SetComponentProperty(name, "RatedPower", ratedPower);
+        SetComponentProperty(name, "InitiallyOn", initiallyOn);
+        SetComponentProperty(name, "DimmingPercent", dimmingPercent);
+    }
+
+    public void AddACFan(string name, double x, double y, double ratedVoltage = 230, double ratedPower = 75, double powerFactor = 0.8, int selectedSpeed = 3)
+    {
+        AddComponent("acfan", name, x, y, ratedVoltage);
+        SetComponentProperty(name, "RatedPower", ratedPower);
+        SetComponentProperty(name, "PowerFactor", powerFactor);
+        SetComponentProperty(name, "SelectedSpeed", selectedSpeed);
+    }
+
+    public void AddSolarPanel(string name, double x, double y, double maximumPowerRating = 300, double openCircuitVoltage = 40, double shortCircuitCurrent = 9, double irradiance = 1000)
+    {
+        AddComponent("solarpanel", name, x, y, maximumPowerRating);
+        SetComponentProperty(name, "OpenCircuitVoltage", openCircuitVoltage);
+        SetComponentProperty(name, "ShortCircuitCurrent", shortCircuitCurrent);
+        SetComponentProperty(name, "SolarIrradiance", irradiance);
+    }
+
+    public void AddBattery(string name, double x, double y, double nominalVoltage = 12, double capacityAh = 100, double initialSocPercent = 80, string chemistry = "Lithium-ion")
+    {
+        AddComponent("battery", name, x, y, nominalVoltage);
+        SetComponentProperty(name, "CapacityAh", capacityAh);
+        SetComponentProperty(name, "InitialSocPercent", initialSocPercent);
+        SetComponentProperty(name, "StateOfChargePercent", initialSocPercent);
+        SetComponentProperty(name, "Chemistry", chemistry);
+    }
 }
 
 

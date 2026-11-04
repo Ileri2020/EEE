@@ -75,6 +75,7 @@ public class EeeProjectDto
 public class EeeComponentDto
 {
     public Guid Id { get; set; }
+    public string StableTypeId { get; set; } = string.Empty;
     public string ComponentType { get; set; } = string.Empty;
     public string Reference { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -146,6 +147,7 @@ public static class EeePlatformSerializer
             var cDto = new EeeComponentDto
             {
                 Id = comp.Id,
+                StableTypeId = comp is EESimulator.Core.Components.Base.ComponentBase baseComponent ? baseComponent.StableTypeId : string.Empty,
                 ComponentType = comp.ComponentType,
                 Reference = comp.Reference,
                 Name = comp.Name,
@@ -247,7 +249,8 @@ public static class EeePlatformSerializer
             ComponentNode? comp = null;
             try
             {
-                comp = ComponentRegistry.CreateInstance(cDto.ComponentType, cDto.Name, cDto.X, cDto.Y);
+                string registryKey = !string.IsNullOrWhiteSpace(cDto.StableTypeId) ? cDto.StableTypeId : cDto.ComponentType;
+                comp = ComponentRegistry.CreateInstance(registryKey, cDto.Name, cDto.X, cDto.Y);
             }
             catch
             {
