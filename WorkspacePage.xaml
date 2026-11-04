@@ -654,7 +654,7 @@
                             StrokeThickness="1"
                             Margin="0">
                         <Editor x:Name="ScriptEditor"
-                                Text="{Binding ScriptText}"
+                                Text="{Binding ScriptText, Mode=TwoWay}"
                                 BackgroundColor="#0D1117"
                                 TextColor="#C9D1D9"
                                 FontFamily="Courier New"

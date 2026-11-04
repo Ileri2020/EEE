@@ -2207,10 +2207,25 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 return;
             }
 
-            ScriptText = draft.Script;
-            IsScriptViewActive = true;
-            IsAnalyticsViewActive = false;
-            UI.Workspace.SetViewport("Script");
+            string normalizedScript = NormalizeAiScriptDraft(draft.Script);
+            if (string.IsNullOrWhiteSpace(normalizedScript))
+            {
+                AiSchemaStatus = string.Join(" ", draft.Questions.Count > 0
+                    ? draft.Questions
+                    : new[] { "The AI service returned an empty script draft." });
+                return;
+            }
+
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                ScriptText = normalizedScript;
+                IsAnalyticsViewActive = false;
+                IsScriptViewActive = true;
+                UI.Workspace.SetViewport("Script");
+                OnPropertyChanged(nameof(ScriptText));
+                OnPropertyChanged(nameof(IsScriptViewActive));
+            });
+
             var draftNotes = new List<string>();
             if (!string.IsNullOrWhiteSpace(draft.Summary)) draftNotes.Add(draft.Summary);
             if (draft.Warnings.Count > 0) draftNotes.Add("Warnings: " + string.Join("; ", draft.Warnings));
@@ -2225,6 +2240,22 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             IsAiSchemaRequestInProgress = false;
         }
+    }
+
+    private static string NormalizeAiScriptDraft(string? script)
+    {
+        if (string.IsNullOrWhiteSpace(script)) return string.Empty;
+
+        var normalized = script.Trim().Replace("\r\n", "\n");
+        if (!normalized.StartsWith("```", StringComparison.Ordinal)) return normalized;
+
+        int firstLineEnd = normalized.IndexOf('\n');
+        if (firstLineEnd > 0)
+            normalized = normalized[(firstLineEnd + 1)..];
+        if (normalized.EndsWith("```", StringComparison.Ordinal))
+            normalized = normalized[..^3].TrimEnd();
+
+        return normalized.Trim();
     }
 
     [RelayCommand]
