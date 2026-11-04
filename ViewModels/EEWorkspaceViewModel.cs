@@ -1580,8 +1580,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void SetAllWaveformSignals(bool selected)
+    public void SetAllWaveformSignals(object? parameter)
     {
+        bool selected = parameter switch
+        {
+            bool b => b,
+            string str => bool.TryParse(str, out var parsed) && parsed,
+            _ => true
+        };
         foreach (var signal in WaveformSignals)
             signal.IsSelected = selected;
     }
