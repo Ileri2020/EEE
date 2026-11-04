@@ -28,6 +28,8 @@ public class SimulationSettings
     public double SolverElapsedTimeSeconds { get; set; }
     /// <summary>Accumulated effective component time used by schedules and environmental profiles.</summary>
     public double DeviceTimeSeconds { get; set; }
+    /// <summary>Capture transient measurements for every component during live playback.</summary>
+    public bool CaptureAllWaveforms { get; set; }
 
     // AC Sweep parameters
     public string AcSweepType { get; set; } = "Decade"; // Decade, Octave, Linear

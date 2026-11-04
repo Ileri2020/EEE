@@ -77,3 +77,71 @@ public class DiodeComponent : ElectricalComponent
         Reference = name;
     }
 }
+
+/// <summary>
+/// Adjustable/vernier diode with a position-controlled fine forward-voltage trim.
+/// </summary>
+public sealed class VernierDiodeComponent : DiodeComponent
+{
+    public override string StableTypeId => "electrical.vernier-diode";
+    public override string ComponentType => "VernierDiode";
+    public override string Description => "Fine-adjustable/vernier junction diode";
+
+    public double VernierPosition
+    {
+        get => ElectricalParameters.TryGetValue(nameof(VernierPosition), out var value) ? value : 50;
+        set
+        {
+            ElectricalParameters[nameof(VernierPosition)] = Math.Clamp(value, 0, 100);
+            UpdateTrimmedModel();
+        }
+    }
+
+    public double MinimumForwardVoltage
+    {
+        get => ElectricalParameters.TryGetValue(nameof(MinimumForwardVoltage), out var value) ? value : 0.55;
+        set
+        {
+            ElectricalParameters[nameof(MinimumForwardVoltage)] = Math.Max(value, 0.1);
+            UpdateTrimmedModel();
+        }
+    }
+
+    public double MaximumForwardVoltage
+    {
+        get => ElectricalParameters.TryGetValue(nameof(MaximumForwardVoltage), out var value) ? value : 0.75;
+        set
+        {
+            ElectricalParameters[nameof(MaximumForwardVoltage)] = Math.Max(value, MinimumForwardVoltage);
+            UpdateTrimmedModel();
+        }
+    }
+
+    public double ForwardVoltage => MinimumForwardVoltage
+        + (MaximumForwardVoltage - MinimumForwardVoltage) * VernierPosition / 100;
+
+    public VernierDiodeComponent()
+    {
+        VernierPosition = 50;
+        MinimumForwardVoltage = 0.55;
+        MaximumForwardVoltage = 0.75;
+        UpdateTrimmedModel();
+    }
+
+    private void UpdateTrimmedModel()
+    {
+        double position = VernierPosition / 100;
+        EmissionCoefficient = 1 + position * 0.4;
+        SeriesResistance = 0.02 + (1 - position) * 0.08;
+    }
+
+    public void ValidateConfiguration()
+    {
+        if (!double.IsFinite(MinimumForwardVoltage) || MinimumForwardVoltage <= 0)
+            throw new InvalidOperationException("Minimum forward voltage must be finite and greater than zero.");
+        if (!double.IsFinite(MaximumForwardVoltage) || MaximumForwardVoltage < MinimumForwardVoltage)
+            throw new InvalidOperationException("Maximum forward voltage must be finite and no less than minimum forward voltage.");
+        if (!double.IsFinite(VernierPosition) || VernierPosition < 0 || VernierPosition > 100)
+            throw new InvalidOperationException("Vernier position must be between 0 and 100 percent.");
+    }
+}

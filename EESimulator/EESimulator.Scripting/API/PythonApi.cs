@@ -136,6 +136,14 @@ public class PythonApi
         if (ibv != 1e-3) SetProperty(name, "Ibv", ibv);
     }
 
+    public void AddVernierDiode(string name, double x, double y, double vernierPosition = 50, double minimumForwardVoltage = 0.55, double maximumForwardVoltage = 0.75)
+    {
+        AddComponent("vernierdiode", name, x, y, 1e-14);
+        SetComponentProperty(name, "VernierPosition", vernierPosition);
+        SetComponentProperty(name, "MinimumForwardVoltage", minimumForwardVoltage);
+        SetComponentProperty(name, "MaximumForwardVoltage", maximumForwardVoltage);
+    }
+
     public void AddBJT(string name, double x, double y, string polarity = "NPN", double bf = 100.0, double br = 1.0, double isat = 1e-14, double vaf = 0.0)
     {
         AddComponent("bjt", name, x, y, bf);
@@ -274,6 +282,26 @@ public class PythonApi
         if (highDuration != 1) SetCustomProperty(name, "HighDuration", highDuration);
         if (lowDuration != 1) SetCustomProperty(name, "LowDuration", lowDuration);
         if (phase != 0) SetCustomProperty(name, "Phase", phase);
+    }
+
+    public void AddCounter(string name, double x, double y, int bitWidth = 3, long maxValue = 5, long initialValue = 1, string goalAction = "Load")
+    {
+        AddComponent("counter", name, x, y, bitWidth);
+        SetComponentProperty(name, "MaxValue", maxValue);
+        SetComponentProperty(name, "Value", initialValue);
+        SetComponentProperty(name, "GoalAction", goalAction);
+    }
+
+    public void AddROM(string name, double x, double y, int addressBitWidth = 3, int dataBitWidth = 8, string contentsHex = "")
+    {
+        AddComponent("rom", name, x, y, addressBitWidth);
+        SetComponentProperty(name, "DataBitWidth", dataBitWidth);
+        SetComponentProperty(name, "ContentsHex", contentsHex);
+    }
+
+    public void AddSevenSegment(string name, double x, double y)
+    {
+        AddComponent("sevensegment", name, x, y, 0);
     }
 
     public void AddPin(string name, double x, double y, string direction = "Input", int bitWidth = 1, long value = 0, string behavior = "Tristate", long initialValue = 0, string radix = "Binary")

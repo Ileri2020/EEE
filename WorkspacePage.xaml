@@ -7,7 +7,7 @@
              xmlns:views="clr-namespace:EESimulator.App.Views"
              x:Class="EEE.WorkspacePage"
              x:DataType="vm:EEWorkspaceViewModel"
-             Title="EESimulator"
+             Title="EE Engine"
              BackgroundColor="#0D1117"
              Shell.NavBarIsVisible="False"
              x:Name="RootPage">
@@ -2793,4 +2793,3 @@
 
     </Grid>
 </ContentPage>
-

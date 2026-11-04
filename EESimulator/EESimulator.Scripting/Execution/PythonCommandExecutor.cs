@@ -70,21 +70,34 @@ public class PythonCommandExecutor
         }
 
         // Example: r1 = circuit.add_component("Resistor", name="R1", position=(100, 200), resistance=1000)
+        var positionalAddMatch = Regex.Match(line, @"(?:circuit|eesim)\.add_component\s*\(\s*""([^""]+)""\s*,\s*""([^""]+)""\s*,\s*([\d\.-]+)\s*,\s*([\d\.-]+)(?:\s*,\s*([\d\.-]+))?\s*\)", RegexOptions.IgnoreCase);
+        if (positionalAddMatch.Success)
+        {
+            string type = positionalAddMatch.Groups[1].Value;
+            string name = positionalAddMatch.Groups[2].Value;
+            double x = double.Parse(positionalAddMatch.Groups[3].Value, CultureInfo.InvariantCulture);
+            double y = double.Parse(positionalAddMatch.Groups[4].Value, CultureInfo.InvariantCulture);
+            double param = positionalAddMatch.Groups[5].Success
+                ? double.Parse(positionalAddMatch.Groups[5].Value, CultureInfo.InvariantCulture)
+                : 0.0;
+            _api.AddComponent(type, name, x, y, param);
+            return;
+        }
+
         var addMatch = Regex.Match(line, @"add_component\s*\(\s*""([^""]+)""\s*,\s*name\s*=\s*""([^""]+)""\s*,\s*position\s*=\s*\(\s*([\d\.-]+)\s*,\s*([\d\.-]+)\s*\)(?:\s*,\s*(\w+)\s*=\s*([\d\.-]+))?\s*\)", RegexOptions.IgnoreCase);
         if (addMatch.Success)
         {
             string type = addMatch.Groups[1].Value;
             string name = addMatch.Groups[2].Value;
-            double x = double.Parse(addMatch.Groups[3].Value);
-            double y = double.Parse(addMatch.Groups[4].Value);
-            double param = addMatch.Groups[6].Success ? double.Parse(addMatch.Groups[6].Value) : 0.0;
-
+            double x = double.Parse(addMatch.Groups[3].Value, CultureInfo.InvariantCulture);
+            double y = double.Parse(addMatch.Groups[4].Value, CultureInfo.InvariantCulture);
+            double param = addMatch.Groups[6].Success ? double.Parse(addMatch.Groups[6].Value, CultureInfo.InvariantCulture) : 0.0;
             _api.AddComponent(type, name, x, y, param);
             return;
         }
 
         // Example: circuit.connect(v1.positive, r1.pin1)
-        var connMatch = Regex.Match(line, @"circuit\.connect\s*\(\s*(\w+)\.(\w+)\s*,\s*(\w+)\.(\w+)\s*\)", RegexOptions.IgnoreCase);
+        var connMatch = Regex.Match(line, @"(?:circuit|eesim)\.connect\s*\(\s*(\w+)\.(\w+)\s*,\s*(\w+)\.(\w+)\s*\)", RegexOptions.IgnoreCase);
         if (connMatch.Success)
         {
             string fromComp = connMatch.Groups[1].Value;

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="220" fill="#161B22" stroke="#30363D" stroke-width="8"/>
+  <path d="M92 256h52l22-42 38 84 34-68 25 46h155" fill="none" stroke="#1F6FEB" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+  <text x="256" y="254" text-anchor="middle" fill="#F0F6FC" font-family="Arial, Helvetica, sans-serif" font-size="156" font-weight="700" letter-spacing="-8">EE</text>
+  <text x="256" y="326" text-anchor="middle" fill="#79C0FF" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="600" letter-spacing="3">Engine</text>
+</svg>

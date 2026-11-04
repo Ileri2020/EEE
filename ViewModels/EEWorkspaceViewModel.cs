@@ -515,6 +515,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("PullResistor",  "RP",  "PULL","#E3B341", "Electrical",  "Pull-Up / Pull-Down Resistor", "pullresistor.svg"),
         new ComponentPaletteItem("Ground",        "⏚",   "GND","#8B949E", "Electrical",  "Circuit ground",        "ground.svg"),
         new ComponentPaletteItem("Diode",            "D",   "▷|", "#FF7B72", "Electrical",  "Semiconductor diode",      "diode.svg"),
+        new ComponentPaletteItem("VernierDiode",     "VD",  "Vf", "#FF9F43", "Electrical",  "Fine-adjustable/vernier junction diode", "vernier_diode.svg"),
         new ComponentPaletteItem("MutualInductance", "K",   "k",  "#D2A8FF", "Electrical",  "Mutual coupled inductors", "mutualinductance.svg"),
         new ComponentPaletteItem("VCVS",             "E",   "μ",  "#56D364", "Electrical",  "Voltage-Controlled Voltage Source", "vcvs.svg"),
         new ComponentPaletteItem("VCCS",             "G",   "Gm", "#56D364", "Electrical",  "Voltage-Controlled Current Source", "vccs.svg"),
@@ -643,8 +644,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
         }),
         new ComponentPaletteGroup("🔘 Diodes", new[]
         {
-            new ComponentPaletteItem("Diode",  "D",  "▷|","#FF7B72", "Diodes",  "Semiconductor diode",   "diode.svg"),
-            new ComponentPaletteItem("LED",    "💡", "LED","#E3B341", "Diodes",  "Light Emitting Diode",  "led.svg"),
+            new ComponentPaletteItem("Diode",        "D",  "▷|","#FF7B72", "Diodes",  "Semiconductor diode",   "diode.svg"),
+            new ComponentPaletteItem("VernierDiode", "VD", "Vf","#FF9F43", "Diodes",  "Fine-adjustable/vernier junction diode", "vernier_diode.svg"),
+            new ComponentPaletteItem("LED",          "💡", "LED","#E3B341", "Diodes",  "Light Emitting Diode",  "led.svg"),
         }),
         new ComponentPaletteGroup("💡 Output & Logic I/O", new[]
         {
@@ -2047,6 +2049,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
             settings.SolverElapsedTimeSeconds = _pendingSolverElapsedTimeSeconds;
             _pendingSolverElapsedTimeSeconds = 0;
             settings.DeviceTimeSeconds = _deviceTimeSeconds;
+            settings.CaptureAllWaveforms = true;
+            settings.StopTime = _solverTimeSeconds;
+            settings.StartTime = Math.Max(0, settings.StopTime - settings.SolverElapsedTimeSeconds);
+            if (settings.StopTime <= settings.StartTime)
+            {
+                double waveformWindow = Math.Max(settings.StepTime * 2, 0.02);
+                settings.StartTime = Math.Max(0, settings.StopTime - waveformWindow);
+            }
+            settings.StepTime = Math.Max(settings.StepTime,
+                Math.Max(settings.StopTime - settings.StartTime, 0.02) / 500.0);
             var results = await Task.Run(() => _simManager.Run(Circuit, settings));
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = FormatResults(results);
@@ -4433,5 +4445,3 @@ public partial class CustomCircuitPortDraft : ObservableObject
         RelativeY = relativeY;
     }
 }
-
-

@@ -119,6 +119,9 @@ public abstract class ComponentNode : RootNode
     public Dictionary<string, List<double>> WaveformNodeVoltages { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
 
     [JsonIgnore]
+    public Dictionary<string, List<double>> WaveformPinCurrents { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    [JsonIgnore]
     private List<SimulationEventTrigger>? _eventTriggers;
 
     /// <summary>User-configured measurement events. Persisted in StringParameters.</summary>
@@ -159,6 +162,10 @@ public abstract class ComponentNode : RootNode
         clone.WaveformVoltage = new List<double>(WaveformVoltage);
         clone.WaveformCurrent = new List<double>(WaveformCurrent);
         clone.WaveformNodeVoltages = WaveformNodeVoltages.ToDictionary(
+            pair => pair.Key,
+            pair => new List<double>(pair.Value),
+            StringComparer.OrdinalIgnoreCase);
+        clone.WaveformPinCurrents = WaveformPinCurrents.ToDictionary(
             pair => pair.Key,
             pair => new List<double>(pair.Value),
             StringComparer.OrdinalIgnoreCase);
@@ -238,5 +245,4 @@ public class LogicOutputNode : EESimulator.Core.Components.Electronics.LogicOutp
     public LogicOutputNode() : base() { }
     public LogicOutputNode(string name, double threshold = 2.5) : base(name, threshold) { }
 }
-
 

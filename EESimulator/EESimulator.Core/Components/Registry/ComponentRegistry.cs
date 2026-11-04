@@ -159,6 +159,16 @@ public static class ComponentRegistry
             d.DefaultParameters["Is"] = 1e-14;
         });
 
+        Register<VernierDiodeComponent>("electrical.vernier-diode", "VernierDiode", "Diodes", "VD", d =>
+        {
+            d.Description = "Fine-adjustable/vernier junction diode";
+            d.Icon = "vernier_diode.svg";
+            d.DefaultParameters[nameof(VernierDiodeComponent.VernierPosition)] = 50;
+            d.DefaultParameters[nameof(VernierDiodeComponent.MinimumForwardVoltage)] = 0.55;
+            d.DefaultParameters[nameof(VernierDiodeComponent.MaximumForwardVoltage)] = 0.75;
+        });
+        RegisterAlias("vernierdiode", "electrical.vernier-diode");
+
         Register<MutualInductanceNode>("electrical.mutualinductance", "MutualInductance", "Electrical", "K", d =>
         {
             d.Description = "Magnetic mutual coupling between two inductors (K)";

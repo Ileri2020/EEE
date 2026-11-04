@@ -1237,12 +1237,16 @@ public class SchematicViewport : GraphicsView, IDrawable
     {
         if (Circuit == null) return;
         var components = Circuit.FindChildren<ComponentNode>().ToList();
-        var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, ConnectionNode? Connection, int ElectronDirection)>();
+        var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, ConnectionNode? Connection, int ElectronDirection, float FlowSpeed)>();
 
         foreach (var wire in components.OfType<WireComponent>())
         {
             var path = SchematicWireRouter.RouteWireComponent(wire, components);
-            routedWires.Add((path, wire, null, wire.LiveCurrent > 0 ? -1 : wire.LiveCurrent < 0 ? 1 : 0));
+            double current = SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent);
+            double voltage = SampleWaveformValue(wire.WaveformVoltage, wire.LiveVoltage);
+            int direction = GetElectronDirection(current);
+            float speed = CalculateFlowSpeed(Math.Abs(voltage), Math.Abs(current));
+            routedWires.Add((path, wire, null, direction, speed));
         }
 
         foreach (var conn in Circuit.FindChildren<ConnectionNode>())
@@ -1255,7 +1259,16 @@ public class SchematicViewport : GraphicsView, IDrawable
             if (fromPin == null || toPin == null) continue;
 
             var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
-            routedWires.Add((path, null, conn, GetElectronDirection(fromComp, fromPin, toComp, toPin)));
+            double fromCurrent = SampleWaveformValue(fromComp.WaveformCurrent, fromComp.LiveCurrent);
+            double toCurrent = SampleWaveformValue(toComp.WaveformCurrent, toComp.LiveCurrent);
+            double fromPinCurrent = SamplePinCurrent(fromComp, fromPin, fromCurrent);
+            double toPinCurrent = SamplePinCurrent(toComp, toPin, toCurrent);
+            routedWires.Add((path, null, conn,
+                GetElectronDirection(fromPinCurrent, toPinCurrent),
+                CalculateFlowSpeed(
+                    Math.Abs(SampleWaveformValue(fromComp.WaveformVoltage, fromComp.LiveVoltage) -
+                             SampleWaveformValue(toComp.WaveformVoltage, toComp.LiveVoltage)),
+                    Math.Max(Math.Abs(fromPinCurrent), Math.Abs(toPinCurrent)))));
         }
 
         for (int index = 0; index < routedWires.Count; index++)
@@ -1270,30 +1283,51 @@ public class SchematicViewport : GraphicsView, IDrawable
                 for (int segment = 0; segment < wire.Path.Count - 1; segment++)
                     canvas.DrawLine(wire.Path[segment], wire.Path[segment + 1]);
             }
-            if (IsSimulationPlaying && wire.ElectronDirection != 0)
-                DrawElectricityDots(canvas, wire.Path, wire.ElectronDirection);
+            if (IsSimulationPlaying && wire.ElectronDirection != 0 && wire.FlowSpeed > 0.01f)
+                DrawElectricityDots(canvas, wire.Path, wire.ElectronDirection, wire.FlowSpeed);
 
             if (wire.Owner is WireComponent owner && (owner.ShowLiveProbe || LiveMeasurementsVisible))
                 DrawWireMeasurement(canvas, owner, wire.Path);
         }
     }
 
-    private static int GetElectronDirection(ComponentNode fromComponent, ComponentPin fromPin, ComponentNode toComponent, ComponentPin toPin)
+    private static float CalculateFlowSpeed(double voltageGap, double branchCurrent)
     {
-        int fromPinIndex = fromComponent.Pins.IndexOf(fromPin);
-        if (Math.Abs(fromComponent.LiveCurrent) > 1e-12 && fromPinIndex >= 0)
-        {
-            int conventionalDirection = Math.Sign(fromComponent.LiveCurrent) * (fromPinIndex == 0 ? -1 : 1);
-            return -conventionalDirection;
-        }
+        if (branchCurrent <= 1e-12)
+            return 0;
 
-        int toPinIndex = toComponent.Pins.IndexOf(toPin);
-        if (Math.Abs(toComponent.LiveCurrent) > 1e-12 && toPinIndex >= 0)
-        {
-            int conventionalDirection = Math.Sign(toComponent.LiveCurrent) * (toPinIndex == 0 ? 1 : -1);
-            return -conventionalDirection;
-        }
+        float currentFactor = (float)Math.Log10(1 + branchCurrent * 1000);
+        float voltageFactor = Math.Min(1, (float)Math.Log10(1 + voltageGap) / 3);
+        return Math.Clamp(currentFactor * (0.75f + voltageFactor * 0.25f), 0.015f, 1.8f);
+    }
+
+    private static int GetElectronDirection(double current) =>
+        Math.Abs(current) <= 1e-12 ? 0 : current > 0 ? -1 : 1;
+
+    private static int GetElectronDirection(double fromPinCurrent, double toPinCurrent)
+    {
+        if (Math.Abs(fromPinCurrent) > 1e-12)
+            return Math.Sign(fromPinCurrent);
+        if (Math.Abs(toPinCurrent) > 1e-12)
+            return -Math.Sign(toPinCurrent);
         return 0;
+    }
+
+    private double SamplePinCurrent(ComponentNode component, ComponentPin pin, double fallback)
+    {
+        if (component.WaveformPinCurrents.TryGetValue(pin.Id, out var samples))
+            return SampleWaveformValue(samples, fallback);
+
+        int pinIndex = component.Pins.IndexOf(pin);
+        double branchCurrent = SampleWaveformValue(component.WaveformCurrent, component.LiveCurrent);
+        return pinIndex == 1 ? -branchCurrent : branchCurrent;
+    }
+
+    private double SampleWaveformValue(List<double> samples, double fallback)
+    {
+        if (samples.Count == 0) return fallback;
+        int index = Math.Clamp((int)(ElectricityAnimPhase * samples.Count), 0, samples.Count - 1);
+        return samples[index];
     }
 
     private static void DrawRoutedWire(ICanvas canvas, List<PointF> path, List<List<PointF>> previousPaths)
@@ -1392,7 +1426,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         canvas.DrawPath(bridge);
     }
 
-    private void DrawElectricityDots(ICanvas canvas, List<PointF> path, int electronDirection)
+    private void DrawElectricityDots(ICanvas canvas, List<PointF> path, int electronDirection, float flowSpeed)
     {
         float totalLength = 0;
         for (int i = 0; i < path.Count - 1; i++)
@@ -1402,7 +1436,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         int dotCount = Math.Clamp((int)(totalLength / 28f), 2, 6);
         for (int i = 0; i < dotCount; i++)
         {
-            float norm = ((float)i / dotCount + ElectricityAnimPhase) % 1.0f;
+            float norm = ((float)i / dotCount + ElectricityAnimPhase * flowSpeed) % 1.0f;
             if (electronDirection < 0) norm = 1f - norm;
             float distance = norm * totalLength;
             for (int segment = 0; segment < path.Count - 1; segment++)

@@ -36,6 +36,6 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(_services.GetRequiredService<AppShell>());
+		return new Window(new EELoadingPage(_services));
 	}
 }

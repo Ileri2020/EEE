@@ -135,6 +135,15 @@ public class PythonCodeGenerator
             ClockComponent clk =>
                 $"{varName} = circuit.add_clock(\"{comp.Name}\", position=({x}, {y}), frequency={clk.Frequency}, duty_cycle={clk.DutyCycle}, high_voltage={clk.HighVoltage}, phase={clk.Phase})",
 
+            CounterComponent counter =>
+                $"{varName} = circuit.add_counter(\"{comp.Name}\", position=({x}, {y}), bit_width={counter.BitWidth}, max_value={counter.MaxValue}, initial_value={counter.Value}, goal_action=\"{counter.GoalAction}\")",
+
+            ROMComponent rom =>
+                $"{varName} = circuit.add_rom(\"{comp.Name}\", position=({x}, {y}), address_bit_width={rom.AddressBitWidth}, data_bit_width={rom.DataBitWidth}, contents_hex=\"{rom.ContentsHex.Replace("\"", "\\\"")}\")",
+
+            SevenSegmentComponent sevenSegment =>
+                $"{varName} = circuit.add_seven_segment(\"{comp.Name}\", position=({x}, {y}))",
+
             PinComponent pin =>
                 $"{varName} = circuit.add_pin(\"{comp.Name}\", position=({x}, {y}), direction=\"{pin.Direction}\", bit_width={pin.BitWidth}, value={pin.Value})",
 
@@ -165,6 +174,9 @@ public class PythonCodeGenerator
 
             JFETComponent jfet =>
                 $"{varName} = circuit.add_jfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{jfet.Channel}\", vto={jfet.ThresholdVoltage}, beta={jfet.Transconductance:G3}, lambda_={jfet.Lambda}, dr={jfet.DrainResistance}, sr={jfet.SourceResistance})",
+
+            VernierDiodeComponent vernier =>
+                $"{varName} = circuit.add_vernier_diode(\"{comp.Name}\", position=({x}, {y}), vernier_position={vernier.VernierPosition}, minimum_forward_voltage={vernier.MinimumForwardVoltage}, maximum_forward_voltage={vernier.MaximumForwardVoltage})",
 
             DiodeComponent d =>
                 $"{varName} = circuit.add_diode(\"{comp.Name}\", position=({x}, {y}), is_={d.SaturationCurrent:G3}, n={d.EmissionCoefficient}, rs={d.SeriesResistance:G3}, cj0={d.JunctionCapacitance:G3}, tt={d.TransitTime:G3}, bv={d.BreakdownVoltage}, ibv={d.BreakdownCurrent:G3})",

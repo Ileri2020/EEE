@@ -1020,7 +1020,7 @@ public class SpiceSharpAdapter : ISimulationEngine
             {
                 if (item.Comp is ElectricalComponent || item.Comp is WireComponent)
                 {
-                    branchCurrentExports[item.Comp] = new RealCurrentExport(op, item.Comp.Name);
+                    branchCurrentExports[item.Comp] = new RealCurrentExport(op, GetComponentCurrentExportName(item.Comp));
                 }
             }
 
@@ -1151,7 +1151,9 @@ public class SpiceSharpAdapter : ISimulationEngine
             DigitalLogicSimulator.EvaluateCombinational(circuit);
 
             // 4. Generate Transient / Waveform data for components with ShowWaveform
-            var waveComps = circuit.Components.Where(c => c.ShowWaveform).ToList();
+            var waveComps = circuit.Components
+                .Where(c => settings.CaptureAllWaveforms || c.ShowWaveform)
+                .ToList();
             if (waveComps.Count > 0)
             {
                 try
@@ -1166,6 +1168,7 @@ public class SpiceSharpAdapter : ISimulationEngine
                         component.WaveformVoltage.Clear();
                         component.WaveformCurrent.Clear();
                         component.WaveformNodeVoltages.Clear();
+                        component.WaveformPinCurrents.Clear();
                     }
                     results.Message += $"\nTransient waveform capture failed: {waveformException.Message}";
                 }
@@ -1316,18 +1319,23 @@ public class SpiceSharpAdapter : ISimulationEngine
 
         var captures = components.Select(component =>
         {
-            List<(string Id, RealVoltageExport? Export)> pins;
+            List<(string Id, RealVoltageExport? Export, RealCurrentExport? ExportCurrent, double Multiplier)> pins;
             lock (component)
             {
                 component.WaveformTime.Clear();
                 component.WaveformVoltage.Clear();
                 component.WaveformCurrent.Clear();
                 component.WaveformNodeVoltages.Clear();
+                component.WaveformPinCurrents.Clear();
                 pins = component.Pins.Select(pin =>
                 {
                     component.WaveformNodeVoltages[pin.Id] = new List<double>();
                     string net = getNetForPin(component.Id, pin.Id);
-                    return (pin.Id, Export: VoltageAt(net));
+                    var pinCurrent = CreatePinCurrentExport(component, pin.Id, transient);
+                    if (pinCurrent.Export != null)
+                        component.WaveformPinCurrents[pin.Id] = new List<double>();
+                    return (Id: pin.Id, Export: VoltageAt(net),
+                        ExportCurrent: pinCurrent.Export, Multiplier: pinCurrent.Multiplier);
                 }).ToList();
             }
 
@@ -1336,7 +1344,9 @@ public class SpiceSharpAdapter : ISimulationEngine
                 Pins: pins,
                 VoltageA: VoltageAt(NodeFor(component, 0)),
                 VoltageB: VoltageAt(NodeFor(component, 1)),
-                Current: new RealCurrentExport(transient, component.Name));
+                Current: component is ElectricalComponent or WireComponent or LogicInputComponent
+                    ? new RealCurrentExport(transient, GetComponentCurrentExportName(component))
+                    : null);
         }).ToList();
 
         foreach (int _ in transient.Run(spiceCircuit, Transient.ExportTransient))
@@ -1349,9 +1359,14 @@ public class SpiceSharpAdapter : ISimulationEngine
                 {
                     capture.Component.WaveformTime.Add(time);
                     capture.Component.WaveformVoltage.Add(Value(capture.VoltageA) - Value(capture.VoltageB));
-                    capture.Component.WaveformCurrent.Add(capture.Current.Value);
+                    capture.Component.WaveformCurrent.Add(capture.Current?.Value ?? 0.0);
                     foreach (var pin in capture.Pins)
+                    {
                         capture.Component.WaveformNodeVoltages[pin.Id].Add(Value(pin.Export));
+                        if (pin.ExportCurrent != null)
+                            capture.Component.WaveformPinCurrents[pin.Id].Add(
+                                pin.ExportCurrent.Value * pin.Multiplier);
+                    }
                 }
             }
         }
@@ -1380,6 +1395,107 @@ public class SpiceSharpAdapter : ISimulationEngine
             }
         }
     }
+
+    private static (RealCurrentExport? Export, double Multiplier) CreatePinCurrentExport(
+        ComponentNode component,
+        string pinId,
+        Transient transient)
+    {
+        int pinIndex = component.Pins.FindIndex(pin => pin.Id.Equals(pinId, StringComparison.OrdinalIgnoreCase));
+        if (pinIndex < 0) return (null, 1);
+
+        if (component is ThreePhaseTransmissionLineComponent threePhaseLine)
+        {
+            if (pinIndex < 3)
+                return (new RealCurrentExport(transient, $"{component.Name}_phase{pinIndex + 1}_R"), 1);
+            if (pinIndex < 6)
+            {
+                string phaseName = $"{component.Name}_phase{pinIndex - 2}";
+                string element = threePhaseLine.InductancePerKmPerPhase * threePhaseLine.LengthKm > 0
+                    ? $"{phaseName}_L"
+                    : $"{phaseName}_link";
+                return (new RealCurrentExport(transient, element), -1);
+            }
+            if (pinIndex == 6 && threePhaseLine.Connection == "Four-wire")
+                return (new RealCurrentExport(transient, $"{component.Name}_neutral"), 1);
+            if (pinIndex == 7 && threePhaseLine.Connection == "Four-wire")
+                return (new RealCurrentExport(transient, $"{component.Name}_neutral"), -1);
+        }
+
+        if (component is TwoPhaseTransmissionLineComponent twoPhaseLine)
+        {
+            if (pinIndex < 2)
+            {
+                string element = pinIndex == 0
+                    ? $"{twoPhaseLine.Name}_R"
+                    : twoPhaseLine.InductancePerKm * twoPhaseLine.LengthKm > 0 ? $"{twoPhaseLine.Name}_L" : $"{twoPhaseLine.Name}_link";
+                return (new RealCurrentExport(transient, element), pinIndex == 0 ? 1 : -1);
+            }
+            if (pinIndex < 4)
+            {
+                string phaseName = $"{twoPhaseLine.Name}_phaseB";
+                string element = pinIndex == 2
+                    ? $"{phaseName}_R"
+                    : twoPhaseLine.InductancePerKm * twoPhaseLine.LengthKm > 0 ? $"{phaseName}_L" : $"{phaseName}_link";
+                return (new RealCurrentExport(transient, element), pinIndex == 2 ? 1 : -1);
+            }
+            if (pinIndex == 4 && twoPhaseLine.ConductorConfiguration == "SplitPhaseThreeWire")
+                return (new RealCurrentExport(transient, $"{twoPhaseLine.Name}_neutral_R"), 1);
+            if (pinIndex == 5 && twoPhaseLine.ConductorConfiguration == "SplitPhaseThreeWire")
+            {
+                string element = twoPhaseLine.InductancePerKm * twoPhaseLine.LengthKm > 0
+                    ? $"{twoPhaseLine.Name}_neutral_L"
+                    : $"{twoPhaseLine.Name}_neutral_link";
+                return (new RealCurrentExport(transient, element), -1);
+            }
+        }
+
+        if (component is SinglePhaseTransmissionLineComponent singlePhaseLine)
+        {
+            string terminalElement = pinIndex == 0
+                ? $"{singlePhaseLine.Name}_R"
+                : singlePhaseLine.InductancePerKm * singlePhaseLine.LengthKm > 0
+                    ? $"{singlePhaseLine.Name}_L"
+                    : $"{singlePhaseLine.Name}_link";
+            return (new RealCurrentExport(transient, terminalElement), pinIndex == 0 ? 1 : -1);
+        }
+
+        if (component is SynchronousGeneratorComponent generator && pinIndex < generator.NumberOfPhases)
+        {
+            string phaseName = pinIndex == 0 ? generator.Name : $"{generator.Name}_phase{pinIndex + 1}";
+            return (new RealCurrentExport(transient, $"{phaseName}_armatureR"), -1);
+        }
+
+        if (component is LogicInputComponent)
+            return (new RealCurrentExport(transient, component.Name), 1);
+
+        if (component is LogicOutputComponent)
+            return (new RealCurrentExport(transient, $"{component.Name}_sense"), 1);
+
+        if (DigitalLogicSimulator.IsSpiceDrivenDigital(component))
+        {
+            bool isDrivenOutput = DigitalLogicSimulator.GetOutputVoltages(component)
+                .Any(output => output.PinId.Equals(pinId, StringComparison.OrdinalIgnoreCase));
+            if (isDrivenOutput)
+                return (new RealCurrentExport(transient, $"{component.Name}_logic_{pinId}"), 1);
+        }
+
+        if (component is ElectricalComponent or WireComponent)
+            return pinIndex < 2
+                ? (new RealCurrentExport(transient, component.Name), pinIndex == 0 ? 1 : -1)
+                : (null, 1);
+
+        return (null, 1);
+    }
+
+    private static string GetComponentCurrentExportName(ComponentNode component) =>
+        component switch
+        {
+            SinglePhaseTransmissionLineComponent => $"{component.Name}_R",
+            TwoPhaseTransmissionLineComponent => $"{component.Name}_R",
+            ThreePhaseTransmissionLineComponent => $"{component.Name}_phase1_R",
+            _ => component.Name
+        };
 
     private static void RunFallbackSolver(CircuitNode circuit, SimulationResultsData results, Exception ex)
     {
