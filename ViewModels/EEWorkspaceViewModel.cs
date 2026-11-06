@@ -2705,6 +2705,30 @@ public partial class EEWorkspaceViewModel : ObservableObject
         StatusText = $"Selected wire {connection.NetName}";
     }
 
+    public void ConnectPins(ComponentNode fromComponent, ComponentPin fromPin, ComponentNode toComponent, ComponentPin toPin)
+    {
+        try
+        {
+            bool connected = CommandManager.ExecuteCommand(new ConnectNodesCommand(
+                Circuit, fromComponent.Name, fromPin.Id, toComponent.Name, toPin.Id)
+            {
+                Origin = CommandOrigin.Schematic
+            });
+            if (!connected)
+            {
+                StatusText = "Could not connect those pins.";
+                return;
+            }
+
+            StatusText = $"Connected {fromComponent.Reference}:{fromPin.Name} → {toComponent.Reference}:{toPin.Name}";
+            CircuitChanged?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Wire error: {ex.Message}";
+        }
+    }
+
     [RelayCommand]
     public void AddComponentEventTrigger()
     {

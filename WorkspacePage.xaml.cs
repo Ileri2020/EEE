@@ -1,7 +1,6 @@
 using EEE.ViewModels;
 using EESimulator.Core.Models;
 using EESimulator.Core.Components.Electrical;
-using EESimulator.Commands.Commands;
 
 namespace EEE;
 
@@ -70,18 +69,7 @@ public partial class WorkspacePage : ContentPage
         SchematicCanvas.WireConnected += (_, args) =>
         {
             var (fromComp, fromPin, toComp, toPin) = args;
-            try
-            {
-                var conn = new ConnectionNode(
-                    fromComp.Id, fromPin.Id,
-                    toComp.Id, toPin.Id);
-                vm.Circuit.AddChild(conn);
-                vm.StatusText = $"Connected {fromComp.Reference}:{fromPin.Name} → {toComp.Reference}:{toPin.Name}";
-            }
-            catch (Exception ex)
-            {
-                vm.StatusText = $"Wire error: {ex.Message}";
-            }
+            vm.ConnectPins(fromComp, fromPin, toComp, toPin);
         };
 
         // Wire cut wire turning into node
