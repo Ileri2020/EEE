@@ -16,7 +16,8 @@ internal static class AndroidDownloadSaver
         var values = new ContentValues();
         values.Put(MediaStore.IMediaColumns.DisplayName, fileName);
         values.Put(MediaStore.IMediaColumns.MimeType, GetMimeType(fileName));
-        values.Put(MediaStore.IMediaColumns.RelativePath, $"{global::Android.OS.Environment.DirectoryDownloads}/EEEngine");
+        string downloadsPath = global::Android.OS.Environment.DirectoryDownloads + "/EEEngine";
+        values.Put(MediaStore.IMediaColumns.RelativePath, downloadsPath);
         values.Put(MediaStore.IMediaColumns.IsPending, 1);
 
         var uri = resolver.Insert(MediaStore.Downloads.ExternalContentUri, values)
