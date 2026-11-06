@@ -135,6 +135,7 @@ public sealed class RemoteEeeApiClient
 
     public async Task<RemoteEeeAccountStatus> GetAccountStatusAsync()
     {
+        EnsureConfigured();
         string? token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
         if (string.IsNullOrWhiteSpace(token)) return new RemoteEeeAccountStatus();
 
@@ -149,6 +150,7 @@ public sealed class RemoteEeeApiClient
 
     public async Task ConnectAccountAsync(string appToken)
     {
+        EnsureConfigured();
         string token = (appToken ?? string.Empty).Trim();
         if (token.Length < 32 || token.Any(char.IsWhiteSpace))
             throw new ArgumentException("Paste a valid EEE app token.", nameof(appToken));
@@ -168,6 +170,7 @@ public sealed class RemoteEeeApiClient
 
     public async Task DisconnectAccountAsync()
     {
+        EnsureConfigured();
         string? token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
         if (string.IsNullOrWhiteSpace(token)) return;
 
@@ -175,6 +178,12 @@ public sealed class RemoteEeeApiClient
             new Uri(new Uri(ApiBaseUrl + "/"), "api/eee/token"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         using var response = await _httpClient.SendAsync(request);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+            response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            SecureStorage.Default.Remove(SecureAccessTokenKey);
+            return;
+        }
         await EnsureSuccessAsync(response);
         SecureStorage.Default.Remove(SecureAccessTokenKey);
     }

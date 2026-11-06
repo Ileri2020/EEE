@@ -96,12 +96,12 @@
                             <HorizontalStackLayout Spacing="8" Padding="8,0" VerticalOptions="Center">
                                 <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                 <!-- Logo -->
-                <Label Text="⚡"
-                       FontSize="18"
-                       TextColor="#58A6FF"
-                       VerticalOptions="Center"
-                       Margin="0,0,2,0"/>
-                <Label Text="EESimulator"
+                  <Image Source="ee_engine.svg"
+                      WidthRequest="26"
+                      HeightRequest="26"
+                      VerticalOptions="Center"
+                      Margin="0,0,2,0"/>
+                <Label Text="EE Engine"
                        FontSize="14"
                        FontAttributes="Bold"
                        TextColor="#C9D1D9"

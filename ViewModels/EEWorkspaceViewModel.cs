@@ -1117,9 +1117,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public void SaveProject()
     {
 #if ANDROID
-        // Android app-private paths are not user-selected shared-storage locations.
-        // Re-open the system folder picker for each save rather than silently writing
-        // to an inaccessible app directory.
+    // Android exports route through Save As and MediaStore into Downloads/EEEngine.
         if (DeviceInfo.Platform == DevicePlatform.Android)
         {
             SaveProjectAs();

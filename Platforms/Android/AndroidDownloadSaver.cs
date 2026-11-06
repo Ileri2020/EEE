@@ -11,12 +11,12 @@ internal static class AndroidDownloadSaver
         if (Build.VERSION.SdkInt < BuildVersionCodes.Q)
             throw new PlatformNotSupportedException("Downloads folder saving requires Android 10 or later.");
 
-        var resolver = Android.App.Application.Context.ContentResolver
+        var resolver = global::Android.App.Application.Context.ContentResolver
             ?? throw new InvalidOperationException("Android content resolver is unavailable.");
         var values = new ContentValues();
         values.Put(MediaStore.IMediaColumns.DisplayName, fileName);
         values.Put(MediaStore.IMediaColumns.MimeType, GetMimeType(fileName));
-        values.Put(MediaStore.IMediaColumns.RelativePath, $"{Environment.DirectoryDownloads}/EEEngine");
+        values.Put(MediaStore.IMediaColumns.RelativePath, $"{global::Android.OS.Environment.DirectoryDownloads}/EEEngine");
         values.Put(MediaStore.IMediaColumns.IsPending, 1);
 
         var uri = resolver.Insert(MediaStore.Downloads.ExternalContentUri, values)
