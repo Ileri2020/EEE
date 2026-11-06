@@ -223,6 +223,17 @@ public static class ComponentRegistry
             d.DefaultParameters["Hysteresis"] = 0.1;
         });
 
+        Register<RelayComponent>("electrical.relay", "Relay", "Switches", "K", d =>
+        {
+            d.Description = "Electromagnetic relay with resistive coil and normally-open contact";
+            d.Icon = "relay.svg";
+            d.DefaultParameters[nameof(RelayComponent.CoilResistance)] = 400;
+            d.DefaultParameters[nameof(RelayComponent.PullInVoltage)] = 5;
+            d.DefaultParameters[nameof(RelayComponent.DropoutVoltage)] = 2;
+            d.DefaultParameters[nameof(RelayComponent.ContactResistance)] = 0.05;
+            d.DefaultParameters[nameof(RelayComponent.OpenResistance)] = 1e9;
+        });
+
         Register<CurrentSwitchComponent>("electrical.currentswitch", "CurrentSwitch", "Electrical", "W", d =>
         {
             d.Description = "Current-Controlled Switch (W)";

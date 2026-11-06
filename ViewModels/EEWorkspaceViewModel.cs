@@ -536,6 +536,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("CCCS",             "F",   "β",  "#79C0FF", "Electrical",  "Current-Controlled Current Source", "cccs.svg"),
         new ComponentPaletteItem("VoltageSwitch",    "S",   "SW", "#E3B341", "Electrical",  "Voltage-Controlled Switch", "voltageswitch.svg"),
         new ComponentPaletteItem("CurrentSwitch",    "W",   "SW", "#E3B341", "Electrical",  "Current-Controlled Switch", "currentswitch.svg"),
+        new ComponentPaletteItem("Relay",             "K",   "NO", "#D2A8FF", "Electrical",  "Electromagnetic relay coil and normally-open contact", "relay.svg"),
         new ComponentPaletteItem("TransmissionLine", "T",   "Ω",  "#79C0FF", "Electrical",  "Lossless Transmission Line", "transmissionline.svg"),
         new ComponentPaletteItem("LossyTransmissionLine", "TL", "RLGC", "#FFA657", "Electrical", "Lossy Transmission Line", "lossy_transmissionline.svg"),
         new ComponentPaletteItem("CoaxialCable",     "CX",  "COAX","#79C0FF", "Electrical",  "Coaxial Cable Line", "coaxial.svg"),
@@ -675,6 +676,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             new ComponentPaletteItem("VoltageSwitch",   "S",  "SW", "#E3B341", "Switches", "Voltage-Controlled Switch", "voltageswitch.svg"),
             new ComponentPaletteItem("CurrentSwitch",   "W",  "SW", "#E3B341", "Switches", "Current-Controlled Switch", "currentswitch.svg"),
+            new ComponentPaletteItem("Relay",             "K", "NO", "#D2A8FF", "Switches", "Electromagnetic relay coil and normally-open contact", "relay.svg"),
             new ComponentPaletteItem("Transistor",      "SW", "SWT","#FFA657", "Switches", "Digital Switch Transistor", "transistor_digital.svg"),
             new ComponentPaletteItem("TransmissionGate","TG", "TG", "#D2A8FF", "Switches", "CMOS Transmission Gate",    "transmissiongate.svg"),
         }),

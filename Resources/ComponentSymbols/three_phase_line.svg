@@ -1,31 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -28 64 56" width="64" height="56">
-  <!-- Three-Phase Transmission Line -->
-  <!-- Phase A leads -->
-  <line x1="-30" y1="-14" x2="-18" y2="-14" stroke="#79C0FF" stroke-width="2" stroke-linecap="round"/>
-  <!-- Phase B leads -->
-  <line x1="-30" y1="0" x2="-18" y2="0" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
-  <!-- Phase C leads -->
-  <line x1="-30" y1="14" x2="-18" y2="14" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
-  <!-- Phase A right leads -->
-  <line x1="18" y1="-14" x2="30" y2="-14" stroke="#79C0FF" stroke-width="2" stroke-linecap="round"/>
-  <!-- Phase B right leads -->
-  <line x1="18" y1="0" x2="30" y2="0" stroke="#56D364" stroke-width="2" stroke-linecap="round"/>
-  <!-- Phase C right leads -->
-  <line x1="18" y1="14" x2="30" y2="14" stroke="#D2A8FF" stroke-width="2" stroke-linecap="round"/>
-  <!-- Body box -->
-  <rect x="-18" y="-22" width="36" height="44" rx="3" ry="3" fill="#161B22" stroke="#79C0FF" stroke-width="1.5"/>
-  <!-- Phase labels A B C -->
-  <text x="0" y="-10" font-size="4.5" fill="#79C0FF" text-anchor="middle" font-family="monospace">A</text>
-  <text x="0" y="4" font-size="4.5" fill="#56D364" text-anchor="middle" font-family="monospace">B</text>
-  <text x="0" y="18" font-size="4.5" fill="#D2A8FF" text-anchor="middle" font-family="monospace">C</text>
-  <!-- 3φ label -->
-  <text x="0" y="-14" font-size="4" fill="#79C0FF" text-anchor="middle" font-family="monospace">3φ LINE</text>
-  <!-- Terminal dots -->
-  <circle cx="-30" cy="-14" r="2.5" fill="#58A6FF"/>
-  <circle cx="-30" cy="0" r="2.5" fill="#58A6FF"/>
-  <circle cx="-30" cy="14" r="2.5" fill="#58A6FF"/>
-  <circle cx="30" cy="-14" r="2.5" fill="#58A6FF"/>
-  <circle cx="30" cy="0" r="2.5" fill="#58A6FF"/>
-  <circle cx="30" cy="14" r="2.5" fill="#58A6FF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 35v22M8 11l48 42" stroke="#8B949E" stroke-width="3"/>
+    <path d="M3 16h58M3 32h58M3 48h58" stroke-width="2.2"/>
+    <path d="M12 18v6M32 34v6M52 50v6" stroke="#E3B341" stroke-width="2"/>
+  </g>
+  <path d="M3 16h58" stroke="#79C0FF" stroke-width="2.2"/>
+  <path d="M3 32h58" stroke="#56D364" stroke-width="2.2"/>
+  <path d="M3 48h58" stroke="#D2A8FF" stroke-width="2.2"/>
+  <g stroke="#0D1117" stroke-width="1.5">
+    <circle cx="12" cy="16" r="3" fill="#79C0FF"/>
+    <circle cx="32" cy="32" r="3" fill="#56D364"/>
+    <circle cx="52" cy="48" r="3" fill="#D2A8FF"/>
+  </g>
+  <text x="32" y="9" fill="#C9D1D9" font-family="sans-serif" font-size="6.5" text-anchor="middle">3 PHASE</text>
 </svg>
-

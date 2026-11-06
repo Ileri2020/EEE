@@ -66,6 +66,37 @@ public class SpiceNetlistExporter
             return GetNode(comp, fallbackPin);
         }
 
+        void AppendLineSection(string name, string from, string to, double resistance, double inductance,
+            double capacitance, double conductance, bool includeShunt)
+        {
+            string seriesNode = $"N_{name}_SER";
+            sb.AppendLine($"R_{name} {from} {seriesNode} {Math.Max(resistance, 1e-6).ToString(inv)}");
+            if (inductance > 0)
+                sb.AppendLine($"L_{name} {seriesNode} {to} {inductance.ToString(inv)}");
+            else
+                sb.AppendLine($"R_{name}_LINK {seriesNode} {to} 1e-6");
+
+            if (!includeShunt) return;
+            if (capacitance > 0)
+            {
+                sb.AppendLine($"C_{name}_FROM {from} 0 {(capacitance / 2).ToString(inv)}");
+                sb.AppendLine($"C_{name}_TO {to} 0 {(capacitance / 2).ToString(inv)}");
+            }
+            if (conductance > 0)
+            {
+                double halfShuntResistance = 2 / conductance;
+                sb.AppendLine($"R_{name}_G_FROM {from} 0 {halfShuntResistance.ToString(inv)}");
+                sb.AppendLine($"R_{name}_G_TO {to} 0 {halfShuntResistance.ToString(inv)}");
+            }
+        }
+
+        void AppendFixedSineSource(string name, string positive, string negative, double voltageRms,
+            double frequency, double phaseDegrees)
+        {
+            double peak = Math.Max(voltageRms, 0) * Math.Sqrt(2);
+            sb.AppendLine($"V_{name} {positive} {negative} SIN(0 {peak.ToString(inv)} {Math.Max(frequency, 0.01).ToString(inv)} 0 0 {phaseDegrees.ToString(inv)}) AC {voltageRms.ToString(inv)} {phaseDegrees.ToString(inv)}");
+        }
+
         var models = new List<string>();
 
         // Write SPICE component lines
@@ -89,6 +120,73 @@ public class SpiceNetlistExporter
                     break;
                 case EESimulator.Core.Components.Electrical.CurrentSourceComponent i:
                     sb.AppendLine($"I_{i.Name} {GetPinOrFirst(i, 0, "positive")} {GetPinOrFirst(i, 1, "negative")} DC {i.Current.ToString(inv)}");
+                    break;
+                case EESimulator.Core.Components.Electrical.SinglePhaseTransmissionLineComponent line1:
+                    string singleFrom = GetPinOrFirst(line1, 0, "from");
+                    string singleTo = GetPinOrFirst(line1, 1, "to");
+                    string singleLineInput = singleFrom;
+                    if (line1.SupplyMode == "FixedVoltageSource")
+                    {
+                        singleLineInput = $"N_{line1.Name}_SOURCE";
+                        AppendFixedSineSource($"{line1.Name}_SOURCE", singleFrom, singleLineInput,
+                            line1.FixedVoltageRms, line1.Frequency, line1.InitialPhaseAngle);
+                    }
+                    AppendLineSection($"{line1.Name}_LINE", singleLineInput, singleTo,
+                        line1.TotalResistance, line1.InductancePerKm * line1.LengthKm,
+                        line1.CapacitancePerKm * line1.LengthKm, line1.ConductancePerKm * line1.LengthKm,
+                        line1.ModelType != "Short Line");
+                    break;
+                case EESimulator.Core.Components.Electrical.TwoPhaseTransmissionLineComponent line2:
+                    for (int phase = 0; phase < 2; phase++)
+                    {
+                        string phaseFrom = GetPinOrFirst(line2, phase * 2, phase == 0 ? "a_from" : "b_from");
+                        string phaseTo = GetPinOrFirst(line2, phase * 2 + 1, phase == 0 ? "a_to" : "b_to");
+                        string phaseLineInput = phaseFrom;
+                        if (line2.SupplyMode == "FixedVoltageSource")
+                        {
+                            phaseLineInput = $"N_{line2.Name}_PH{phase + 1}_SOURCE";
+                            double phaseDegrees = phase == 0 ? 0 :
+                                line2.ConductorConfiguration == "SplitPhaseThreeWire" ? 180 : line2.PhaseDisplacementDegrees;
+                            AppendFixedSineSource($"{line2.Name}_PH{phase + 1}_SOURCE", phaseFrom, phaseLineInput,
+                                line2.FixedVoltageRms, line2.Frequency, phaseDegrees);
+                        }
+                        AppendLineSection($"{line2.Name}_PH{phase + 1}", phaseLineInput, phaseTo,
+                            line2.ResistancePerKm * line2.LengthKm, line2.InductancePerKm * line2.LengthKm,
+                            line2.CapacitancePerKm * line2.LengthKm, line2.ConductancePerKm * line2.LengthKm, true);
+                    }
+                    if (line2.ConductorConfiguration == "SplitPhaseThreeWire")
+                    {
+                        AppendLineSection($"{line2.Name}_NEUTRAL", GetPinOrFirst(line2, 4, "neutral_from"),
+                            GetPinOrFirst(line2, 5, "neutral_to"), line2.ResistancePerKm * line2.LengthKm,
+                            line2.InductancePerKm * line2.LengthKm, line2.CapacitancePerKm * line2.LengthKm,
+                            line2.ConductancePerKm * line2.LengthKm, true);
+                    }
+                    break;
+                case EESimulator.Core.Components.Electrical.ThreePhaseTransmissionLineComponent line3:
+                    for (int phase = 0; phase < 3; phase++)
+                    {
+                        string phaseFrom = GetPinOrFirst(line3, phase, $"{(char)('A' + phase)}_send");
+                        string phaseTo = GetPinOrFirst(line3, phase + 3, $"{(char)('A' + phase)}_receive");
+                        string phaseLineInput = phaseFrom;
+                        if (line3.SupplyMode == "FixedVoltageSource")
+                        {
+                            phaseLineInput = $"N_{line3.Name}_PH{phase + 1}_SOURCE";
+                            double phaseOrder = line3.PhaseSequence == "ACB" ? -1 : 1;
+                            AppendFixedSineSource($"{line3.Name}_PH{phase + 1}_SOURCE", phaseFrom, phaseLineInput,
+                                line3.FixedPhaseVoltageRms, line3.Frequency, phaseOrder * phase * 120);
+                        }
+                        AppendLineSection($"{line3.Name}_PH{phase + 1}", phaseLineInput, phaseTo,
+                            line3.ResistancePerKmPerPhase * line3.LengthKm,
+                            line3.InductancePerKmPerPhase * line3.LengthKm,
+                            line3.CapacitancePerKmPerPhase * line3.LengthKm,
+                            line3.ConductancePerKmPerPhase * line3.LengthKm,
+                            line3.ModelType != "Short");
+                    }
+                    if (line3.Connection == "Four-wire")
+                    {
+                        AppendLineSection($"{line3.Name}_NEUTRAL", GetPinOrFirst(line3, 6, "N_send"),
+                            GetPinOrFirst(line3, 7, "N_receive"), line3.NeutralImpedance, 0, 0, 0, false);
+                    }
                     break;
                 case EESimulator.Core.Components.Electrical.DiodeComponent d:
                     string dModel = $"D_{d.Name}_mod";
@@ -134,6 +232,12 @@ public class SpiceNetlistExporter
                     string wSense = string.IsNullOrEmpty(csw.ControllingSource) ? $"V_sense_{csw.Name}" : csw.ControllingSource;
                     sb.AppendLine($"W_{csw.Name} {GetPinOrFirst(csw, 0, "sw_pos")} {GetPinOrFirst(csw, 1, "sw_neg")} {wSense} {cswMod}");
                     models.Add($".model {cswMod} ISWITCH (RON={csw.ResistanceOn.ToString(inv)} ROFF={csw.ResistanceOff.ToString(inv)} ION={csw.Threshold.ToString(inv)} IOFF={(csw.Threshold - csw.Hysteresis).ToString(inv)})");
+                    break;
+                case EESimulator.Core.Components.Electrical.RelayComponent relay:
+                    string relayMod = $"S_{relay.Name}_contact_mod";
+                    sb.AppendLine($"R_{relay.Name}_coil {GetNode(relay, "coil_positive")} {GetNode(relay, "coil_negative")} {relay.CoilResistance.ToString(inv)}");
+                    sb.AppendLine($"S_{relay.Name} {GetNode(relay, "common")} {GetNode(relay, "normally_open")} {GetNode(relay, "coil_positive")} {GetNode(relay, "coil_negative")} {relayMod}");
+                    models.Add($".model {relayMod} VSWITCH (RON={relay.ContactResistance.ToString(inv)} ROFF={relay.OpenResistance.ToString(inv)} VON={relay.PullInVoltage.ToString(inv)} VOFF={relay.DropoutVoltage.ToString(inv)})");
                     break;
                 case EESimulator.Core.Components.Electronics.OpAmpComponent op:
                     sb.AppendLine($"E_{op.Name} {GetNode(op, "out")} 0 {GetNode(op, "in_pos")} {GetNode(op, "in_neg")} {op.OpenLoopGain.ToString(inv)}");

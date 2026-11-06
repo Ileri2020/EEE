@@ -59,6 +59,8 @@ public sealed class SinglePhaseTransmissionLineComponent : PowerSystemComponent
     public double LineTemperature { get => Number(nameof(LineTemperature), 20); set => SetNumber(nameof(LineTemperature), value, -273.15); }
     public string ConductorType { get => Text(nameof(ConductorType), "Copper"); set => SetText(nameof(ConductorType), value); }
     public string ModelType { get => Text(nameof(ModelType), "Short Line"); set { if (value is not ("Short Line" or "Medium Line" or "Long Line")) throw new ArgumentException("Choose Short Line, Medium Line, or Long Line."); SetText(nameof(ModelType), value); } }
+    public string SupplyMode { get => Text(nameof(SupplyMode), "ExternalGenerators"); set { if (value is not ("ExternalGenerators" or "FixedVoltageSource")) throw new ArgumentException("Supply mode must be ExternalGenerators or FixedVoltageSource."); SetText(nameof(SupplyMode), value); } }
+    public double FixedVoltageRms { get => Number(nameof(FixedVoltageRms), RatedVoltage); set => SetNumber(nameof(FixedVoltageRms), value, 0); }
     public double InitialVoltageMagnitude { get => Number(nameof(InitialVoltageMagnitude), 230); set => SetNumber(nameof(InitialVoltageMagnitude), value, 0); }
     public double InitialPhaseAngle { get => Number(nameof(InitialPhaseAngle), 0); set => SetNumber(nameof(InitialPhaseAngle), value); }
     public double TotalResistance => ResistancePerKm * LengthKm * Math.Max(0, 1 + ConductorTemperatureCoefficient * (LineTemperature - 20));
@@ -136,6 +138,8 @@ public sealed class TwoPhaseTransmissionLineComponent : PowerSystemComponent
     public double MaximumCurrent { get => Number(nameof(MaximumCurrent), 100); set => SetNumber(nameof(MaximumCurrent), value, 0.01); }
     public string ConductorType { get => Text(nameof(ConductorType), "Copper"); set => SetText(nameof(ConductorType), value); }
     public string ConductorConfiguration { get => Text(nameof(ConductorConfiguration), "TrueTwoPhase"); set { if (value is not ("TrueTwoPhase" or "SplitPhaseThreeWire")) throw new ArgumentException("Choose TrueTwoPhase or SplitPhaseThreeWire; these have different wiring models."); SetText(nameof(ConductorConfiguration), value); } }
+    public string SupplyMode { get => Text(nameof(SupplyMode), "ExternalGenerators"); set { if (value is not ("ExternalGenerators" or "FixedVoltageSource")) throw new ArgumentException("Supply mode must be ExternalGenerators or FixedVoltageSource."); SetText(nameof(SupplyMode), value); } }
+    public double FixedVoltageRms { get => Number(nameof(FixedVoltageRms), PhaseVoltage); set => SetNumber(nameof(FixedVoltageRms), value, 0); }
     public double PowerFactor { get => Number(nameof(PowerFactor), 0.9); set => SetNumber(nameof(PowerFactor), Math.Clamp(value, -1, 1)); }
     public double LineTemperature { get => Number(nameof(LineTemperature), 20); set => SetNumber(nameof(LineTemperature), value, -273.15); }
     private double TemperatureAdjustedResistance => ResistancePerKm * Math.Max(0, 1 + (ConductorType.Equals("Aluminum", StringComparison.OrdinalIgnoreCase) ? 0.00403 : 0.00393) * (LineTemperature - 20));
@@ -176,6 +180,8 @@ public sealed class ThreePhaseTransmissionLineComponent : PowerSystemComponent
     public double LineTemperature { get => Number(nameof(LineTemperature), 20); set => SetNumber(nameof(LineTemperature), value, -273.15); }
     public double NeutralImpedance { get => Number(nameof(NeutralImpedance), 0); set => SetNumber(nameof(NeutralImpedance), value, 0); }
     public string ModelType { get => Text(nameof(ModelType), "Short"); set { if (value is not ("Short" or "Medium" or "Long")) throw new ArgumentException("Model type must be Short, Medium, or Long."); SetText(nameof(ModelType), value); } }
+    public string SupplyMode { get => Text(nameof(SupplyMode), "ExternalGenerators"); set { if (value is not ("ExternalGenerators" or "FixedVoltageSource")) throw new ArgumentException("Supply mode must be ExternalGenerators or FixedVoltageSource."); SetText(nameof(SupplyMode), value); } }
+    public double FixedPhaseVoltageRms { get => Number(nameof(FixedPhaseVoltageRms), PhaseVoltage); set => SetNumber(nameof(FixedPhaseVoltageRms), value, 0); }
     public double PhaseVoltage => RatedLineVoltage / Math.Sqrt(3);
     public double LineVoltage => RatedLineVoltage;
     public double PhaseCurrent => MaximumCurrent;

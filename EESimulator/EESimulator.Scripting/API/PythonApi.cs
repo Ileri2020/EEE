@@ -961,7 +961,7 @@ public class PythonApi
         OnViewToggleRequested?.Invoke();
     }
 
-    public void AddSinglePhaseTransmissionLine(string name, double x, double y, double ratedVoltage = 230, double frequency = 50, double lengthKm = 1, double resistancePerKm = 0.2, double inductancePerKm = 1e-3, double capacitancePerKm = 10e-9, double conductancePerKm = 0, string modelType = "Short Line")
+    public void AddSinglePhaseTransmissionLine(string name, double x, double y, double ratedVoltage = 230, double frequency = 50, double lengthKm = 1, double resistancePerKm = 0.2, double inductancePerKm = 1e-3, double capacitancePerKm = 10e-9, double conductancePerKm = 0, string modelType = "Short Line", string supplyMode = "ExternalGenerators", double fixedVoltageRms = 230)
     {
         AddComponent("singlephasetransmissionline", name, x, y, ratedVoltage);
         SetComponentProperty(name, "Frequency", frequency);
@@ -971,18 +971,22 @@ public class PythonApi
         SetComponentProperty(name, "CapacitancePerKm", capacitancePerKm);
         SetComponentProperty(name, "ConductancePerKm", conductancePerKm);
         SetComponentProperty(name, "ModelType", modelType);
+        SetComponentProperty(name, "SupplyMode", supplyMode);
+        SetComponentProperty(name, "FixedVoltageRms", fixedVoltageRms);
     }
 
-    public void AddTwoPhaseTransmissionLine(string name, double x, double y, double ratedVoltage = 240, double frequency = 60, double lengthKm = 1, double phaseDisplacement = 90, string configuration = "TrueTwoPhase")
+    public void AddTwoPhaseTransmissionLine(string name, double x, double y, double ratedVoltage = 240, double frequency = 60, double lengthKm = 1, double phaseDisplacement = 90, string configuration = "TrueTwoPhase", string supplyMode = "ExternalGenerators", double fixedVoltageRms = 120)
     {
         AddComponent("twophasetransmissionline", name, x, y, ratedVoltage);
         SetComponentProperty(name, "Frequency", frequency);
         SetComponentProperty(name, "LengthKm", lengthKm);
         SetComponentProperty(name, "PhaseDisplacementDegrees", phaseDisplacement);
         SetComponentProperty(name, "ConductorConfiguration", configuration);
+        SetComponentProperty(name, "SupplyMode", supplyMode);
+        SetComponentProperty(name, "FixedVoltageRms", fixedVoltageRms);
     }
 
-    public void AddThreePhaseTransmissionLine(string name, double x, double y, double ratedLineVoltage = 11000, double frequency = 50, double lengthKm = 1, string phaseSequence = "ABC", string connection = "Three-wire", string modelType = "Short")
+    public void AddThreePhaseTransmissionLine(string name, double x, double y, double ratedLineVoltage = 11000, double frequency = 50, double lengthKm = 1, string phaseSequence = "ABC", string connection = "Three-wire", string modelType = "Short", string supplyMode = "ExternalGenerators", double fixedPhaseVoltageRms = 6350.85)
     {
         AddComponent("threephasetransmissionline", name, x, y, ratedLineVoltage);
         SetComponentProperty(name, "Frequency", frequency);
@@ -990,6 +994,8 @@ public class PythonApi
         SetComponentProperty(name, "PhaseSequence", phaseSequence);
         SetComponentProperty(name, "Connection", connection);
         SetComponentProperty(name, "ModelType", modelType);
+        SetComponentProperty(name, "SupplyMode", supplyMode);
+        SetComponentProperty(name, "FixedPhaseVoltageRms", fixedPhaseVoltageRms);
     }
 
     public void AddACTransformer(string name, double x, double y, double primaryVoltage = 230, double secondaryVoltage = 115, double apparentPower = 1000, double frequency = 50, string connection = "Single-phase")

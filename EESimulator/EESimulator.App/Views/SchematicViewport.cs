@@ -1607,6 +1607,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "CCCS":          ComponentSymbolDrawer.DrawCCCS(canvas); break;
             case "VoltageSwitch": ComponentSymbolDrawer.DrawVoltageSwitch(canvas); break;
             case "CurrentSwitch": ComponentSymbolDrawer.DrawCurrentSwitch(canvas); break;
+            case "Relay": ComponentSymbolDrawer.DrawRelay(canvas); break;
             case "LogicGate":
             case "AND":           DrawAndGate(canvas); break;
             case "OR":            DrawOrGate(canvas); break;
@@ -1695,9 +1696,9 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "LossyTransmissionLine": ComponentSymbolDrawer.DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     ComponentSymbolDrawer.DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;
-            case "SinglePhaseTransmissionLine": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "1φ LINE", "#79C0FF"); break;
-            case "TwoPhaseTransmissionLine": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "2φ LINE", "#79C0FF"); break;
-            case "ThreePhaseTransmissionLine": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "3φ LINE", "#79C0FF"); break;
+            case "SinglePhaseTransmissionLine": ComponentSymbolDrawer.DrawSinglePhaseLinePole(canvas); break;
+            case "TwoPhaseTransmissionLine": ComponentSymbolDrawer.DrawTwoPhaseLinePole(canvas); break;
+            case "ThreePhaseTransmissionLine": ComponentSymbolDrawer.DrawThreePhaseLinePole(canvas); break;
             case "ACTransformer": ComponentSymbolDrawer.DrawTransformer(canvas); break;
             case "SynchronousGenerator": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "GEN", "#56D364"); break;
             case "InductionMotor": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MTR", "#FFA657"); break;

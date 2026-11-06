@@ -92,7 +92,14 @@ public class SpiceSharpAdapter : ISimulationEngine
                 {
                     case SinglePhaseTransmissionLineComponent line:
                     {
-                        AddLineBranch(spiceCircuit, line.Name, nodeA, nodeB,
+                        string lineInput = nodeA;
+                        if (line.SupplyMode == "FixedVoltageSource")
+                        {
+                            lineInput = $"{line.Name}_fixed_source_out";
+                            AddFixedAcSource(spiceCircuit, $"{line.Name}_fixed_source", nodeA, lineInput,
+                                line.FixedVoltageRms, line.Frequency, line.InitialPhaseAngle, settings.StartTime);
+                        }
+                        AddLineBranch(spiceCircuit, line.Name, lineInput, nodeB,
                             line.TotalResistance, line.InductancePerKm * line.LengthKm,
                             line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm,
                             line.ModelType is "Medium Line" or "Long Line", line.Frequency,
@@ -102,14 +109,31 @@ public class SpiceSharpAdapter : ISimulationEngine
 
                     case TwoPhaseTransmissionLineComponent line:
                     {
-                        AddLineBranch(spiceCircuit, line.Name, nodeA, nodeB,
+                        string phaseAInput = nodeA;
+                        if (line.SupplyMode == "FixedVoltageSource")
+                        {
+                            phaseAInput = $"{line.Name}_phaseA_source_out";
+                            AddFixedAcSource(spiceCircuit, $"{line.Name}_phaseA_source", nodeA, phaseAInput,
+                                line.FixedVoltageRms, line.Frequency, 0, settings.StartTime);
+                        }
+                        AddLineBranch(spiceCircuit, line.Name, phaseAInput, nodeB,
                             line.ResistancePerKm * line.LengthKm, line.InductancePerKm * line.LengthKm,
                             line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm, true, line.Frequency);
                         if (line.Pins.Count >= 4)
                         {
                             string phaseBFrom = GetNetForPin(line.Id, line.Pins[2].Id);
                             string phaseBTo = GetNetForPin(line.Id, line.Pins[3].Id);
-                            AddLineBranch(spiceCircuit, $"{line.Name}_phaseB", phaseBFrom, phaseBTo,
+                            string phaseBInput = phaseBFrom;
+                            if (line.SupplyMode == "FixedVoltageSource")
+                            {
+                                phaseBInput = $"{line.Name}_phaseB_source_out";
+                                double phaseBOffset = line.ConductorConfiguration == "SplitPhaseThreeWire"
+                                    ? 180
+                                    : line.PhaseDisplacementDegrees;
+                                AddFixedAcSource(spiceCircuit, $"{line.Name}_phaseB_source", phaseBFrom, phaseBInput,
+                                    line.FixedVoltageRms, line.Frequency, phaseBOffset, settings.StartTime);
+                            }
+                            AddLineBranch(spiceCircuit, $"{line.Name}_phaseB", phaseBInput, phaseBTo,
                                 line.ResistancePerKm * line.LengthKm, line.InductancePerKm * line.LengthKm,
                                 line.CapacitancePerKm * line.LengthKm, line.ConductancePerKm * line.LengthKm, true, line.Frequency);
                         }
@@ -130,7 +154,15 @@ public class SpiceSharpAdapter : ISimulationEngine
                         {
                             string from = GetNetForPin(line.Id, line.Pins[phase].Id);
                             string to = GetNetForPin(line.Id, line.Pins[phase + 3].Id);
-                            AddLineBranch(spiceCircuit, $"{line.Name}_phase{phase + 1}", from, to,
+                            string lineInput = from;
+                            if (line.SupplyMode == "FixedVoltageSource")
+                            {
+                                lineInput = $"{line.Name}_phase{phase + 1}_source_out";
+                                double phaseOrder = line.PhaseSequence == "ACB" ? -1 : 1;
+                                AddFixedAcSource(spiceCircuit, $"{line.Name}_phase{phase + 1}_source", from, lineInput,
+                                    line.FixedPhaseVoltageRms, line.Frequency, phaseOrder * phase * 120, settings.StartTime);
+                            }
+                            AddLineBranch(spiceCircuit, $"{line.Name}_phase{phase + 1}", lineInput, to,
                                 line.ResistancePerKmPerPhase * line.LengthKm,
                                 line.InductancePerKmPerPhase * line.LengthKm,
                                 line.CapacitancePerKmPerPhase * line.LengthKm,
@@ -628,6 +660,28 @@ public class SpiceSharpAdapter : ISimulationEngine
                         }
                         var fsrc = new SpiceSharp.Components.CurrentControlledCurrentSource(cccs.Name, outPos, outNeg, ctrlSource, cccs.CurrentGain);
                         spiceCircuit.Add(fsrc);
+                        break;
+                    }
+
+                    case RelayComponent relay:
+                    {
+                        relay.ValidateConfiguration();
+                        string coilPositive = GetPinNode(relay, "coil_positive", 0);
+                        string coilNegative = GetPinNode(relay, "coil_negative", 1);
+                        string common = GetPinNode(relay, "common", 2);
+                        string normallyOpen = GetPinNode(relay, "normally_open", 3);
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{relay.Name}_coil", coilPositive, coilNegative, Math.Max(relay.CoilResistance, 1e-3)));
+
+                        var relayModel = new SpiceSharp.Components.VoltageSwitchModel($"{relay.Name}_contact_model");
+                        relayModel.SetParameter("ron", Math.Max(relay.ContactResistance, 1e-6));
+                        relayModel.SetParameter("roff", Math.Max(relay.OpenResistance, relay.ContactResistance + 1));
+                        relayModel.Parameters.Threshold = (relay.PullInVoltage + relay.DropoutVoltage) / 2;
+                        relayModel.Parameters.Hysteresis = Math.Max(0, relay.PullInVoltage - relay.DropoutVoltage) / 2;
+                        spiceCircuit.Add(relayModel);
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageSwitch(
+                            relay.Name, common, normallyOpen, coilPositive, coilNegative,
+                            $"{relay.Name}_contact_model"));
                         break;
                     }
 
@@ -1244,6 +1298,37 @@ public class SpiceSharpAdapter : ISimulationEngine
                 catch { }
                 break;
         }
+    }
+
+    private static void AddFixedAcSource(
+        SpiceSharp.Circuit circuit,
+        string name,
+        string positiveNode,
+        string negativeNode,
+        double voltageRms,
+        double frequency,
+        double phaseDegrees,
+        double solverTime)
+    {
+        double phaseRadians = phaseDegrees * Math.PI / 180.0;
+        double safeFrequency = Math.Max(frequency, 0.01);
+        double peakVoltage = Math.Max(voltageRms, 0) * Math.Sqrt(2);
+        double instantPhase = 2 * Math.PI * safeFrequency * Math.Max(solverTime, 0) + phaseRadians;
+        var source = new SpiceSharp.Components.VoltageSource(
+            name,
+            positiveNode,
+            negativeNode,
+            peakVoltage * Math.Sin(instantPhase));
+        source.Parameters.AcMagnitude = Math.Max(voltageRms, 0);
+        source.Parameters.AcPhase = phaseDegrees;
+        source.Parameters.Waveform = new SpiceSharp.Components.Sine(
+            0,
+            peakVoltage,
+            safeFrequency,
+            0,
+            0,
+            phaseRadians);
+        circuit.Add(source);
     }
 
     private static void AddLineBranch(

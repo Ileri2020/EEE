@@ -40,6 +40,10 @@ public static class ComponentSymbolDrawer
             case "CCCS":           DrawCCCS(canvas); break;
             case "VoltageSwitch":  DrawVoltageSwitch(canvas); break;
             case "CurrentSwitch":  DrawCurrentSwitch(canvas); break;
+            case "Relay":          DrawRelay(canvas); break;
+            case "SinglePhaseTransmissionLine": DrawSinglePhaseLinePole(canvas); break;
+            case "TwoPhaseTransmissionLine": DrawTwoPhaseLinePole(canvas); break;
+            case "ThreePhaseTransmissionLine": DrawThreePhaseLinePole(canvas); break;
             case "LogicGate":
             case "AND":            DrawAndGate(canvas); break;
             case "OR":             DrawOrGate(canvas); break;
@@ -1019,6 +1023,80 @@ public static class ComponentSymbolDrawer
         canvas.StrokeSize = 1.2f;
         canvas.DrawLine(0, -20, 0, -14);
         canvas.DrawLine(0, 14, 0, 20);
+    }
+
+    public static void DrawRelay(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(-20, -14, -15, -14);
+        canvas.DrawLine(-20, 14, -15, 14);
+        var coil = new PathF();
+        coil.MoveTo(-15, -14);
+        coil.LineTo(-9, -10);
+        coil.LineTo(-15, -6);
+        coil.LineTo(-9, -2);
+        coil.LineTo(-15, 2);
+        coil.LineTo(-9, 6);
+        coil.LineTo(-15, 10);
+        coil.LineTo(-15, 14);
+        canvas.DrawPath(coil);
+
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
+        canvas.DrawLine(20, -14, 8, -14);
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(7, -14, 2.2f);
+        canvas.DrawLine(7, -14, -2, -3);
+        canvas.DrawLine(2, 14, 20, 14);
+        canvas.FillCircle(1, 14, 2.2f);
+    }
+
+    public static void DrawSinglePhaseLinePole(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(0, -2, 0, 17);
+        canvas.DrawLine(-16, -12, 16, 8);
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawLine(-20, 0, 20, 0);
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(-10, 0, 2f);
+        canvas.FillCircle(10, 0, 2f);
+    }
+
+    public static void DrawTwoPhaseLinePole(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(0, -3, 0, 19);
+        canvas.DrawLine(-18, -14, 18, 14);
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.8f;
+        canvas.DrawLine(-20, -14, 20, -14);
+        canvas.DrawLine(-20, 14, 20, 14);
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(-9, -14, 2f);
+        canvas.FillCircle(9, 14, 2f);
+    }
+
+    public static void DrawThreePhaseLinePole(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeSize = 2f;
+        canvas.DrawLine(0, 0, 0, 19);
+        canvas.DrawLine(-18, -14, 18, 14);
+        canvas.StrokeSize = 1.7f;
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.DrawLine(-20, -14, 20, -14);
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.DrawLine(-20, 0, 20, 0);
+        canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+        canvas.DrawLine(-20, 14, 20, 14);
+        canvas.FillColor = Color.FromArgb("#E3B341");
+        canvas.FillCircle(-9, -14, 2f);
+        canvas.FillCircle(0, 0, 2f);
+        canvas.FillCircle(9, 14, 2f);
     }
 
     public static void DrawTransmissionLine(ICanvas canvas)

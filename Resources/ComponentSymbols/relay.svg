@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 20h8M4 44h8M52 20h8M52 44h8" stroke="#79C0FF" stroke-width="2.5"/>
+    <path d="M12 14c8 0 8 12 16 12s8-12 16-12M12 50c8 0 8-12 16-12s8 12 16 12" stroke="#D2A8FF" stroke-width="2.5"/>
+    <path d="M32 30v-7M31 23l12-8" stroke="#E3B341" stroke-width="2.5"/>
+    <circle cx="30" cy="32" r="2.5" fill="#E3B341" stroke="none"/>
+    <circle cx="44" cy="14" r="2.5" fill="#E3B341" stroke="none"/>
+    <rect x="8" y="8" width="48" height="48" rx="8" stroke="#30363D" stroke-width="1.5"/>
+  </g>
+  <text x="32" y="63" fill="#8B949E" font-family="sans-serif" font-size="6" text-anchor="middle">COIL · NO</text>
+</svg>
