@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace EEE.ViewModels;
@@ -2315,6 +2316,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     : new[] { "The AI service returned an empty script draft." });
                 return;
             }
+            string? draftError = ValidateAiScriptDraft(normalizedScript);
+            if (draftError != null)
+            {
+                AiSchemaStatus = $"The AI returned an unsupported script ({draftError}). No draft was applied; try asking again with fewer details.";
+                return;
+            }
 
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -2357,6 +2364,34 @@ public partial class EEWorkspaceViewModel : ObservableObject
             normalized = normalized[..^3].TrimEnd();
 
         return normalized.Trim();
+    }
+
+    private static readonly HashSet<string> SupportedAiScriptMethods = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "add_component", "add_ttl", "connect", "set_position", "set_property",
+        "set_component_property", "rename_pin", "set_logic", "toggle_logic",
+        "set_waveform", "set_live_probe", "fire_event", "toggle_event",
+        "rotate_component", "stretch_component", "simulate"
+    };
+
+    private static string? ValidateAiScriptDraft(string script)
+    {
+        var lines = script.Split('\n');
+        for (int index = 0; index < lines.Length; index++)
+        {
+            string line = lines[index].Trim();
+            if (line.Length == 0 || line.StartsWith('#')) continue;
+
+            var match = Regex.Match(line, @"^eesim\.(?<method>[A-Za-z_]\w*)\s*\(.*\)\s*$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (!match.Success || line.Contains("f\"", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("f'", StringComparison.OrdinalIgnoreCase))
+                return $"line {index + 1} is not a single literal eesim call";
+            if (!SupportedAiScriptMethods.Contains(match.Groups["method"].Value))
+                return $"line {index + 1} uses unsupported call '{match.Groups["method"].Value}'";
+        }
+
+        return null;
     }
 
     [RelayCommand]
