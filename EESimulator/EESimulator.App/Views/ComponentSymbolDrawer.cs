@@ -1,4 +1,7 @@
 using Microsoft.Maui.Graphics;
+using System.Collections.Generic;
+using System.Linq;
+using EESimulator.Core.Models;
 
 namespace EESimulator.App.Views;
 
@@ -167,13 +170,37 @@ public static class ComponentSymbolDrawer
         canvas.DrawLine(3, 0, 9, 0);
     }
 
-    public static void DrawDigitalBlock(ICanvas canvas, string label, string color)
+    public static float GetDigitalBlockHalfHeight(IEnumerable<ComponentPin>? pins)
     {
+        double sidePinExtent = pins?
+            .Where(pin => Math.Abs(pin.RelativeX) >= 20)
+            .Select(pin => Math.Abs(pin.RelativeY))
+            .DefaultIfEmpty(0)
+            .Max() ?? 0;
+        return (float)Math.Max(13, sidePinExtent - 6);
+    }
+
+    public static float GetDigitalBlockHalfWidth(IEnumerable<ComponentPin>? pins)
+    {
+        double pinExtent = pins?
+            .Select(pin => Math.Abs(pin.RelativeX))
+            .DefaultIfEmpty(0)
+            .Max() ?? 0;
+        return (float)Math.Max(15, pinExtent + 4);
+    }
+
+    public static void DrawDigitalBlock(
+        ICanvas canvas,
+        string label,
+        string color,
+        IEnumerable<ComponentPin>? pins = null)
+    {
+        float halfHeight = GetDigitalBlockHalfHeight(pins);
         canvas.StrokeColor = Color.FromArgb(color);
         canvas.StrokeSize = 2f;
         canvas.FillColor = Color.FromArgb("#161B22");
-        canvas.FillRoundedRectangle(-15, -13, 30, 26, 3);
-        canvas.DrawRoundedRectangle(-15, -13, 30, 26, 3);
+        canvas.FillRoundedRectangle(-15, -halfHeight, 30, halfHeight * 2, 3);
+        canvas.DrawRoundedRectangle(-15, -halfHeight, 30, halfHeight * 2, 3);
         canvas.DrawLine(-22, 0, -15, 0);
         canvas.DrawLine(15, 0, 22, 0);
         canvas.FillColor = Color.FromArgb(color);
@@ -1631,4 +1658,3 @@ public static class ComponentSymbolDrawer
         canvas.FillCircle(0, 20, 2.5f);
     }
 }
-

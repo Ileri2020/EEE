@@ -119,8 +119,10 @@ internal static class SchematicWireRouter
             if (excludedSet.Contains(component) || component is WireComponent || component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            float halfX = 26f * (float)(component.ScaleX > 0 ? component.ScaleX : 1.0);
-            float halfY = 26f * (float)(component.ScaleY > 0 ? component.ScaleY : 1.0);
+            float halfX = Math.Max(26f, ComponentSymbolDrawer.GetDigitalBlockHalfWidth(component.Pins))
+                * (float)(component.ScaleX > 0 ? component.ScaleX : 1.0);
+            float halfY = Math.Max(26f, ComponentSymbolDrawer.GetDigitalBlockHalfHeight(component.Pins))
+                * (float)(component.ScaleY > 0 ? component.ScaleY : 1.0);
             float radians = (float)(component.Rotation * Math.PI / 180.0);
             float cos = MathF.Abs(MathF.Cos(radians));
             float sin = MathF.Abs(MathF.Sin(radians));

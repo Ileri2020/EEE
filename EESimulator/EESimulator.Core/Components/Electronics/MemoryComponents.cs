@@ -169,7 +169,7 @@ public class CounterComponent : ElectronicComponent
             new("up_down", "DIR", -24, 6), new("clr", "CLR", -24, 18),
             new("ld", "LD", -24, 24)
         };
-        for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"D{bit}", $"D{bit}", -12, DigitalPinLayout.Position(bit, width)));
+        for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"D{bit}", $"D{bit}", -40, DigitalPinLayout.Position(bit, width)));
         for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"Q{bit}", $"Q{bit}", 24, DigitalPinLayout.Position(bit, width)));
         pins.Add(new ComponentPin("carry", "CY", 12, 24));
         DigitalPinLayout.Replace(this, pins);
@@ -254,7 +254,7 @@ public class ShiftRegisterComponent : ElectronicComponent
         if (HasParallelLoad)
         {
             pins.Add(new ComponentPin("ld", "LD", 0, 24));
-            for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"D{bit}", $"D{bit}", -12, DigitalPinLayout.Position(bit, width)));
+            for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"D{bit}", $"D{bit}", -40, DigitalPinLayout.Position(bit, width)));
         }
         for (int bit = 0; bit < width; bit++) pins.Add(new ComponentPin($"Q{bit}", $"Q{bit}", 24, DigitalPinLayout.Position(bit, width)));
         pins.Add(new ComponentPin("sout", "SO", 8, 24));
@@ -343,7 +343,7 @@ public class RAMComponent : ElectronicComponent
     {
         var pins = new List<ComponentPin>();
         for (int bit = 0; bit < AddressBitWidth; bit++) pins.Add(new ComponentPin($"addr{bit}", $"A{bit}", -24, DigitalPinLayout.Position(bit, AddressBitWidth)));
-        for (int bit = 0; bit < DataBitWidth; bit++) pins.Add(new ComponentPin($"din{bit}", $"D{bit}", -8, DigitalPinLayout.Position(bit, DataBitWidth)));
+        for (int bit = 0; bit < DataBitWidth; bit++) pins.Add(new ComponentPin($"din{bit}", $"D{bit}", -40, DigitalPinLayout.Position(bit, DataBitWidth)));
         pins.Add(new ComponentPin("clk", "CLK", 0, 24));
         pins.Add(new ComponentPin("we", "WE", -12, 24));
         if (HasOutputEnable) pins.Add(new ComponentPin("oe", "OE", 12, 24));

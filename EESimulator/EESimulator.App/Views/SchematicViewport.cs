@@ -98,6 +98,12 @@ public class SchematicViewport : GraphicsView, IDrawable
     private double _initialScaleX = 1.0;
     private double _initialScaleY = 1.0;
 
+    private static float GetSelectionHalfWidth(ComponentNode component)
+        => Math.Max(26f, ComponentSymbolDrawer.GetDigitalBlockHalfWidth(component.Pins));
+
+    private static float GetSelectionHalfHeight(ComponentNode component)
+        => Math.Max(26f, ComponentSymbolDrawer.GetDigitalBlockHalfHeight(component.Pins) + 6f);
+
     // Long-press timer
     private System.Threading.Timer? _longPressTimer;
     private ComponentNode?           _pressedComp;
@@ -195,7 +201,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         }
 
         float sx = (float)(_selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0);
-        float localX = (26f * sx) + 14f;
+        float localX = GetSelectionHalfWidth(_selectedComponent) * sx + 14f;
         const float localY = 0f;
 
         // Rotate the local offset by the component's rotation angle
@@ -223,8 +229,8 @@ public class SchematicViewport : GraphicsView, IDrawable
 
         float sx = (float)(_selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0);
         float sy = (float)(_selectedComponent.ScaleY > 0 ? _selectedComponent.ScaleY : 1.0);
-        float halfX = 26f * sx;
-        float halfY = 26f * sy;
+        float halfX = GetSelectionHalfWidth(_selectedComponent) * sx;
+        float halfY = GetSelectionHalfHeight(_selectedComponent) * sy;
 
         float[] hx = { -halfX, 0,     halfX,  -halfX, halfX,  -halfX, 0,     halfX };
         float[] hy = { -halfY, -halfY, -halfY, 0,     0,      halfY,  halfY, halfY };
@@ -366,8 +372,8 @@ public class SchematicViewport : GraphicsView, IDrawable
             float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float ldx = (ddx * cos - ddy * sin) / 26f;
-            float ldy = (ddx * sin + ddy * cos) / 26f;
+            float ldx = (ddx * cos - ddy * sin) / GetSelectionHalfWidth(_selectedComponent);
+            float ldy = (ddx * sin + ddy * cos) / GetSelectionHalfHeight(_selectedComponent);
 
             double newSx = _initialScaleX;
             double newSy = _initialScaleY;
@@ -780,8 +786,8 @@ public class SchematicViewport : GraphicsView, IDrawable
             float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float ldx = (ddx * cos - ddy * sin) / 26f;
-            float ldy = (ddx * sin + ddy * cos) / 26f;
+            float ldx = (ddx * cos - ddy * sin) / GetSelectionHalfWidth(_selectedComponent);
+            float ldy = (ddx * sin + ddy * cos) / GetSelectionHalfHeight(_selectedComponent);
 
             double newSx = _initialScaleX;
             double newSy = _initialScaleY;
@@ -1499,8 +1505,8 @@ public class SchematicViewport : GraphicsView, IDrawable
         // Selection outline with resize handles
         if (selected)
         {
-            float halfX = 26f * sx;
-            float halfY = 26f * sy;
+            float halfX = GetSelectionHalfWidth(comp) * sx;
+            float halfY = GetSelectionHalfHeight(comp) * sy;
             const float hSz  = 5f;  // handle half-size
 
             // Glow border
@@ -1622,7 +1628,7 @@ public class SchematicViewport : GraphicsView, IDrawable
                 string macroLabel = comp is CustomCircuitComponent macro
                     ? macro.DisplayName[..Math.Min(5, macro.DisplayName.Length)].ToUpperInvariant()
                     : "MACRO";
-                ComponentSymbolDrawer.DrawDigitalBlock(canvas, macroLabel, "#D2A8FF");
+                ComponentSymbolDrawer.DrawDigitalBlock(canvas, macroLabel, "#D2A8FF", comp.Pins);
                 break;
             case "Junction":      DrawJunction(canvas, comp); break;
             case "Label":            DrawLabel(canvas, comp.Name); break;
@@ -1630,55 +1636,55 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "TransmissionLine": ComponentSymbolDrawer.DrawTransmissionLine(canvas); break;
             case "VoltageDelay":     ComponentSymbolDrawer.DrawVoltageDelay(canvas); break;
             case "Clock":            ComponentSymbolDrawer.DrawClock(canvas, isOn); break;
-            case "Buffer":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "BUF", "#58A6FF"); break;
-            case "ControlledBuffer": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "TRI", "#58A6FF"); break;
-            case "EvenParity":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "EVEN", "#58A6FF"); break;
-            case "OddParity":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ODD", "#58A6FF"); break;
-            case "PLA":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PLA", "#58A6FF"); break;
-            case "Multiplexer":      ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MUX", "#79C0FF"); break;
-            case "Demultiplexer":    ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DMX", "#79C0FF"); break;
-            case "Decoder":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DEC", "#79C0FF"); break;
-            case "PriorityEncoder":  ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PRI", "#79C0FF"); break;
-            case "BitSelector":      ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SEL", "#79C0FF"); break;
-            case "DFlipFlop":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DFF", "#D2A8FF"); break;
-            case "JKFlipFlop":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "JK", "#D2A8FF"); break;
-            case "SRFlipFlop":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SR", "#D2A8FF"); break;
-            case "TFlipFlop":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "TFF", "#D2A8FF"); break;
-            case "Register":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "REG", "#D2A8FF"); break;
-            case "Counter":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "CTR", "#D2A8FF"); break;
-            case "ShiftRegister":    ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SHR", "#D2A8FF"); break;
-            case "RAM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RAM", "#D2A8FF"); break;
-            case "ROM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ROM", "#D2A8FF"); break;
-            case "Random":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RND", "#D2A8FF"); break;
-            case "Adder":             ComponentSymbolDrawer.DrawDigitalBlock(canvas, "+", "#FFB86C"); break;
-            case "Subtractor":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "−", "#FFB86C"); break;
-            case "Multiplier":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "×", "#FFB86C"); break;
-            case "Divider":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "÷", "#FFB86C"); break;
-            case "Comparator":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "CMP", "#FFB86C"); break;
-            case "Negator":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "−x", "#FFB86C"); break;
-            case "Shifter":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SHF", "#FFB86C"); break;
-            case "BitAdder":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "POP", "#FFB86C"); break;
-            case "BitFinder":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "FND", "#FFB86C"); break;
-            case "SquareRoot":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "√", "#FFB86C"); break;
-            case "AbsoluteValue":     ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ABS", "#FFB86C"); break;
-            case "MinMax":            ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MIN", "#FFB86C"); break;
-            case "Exponentiator":     ComponentSymbolDrawer.DrawDigitalBlock(canvas, "POW", "#FFB86C"); break;
+            case "Buffer":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "BUF", "#58A6FF", comp.Pins); break;
+            case "ControlledBuffer": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "TRI", "#58A6FF", comp.Pins); break;
+            case "EvenParity":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "EVEN", "#58A6FF", comp.Pins); break;
+            case "OddParity":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ODD", "#58A6FF", comp.Pins); break;
+            case "PLA":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PLA", "#58A6FF", comp.Pins); break;
+            case "Multiplexer":      ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MUX", "#79C0FF", comp.Pins); break;
+            case "Demultiplexer":    ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DMX", "#79C0FF", comp.Pins); break;
+            case "Decoder":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DEC", "#79C0FF", comp.Pins); break;
+            case "PriorityEncoder":  ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PRI", "#79C0FF", comp.Pins); break;
+            case "BitSelector":      ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SEL", "#79C0FF", comp.Pins); break;
+            case "DFlipFlop":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DFF", "#D2A8FF", comp.Pins); break;
+            case "JKFlipFlop":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "JK", "#D2A8FF", comp.Pins); break;
+            case "SRFlipFlop":       ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SR", "#D2A8FF", comp.Pins); break;
+            case "TFlipFlop":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "TFF", "#D2A8FF", comp.Pins); break;
+            case "Register":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "REG", "#D2A8FF", comp.Pins); break;
+            case "Counter":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "CTR", "#D2A8FF", comp.Pins); break;
+            case "ShiftRegister":    ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SHR", "#D2A8FF", comp.Pins); break;
+            case "RAM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RAM", "#D2A8FF", comp.Pins); break;
+            case "ROM":              ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ROM", "#D2A8FF", comp.Pins); break;
+            case "Random":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "RND", "#D2A8FF", comp.Pins); break;
+            case "Adder":             ComponentSymbolDrawer.DrawDigitalBlock(canvas, "+", "#FFB86C", comp.Pins); break;
+            case "Subtractor":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "−", "#FFB86C", comp.Pins); break;
+            case "Multiplier":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "×", "#FFB86C", comp.Pins); break;
+            case "Divider":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "÷", "#FFB86C", comp.Pins); break;
+            case "Comparator":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "CMP", "#FFB86C", comp.Pins); break;
+            case "Negator":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "−x", "#FFB86C", comp.Pins); break;
+            case "Shifter":           ComponentSymbolDrawer.DrawDigitalBlock(canvas, "SHF", "#FFB86C", comp.Pins); break;
+            case "BitAdder":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "POP", "#FFB86C", comp.Pins); break;
+            case "BitFinder":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "FND", "#FFB86C", comp.Pins); break;
+            case "SquareRoot":        ComponentSymbolDrawer.DrawDigitalBlock(canvas, "√", "#FFB86C", comp.Pins); break;
+            case "AbsoluteValue":     ComponentSymbolDrawer.DrawDigitalBlock(canvas, "ABS", "#FFB86C", comp.Pins); break;
+            case "MinMax":            ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MIN", "#FFB86C", comp.Pins); break;
+            case "Exponentiator":     ComponentSymbolDrawer.DrawDigitalBlock(canvas, "POW", "#FFB86C", comp.Pins); break;
             case "Button":            ComponentSymbolDrawer.DrawButton(canvas, isOn); break;
-            case "DIPSwitch":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DIP", "#56D364"); break;
+            case "DIPSwitch":         ComponentSymbolDrawer.DrawDigitalBlock(canvas, "DIP", "#56D364", comp.Pins); break;
             case "SevenSegment":      ComponentSymbolDrawer.DrawSevenSegment(canvas, comp.CustomProperties.TryGetValue("RenderedSegments", out var segs) ? Convert.ToInt32(segs) : 0); break;
             case "HexDigit":          ComponentSymbolDrawer.DrawHexDigit(canvas, comp.CustomProperties.TryGetValue("RenderedValue", out var hexValue) ? Convert.ToInt32(hexValue) : 0); break;
             case "LedBar":            ComponentSymbolDrawer.DrawLedBar(canvas, comp.CustomProperties.TryGetValue("RenderedValue", out var ledBarValue) ? Convert.ToInt64(ledBarValue) : 0, comp is EESimulator.Core.Components.Electronics.LedBarComponent ledBar ? ledBar.LedCount : 8); break;
             case "RGBLED":            ComponentSymbolDrawer.DrawRgbLed(canvas, comp.CustomProperties.TryGetValue("RenderedRgb", out var rgb) ? Convert.ToInt32(rgb) : 0); break;
             case "DotMatrix":         ComponentSymbolDrawer.DrawDotMatrix(canvas, comp.CustomProperties.TryGetValue("RenderedRows", out var matrixRows) ? Convert.ToInt64(matrixRows) : 0, comp.CustomProperties.TryGetValue("RenderedColumns", out var matrixCols) ? Convert.ToInt64(matrixCols) : 0, comp is EESimulator.Core.Components.Electronics.DotMatrixComponent matrix ? matrix.Rows : 7, comp is EESimulator.Core.Components.Electronics.DotMatrixComponent matrixColumns ? matrixColumns.Columns : 5); break;
             case "Joystick":          ComponentSymbolDrawer.DrawJoystick(canvas); break;
-            case "Keyboard":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "KEY", "#56D364"); break;
+            case "Keyboard":          ComponentSymbolDrawer.DrawDigitalBlock(canvas, "KEY", "#56D364", comp.Pins); break;
             case "TTY":               ComponentSymbolDrawer.DrawTty(canvas, comp is EESimulator.Core.Components.Electronics.TtyComponent tty ? tty.Text : string.Empty); break;
             case "Video":             ComponentSymbolDrawer.DrawVideo(canvas, comp.CustomProperties.TryGetValue("RenderedRgb", out var videoRgb) ? Convert.ToInt32(videoRgb) : 0); break;
             case "RealTimeClock":
                 string clockLabel = comp.CustomProperties.TryGetValue("RenderedHours", out var clockHours) && comp.CustomProperties.TryGetValue("RenderedMinutes", out var clockMinutes)
                     ? $"{Convert.ToInt32(clockHours):00}:{Convert.ToInt32(clockMinutes):00}"
                     : "RTC";
-                ComponentSymbolDrawer.DrawDigitalBlock(canvas, clockLabel, "#56D364");
+                ComponentSymbolDrawer.DrawDigitalBlock(canvas, clockLabel, "#56D364", comp.Pins);
                 break;
             case "Pin":              ComponentSymbolDrawer.DrawPin(canvas, isOn); break;
             case "Power":
@@ -1700,11 +1706,11 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "TwoPhaseTransmissionLine": ComponentSymbolDrawer.DrawTwoPhaseTransmissionLine(canvas); break;
             case "ThreePhaseTransmissionLine": ComponentSymbolDrawer.DrawThreePhaseTransmissionLine(canvas); break;
             case "ACTransformer": ComponentSymbolDrawer.DrawTransformer(canvas); break;
-            case "SynchronousGenerator": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "GEN", "#56D364"); break;
-            case "InductionMotor": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MTR", "#FFA657"); break;
+            case "SynchronousGenerator": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "GEN", "#56D364", comp.Pins); break;
+            case "InductionMotor": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MTR", "#FFA657", comp.Pins); break;
             case "ACBulb": ComponentSymbolDrawer.DrawBulb(canvas, isOn); break;
-            case "ACFan": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "FAN", "#79C0FF"); break;
-            case "SolarPanel": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PV", "#E3B341"); break;
+            case "ACFan": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "FAN", "#79C0FF", comp.Pins); break;
+            case "SolarPanel": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "PV", "#E3B341", comp.Pins); break;
             case "Battery": ComponentSymbolDrawer.DrawBattery(canvas, comp is EESimulator.Core.Components.Electrical.BatteryComponent battery ? battery.StateOfChargePercent : 0); break;
             default:
                 if (comp is EESimulator.Core.Components.Electronics.TtlPackageComponent ttl)
@@ -1821,8 +1827,10 @@ public class SchematicViewport : GraphicsView, IDrawable
         foreach (var component in components)
         {
             if (ReferenceEquals(component, target) || component is WireComponent) continue;
-            float halfX = 28f * (float)(component.ScaleX > 0 ? component.ScaleX : 1.0);
-            float halfY = 28f * (float)(component.ScaleY > 0 ? component.ScaleY : 1.0);
+            float halfX = Math.Max(28f, ComponentSymbolDrawer.GetDigitalBlockHalfWidth(component.Pins) + 2)
+                * (float)(component.ScaleX > 0 ? component.ScaleX : 1.0);
+            float halfY = Math.Max(28f, ComponentSymbolDrawer.GetDigitalBlockHalfHeight(component.Pins) + 2)
+                * (float)(component.ScaleY > 0 ? component.ScaleY : 1.0);
             var body = new RectF((float)component.X - halfX, (float)component.Y - halfY, halfX * 2, halfY * 2);
             if (RectanglesOverlap(body, badge)) return true;
         }

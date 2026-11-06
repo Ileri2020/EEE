@@ -110,30 +110,13 @@
 
                 <BoxView WidthRequest="1" HeightRequest="20" Color="#30363D" VerticalOptions="Center" Margin="4,0"/>
 
-                <!-- Save button (Desktop: 💾 Save, Mobile: 💾) -->
-                <Button Text="{OnIdiom Phone='💾', Default='💾 Save'}"
+                <Button Text="File ▾"
                         Style="{StaticResource ToolBtn}"
-                        TextColor="#56D364"
+                        TextColor="#C9D1D9"
                         FontSize="12"
                         Padding="8,5"
-                        Command="{Binding SaveProjectCommand}"
-                        ToolTipProperties.Text="Save Project (Ctrl+S)"/>
-
-                <!-- Save As button (Desktop: ⤓ Save As, Mobile: 💾+) -->
-                <Button Text="{OnIdiom Phone='💾+', Default='⤓ Save As'}"
-                        Style="{StaticResource ToolBtn}"
-                        TextColor="#79C0FF"
-                        FontSize="12"
-                        Padding="8,5"
-                        Command="{Binding SaveProjectAsCommand}"
-                        ToolTipProperties.Text="Save Project As (.eee, .kicad_sch, .cir, .eesim, .py)"/>
-                <Button Text="☁ Save"
-                    Style="{StaticResource ToolBtn}"
-                    TextColor="#D2A8FF"
-                    FontSize="12"
-                    Padding="8,5"
-                    Command="{Binding SaveProjectToServerCommand}"
-                    ToolTipProperties.Text="Save a server copy; sign-in is optional"/>
+                        Command="{Binding ToggleFileMenuCommand}"
+                        ToolTipProperties.Text="Open or save a project"/>
                       </HorizontalStackLayout>
 
                       <Label Text="{Binding ProjectName}"
@@ -190,6 +173,38 @@
                      BackgroundColor="#30363D"
                      VerticalOptions="End"/>
         </Grid>
+
+        <VerticalStackLayout Grid.RowSpan="3"
+                             IsVisible="{Binding IsFileMenuOpen}"
+                             HorizontalOptions="Start"
+                             VerticalOptions="Start"
+                             Margin="8,48,0,0"
+                             ZIndex="20"
+                             Spacing="2">
+            <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="6">
+                <VerticalStackLayout Spacing="2">
+                    <Button Text="Open project..."
+                            Style="{StaticResource ToolBtn}"
+                            HorizontalOptions="Fill"
+                            Command="{Binding OpenProjectCommand}"/>
+                    <Button Text="Save"
+                            Style="{StaticResource ToolBtn}"
+                            HorizontalOptions="Fill"
+                            TextColor="#56D364"
+                            Command="{Binding SaveProjectCommand}"/>
+                    <Button Text="Save As..."
+                            Style="{StaticResource ToolBtn}"
+                            HorizontalOptions="Fill"
+                            TextColor="#79C0FF"
+                            Command="{Binding SaveProjectAsCommand}"/>
+                    <Button Text="Save to database"
+                            Style="{StaticResource ToolBtn}"
+                            HorizontalOptions="Fill"
+                            TextColor="#D2A8FF"
+                            Command="{Binding SaveProjectToServerCommand}"/>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
 
         <!-- ═══════════════════════════════════════════════════════════════ -->
         <!-- MAIN WORKSPACE                                                   -->

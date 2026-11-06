@@ -33,7 +33,9 @@ public class EesimSerializer
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"Project file not found: {filePath}");
 
-        string json = File.ReadAllText(filePath);
-        return JsonSerializer.Deserialize<CircuitNode>(json, Options);
+        return LoadFromJson(File.ReadAllText(filePath));
     }
+
+    public static CircuitNode? LoadFromJson(string json)
+        => JsonSerializer.Deserialize<CircuitNode>(json, Options);
 }

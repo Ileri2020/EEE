@@ -28,10 +28,10 @@ public abstract class ArithmeticComponentBase : ElectronicComponent
         var pins = new List<ComponentPin>();
         for (int bit = 0; bit < BitWidth; bit++) pins.Add(new ComponentPin($"{InputA}{bit}", $"{InputA}{bit}", -24, DigitalPinLayout.Position(bit, BitWidth)));
         if (HasSecondInput)
-            for (int bit = 0; bit < BitWidth; bit++) pins.Add(new ComponentPin($"{InputB}{bit}", $"{InputB}{bit}", -24, DigitalPinLayout.Position(bit, BitWidth)));
+            for (int bit = 0; bit < BitWidth; bit++) pins.Add(new ComponentPin($"{InputB}{bit}", $"{InputB}{bit}", -40, DigitalPinLayout.Position(bit, BitWidth)));
         if (HasCarryInput) pins.Add(new ComponentPin("cin", "CI", -8, 24));
         if (this is ShifterComponent)
-            for (int bit = 0; bit < ShiftWidth; bit++) pins.Add(new ComponentPin($"S{bit}", $"S{bit}", -24, DigitalPinLayout.Position(bit, ShiftWidth)));
+            for (int bit = 0; bit < ShiftWidth; bit++) pins.Add(new ComponentPin($"S{bit}", $"S{bit}", -40, DigitalPinLayout.Position(bit, ShiftWidth)));
         if (HasCompareOutputs)
         {
             pins.Add(new ComponentPin("gt", "A>B", 24, -12));

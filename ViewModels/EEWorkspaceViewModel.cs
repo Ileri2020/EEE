@@ -16,6 +16,7 @@ using EESimulator.Formats;
 using EEE.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -160,6 +161,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool IsSaveAsModalVisible { get; set; } = false;
+
+    [ObservableProperty]
+    public partial bool IsFileMenuOpen { get; set; }
 
     [ObservableProperty]
     public partial string SaveFileName { get; set; } = "Circuit1";
@@ -1119,8 +1123,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     public void SaveProject()
     {
+        IsFileMenuOpen = false;
 #if ANDROID
-    // Android exports route through Save As and MediaStore into Downloads/EEEngine.
+        // Android exports route through Save As and MediaStore into Downloads/EEEngine.
         if (DeviceInfo.Platform == DevicePlatform.Android)
         {
             SaveProjectAs();
@@ -1145,8 +1150,75 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenProjectAsync()
+    {
+        IsFileMenuOpen = false;
+        try
+        {
+            var file = await FilePicker.Default.PickAsync();
+            if (file == null) return;
+
+            string extension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+            await using var stream = await file.OpenReadAsync();
+            using var reader = new System.IO.StreamReader(stream);
+            string content = await reader.ReadToEndAsync();
+
+            CircuitNode loaded = extension switch
+            {
+                ".eee" => EeePlatformSerializer.LoadFromEeeJson(content),
+                ".eesim" => EesimSerializer.LoadFromJson(content)
+                    ?? throw new System.IO.InvalidDataException("The selected EESIM file is empty or invalid."),
+                ".json" => IsEeeProjectJson(content)
+                    ? EeePlatformSerializer.LoadFromEeeJson(content)
+                    : EesimSerializer.LoadFromJson(content)
+                        ?? throw new System.IO.InvalidDataException("The selected JSON project is empty or invalid."),
+                ".kicad_sch" => KiCadImporter.ImportFromKiCadSch(content, file.FileName),
+                ".cir" or ".sp" => SpiceNetlistImporter.ImportFromSpice(content, file.FileName),
+                _ => throw new NotSupportedException(
+                    $"'{extension}' is not a supported project format. Open .eee, .eesim, .json, .kicad_sch, .cir, or .sp files.")
+            };
+
+            foreach (var child in Circuit.Children.ToList())
+                Circuit.RemoveChild(child);
+            foreach (var child in loaded.Children.ToList())
+                Circuit.AddChild(child);
+            Circuit.Title = loaded.Title;
+            Circuit.Description = loaded.Description;
+            CommandManager.Clear();
+
+#if WINDOWS
+            CurrentFilePath = file.FullPath;
+#else
+            CurrentFilePath = null;
+#endif
+            ProjectName = file.FileName;
+            StatusText = $"Opened: {file.FileName}";
+            CircuitChanged?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Open project failed: {ex.Message}";
+        }
+    }
+
+    private static bool IsEeeProjectJson(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        foreach (var property in document.RootElement.EnumerateObject())
+        {
+            if (property.Name.Equals("FileType", StringComparison.OrdinalIgnoreCase))
+                return property.Value.GetString() == "EEE_PLATFORM_SCHEMATIC";
+        }
+        return false;
+    }
+
+    [RelayCommand]
+    private void ToggleFileMenu() => IsFileMenuOpen = !IsFileMenuOpen;
+
+    [RelayCommand]
     private async Task SaveProjectToServerAsync()
     {
+        IsFileMenuOpen = false;
         try
         {
             StatusText = "Saving project to the server…";
@@ -1190,6 +1262,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [RelayCommand]
     public void SaveProjectAs()
     {
+        IsFileMenuOpen = false;
 #if ANDROID
         if (DeviceInfo.Platform == DevicePlatform.Android)
             SaveDestinationFolder = "Downloads/EEEngine";
