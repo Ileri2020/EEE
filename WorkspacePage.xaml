@@ -779,9 +779,9 @@
                             </Grid>
                             <HorizontalStackLayout Grid.Row="1" Padding="14,8" Spacing="8">
                                 <Button Text="Select all" Style="{StaticResource ToolBtn}" FontSize="11"
-                                        Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="{x:Boolean True}"/>
+                                        Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="True"/>
                                 <Button Text="Clear" Style="{StaticResource ToolBtn}" FontSize="11"
-                                        Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="{x:Boolean False}"/>
+                                        Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="False"/>
                             </HorizontalStackLayout>
                             <ScrollView Grid.Row="2" Padding="12,4">
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding WaveformSignals}" Spacing="4">

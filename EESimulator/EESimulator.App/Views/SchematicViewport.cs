@@ -97,12 +97,14 @@ public class SchematicViewport : GraphicsView, IDrawable
     private PointF _stretchStartWorld;
     private double _initialScaleX = 1.0;
     private double _initialScaleY = 1.0;
+    private float _stretchScaleWidth = 26f;
+    private float _stretchScaleHeight = 26f;
 
     private static float GetSelectionHalfWidth(ComponentNode component)
-        => Math.Max(26f, ComponentSymbolDrawer.GetDigitalBlockHalfWidth(component.Pins));
+        => (float)AdaptiveComponentLayout.Get(component).HalfWidth;
 
     private static float GetSelectionHalfHeight(ComponentNode component)
-        => Math.Max(26f, ComponentSymbolDrawer.GetDigitalBlockHalfHeight(component.Pins) + 6f);
+        => (float)AdaptiveComponentLayout.Get(component).HalfHeight;
 
     // Long-press timer
     private System.Threading.Timer? _longPressTimer;
@@ -190,7 +192,7 @@ public class SchematicViewport : GraphicsView, IDrawable
     /// <summary>
     /// Recomputes the world-space position of the rotate handle based on the
     /// currently selected component's position and rotation.
-    /// The handle is drawn at (half+14, 0) in component-local space where half=26f.
+    /// The handle follows the current component bounds with a fixed offset.
     /// </summary>
     private void UpdateRotateHandle()
     {
@@ -200,8 +202,7 @@ public class SchematicViewport : GraphicsView, IDrawable
             return;
         }
 
-        float sx = (float)(_selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0);
-        float localX = GetSelectionHalfWidth(_selectedComponent) * sx + 14f;
+        float localX = GetSelectionHalfWidth(_selectedComponent) + 14f;
         const float localY = 0f;
 
         // Rotate the local offset by the component's rotation angle
@@ -227,10 +228,8 @@ public class SchematicViewport : GraphicsView, IDrawable
         float lx = dx * cos - dy * sin;
         float ly = dx * sin + dy * cos;
 
-        float sx = (float)(_selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0);
-        float sy = (float)(_selectedComponent.ScaleY > 0 ? _selectedComponent.ScaleY : 1.0);
-        float halfX = GetSelectionHalfWidth(_selectedComponent) * sx;
-        float halfY = GetSelectionHalfHeight(_selectedComponent) * sy;
+        float halfX = GetSelectionHalfWidth(_selectedComponent);
+        float halfY = GetSelectionHalfHeight(_selectedComponent);
 
         float[] hx = { -halfX, 0,     halfX,  -halfX, halfX,  -halfX, 0,     halfX };
         float[] hy = { -halfY, -halfY, -halfY, 0,     0,      halfY,  halfY, halfY };
@@ -372,8 +371,8 @@ public class SchematicViewport : GraphicsView, IDrawable
             float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float ldx = (ddx * cos - ddy * sin) / GetSelectionHalfWidth(_selectedComponent);
-            float ldy = (ddx * sin + ddy * cos) / GetSelectionHalfHeight(_selectedComponent);
+            float ldx = (ddx * cos - ddy * sin) / _stretchScaleWidth;
+            float ldy = (ddx * sin + ddy * cos) / _stretchScaleHeight;
 
             double newSx = _initialScaleX;
             double newSy = _initialScaleY;
@@ -699,6 +698,8 @@ public class SchematicViewport : GraphicsView, IDrawable
                 _stretchStartWorld = w;
                 _initialScaleX = _selectedComponent.ScaleX > 0 ? _selectedComponent.ScaleX : 1.0;
                 _initialScaleY = _selectedComponent.ScaleY > 0 ? _selectedComponent.ScaleY : 1.0;
+                _stretchScaleWidth = GetSelectionHalfWidth(_selectedComponent) / (float)_initialScaleX;
+                _stretchScaleHeight = GetSelectionHalfHeight(_selectedComponent) / (float)_initialScaleY;
                 Invalidate();
                 return;
             }
@@ -786,8 +787,8 @@ public class SchematicViewport : GraphicsView, IDrawable
             float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float ldx = (ddx * cos - ddy * sin) / GetSelectionHalfWidth(_selectedComponent);
-            float ldy = (ddx * sin + ddy * cos) / GetSelectionHalfHeight(_selectedComponent);
+            float ldx = (ddx * cos - ddy * sin) / _stretchScaleWidth;
+            float ldy = (ddx * sin + ddy * cos) / _stretchScaleHeight;
 
             double newSx = _initialScaleX;
             double newSy = _initialScaleY;
@@ -891,6 +892,8 @@ public class SchematicViewport : GraphicsView, IDrawable
     {
         if (Circuit == null) return null;
         float pinHitRadius = DeviceInfo.Idiom == DeviceIdiom.Phone ? 24.0f : 16.0f;
+        float nearestDistanceSq = pinHitRadius * pinHitRadius;
+        (ComponentNode Component, ComponentPin Pin)? nearestPin = null;
 
         foreach (var comp in Circuit.FindChildren<ComponentNode>())
         {
@@ -906,21 +909,21 @@ public class SchematicViewport : GraphicsView, IDrawable
                 dy = ry;
             }
 
-            dx /= (float)(comp.ScaleX > 0 ? comp.ScaleX : 1.0);
-            dy /= (float)(comp.ScaleY > 0 ? comp.ScaleY : 1.0);
-
+            AdaptiveComponentLayout layout = AdaptiveComponentLayout.Get(comp);
             foreach (var pin in comp.Pins)
             {
-                float px = (float)pin.RelativeX;
-                float py = (float)pin.RelativeY;
+                ComponentPinPosition position = layout.GetPinPosition(pin);
+                float px = (float)position.X;
+                float py = (float)position.Y;
                 float distSq = (dx - px) * (dx - px) + (dy - py) * (dy - py);
-                if (distSq <= pinHitRadius * pinHitRadius)
+                if (distSq <= nearestDistanceSq)
                 {
-                    return (comp, pin);
+                    nearestDistanceSq = distSq;
+                    nearestPin = (comp, pin);
                 }
             }
         }
-        return null;
+        return nearestPin;
     }
 
     private ComponentNode? HitTest(PointF p) => HitTest(p.X, p.Y);
@@ -965,7 +968,11 @@ public class SchematicViewport : GraphicsView, IDrawable
             if (node is WireComponent) continue;
             float dx = wx - (float)node.X;
             float dy = wy - (float)node.Y;
-            if (Math.Abs(dx) <= 26 && Math.Abs(dy) <= 26)
+            float radians = -(float)(node.Rotation * Math.PI / 180.0);
+            float localX = dx * MathF.Cos(radians) - dy * MathF.Sin(radians);
+            float localY = dx * MathF.Sin(radians) + dy * MathF.Cos(radians);
+            AdaptiveComponentLayout layout = AdaptiveComponentLayout.Get(node);
+            if (Math.Abs(localX) <= layout.HalfWidth && Math.Abs(localY) <= layout.HalfHeight)
                 return node;
         }
         return null;
@@ -1501,12 +1508,13 @@ public class SchematicViewport : GraphicsView, IDrawable
 
         float sx = (float)(comp.ScaleX > 0 ? comp.ScaleX : 1.0);
         float sy = (float)(comp.ScaleY > 0 ? comp.ScaleY : 1.0);
+        AdaptiveComponentLayout layout = AdaptiveComponentLayout.Get(comp);
 
         // Selection outline with resize handles
         if (selected)
         {
-            float halfX = GetSelectionHalfWidth(comp) * sx;
-            float halfY = GetSelectionHalfHeight(comp) * sy;
+            float halfX = GetSelectionHalfWidth(comp);
+            float halfY = GetSelectionHalfHeight(comp);
             const float hSz  = 5f;  // handle half-size
 
             // Glow border
@@ -1547,14 +1555,14 @@ public class SchematicViewport : GraphicsView, IDrawable
         {
             // Glowing red breakdown / overload halo behind the component
             canvas.FillColor = Color.FromRgba(248, 81, 73, 90);
-            canvas.FillCircle(0, 0, 26 * Math.Max(sx, sy));
+            canvas.FillCircle(0, 0, (float)Math.Max(layout.HalfWidth, layout.HalfHeight));
 
             // Breakdown warning indicator badge at top-right
             canvas.FillColor = Color.FromArgb("#B3261E");
-            canvas.FillCircle(20 * sx, -20 * sy, 8.5f);
+            canvas.FillCircle((float)layout.HalfWidth, (float)-layout.HalfHeight, 8.5f);
             canvas.FontColor = Colors.White;
             canvas.FontSize = 9f;
-            canvas.DrawString("⚡", 15 * sx, -25 * sy, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+            canvas.DrawString("⚡", (float)layout.HalfWidth - 5, (float)-layout.HalfHeight - 5, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
 
         bool isOn = comp switch
@@ -1575,7 +1583,7 @@ public class SchematicViewport : GraphicsView, IDrawable
         };
 
         canvas.SaveState();
-        canvas.Scale(sx, sy);
+        canvas.Scale(sx * (float)layout.ScaleFactor, sy * (float)layout.ScaleFactor);
 
         switch (comp.ComponentType)
         {
@@ -1726,7 +1734,8 @@ public class SchematicViewport : GraphicsView, IDrawable
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 9;
         canvas.DrawString(comp.Reference.Length > 0 ? comp.Reference : comp.Name,
-            -30, 22, 60, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
+            -GetSelectionHalfWidth(comp), GetSelectionHalfHeight(comp) + 2,
+            GetSelectionHalfWidth(comp) * 2, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
 
         // Waveform indicator (Graph icon enabled)
         if (comp.ShowWaveform)
@@ -1744,8 +1753,9 @@ public class SchematicViewport : GraphicsView, IDrawable
         // Draw small circle to nodes/pins on all components in viewport with connection degree coloring
         foreach (var pin in comp.Pins)
         {
-            float px = (float)pin.RelativeX * sx;
-            float py = (float)pin.RelativeY * sy;
+            ComponentPinPosition position = layout.GetPinPosition(pin);
+            float px = (float)position.X;
+            float py = (float)position.Y;
             bool isPinSelected = (_selectedPin != null &&
                                   _selectedPin.Value.Component == comp &&
                                   _selectedPin.Value.Pin == pin);
@@ -1827,10 +1837,9 @@ public class SchematicViewport : GraphicsView, IDrawable
         foreach (var component in components)
         {
             if (ReferenceEquals(component, target) || component is WireComponent) continue;
-            float halfX = Math.Max(28f, ComponentSymbolDrawer.GetDigitalBlockHalfWidth(component.Pins) + 2)
-                * (float)(component.ScaleX > 0 ? component.ScaleX : 1.0);
-            float halfY = Math.Max(28f, ComponentSymbolDrawer.GetDigitalBlockHalfHeight(component.Pins) + 2)
-                * (float)(component.ScaleY > 0 ? component.ScaleY : 1.0);
+            AdaptiveComponentLayout layout = AdaptiveComponentLayout.Get(component);
+            float halfX = (float)layout.HalfWidth + 2;
+            float halfY = (float)layout.HalfHeight + 2;
             var body = new RectF((float)component.X - halfX, (float)component.Y - halfY, halfX * 2, halfY * 2);
             if (RectanglesOverlap(body, badge)) return true;
         }

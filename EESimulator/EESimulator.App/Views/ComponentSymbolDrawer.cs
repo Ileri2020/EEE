@@ -180,35 +180,27 @@ public static class ComponentSymbolDrawer
         return (float)Math.Max(13, sidePinExtent - 6);
     }
 
-    public static float GetDigitalBlockHalfWidth(IEnumerable<ComponentPin>? pins)
-    {
-        double pinExtent = pins?
-            .Select(pin => Math.Abs(pin.RelativeX))
-            .DefaultIfEmpty(0)
-            .Max() ?? 0;
-        return (float)Math.Max(15, pinExtent + 4);
-    }
-
     public static void DrawDigitalBlock(
         ICanvas canvas,
         string label,
         string color,
         IEnumerable<ComponentPin>? pins = null)
     {
+        const float halfWidth = 15f;
         float halfHeight = GetDigitalBlockHalfHeight(pins);
         canvas.StrokeColor = Color.FromArgb(color);
         canvas.StrokeSize = 2f;
         canvas.FillColor = Color.FromArgb("#161B22");
-        canvas.FillRoundedRectangle(-15, -halfHeight, 30, halfHeight * 2, 3);
-        canvas.DrawRoundedRectangle(-15, -halfHeight, 30, halfHeight * 2, 3);
-        canvas.DrawLine(-22, 0, -15, 0);
-        canvas.DrawLine(15, 0, 22, 0);
+        canvas.FillRoundedRectangle(-halfWidth, -halfHeight, halfWidth * 2, halfHeight * 2, 3);
+        canvas.DrawRoundedRectangle(-halfWidth, -halfHeight, halfWidth * 2, halfHeight * 2, 3);
+        canvas.DrawLine(-22, 0, -halfWidth, 0);
+        canvas.DrawLine(halfWidth, 0, 22, 0);
         canvas.FillColor = Color.FromArgb(color);
         canvas.FillCircle(-22, 0, 2);
         canvas.FillCircle(22, 0, 2);
         canvas.FontColor = Color.FromArgb(color);
         canvas.FontSize = label.Length > 3 ? 7f : 9f;
-        canvas.DrawString(label, -13, -5, 26, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.DrawString(label, -halfWidth + 2, -5, halfWidth * 2 - 4, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
     }
 
     public static void DrawButton(ICanvas canvas, bool pressed)

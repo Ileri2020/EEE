@@ -162,8 +162,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsSaveAsModalVisible { get; set; } = false;
 
-    [ObservableProperty]
-    public partial bool IsFileMenuOpen { get; set; }
+    private bool _isFileMenuOpen;
+    public bool IsFileMenuOpen
+    {
+        get => _isFileMenuOpen;
+        set => SetProperty(ref _isFileMenuOpen, value);
+    }
 
     [ObservableProperty]
     public partial string SaveFileName { get; set; } = "Circuit1";
@@ -1553,8 +1557,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
         static Point2D PinWorldPosition(ComponentNode component, ComponentPin pin)
         {
-            double localX = pin.RelativeX * (component.ScaleX > 0 ? component.ScaleX : 1.0);
-            double localY = pin.RelativeY * (component.ScaleY > 0 ? component.ScaleY : 1.0);
+            ComponentPinPosition local = AdaptiveComponentLayout.Get(component).GetPinPosition(pin);
+            double localX = local.X;
+            double localY = local.Y;
             double radians = component.Rotation * Math.PI / 180.0;
             return new Point2D(
                 component.X + localX * Math.Cos(radians) - localY * Math.Sin(radians),
@@ -2996,7 +3001,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     // Called by the canvas when user clicks a specific node/pin on a component
     public void OnPinSelected(ComponentNode comp, ComponentPin pin)
     {
-        ActiveComponentInfo = $"{comp.Reference}:{pin.Name} (Pin {pin.Id}) @ ({comp.X + pin.RelativeX:F0}, {comp.Y + pin.RelativeY:F0})";
+        ComponentPinPosition local = AdaptiveComponentLayout.Get(comp).GetPinPosition(pin);
+        double radians = comp.Rotation * Math.PI / 180.0;
+        double worldX = comp.X + local.X * Math.Cos(radians) - local.Y * Math.Sin(radians);
+        double worldY = comp.Y + local.X * Math.Sin(radians) + local.Y * Math.Cos(radians);
+        ActiveComponentInfo = $"{comp.Reference}:{pin.Name} (Pin {pin.Id}) @ ({worldX:F0}, {worldY:F0})";
         StatusText = $"Selected node {comp.Reference}:{pin.Name}";
     }
 
