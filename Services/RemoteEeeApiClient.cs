@@ -28,6 +28,7 @@ public sealed class RemoteEeeApiClient
     private const string DefaultApiBaseUrl = "https://www.vport.store";
     private const int MaxAiRequestBytes = 350_000;
     private const int MaxAiPromptCharacters = 8_000;
+    private const int GeminiKeyTimeoutSeconds = 60;
     public const string SecureAccessTokenKey = "EEE.RemoteApi.AccessToken";
     private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(305) };
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -374,7 +375,7 @@ public sealed class RemoteEeeApiClient
                 };
                 httpRequest.Headers.Add("x-goog-api-key", apiKey);
 
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(GeminiKeyTimeoutSeconds));
                 using var response = await _httpClient.SendAsync(httpRequest, timeout.Token);
                 await EnsureSuccessAsync(response);
                 using var payload = await JsonDocument.ParseAsync(
