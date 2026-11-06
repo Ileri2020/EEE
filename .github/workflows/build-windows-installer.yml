@@ -1,0 +1,46 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install .NET MAUI workload
+        run: dotnet workload install maui
+
+      - name: Publish unsigned MSIX installer
+        shell: pwsh
+        run: >-
+          dotnet publish EEE.csproj
+          -f net10.0-windows10.0.19041.0
+          -c Release
+          --artifacts-path Platforms/dist
+          -p:PublishReadyToRun=false
+          -p:WindowsPackageType=MSIX
+          -p:GenerateAppxPackageOnBuild=true
+          -p:AppxPackageSigningEnabled=false
+          -p:AppxBundle=Never
+          -p:AppxPackageDir=Platforms/installer/
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ee-engine-windows-msix
+          path: Platforms/installer/**/*.msix
+          if-no-files-found: error

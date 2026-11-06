@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EEE.AccountPage"
+             Title="Account"
+             BackgroundColor="#0D1117">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16" MaximumWidthRequest="680" HorizontalOptions="Center">
+            <Label Text="EE Engine Account" TextColor="#E6EDF3" FontSize="22" FontAttributes="Bold"/>
+            <Label x:Name="AccountStatusLabel" Text="Not connected" TextColor="#8B949E" FontSize="13"/>
+            <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="16">
+                <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="HCVP ACCOUNT" TextColor="#79C0FF" FontSize="11" FontAttributes="Bold"/>
+                    <Label Text="Sign in or create an account with email, password, or Google. Add or remove your Gemini key there; it is encrypted and stored on HCVP, never in this app." TextColor="#C9D1D9" FontSize="13" LineBreakMode="WordWrap"/>
+                    <Button Text="Open account and Gemini key settings" Clicked="OnOpenAccountClicked" BackgroundColor="#1F6FEB" TextColor="White" CornerRadius="6"/>
+                </VerticalStackLayout>
+            </Border>
+            <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="16">
+                <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="CONNECT THIS APP" TextColor="#56D364" FontSize="11" FontAttributes="Bold"/>
+                    <Label Text="After signing in on HCVP, create an EEE app token and paste it here. The app stores the token in secure device storage and will use your saved Gemini key when making AI requests." TextColor="#C9D1D9" FontSize="13" LineBreakMode="WordWrap"/>
+                    <Entry x:Name="AppTokenEntry" Placeholder="Paste EEE app token" IsPassword="True" BackgroundColor="#0D1117" TextColor="#C9D1D9" PlaceholderColor="#6E7681"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="Connect" Clicked="OnConnectClicked" BackgroundColor="#238636" TextColor="White" CornerRadius="6"/>
+                        <Button x:Name="DisconnectButton" Grid.Column="1" Text="Disconnect and revoke" Clicked="OnDisconnectClicked" BackgroundColor="#21262D" TextColor="#F78166" CornerRadius="6" IsVisible="False"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

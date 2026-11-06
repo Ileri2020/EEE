@@ -177,6 +177,10 @@
                     </Border.StrokeShape>
 
                     <VerticalStackLayout Spacing="16">
+                        <Button Text="Open Control Sidebar"
+                                Style="{StaticResource AccentBtn}"
+                                HorizontalOptions="Start"
+                                Clicked="OnOpenControlSidebarClicked"/>
                         <!-- Header -->
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                             <Label Grid.Column="0" Text="🎛" FontSize="20" TextColor="#58A6FF" VerticalOptions="Center"/>

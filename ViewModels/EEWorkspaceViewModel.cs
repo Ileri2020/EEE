@@ -61,6 +61,19 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial string AiSchemaPrompt { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial bool IsAiEditMode { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool IsAwaitingAiReply { get; set; }
+
+    private string _pendingAiPrompt = string.Empty;
+    public string AiSchemaInputPlaceholder => IsAwaitingAiReply
+        ? "Answer the AI clarification…"
+        : "Ask AI to create or edit this circuit…";
+
+    partial void OnIsAwaitingAiReplyChanged(bool value) => OnPropertyChanged(nameof(AiSchemaInputPlaceholder));
+
+    [ObservableProperty]
     public partial string AiSchemaStatus { get; set; } = "AI drafts use the HCVP server Gemini key; sign-in is not required.";
 
     [ObservableProperty]
@@ -1004,12 +1017,26 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         try
         {
-            await Shell.Current.GoToAsync("settings-detail");
+            await Shell.Current.GoToAsync("//settings");
             StatusText = "Settings opened";
         }
         catch (Exception ex)
         {
             StatusText = $"Could not open Settings: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenAccount()
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("account-detail");
+            StatusText = "Account opened";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Could not open Account: {ex.Message}";
         }
     }
 
@@ -1134,11 +1161,37 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task SaveProjectAsOnlineAsync()
+    {
+        string title = System.IO.Path.GetFileNameWithoutExtension(SaveFileName).Trim();
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            StatusText = "Filename cannot be empty.";
+            return;
+        }
+
+        try
+        {
+            StatusText = "Saving project online…";
+            var result = await _remoteApi.SaveProjectAsync(Circuit, title);
+            ProjectName = title + ".eee";
+            IsSaveAsModalVisible = false;
+            StatusText = string.IsNullOrWhiteSpace(result.Id)
+                ? "Project saved online."
+                : $"Project saved online (ID: {result.Id}).";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Online save failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     public void SaveProjectAs()
     {
 #if ANDROID
         if (DeviceInfo.Platform == DevicePlatform.Android)
-            SaveDestinationFolder = "Choose a destination on your device when you save";
+            SaveDestinationFolder = "Downloads/EEEngine";
         else
 #endif
         if (string.IsNullOrWhiteSpace(SaveDestinationFolder))
@@ -1200,21 +1253,29 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 try
                 {
                     SaveToPath(temporaryPath);
-                    await using var stream = System.IO.File.OpenRead(temporaryPath);
-                    var result = await FileSaver.Default.SaveAsync(
-                        cleanName + ext,
-                        stream,
-                        System.Threading.CancellationToken.None);
-                    if (!result.IsSuccessful)
+                    if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Q)
                     {
-                        StatusText = result.Exception?.Message ?? "Save cancelled.";
-                        return;
+                        await EEE.Platforms.Android.AndroidDownloadSaver.SaveAsync(temporaryPath, cleanName + ext);
+                        StatusText = $"Saved to Downloads/EEEngine/{cleanName + ext}";
+                    }
+                    else
+                    {
+                        await using var stream = System.IO.File.OpenRead(temporaryPath);
+                        var result = await FileSaver.Default.SaveAsync(
+                            cleanName + ext,
+                            stream,
+                            System.Threading.CancellationToken.None);
+                        if (!result.IsSuccessful)
+                        {
+                            StatusText = result.Exception?.Message ?? "Save cancelled.";
+                            return;
+                        }
+                        StatusText = $"Saved locally: {result.FilePath}";
                     }
 
                     CurrentFilePath = null;
                     ProjectName = cleanName + ext;
                     IsSaveAsModalVisible = false;
-                    StatusText = $"Saved locally: {result.FilePath}";
                     return;
                 }
                 finally
@@ -2188,9 +2249,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private async Task GenerateSchemaScriptAsync()
     {
         if (IsAiSchemaRequestInProgress) return;
-        if (string.IsNullOrWhiteSpace(AiSchemaPrompt))
+        bool answeringClarification = IsAwaitingAiReply;
+        string requestPrompt = answeringClarification ? _pendingAiPrompt : AiSchemaPrompt.Trim();
+        string clarificationAnswer = answeringClarification ? AiSchemaPrompt.Trim() : string.Empty;
+        if (string.IsNullOrWhiteSpace(requestPrompt) || (answeringClarification && string.IsNullOrWhiteSpace(clarificationAnswer)))
         {
-            AiSchemaStatus = "Describe the schematic change you want first.";
+            AiSchemaStatus = answeringClarification
+                ? "Enter an answer to the AI clarification first."
+                : "Describe the schematic change you want first.";
             return;
         }
 
@@ -2208,14 +2274,36 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 DispatchTriggeredUiEvents();
             }
             var draft = await _remoteApi.GenerateSchemaScriptAsync(
-                AiSchemaPrompt,
+                requestPrompt,
                 ScriptText,
                 ConsoleOutput,
                 Circuit,
-                _simManager.LastResults);
-            if (draft.Questions.Count > 0 && string.IsNullOrWhiteSpace(draft.Script))
+                _simManager.LastResults,
+                IsAiEditMode,
+                clarificationAnswer,
+                answeringClarification);
+            if (!answeringClarification && draft.Questions.Count > 0 && string.IsNullOrWhiteSpace(draft.Script))
             {
-                AiSchemaStatus = string.Join(" ", draft.Questions);
+                _pendingAiPrompt = requestPrompt;
+                IsAwaitingAiReply = true;
+                AiSchemaPrompt = string.Empty;
+                AiSchemaStatus = $"AI needs one clarification: {draft.Questions[0]} Enter your reply and submit once; it will then return a script without another question.";
+                return;
+            }
+            if (answeringClarification)
+            {
+                IsAwaitingAiReply = false;
+                _pendingAiPrompt = string.Empty;
+                if (string.IsNullOrWhiteSpace(draft.Script))
+                {
+                    AiSchemaPrompt = string.Empty;
+                    AiSchemaStatus = "The AI did not return a script after your answer. Start a new request with any missing details included.";
+                    return;
+                }
+            }
+            if (draft.Script.Trim().Length == 0)
+            {
+                AiSchemaStatus = draft.Questions.FirstOrDefault() ?? "The AI service returned an empty script draft.";
                 return;
             }
 
@@ -2231,6 +2319,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
                 ScriptText = normalizedScript;
+                AiSchemaPrompt = string.Empty;
                 IsAnalyticsViewActive = false;
                 IsScriptViewActive = true;
                 UI.Workspace.SetViewport("Script");

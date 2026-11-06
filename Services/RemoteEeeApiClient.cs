@@ -133,21 +133,77 @@ public sealed class RemoteEeeApiClient
             ?? throw new InvalidOperationException("The projects API returned an empty response.");
     }
 
+    public async Task<RemoteEeeAccountStatus> GetAccountStatusAsync()
+    {
+        string? token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
+        if (string.IsNullOrWhiteSpace(token)) return new RemoteEeeAccountStatus();
+
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            new Uri(new Uri(ApiBaseUrl + "/"), "api/eee/account"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var response = await _httpClient.SendAsync(request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<RemoteEeeAccountStatus>(JsonOptions)
+            ?? throw new InvalidOperationException("The account API returned an empty response.");
+    }
+
+    public async Task ConnectAccountAsync(string appToken)
+    {
+        string token = (appToken ?? string.Empty).Trim();
+        if (token.Length < 32 || token.Any(char.IsWhiteSpace))
+            throw new ArgumentException("Paste a valid EEE app token.", nameof(appToken));
+
+        await SecureStorage.Default.SetAsync(SecureAccessTokenKey, token);
+        try
+        {
+            var status = await GetAccountStatusAsync();
+            if (!status.SignedIn) throw new InvalidOperationException("The app token was not accepted by HCVP.");
+        }
+        catch
+        {
+            SecureStorage.Default.Remove(SecureAccessTokenKey);
+            throw;
+        }
+    }
+
+    public async Task DisconnectAccountAsync()
+    {
+        string? token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
+        if (string.IsNullOrWhiteSpace(token)) return;
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete,
+            new Uri(new Uri(ApiBaseUrl + "/"), "api/eee/token"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var response = await _httpClient.SendAsync(request);
+        await EnsureSuccessAsync(response);
+        SecureStorage.Default.Remove(SecureAccessTokenKey);
+    }
+
     /// <summary>Asks HCVP to produce a Python script draft; never executes the response.</summary>
     public async Task<AiSchemaScriptDraft> GenerateSchemaScriptAsync(
         string prompt,
         string currentScript,
         string lastScriptExecutionOutput,
         CircuitNode circuit,
-        SimulationResultsData? latestSimulation)
+        SimulationResultsData? latestSimulation,
+        bool editMode = true,
+        string? clarificationAnswer = null,
+        bool clarificationWasAnswered = false)
     {
         EnsureConfigured();
         ArgumentNullException.ThrowIfNull(circuit);
         var request = new GenerateSchemaScriptRequest
         {
-            SystemInstructions = AiSystemInstructions,
-            Prompt = prompt.Trim(),
-            CurrentScript = currentScript ?? string.Empty,
+            SystemInstructions = AiSystemInstructions + (clarificationWasAnswered
+                ? "\nThe user has answered the only clarification allowed. Do not ask another question; return the final valid Python script now."
+                : "\nAsk at most one concise clarification question. If one is necessary, return only the first question and an empty script."),
+            Prompt = clarificationWasAnswered
+                ? $"{prompt.Trim()}\n\nUser's answer to the single clarification: {clarificationAnswer?.Trim()}\nNow return the final Python script without asking another question."
+                : prompt.Trim(),
+            CurrentScript = editMode ? currentScript ?? string.Empty : string.Empty,
+            IsEditMode = editMode,
+            ClarificationAnswer = clarificationAnswer ?? string.Empty,
+            ClarificationWasAnswered = clarificationWasAnswered,
             LastScriptExecutionOutput = LimitText(lastScriptExecutionOutput, 8_000),
             CurrentCircuitJson = SanitizeCircuitJson(EeePlatformSerializer.ExportToEee(circuit)),
             AvailableComponents = BuildComponentCatalog(),
@@ -545,6 +601,9 @@ public sealed class RemoteEeeApiClient
         public string SystemInstructions { get; set; } = string.Empty;
         public string Prompt { get; set; } = string.Empty;
         public string CurrentScript { get; set; } = string.Empty;
+        public bool IsEditMode { get; set; }
+        public string ClarificationAnswer { get; set; } = string.Empty;
+        public bool ClarificationWasAnswered { get; set; }
         public string LastScriptExecutionOutput { get; set; } = string.Empty;
         public string CurrentCircuitJson { get; set; } = string.Empty;
         public object AvailableComponents { get; set; } = Array.Empty<object>();
@@ -560,6 +619,21 @@ public sealed class ServerProjectSaveResult
     public string Title { get; set; } = string.Empty;
     public string? OwnerName { get; set; }
     public DateTimeOffset? SavedAt { get; set; }
+}
+
+public sealed class RemoteEeeAccountStatus
+{
+    public bool SignedIn { get; set; }
+    public bool ApiKeyConfigured { get; set; }
+    public bool TokenConfigured { get; set; }
+    public DateTimeOffset? TokenExpiresAt { get; set; }
+    public RemoteEeeAccountUser? User { get; set; }
+}
+
+public sealed class RemoteEeeAccountUser
+{
+    public string? Name { get; set; }
+    public string? Email { get; set; }
 }
 
 public sealed class AiSchemaScriptDraft
