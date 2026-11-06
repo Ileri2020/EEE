@@ -1696,9 +1696,9 @@ public class SchematicViewport : GraphicsView, IDrawable
             case "LossyTransmissionLine": ComponentSymbolDrawer.DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     ComponentSymbolDrawer.DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;
-            case "SinglePhaseTransmissionLine": ComponentSymbolDrawer.DrawSinglePhaseLinePole(canvas); break;
-            case "TwoPhaseTransmissionLine": ComponentSymbolDrawer.DrawTwoPhaseLinePole(canvas); break;
-            case "ThreePhaseTransmissionLine": ComponentSymbolDrawer.DrawThreePhaseLinePole(canvas); break;
+            case "SinglePhaseTransmissionLine": ComponentSymbolDrawer.DrawSinglePhaseTransmissionLine(canvas); break;
+            case "TwoPhaseTransmissionLine": ComponentSymbolDrawer.DrawTwoPhaseTransmissionLine(canvas); break;
+            case "ThreePhaseTransmissionLine": ComponentSymbolDrawer.DrawThreePhaseTransmissionLine(canvas); break;
             case "ACTransformer": ComponentSymbolDrawer.DrawTransformer(canvas); break;
             case "SynchronousGenerator": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "GEN", "#56D364"); break;
             case "InductionMotor": ComponentSymbolDrawer.DrawDigitalBlock(canvas, "MTR", "#FFA657"); break;
