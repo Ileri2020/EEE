@@ -682,9 +682,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
         }),
         new ComponentPaletteGroup("📡 Transmission Lines", new[]
         {
-            new ComponentPaletteItem("SinglePhaseTransmissionLine", "T1", "RLGC", "#79C0FF", "Transmission Lines", "Single-phase line: short, medium, or long-line model", "single_phase_line.svg"),
-            new ComponentPaletteItem("TwoPhaseTransmissionLine", "T2", "RLGC", "#79C0FF", "Transmission Lines", "True two-phase or split-phase three-wire line", "two_phase_line.svg"),
-            new ComponentPaletteItem("ThreePhaseTransmissionLine", "T3", "RLGC", "#79C0FF", "Transmission Lines", "Three-phase line with explicit phase/neutral nodes", "three_phase_line.svg"),
+            new ComponentPaletteItem("SinglePhaseTransmissionLine", "T1", "RLGC", "#79C0FF", "Transmission Lines", "Single-phase RLGC line; external generator or fixed AC source", "single_phase_line.svg"),
+            new ComponentPaletteItem("TwoPhaseTransmissionLine", "T2", "RLGC", "#79C0FF", "Transmission Lines", "True two-phase or split-phase RLGC line; external or fixed AC", "two_phase_line.svg"),
+            new ComponentPaletteItem("ThreePhaseTransmissionLine", "T3", "RLGC", "#79C0FF", "Transmission Lines", "Three-phase RLGC line; external generators or fixed phase sources", "three_phase_line.svg"),
             new ComponentPaletteItem("TransmissionLine",      "T",  "Ω",   "#79C0FF", "Transmission", "Lossless Transmission Line", "transmissionline.svg"),
             new ComponentPaletteItem("LossyTransmissionLine", "TL", "RLGC","#FFA657", "Transmission", "Lossy Transmission Line",    "lossy_transmissionline.svg"),
             new ComponentPaletteItem("CoaxialCable",          "CX", "COAX","#79C0FF", "Transmission", "Coaxial Cable Line",         "coaxial.svg"),
