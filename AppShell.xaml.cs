@@ -1,13 +1,16 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace EEE;
 
 public partial class AppShell : Shell
 {
-    public AppShell(WorkspacePage workspacePage)
+    public AppShell(IServiceProvider services)
     {
         InitializeComponent();
-        // Keep Settings available as a DI-created detail page so workspace
-        // navigation does not land on a blank root ShellContent surface.
-        Routing.RegisterRoute("settings-detail", typeof(SettingsPage));
+        WorkspaceShellContent.ContentTemplate = new DataTemplate(
+            () => services.GetRequiredService<WorkspacePage>());
+        SettingsShellContent.ContentTemplate = new DataTemplate(
+            () => services.GetRequiredService<SettingsPage>());
         Routing.RegisterRoute("account-detail", typeof(AccountPage));
     }
 }

@@ -9,11 +9,11 @@
     BackgroundColor="#161B22">
 
     <ShellContent
-        ContentTemplate="{DataTemplate local:WorkspacePage}"
+        x:Name="WorkspaceShellContent"
         Route="workspace"/>
 
     <ShellContent
-        ContentTemplate="{DataTemplate local:SettingsPage}"
+        x:Name="SettingsShellContent"
         Route="settings"/>
 
     <ShellContent

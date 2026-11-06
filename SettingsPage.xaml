@@ -468,7 +468,7 @@
                                        FontSize="10"/>
                             </VerticalStackLayout>
 
-                                <!-- Secured server endpoint; API credentials are never stored in the app -->
+                                <!-- Keys are fetched only for in-memory use and are not persisted on the device. -->
                                 <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
                                     <Label Text="HCVP API BASE URL" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Entry Text="{Binding RemoteApiBaseUrl}"
@@ -480,16 +480,16 @@
                                     <Button Text="Open HCVP Account" Style="{StaticResource StandardBtn}"
                                             HorizontalOptions="Start"
                                             Command="{Binding OpenHcvpAccountCommand}"/>
-                                    <Label Text="AI drafts use the Gemini key configured privately on the HCVP server and work without signing in. Production requires HTTPS."
+                                    <Label Text="AI requests go directly from this app to Gemini. HCVP returns keys just in time and does not send circuit prompts to Gemini. Production requires HTTPS."
                                         TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 
                                 <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
-                                    <Label Text="EEE APP TOKEN (OPTIONAL — PUBLISHING ONLY)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                    <Label Text="EEE APP TOKEN (OPTIONAL — PERSONAL KEY &amp; PUBLISHING)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                         <Entry Grid.Column="0"
                                                Text="{Binding RemoteApiAccessTokenDraft}"
-                                               Placeholder="Only needed to publish community examples"
+                                               Placeholder="Needed to use your saved Gemini key or publish examples"
                                                IsPassword="True"
                                                BackgroundColor="#0D1117"
                                                TextColor="#C9D1D9"
@@ -499,7 +499,7 @@
                                         <Button Grid.Column="2" Text="Clear" Style="{StaticResource ToolBtn}"
                                                 Command="{Binding ClearRemoteApiAccessTokenCommand}"/>
                                     </Grid>
-                                     <Label Text="AI drafts do not need login or this token. Create an EEE app token in your HCVP Account only if you want to publish community examples. Never paste a Gemini key or database password here."
+                                     <Label Text="Without a token, the app uses the HCVP server-key pool. Those keys are delivered to the app and can be copied by anyone who can access the key endpoint. With a token, your saved personal key is used first; keys are kept only in memory. Never paste a Gemini key or database password here."
                                            TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 

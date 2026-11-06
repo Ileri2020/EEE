@@ -66,7 +66,7 @@ public partial class AccountPage : ContentPage
             var status = await _remoteApi.GetAccountStatusAsync();
             AccountStatusLabel.Text = status.SignedIn
                 ? $"Connected{(string.IsNullOrWhiteSpace(status.User?.Email) ? string.Empty : $" as {status.User.Email}")}{(status.ApiKeyConfigured ? " · personal Gemini key active" : " · using server Gemini key")}" 
-                : "Not connected. AI continues to use the HCVP server key.";
+                : "Not connected. AI uses a just-in-time HCVP server key.";
             DisconnectButton.IsVisible = status.SignedIn;
         }
         catch (Exception ex)

@@ -612,7 +612,7 @@
                                 Command="{Binding ClearConsoleCommand}"/>
                     </Grid>
 
-                          <!-- AI schema-to-script drafting (provider keys stay on the server) -->
+                          <!-- AI schema-to-script drafting (the app calls Gemini directly) -->
                           <Grid Grid.Row="1"
                              BackgroundColor="#12161D"
                              RowDefinitions="Auto,Auto,Auto"

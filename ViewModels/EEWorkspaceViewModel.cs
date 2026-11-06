@@ -75,7 +75,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     partial void OnIsAwaitingAiReplyChanged(bool value) => OnPropertyChanged(nameof(AiSchemaInputPlaceholder));
 
     [ObservableProperty]
-    public partial string AiSchemaStatus { get; set; } = "AI drafts use the HCVP server Gemini key; sign-in is not required.";
+    public partial string AiSchemaStatus { get; set; } = "AI drafts call Gemini directly from the app using a just-in-time HCVP key.";
 
     [ObservableProperty]
     public partial bool IsAiSchemaRequestInProgress { get; set; }
@@ -1850,7 +1850,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 try
                 {
                     if (!_remoteApi.IsConfigured)
-                        throw new InvalidOperationException("Configure the HCVP HTTPS API URL in Settings. AI drafts do not require sign-in or an app token.");
+                        throw new InvalidOperationException("Configure the HCVP HTTPS API URL in Settings before publishing.");
                     await _remoteApi.PublishExampleAsync(subCircuit, name, "Custom Components", definition.SvgIcon);
                     onlineStatus = " Published online.";
                 }
