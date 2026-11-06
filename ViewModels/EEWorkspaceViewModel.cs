@@ -1253,7 +1253,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 try
                 {
                     SaveToPath(temporaryPath);
-                    if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Q)
+                    if (OperatingSystem.IsAndroidVersionAtLeast(29))
                     {
                         await EEE.Platforms.Android.AndroidDownloadSaver.SaveAsync(temporaryPath, cleanName + ext);
                         StatusText = $"Saved to Downloads/EEEngine/{cleanName + ext}";

@@ -1,14 +1,15 @@
 using Android.Content;
-using Android.OS;
 using Android.Provider;
+using System.Runtime.Versioning;
 
 namespace EEE.Platforms.Android;
 
 internal static class AndroidDownloadSaver
 {
+    [SupportedOSPlatform("android29.0")]
     public static async Task SaveAsync(string sourcePath, string fileName)
     {
-        if (Build.VERSION.SdkInt < BuildVersionCodes.Q)
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
             throw new PlatformNotSupportedException("Downloads folder saving requires Android 10 or later.");
 
         var resolver = global::Android.App.Application.Context.ContentResolver
