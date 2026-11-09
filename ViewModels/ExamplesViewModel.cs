@@ -22,7 +22,7 @@ public partial class ExamplesViewModel : ObservableObject
     private readonly List<CircuitExampleItem> _communityExamples = new();
 
     [ObservableProperty]
-    private ObservableCollection<CircuitExampleItem> _filteredExamples = new();
+    public partial ObservableCollection<CircuitExampleItem> FilteredExamples { get; set; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsAllSelected))]
@@ -31,7 +31,7 @@ public partial class ExamplesViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsDigitalLogicSelected))]
     [NotifyPropertyChangedFor(nameof(IsPassiveCircuitsSelected))]
     [NotifyPropertyChangedFor(nameof(IsFiltersSelected))]
-    private string _selectedCategory = "All";
+    public partial string SelectedCategory { get; set; } = "All";
 
     public bool IsAllSelected => SelectedCategory == "All";
     public bool IsOscillatorsSelected => SelectedCategory == "Oscillators";
@@ -41,7 +41,7 @@ public partial class ExamplesViewModel : ObservableObject
     public bool IsFiltersSelected => SelectedCategory == "Filters";
 
     [ObservableProperty]
-    private string _statusMessage = string.Empty;
+    public partial string StatusMessage { get; set; } = string.Empty;
 
     public ExamplesViewModel(EEWorkspaceViewModel workspaceVm, RemoteEeeApiClient remoteApi)
     {

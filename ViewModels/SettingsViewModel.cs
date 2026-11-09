@@ -22,7 +22,7 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsTabControls))]
     [NotifyPropertyChangedFor(nameof(IsTabViewport))]
     [NotifyPropertyChangedFor(nameof(IsTabWorkspace))]
-    private string _activeSettingsTab = "Controls";
+    public partial string ActiveSettingsTab { get; set; } = "Controls";
 
     public bool IsTabControls  => ActiveSettingsTab == "Controls";
     public bool IsTabViewport  => ActiveSettingsTab == "Viewport";
@@ -33,32 +33,32 @@ public partial class SettingsViewModel : ObservableObject
 
     // ─── Viewport Settings ────────────────────────────────────────────────────
     [ObservableProperty]
-    private bool _showGrid = true;
+    public partial bool ShowGrid { get; set; } = true;
 
     partial void OnShowGridChanged(bool value) => PersistBool(nameof(ShowGrid), value);
 
     [ObservableProperty]
-    private double _gridSize = 20.0;
+    public partial double GridSize { get; set; } = 20.0;
 
     partial void OnGridSizeChanged(double value) => PersistDouble(nameof(GridSize), value);
 
     [ObservableProperty]
-    private bool _showOriginCross = true;
+    public partial bool ShowOriginCross { get; set; } = true;
 
     partial void OnShowOriginCrossChanged(bool value) => PersistBool(nameof(ShowOriginCross), value);
 
     [ObservableProperty]
-    private bool _showLiveProbes = true;
+    public partial bool ShowLiveProbes { get; set; } = true;
 
     partial void OnShowLiveProbesChanged(bool value) => PersistBool(nameof(ShowLiveProbes), value);
 
     [ObservableProperty]
-    private bool _showWaveformBadges = true;
+    public partial bool ShowWaveformBadges { get; set; } = true;
 
     partial void OnShowWaveformBadgesChanged(bool value) => PersistBool(nameof(ShowWaveformBadges), value);
 
     [ObservableProperty]
-    private string _selectedCanvasTheme = "Deep Dark (#0D1117)";
+    public partial string SelectedCanvasTheme { get; set; } = "Deep Dark (#0D1117)";
 
     partial void OnSelectedCanvasThemeChanged(string value) => PersistString(nameof(SelectedCanvasTheme), value);
 
@@ -71,33 +71,33 @@ public partial class SettingsViewModel : ObservableObject
     };
 
     [ObservableProperty]
-    private double _defaultZoom = 100.0;
+    public partial double DefaultZoom { get; set; } = 100.0;
 
     partial void OnDefaultZoomChanged(double value) => PersistDouble(nameof(DefaultZoom), value);
 
     // ─── Workspace Settings ───────────────────────────────────────────────────
     [ObservableProperty]
-    private bool _defaultSidebarVisible = true;
+    public partial bool DefaultSidebarVisible { get; set; } = true;
 
     partial void OnDefaultSidebarVisibleChanged(bool value) => PersistBool(nameof(DefaultSidebarVisible), value);
 
     [ObservableProperty]
-    private bool _defaultConsoleVisible = false;
+    public partial bool DefaultConsoleVisible { get; set; } = false;
 
     partial void OnDefaultConsoleVisibleChanged(bool value) => PersistBool(nameof(DefaultConsoleVisible), value);
 
     [ObservableProperty]
-    private bool _defaultWaveformDrawerVisible = false;
+    public partial bool DefaultWaveformDrawerVisible { get; set; } = false;
 
     partial void OnDefaultWaveformDrawerVisibleChanged(bool value) => PersistBool(nameof(DefaultWaveformDrawerVisible), value);
 
     [ObservableProperty]
-    private bool _autoRunSimulation = false;
+    public partial bool AutoRunSimulation { get; set; } = false;
 
     partial void OnAutoRunSimulationChanged(bool value) => PersistBool(nameof(AutoRunSimulation), value);
 
     [ObservableProperty]
-    private string _defaultCategory = "All";
+    public partial string DefaultCategory { get; set; } = "All";
 
     partial void OnDefaultCategoryChanged(string value) => PersistString(nameof(DefaultCategory), value);
 
@@ -107,31 +107,31 @@ public partial class SettingsViewModel : ObservableObject
         "Electrical Loads", "Sources & Energy", "Energy Storage"
     };
 
-    [ObservableProperty] private bool _enableTimeScaling;
+    [ObservableProperty] public partial bool EnableTimeScaling { get; set; }
     partial void OnEnableTimeScalingChanged(bool value) => PersistBool(nameof(EnableTimeScaling), value);
 
-    [ObservableProperty] private string _simulationTimeUnit = "seconds";
+    [ObservableProperty] public partial string SimulationTimeUnit { get; set; } = "seconds";
     partial void OnSimulationTimeUnitChanged(string value) { PersistString(nameof(SimulationTimeUnit), value); OnPropertyChanged(nameof(TimeScalingRatio)); }
 
-    [ObservableProperty] private string _deviceTimeUnit = "hours";
+    [ObservableProperty] public partial string DeviceTimeUnit { get; set; } = "hours";
     partial void OnDeviceTimeUnitChanged(string value) { PersistString(nameof(DeviceTimeUnit), value); OnPropertyChanged(nameof(TimeScalingRatio)); }
 
-    [ObservableProperty] private double _simulationTimeAmount = 30;
+    [ObservableProperty] public partial double SimulationTimeAmount { get; set; } = 30;
     partial void OnSimulationTimeAmountChanged(double value) { PersistDouble(nameof(SimulationTimeAmount), Math.Max(value, 1e-9)); OnPropertyChanged(nameof(TimeScalingRatio)); }
 
-    [ObservableProperty] private double _deviceTimeAmount = 1;
+    [ObservableProperty] public partial double DeviceTimeAmount { get; set; } = 1;
     partial void OnDeviceTimeAmountChanged(double value) { PersistDouble(nameof(DeviceTimeAmount), Math.Max(value, 1e-9)); OnPropertyChanged(nameof(TimeScalingRatio)); }
 
-    [ObservableProperty] private double _simulationTimeStepSeconds = 0.04;
+    [ObservableProperty] public partial double SimulationTimeStepSeconds { get; set; } = 0.04;
     partial void OnSimulationTimeStepSecondsChanged(double value) => PersistDouble(nameof(SimulationTimeStepSeconds), Math.Max(value, 1e-6));
 
-    [ObservableProperty] private bool _automaticTimeStepSelection = true;
+    [ObservableProperty] public partial bool AutomaticTimeStepSelection { get; set; } = true;
     partial void OnAutomaticTimeStepSelectionChanged(bool value) => PersistBool(nameof(AutomaticTimeStepSelection), value);
 
-    [ObservableProperty] private double _simulationStartTimeSeconds;
+    [ObservableProperty] public partial double SimulationStartTimeSeconds { get; set; }
     partial void OnSimulationStartTimeSecondsChanged(double value) => PersistDouble(nameof(SimulationStartTimeSeconds), Math.Max(value, 0));
 
-    [ObservableProperty] private double _simulationDurationSeconds = 60;
+    [ObservableProperty] public partial double SimulationDurationSeconds { get; set; } = 60;
     partial void OnSimulationDurationSecondsChanged(double value) => PersistDouble(nameof(SimulationDurationSeconds), Math.Max(value, 1e-6));
 
     public double TimeScalingRatio =>
@@ -149,7 +149,7 @@ public partial class SettingsViewModel : ObservableObject
     };
 
     [ObservableProperty]
-    private string _remoteApiBaseUrl = string.Empty;
+    public partial string RemoteApiBaseUrl { get; set; } = string.Empty;
 
     partial void OnRemoteApiBaseUrlChanged(string value)
     {
@@ -160,7 +160,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private string _remoteApiAccessTokenDraft = string.Empty;
+    public partial string RemoteApiAccessTokenDraft { get; set; } = string.Empty;
 
     [RelayCommand]
     private async Task SaveRemoteApiAccessTokenAsync()
@@ -231,10 +231,10 @@ public partial class SettingsViewModel : ObservableObject
         => EEE.Services.ControlSidebarService.GetGroupedActions();
 
     [ObservableProperty]
-    private string _newButtonLabel = string.Empty;
+    public partial string NewButtonLabel { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string _selectedAction = "Play / Pause Simulation";
+    public partial string SelectedAction { get; set; } = "Play / Pause Simulation";
 
     /// <summary>Character count hint shown beside the label Entry (§3.E).</summary>
     public string LabelCharCount => $"({NewButtonLabel?.Length ?? 0}/3)";
@@ -273,10 +273,10 @@ public partial class SettingsViewModel : ObservableObject
     /// Transient toast message shown in the bottom status bar only (not duplicated in the header — §4.D).
     /// </summary>
     [ObservableProperty]
-    private string _statusMessage = string.Empty;
+    public partial string StatusMessage { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private bool _isToastVisible = false;
+    public partial bool IsToastVisible { get; set; } = false;
 
     private async void ShowToast(string message)
     {

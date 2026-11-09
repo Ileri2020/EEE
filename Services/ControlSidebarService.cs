@@ -17,20 +17,20 @@ public partial class CustomControlButton : ObservableObject
     public Guid Id { get; set; } = Guid.NewGuid();
 
     [ObservableProperty]
-    private string _label = "ACT"; // Max 3 characters
+    public partial string Label { get; set; } = "ACT"; // Max 3 characters
 
     [ObservableProperty]
-    private string _actionName = "Play / Pause Simulation";
+    public partial string ActionName { get; set; } = "Play / Pause Simulation";
 
     [ObservableProperty]
-    private string _category = "General";
+    public partial string Category { get; set; } = "General";
 
     [ObservableProperty]
-    private string _description = string.Empty;
+    public partial string Description { get; set; } = string.Empty;
 
     // User-authored description field (§3.E / §4.E)
     [ObservableProperty]
-    private string _userDescription = string.Empty;
+    public partial string UserDescription { get; set; } = string.Empty;
 
     public List<string> AvailableActions => ControlSidebarService.PerformableActions;
 
