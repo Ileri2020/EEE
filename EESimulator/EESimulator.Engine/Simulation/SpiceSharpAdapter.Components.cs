@@ -949,7 +949,9 @@ public partial class SpiceSharpAdapter
                 {
                     foreach (var (pinId, voltage) in DigitalLogicSimulator.GetOutputVoltages(comp))
                     {
-                        string outputNode = GetPinNode(comp, pinId);
+                        int pinIndex = comp.Pins.FindIndex(pin =>
+                            pin.Id.Equals(pinId, StringComparison.OrdinalIgnoreCase));
+                        string outputNode = GetPinNode(comp, pinId, Math.Max(pinIndex, 0));
                         if (outputNode != "0")
                         {
                             string driverName = $"{comp.Name}_logic_{pinId}";

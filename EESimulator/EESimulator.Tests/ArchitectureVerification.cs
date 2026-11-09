@@ -209,7 +209,7 @@ public static class ArchitectureVerification
         }
         var topologyAfter = NetlistBuilder.BuildTopology(circuit);
         Assert(topologyBefore.Nets.Count == topologyAfter.Nets.Count, "Physical layout must not alter electrical topology");
-        Assert(circuit.Connections.Count == 1, "Physical layout must preserve component connections");
+        Assert(circuit.Connections.Count() == 1, "Physical layout must preserve component connections");
 
         var roundTrip = EeePlatformSerializer.LoadFromEeeJson(EeePlatformSerializer.ExportToEee(circuit));
         var restored = roundTrip.FindChild<ComponentNode>("R1")!;

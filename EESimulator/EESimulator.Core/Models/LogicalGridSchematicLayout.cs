@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.General;
 
 namespace EESimulator.Core.Models;
 
@@ -210,7 +211,7 @@ public static class LogicalGridSchematicLayout
             Footprint footprint = footprints[component].Rotate(component.Rotation);
             right = Math.Max(right, footprint.Right(component.X));
         }
-        return double.IsNegativeInfinity(right) ? OriginX - WireCorridor : right;
+        return double.IsNegativeInfinity(right) ? OriginX - MinimumWireCorridor : right;
     }
 
     private static Footprint GetFootprint(ComponentNode component)

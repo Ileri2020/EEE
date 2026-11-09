@@ -3,6 +3,8 @@ name: Build Windows Installer
 on:
   workflow_dispatch:
   push:
+    branches:
+      - "**"
     tags:
       - "v*"
 
@@ -24,19 +26,9 @@ jobs:
       - name: Install .NET MAUI workload
         run: dotnet workload install maui
 
-      - name: Publish unsigned MSIX installer
-        shell: pwsh
-        run: >-
-          dotnet publish EEE.csproj
-          -f net10.0-windows10.0.19041.0
-          -c Release
-          --artifacts-path Platforms/dist
-          -p:PublishReadyToRun=false
-          -p:WindowsPackageType=MSIX
-          -p:GenerateAppxPackageOnBuild=true
-          -p:AppxPackageSigningEnabled=false
-          -p:AppxBundle=Never
-          -p:AppxPackageDir=Platforms/installer/
+      - name: Build unsigned MSIX installer
+        shell: cmd
+        run: devrunners\buildwindowsinstaller.bat
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4

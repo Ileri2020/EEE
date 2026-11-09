@@ -12,6 +12,7 @@ dotnet publish EEE.csproj ^
     -f net10.0-windows10.0.19041.0 ^
     -c Release ^
     --artifacts-path Platforms/dist ^
+    -p:PublishReadyToRun=false ^
     -p:WindowsPackageType=MSIX ^
     -p:GenerateAppxPackageOnBuild=true ^
     -p:AppxPackageSigningEnabled=false ^

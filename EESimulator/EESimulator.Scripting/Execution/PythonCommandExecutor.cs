@@ -89,13 +89,13 @@ public class PythonCommandExecutor
                 ? double.Parse(paramMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture)
                 : 0.0;
             _api.AddComponentAtGrid(type, name, row, column, param);
-            foreach (Match propertyMatch in Regex.Matches(extra,
+            foreach (Match namedPropertyMatch in Regex.Matches(extra,
                          @"(\w+)\s*=\s*(true|false|""[^""]*""|'[^']*'|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)",
                          RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
             {
-                string propertyName = propertyMatch.Groups[1].Value;
+                string propertyName = namedPropertyMatch.Groups[1].Value;
                 if (propertyName.Equals("param", StringComparison.OrdinalIgnoreCase)) continue;
-                string rawValue = propertyMatch.Groups[2].Value;
+                string rawValue = namedPropertyMatch.Groups[2].Value;
                 object value = rawValue.Equals("true", StringComparison.OrdinalIgnoreCase) ? true
                     : rawValue.Equals("false", StringComparison.OrdinalIgnoreCase) ? false
                     : rawValue.Length >= 2 && rawValue[0] == '"' ? JsonSerializer.Deserialize<string>(rawValue) ?? string.Empty
@@ -318,4 +318,3 @@ public class PythonCommandExecutor
         }
     }
 }
-
