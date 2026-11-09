@@ -179,6 +179,7 @@ public partial class EEWorkspaceViewModel
     private bool _simulationRefreshRequested;
     private bool _isApplyingScript;
     private DateTime _lastPlaybackSolveUtc = DateTime.MinValue;
+    private DateTime _lastPlaybackConsoleUpdateUtc = DateTime.MinValue;
     private double _pendingSolverElapsedTimeSeconds;
     private double _solverTimeSeconds;
     private double _deviceTimeSeconds;
@@ -209,9 +210,8 @@ public partial class EEWorkspaceViewModel
                             _solverTimeSeconds += solverDelta;
                             double scale = GetConfiguredDeviceTimeScale();
                             _deviceTimeSeconds += solverDelta * scale;
-                            DigitalLogicSimulator.Advance(Circuit, solverDelta);
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
-                            CircuitChanged?.Invoke();
+                            AnimationFrameRequested?.Invoke();
                             if (!IsSimulating && !_playbackSolveRunning &&
                                 DateTime.UtcNow - _lastPlaybackSolveUtc >= TimeSpan.FromMilliseconds(250))
                                 _ = RefreshPlaybackSimulationAsync();
@@ -249,7 +249,6 @@ public partial class EEWorkspaceViewModel
             settings.SolverElapsedTimeSeconds = _pendingSolverElapsedTimeSeconds;
             _pendingSolverElapsedTimeSeconds = 0;
             settings.DeviceTimeSeconds = _deviceTimeSeconds;
-            settings.CaptureAllWaveforms = true;
             settings.StopTime = _solverTimeSeconds;
             settings.StartTime = Math.Max(0, settings.StopTime - settings.SolverElapsedTimeSeconds);
             if (settings.StopTime <= settings.StartTime)
@@ -259,9 +258,16 @@ public partial class EEWorkspaceViewModel
             }
             settings.StepTime = Math.Max(settings.StepTime,
                 Math.Max(settings.StopTime - settings.StartTime, 0.02) / 500.0);
-            var results = await Task.Run(() => _simManager.Run(Circuit, settings));
-            _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
-            ConsoleOutput = FormatResults(results);
+            var results = await Task.Run(() =>
+            {
+                DigitalLogicSimulator.Advance(Circuit, settings.SolverElapsedTimeSeconds);
+                return _simManager.Run(Circuit, settings);
+            });
+            if (DateTime.UtcNow - _lastPlaybackConsoleUpdateUtc >= TimeSpan.FromSeconds(1))
+            {
+                ConsoleOutput = FormatResults(results);
+                _lastPlaybackConsoleUpdateUtc = DateTime.UtcNow;
+            }
             DispatchTriggeredUiEvents();
             OnPropertyChanged(nameof(SelectedComponent));
             CircuitChanged?.Invoke();
@@ -313,10 +319,10 @@ public partial class EEWorkspaceViewModel
                 _ = SimulateAsync();
                 break;
             case "Pan Mode":
-                SetMobilePanMode();
+                SetPanTool();
                 break;
             case "Select Mode":
-                SetMobileSelectMode();
+                SetSelectTool();
                 break;
             case "Component Edit Dialog":
                 if (EditingComponent != null)
@@ -567,6 +573,7 @@ public partial class EEWorkspaceViewModel
                 }
             }
 
+            ApplyLogicalSchematicLayout();
             var commandOutput = ConsoleOutput;
             _simulationRefreshRequested = false;
             IsSimulating = true;
@@ -777,6 +784,7 @@ public partial class EEWorkspaceViewModel
             custom.SetDefinition(definition);
             var customCommand = new AddComponentCommand(Circuit, custom) { Origin = CommandOrigin.Schematic };
             CommandManager.ExecuteCommand(customCommand);
+            ApplyLogicalSchematicLayout();
             StatusText = $"Added custom component {name} ({definition.Name})";
             CircuitChanged?.Invoke();
             return;
@@ -787,6 +795,7 @@ public partial class EEWorkspaceViewModel
             Origin = CommandOrigin.Schematic
         };
         CommandManager.ExecuteCommand(cmd);
+        ApplyLogicalSchematicLayout();
         StatusText = $"Added {name}";
 
         // Notify the canvas to redraw immediately

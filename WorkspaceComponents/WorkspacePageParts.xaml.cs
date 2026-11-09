@@ -99,12 +99,6 @@ public partial class WorkspaceCenterViewport
     public WaveformViewport WaveformCanvasControl => WaveformCanvas;
 }
 
-public partial class WorkspaceLeftToolbar
-{
-    public Button MobilePanButton => BtnMobilePan;
-    public Button MobileSelectButton => BtnMobileSelect;
-}
-
 public partial class WorkspaceDescriptionSidebar
 {
     public ComponentIconView SelectedIcon => SelectedComponentIcon;
@@ -115,6 +109,4 @@ public partial class WorkspaceMainLayout
     public SchematicViewport SchematicCanvas => CenterView.SchematicCanvasControl;
     public WaveformViewport WaveformCanvas => CenterView.WaveformCanvasControl;
     public ComponentIconView SelectedComponentIcon => DescriptionSidebar.SelectedIcon;
-    public Button BtnMobilePan => LeftToolbar.MobilePanButton;
-    public Button BtnMobileSelect => LeftToolbar.MobileSelectButton;
 }

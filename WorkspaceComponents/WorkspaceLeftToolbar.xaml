@@ -5,7 +5,7 @@
                   BackgroundColor="#161B22"
                   RowDefinitions="*,Auto">
 
-                <ScrollView Grid.Row="0" Orientation="Vertical" VerticalScrollBarVisibility="Never">
+                <ScrollView Grid.Row="0" Orientation="Vertical" VerticalScrollBarVisibility="Auto">
                     <VerticalStackLayout Spacing="4" Padding="6,8">
                         <!-- Sidebar toggles stacked vertically together -->
                         <Button Text="🧩"
@@ -66,50 +66,71 @@
                         <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
 
                         <!-- Selection / drawing tools -->
-                        <Button Text="↖" Style="{StaticResource IconBtn}" CommandParameter="Select"
-                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Select"/>
-                        <Button Text="✏" Style="{StaticResource IconBtn}" CommandParameter="Wire"
-                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Wire (long-press pin)"/>
+                        <Button Text="Sel" Style="{StaticResource IconBtn}" CommandParameter="Select"
+                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Select">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Select">
+                                    <Setter Property="BackgroundColor" Value="#1C3060"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Wire" Style="{StaticResource IconBtn}" CommandParameter="Wire"
+                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Wire">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Wire">
+                                    <Setter Property="BackgroundColor" Value="#1C3060"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Pan" Style="{StaticResource IconBtn}" CommandParameter="Pan"
+                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Pan viewport">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Pan">
+                                    <Setter Property="BackgroundColor" Value="#1C3060"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Move" Style="{StaticResource IconBtn}" CommandParameter="Move"
+                                Command="{Binding SelectToolCommand}" IsEnabled="{Binding HasSelectedComponent}"
+                                ToolTipProperties.Text="Move selected component">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Move">
+                                    <Setter Property="BackgroundColor" Value="#1C3060"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
                         <Button Text="✂" Style="{StaticResource IconBtn}" CommandParameter="Cut"
                                 Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Cut wire"/>
                         <Button Text="⊕" Style="{StaticResource IconBtn}" CommandParameter="Label"
                                 Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Net label"/>
                         <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
 
-                        <!-- Zoom tools -->
-                        <Button Text="🔍" Style="{StaticResource IconBtn}" CommandParameter="ZoomIn"
-                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Zoom in"/>
-                        <Button Text="⊖" Style="{StaticResource IconBtn}" CommandParameter="ZoomOut"
-                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Zoom out"/>
-                        <Button Text="⊡" Style="{StaticResource IconBtn}" CommandParameter="FitAll"
-                                Command="{Binding SelectToolCommand}" ToolTipProperties.Text="Fit all"/>
+                        <!-- View controls -->
+                        <Button Text="+" Style="{StaticResource IconBtn}"
+                                Command="{Binding ZoomInCommand}" ToolTipProperties.Text="Zoom in"/>
+                        <Button Text="−" Style="{StaticResource IconBtn}"
+                                Command="{Binding ZoomOutCommand}" ToolTipProperties.Text="Zoom out"/>
                         <BoxView HeightRequest="1" Color="#30363D" Margin="4,4"/>
-
-                        <!-- Mobile: Pan / Select mode toggle buttons -->
-                        <Button Text="✋"
-                                x:Name="BtnMobilePan"
-                                Style="{StaticResource IconBtn}"
-                                Command="{Binding SetMobilePanModeCommand}"
-                                ToolTipProperties.Text="Pan mode"/>
-                        <Button Text="↖"
-                                x:Name="BtnMobileSelect"
-                                Style="{StaticResource IconBtn}"
-                                Command="{Binding SetMobileSelectModeCommand}"
-                                ToolTipProperties.Text="Select mode"/>
                         <!-- Help button is in the top-right toolbar; removed here to avoid duplication (§2.D) -->
                     </VerticalStackLayout>
                 </ScrollView>
 
-                <Button Grid.Row="1"
-                    Text="⌖"
-                    Style="{StaticResource IconBtn}"
-                    TextColor="#56D364"
-                    WidthRequest="40"
-                    HeightRequest="40"
-                    Margin="0,6,0,10"
-                    HorizontalOptions="Center"
-                    Command="{Binding RecenterViewportCommand}"
-                    ToolTipProperties.Text="Recenter on the mean position of all schematic components"/>
+                <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center" Margin="0,6,0,10" Spacing="2">
+                    <Button Text="⌖"
+                            Style="{StaticResource IconBtn}"
+                            TextColor="#56D364"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            Command="{Binding RecenterViewportCommand}"
+                            ToolTipProperties.Text="Recenter on the mean position of all schematic components"/>
+                    <Button Text="Fit"
+                            Style="{StaticResource IconBtn}"
+                            TextColor="#58A6FF"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            Command="{Binding FitToScreenCommand}"
+                            ToolTipProperties.Text="Fit all components to the screen"/>
+                </HorizontalStackLayout>
 
                 <!-- Right border -->
                 <BoxView Grid.Row="0" Grid.RowSpan="2"

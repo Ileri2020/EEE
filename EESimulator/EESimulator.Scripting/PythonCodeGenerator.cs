@@ -37,6 +37,8 @@ public class PythonCodeGenerator
         {
             var varName = SanitizePythonName(comp.Name);
             string statement = BuildAddStatement(varName, comp);
+            if (comp.LogicalRow is int row && comp.LogicalColumn is int column)
+                statement = ReplacePositionWithLogicalPlacement(statement, row, column);
             sb.AppendLine(statement);
         }
 
@@ -241,6 +243,16 @@ public class PythonCodeGenerator
             _ =>
                 $"{varName} = circuit.add_component(\"{comp.ComponentType}\", name=\"{comp.Name}\", position=({x}, {y}))"
         };
+    }
+
+    private static string ReplacePositionWithLogicalPlacement(string statement, int row, int column)
+    {
+        const string positionArgument = "position=(";
+        int start = statement.IndexOf(positionArgument, StringComparison.Ordinal);
+        if (start < 0) return statement;
+        int end = statement.IndexOf(')', start + positionArgument.Length);
+        if (end < 0) return statement;
+        return statement[..start] + $"row={row}, col={column}" + statement[(end + 1)..];
     }
 
     private static string BuildVoltageSourceStatement(string varName, string name, double x, double y, VoltageSourceComponent v)

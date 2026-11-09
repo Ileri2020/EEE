@@ -117,14 +117,9 @@ internal static class SchematicWireRouter
             if (excludedSet.Contains(component) || component is WireComponent || component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            AdaptiveComponentLayout layout = AdaptiveComponentLayout.Get(component);
-            float halfX = (float)layout.HalfWidth;
-            float halfY = (float)layout.HalfHeight;
-            float radians = (float)(component.Rotation * Math.PI / 180.0);
-            float cos = MathF.Abs(MathF.Cos(radians));
-            float sin = MathF.Abs(MathF.Sin(radians));
-            float extentX = halfX * cos + halfY * sin + ObstaclePadding;
-            float extentY = halfX * sin + halfY * cos + ObstaclePadding;
+            var visualBounds = LogicalGridSchematicLayout.GetVisualHalfExtents(component);
+            float extentX = (float)visualBounds.HalfWidth + ObstaclePadding;
+            float extentY = (float)visualBounds.HalfHeight + ObstaclePadding;
             obstacles.Add(new Obstacle(
                 (float)component.X - extentX,
                 (float)component.Y - extentY,

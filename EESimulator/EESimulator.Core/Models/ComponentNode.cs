@@ -48,6 +48,23 @@ public abstract class ComponentNode : RootNode
     public double X { get; set; }
     public double Y { get; set; }
 
+    [JsonIgnore]
+    public int? LogicalRow
+    {
+        get => ReadLogicalCoordinate("LogicalRow");
+        set => WriteLogicalCoordinate("LogicalRow", value);
+    }
+
+    [JsonIgnore]
+    public int? LogicalColumn
+    {
+        get => ReadLogicalCoordinate("LogicalColumn");
+        set => WriteLogicalCoordinate("LogicalColumn", value);
+    }
+
+    [JsonIgnore]
+    public bool HasLogicalPlacement => LogicalRow.HasValue && LogicalColumn.HasValue;
+
     public (double X, double Y) Position
     {
         get => (X, Y);
@@ -87,6 +104,27 @@ public abstract class ComponentNode : RootNode
             ElectricalParameters["BreakingCurrent"] = value;
             NotifyModified(nameof(BreakingCurrent));
         }
+    }
+
+    private int? ReadLogicalCoordinate(string key)
+    {
+        return CustomProperties.TryGetValue(key, out var value) &&
+               int.TryParse(value?.ToString(), System.Globalization.NumberStyles.Integer,
+                   System.Globalization.CultureInfo.InvariantCulture, out int coordinate) && coordinate > 0
+            ? coordinate
+            : null;
+    }
+
+    private void WriteLogicalCoordinate(string key, int? value)
+    {
+        if (value is <= 0)
+            throw new ArgumentOutOfRangeException(key, "Logical rows and columns are 1-based positive integers.");
+
+        if (value.HasValue)
+            CustomProperties[key] = value.Value;
+        else
+            CustomProperties.Remove(key);
+        NotifyModified(key);
     }
 
     /// <summary>

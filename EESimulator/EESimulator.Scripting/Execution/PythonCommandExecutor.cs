@@ -41,11 +41,15 @@ public class PythonCommandExecutor
             }
             catch (Exception ex)
             {
+                _api.ApplyLogicalGridLayout();
                 message = $"Line {lineNum} error: {ex.Message}";
                 return false;
             }
         }
 
+        var layout = _api.ApplyLogicalGridLayout();
+        if (layout.UnresolvedCollisions.Count > 0)
+            message = $"Completed with {layout.UnresolvedCollisions.Count} unresolved component collision(s).";
         return true;
     }
 
@@ -66,6 +70,39 @@ public class PythonCommandExecutor
                 : rawValue.Length >= 2 && rawValue[0] == '\'' ? rawValue[1..^1]
                 : double.Parse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture);
             _api.SetComponentProperty(componentName, propertyName, value);
+            return;
+        }
+
+        var gridAddMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.add_component\s*\(\s*""([^""]+)""\s*,\s*name\s*=\s*""([^""]+)""\s*,\s*row\s*=\s*(\d+)\s*,\s*col\s*=\s*(\d+)(?<extra>(?:\s*,\s*\w+\s*=\s*(?:true|false|""[^""]*""|'[^']*'|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?))*)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (gridAddMatch.Success)
+        {
+            string type = gridAddMatch.Groups[1].Value;
+            string name = gridAddMatch.Groups[2].Value;
+            int row = int.Parse(gridAddMatch.Groups[3].Value, CultureInfo.InvariantCulture);
+            int column = int.Parse(gridAddMatch.Groups[4].Value, CultureInfo.InvariantCulture);
+            string extra = gridAddMatch.Groups["extra"].Value;
+            var paramMatch = Regex.Match(extra, @"\bparam\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            double param = paramMatch.Success
+                ? double.Parse(paramMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture)
+                : 0.0;
+            _api.AddComponentAtGrid(type, name, row, column, param);
+            foreach (Match propertyMatch in Regex.Matches(extra,
+                         @"(\w+)\s*=\s*(true|false|""[^""]*""|'[^']*'|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)",
+                         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+            {
+                string propertyName = propertyMatch.Groups[1].Value;
+                if (propertyName.Equals("param", StringComparison.OrdinalIgnoreCase)) continue;
+                string rawValue = propertyMatch.Groups[2].Value;
+                object value = rawValue.Equals("true", StringComparison.OrdinalIgnoreCase) ? true
+                    : rawValue.Equals("false", StringComparison.OrdinalIgnoreCase) ? false
+                    : rawValue.Length >= 2 && rawValue[0] == '"' ? JsonSerializer.Deserialize<string>(rawValue) ?? string.Empty
+                    : rawValue.Length >= 2 && rawValue[0] == '\'' ? rawValue[1..^1]
+                    : double.Parse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture);
+                _api.SetComponentProperty(name, propertyName, value);
+            }
             return;
         }
 

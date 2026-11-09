@@ -2,7 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceMainLayout" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
     <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
     <Grid Grid.Row="1"
-              ColumnDefinitions="{OnIdiom Phone='52,*', Default='52,Auto,*,Auto'}">
+              ColumnDefinitions="{OnIdiom Phone='88,*', Default='88,Auto,*,Auto'}">
 
             <!-- ─── Left toolbar ─────────────────────────────────────────── -->
             <parts:WorkspaceLeftToolbar x:Name="LeftToolbar" Grid.Column="0" />

@@ -7,23 +7,8 @@ namespace EESimulator.App.Views;
 /// <summary>
 /// Renders the schematic circuit on a MAUI GraphicsView canvas.
 /// 
-/// Desktop gestures:
-///   Left-click              → select component or pin
-///   Right-drag              → pan viewport
-///   Right-click (no drag)   → open component edit dialog
-///   Double-click            → open component edit dialog
-///   Pin long-press + drag   → draw wire from that pin to another
-///   Middle/scroll wheel     → zoom
-///   Pinch (trackpad)        → zoom
-///
-/// Mobile gestures (controlled by IsMobilePanMode):
-///   Pan mode   + one-finger swipe  → pan viewport
-///   Pan mode   + long-press comp   + drag → move component
-///   Pan mode   + long-press pin    + drag → draw wire
-///   Select mode + tap              → select component or pin
-///   Select mode + long-press comp  → open edit dialog
-///   Select mode + long-press pin   + drag → draw wire
-///   Pinch                          → zoom
+/// Viewport actions are selected from the workspace toolbar. Canvas taps select
+/// objects or place the two endpoints of a wire; the Pan and Move tools use dragging.
 /// </summary>
 public partial class SchematicViewport : GraphicsView, IDrawable
 {
@@ -48,9 +33,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         set => SetValue(LiveMeasurementsVisibleProperty, value);
     }
 
-    /// <summary>Reflects the ViewModel's IsMobilePanMode; set from WorkspacePage.</summary>
-    public bool IsMobilePanMode { get; set; } = true;
-
     /// <summary>Controls whether electricity movements (animated current dots) are rendered.</summary>
     public bool IsSimulationPlaying { get; set; } = false;
     public float ElectricityAnimPhase { get; set; } = 0.0f;
@@ -61,23 +43,27 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private const float MinZoom = 0.2f;
     private const float MaxZoom = 5.0f;
     private float _lastPanX, _lastPanY;
-    private float _pinchStartZoom = 1.0f;
     private const float GridSize = 20f;
 
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<ComponentNode>? ComponentSelected;
     public event EventHandler<ConnectionNode>? ConnectionSelected;
     public event EventHandler<(ComponentNode Component, ComponentPin Pin)>? PinSelected;
-    public event EventHandler<ComponentNode>? ComponentContextRequested;
-    public event EventHandler<ComponentNode>? ComponentLongPressRequested;
     public event EventHandler<(ComponentNode Component, double OldX, double OldY, double NewX, double NewY)>? ComponentMoveCommitted;
     public event EventHandler<ComponentNode>? ComponentRotateRequested;
     public event EventHandler<(ComponentNode From, ComponentPin FromPin,
                                ComponentNode To,   ComponentPin ToPin)>? WireConnected;
     public event EventHandler<JunctionComponent>? WireCutIntoNode;
 
-    /// <summary>Active tool selected in main sidebar (e.g. "Select", "Wire", "Cut", "Pan").</summary>
+    /// <summary>Active tool selected in the workspace sidebar.</summary>
     public string ActiveTool { get; set; } = "Select";
+
+    public void SetActiveTool(string tool)
+    {
+        ActiveTool = tool;
+        if (!tool.Equals("Wire", StringComparison.OrdinalIgnoreCase))
+            CancelWire();
+    }
 
     // Interaction state ────────────────────────────────────────────────────
     private ComponentNode? _selectedComponent;
@@ -136,31 +122,14 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         panGesture.PanUpdated += OnPan;
         GestureRecognizers.Add(panGesture);
 
-        // Pinch to zoom
-        var pinchGesture = new PinchGestureRecognizer();
-        pinchGesture.PinchUpdated += OnPinch;
-        GestureRecognizers.Add(pinchGesture);
-
-        // Left tap → select
+        // Canvas taps are interpreted by the active toolbar tool.
         var tapGesture = new TapGestureRecognizer();
         tapGesture.Tapped += OnTapped;
         GestureRecognizers.Add(tapGesture);
 
-        // Double tap → edit dialog
-        var doubleTapGesture = new TapGestureRecognizer { NumberOfTapsRequired = 2 };
-        doubleTapGesture.Tapped += OnDoubleTapped;
-        GestureRecognizers.Add(doubleTapGesture);
-
-        // Secondary button tap (non-Windows fallback for right-click)
-        var rightClickGesture = new TapGestureRecognizer { Buttons = ButtonsMask.Secondary };
-        rightClickGesture.Tapped += OnRightClicked;
-        GestureRecognizers.Add(rightClickGesture);
-
-        // Pointer events: long-press detection, pointer move for wire preview
+        // Pointer movement updates the in-progress wire preview.
         var pointerGesture = new PointerGestureRecognizer();
-        pointerGesture.PointerPressed  += OnPointerPressed;
         pointerGesture.PointerMoved    += OnPointerMoved;
-        pointerGesture.PointerReleased += OnPointerReleased;
         GestureRecognizers.Add(pointerGesture);
     }
 
@@ -281,18 +250,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler?.PlatformView is Microsoft.UI.Xaml.UIElement el)
-        {
-            el.PointerPressed      -= OnNativePtrPressed;
-            el.PointerMoved        -= OnNativePtrMoved;
-            el.PointerReleased     -= OnNativePtrReleased;
-            el.PointerWheelChanged -= OnNativePtrWheel;
-
-            el.PointerPressed      += OnNativePtrPressed;
-            el.PointerMoved        += OnNativePtrMoved;
-            el.PointerReleased     += OnNativePtrReleased;
-            el.PointerWheelChanged += OnNativePtrWheel;
-        }
     }
 
     private void OnNativePtrWheel(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -417,13 +374,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         if (_isRightCompMove && _rightClickedComp != null)
         {
             (sender as Microsoft.UI.Xaml.UIElement)?.ReleasePointerCapture(e.Pointer);
-            if (_rightPanTotalDist < 6)
-            {
-                var comp = _rightClickedComp;
-                _selectedComponent = comp;
-                Invalidate();
-                ComponentContextRequested?.Invoke(this, comp);
-            }
             _isRightCompMove  = false;
             _rightClickedComp = null;
             e.Handled = true;
@@ -450,16 +400,13 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         switch (e.StatusType)
         {
             case GestureStatus.Started:
-                // Cancel pending long-press unless already moving a component
-                if (!_isMovingComponent && _pressedComp == null)
-                {
-                    _longPressTimer?.Dispose();
-                    _longPressTimer = null;
-                }
                 _lastPanX = _panX;
                 _lastPanY = _panY;
                 _lastPanTotalX = 0;
                 _lastPanTotalY = 0;
+                _isMovingComponent = ActiveTool.Equals("Move", StringComparison.OrdinalIgnoreCase) &&
+                    _selectedComponent != null;
+                _pressedComp = _isMovingComponent ? _selectedComponent : null;
                 if (_pressedComp != null)
                 {
                     _componentDragStartX = (float)_pressedComp.X;
@@ -478,11 +425,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                     _componentDragMoved = true;
                     Invalidate();
                 }
-                else if (_isDrawingWire)
-                {
-                    // nothing — wire cursor is updated via PointerMoved
-                }
-                else if (IsMobilePanMode || DeviceInfo.Idiom == DeviceIdiom.Phone || DeviceInfo.Platform == DevicePlatform.WinUI)
+                else if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase))
                 {
                     _panX = _lastPanX + (float)e.TotalX;
                     _panY = _lastPanY + (float)e.TotalY;
@@ -499,26 +442,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         }
     }
 
-    private void OnPinch(object? sender, PinchGestureUpdatedEventArgs e)
-    {
-        if (e.Status == GestureStatus.Started)
-        {
-            _pinchStartZoom = _zoom;
-            return;
-        }
-
-        if (e.Status == GestureStatus.Running && e.Scale > 0.05 && e.Scale < 20.0)
-        {
-            float originX = (float)e.ScaleOrigin.X * (float)Width;
-            float originY = (float)e.ScaleOrigin.Y * (float)Height;
-            var worldAtOrigin = ToWorld(originX, originY);
-            _zoom = Math.Clamp(_pinchStartZoom * (float)e.Scale, MinZoom, MaxZoom);
-            _panX = originX - worldAtOrigin.X * _zoom;
-            _panY = originY - worldAtOrigin.Y * _zoom;
-            Invalidate();
-        }
-    }
-
     private void OnTapped(object? sender, TappedEventArgs e)
     {
         var pos = e.GetPosition(this);
@@ -526,23 +449,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 
         var w = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
 
-        if (ActiveTool.Equals("ZoomIn", StringComparison.OrdinalIgnoreCase))
-        {
-            ZoomAt((float)pos.Value.X, (float)pos.Value.Y, 1.25f);
-            return;
-        }
-        if (ActiveTool.Equals("ZoomOut", StringComparison.OrdinalIgnoreCase))
-        {
-            ZoomAt((float)pos.Value.X, (float)pos.Value.Y, 1f / 1.25f);
-            return;
-        }
-        if (ActiveTool.Equals("FitAll", StringComparison.OrdinalIgnoreCase))
-        {
-            RecenterToCircuit();
-            return;
-        }
-
-        // When cut wire tool is active in main sidebar, touching anywhere on a wire turns it into a node
         if (ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase))
         {
             if (TryCutWireToNode(w))
@@ -552,24 +458,43 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             }
         }
 
-        // If rotate handle is visible and tapped, rotate immediately
-        if (_rotateHandleVisible)
+        var pin = HitTestPin(w);
+        if (ActiveTool.Equals("Wire", StringComparison.OrdinalIgnoreCase))
         {
-            float rdx = w.X - _rotateHandleWorld.X;
-            float rdy = w.Y - _rotateHandleWorld.Y;
-            if (rdx * rdx + rdy * rdy <= RotateHandleRadius * RotateHandleRadius * 4)
+            if (pin != null)
             {
-                if (_selectedComponent != null)
+                if (!_isDrawingWire)
                 {
-                    ComponentRotateRequested?.Invoke(this, _selectedComponent);
-                    Invalidate();
+                    _isDrawingWire = true;
+                    _wireSourceComp = pin.Value.Component;
+                    _wireSourcePin = pin.Value.Pin;
+                    _wireCursorWorld = SchematicWireRouter.GetPinWorldPosition(_wireSourceComp, _wireSourcePin);
+                    _selectedComponent = pin.Value.Component;
+                    UpdateRotateHandle();
+                    PinSelected?.Invoke(this, pin.Value);
+                    ComponentSelected?.Invoke(this, pin.Value.Component);
                     return;
                 }
+
+                if (_wireSourceComp == pin.Value.Component && _wireSourcePin == pin.Value.Pin)
+                {
+                    CancelWire();
+                    return;
+                }
+
+                _wireCursorWorld = w;
+                TryCompleteWire(w);
+                return;
             }
+
+            if (_isDrawingWire)
+                TryCompleteWire(w);
+            return;
         }
 
-        // Prefer pin hit
-        var pin = HitTestPin(w);
+        if (!ActiveTool.Equals("Select", StringComparison.OrdinalIgnoreCase))
+            return;
+
         if (pin != null)
         {
             _selectedConnection = null;
@@ -601,56 +526,9 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             Invalidate();
             return;
         }
-        if (_selectedComponent is EESimulator.Core.Components.Electronics.LogicInputComponent lin)
-        {
-            lin.Toggle();
-        }
-        else if (_selectedComponent is EESimulator.Core.Components.Electronics.ButtonComponent button)
-        {
-            button.Press();
-            Dispatcher?.DispatchDelayed(TimeSpan.FromMilliseconds(120), button.Release);
-        }
-        else if (_selectedComponent is EESimulator.Core.Components.Electronics.DipSwitchComponent dip)
-        {
-            dip.Value = (dip.Value ^ 1) & ((1L << dip.PoleCount) - 1);
-        }
-        else if (_selectedComponent is EESimulator.Core.Components.Electronics.PinComponent pinComp)
-        {
-            pinComp.Toggle();
-        }
         Invalidate();
         if (_selectedComponent != null)
             ComponentSelected?.Invoke(this, _selectedComponent);
-    }
-
-    private void OnDoubleTapped(object? sender, TappedEventArgs e)
-    {
-        var pos = e.GetPosition(this);
-        if (pos == null || Circuit == null) return;
-        var comp = HitTest(ToWorld((float)pos.Value.X, (float)pos.Value.Y));
-        if (comp != null)
-        {
-            _selectedComponent = comp;
-            Invalidate();
-            ComponentContextRequested?.Invoke(this, comp);
-        }
-        else
-        {
-            ZoomAt((float)pos.Value.X, (float)pos.Value.Y, 1.5f);
-        }
-    }
-
-    private void OnRightClicked(object? sender, TappedEventArgs e)
-    {
-        var pos = e.GetPosition(this);
-        if (pos == null || Circuit == null) return;
-        var comp = HitTest(ToWorld((float)pos.Value.X, (float)pos.Value.Y));
-        if (comp != null)
-        {
-            _selectedComponent = comp;
-            Invalidate();
-            ComponentContextRequested?.Invoke(this, comp);
-        }
     }
 
 }

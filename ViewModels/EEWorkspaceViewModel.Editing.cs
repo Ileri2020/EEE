@@ -453,6 +453,7 @@ public partial class EEWorkspaceViewModel
 
         EditingComponent.NotifyModified(EditingComponent.Reference);
         IsEditDialogVisible = false;
+        ApplyLogicalSchematicLayout();
         StatusText = $"Updated {EditingComponent.Reference}";
         CircuitChanged?.Invoke();
 

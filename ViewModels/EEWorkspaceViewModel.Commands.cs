@@ -45,6 +45,25 @@ public partial class EEWorkspaceViewModel
         StatusText = "Centered on the circuit";
     }
 
+    [RelayCommand]
+    private void ZoomIn() => ViewportZoomRequested?.Invoke(1.25f);
+
+    [RelayCommand]
+    private void ZoomOut() => ViewportZoomRequested?.Invoke(1f / 1.25f);
+
+    [RelayCommand]
+    private void FitToScreen()
+    {
+        if (!Circuit.FindChildren<ComponentNode>().Any(component => component is not WireComponent))
+        {
+            StatusText = "No circuit components to fit";
+            return;
+        }
+
+        ViewportFitToScreenRequested?.Invoke();
+        StatusText = "Fitted the circuit to the screen";
+    }
+
     public void CommitComponentMove(ComponentNode component, double oldX, double oldY, double newX, double newY)
     {
         if (Math.Abs(oldX - newX) < 0.01 && Math.Abs(oldY - newY) < 0.01) return;
@@ -55,6 +74,12 @@ public partial class EEWorkspaceViewModel
         {
             Origin = CommandOrigin.Schematic
         });
+        if (component.HasLogicalPlacement)
+        {
+            PythonApi.SetComponentProperty(component.Name, nameof(ComponentNode.LogicalRow), null);
+            PythonApi.SetComponentProperty(component.Name, nameof(ComponentNode.LogicalColumn), null);
+        }
+        ApplyLogicalSchematicLayout();
         CircuitChanged?.Invoke();
     }
 
@@ -132,20 +157,16 @@ public partial class EEWorkspaceViewModel
     }
 
 
-    [RelayCommand]
-    private void SetMobilePanMode()
+    private void SetPanTool()
     {
-        IsMobilePanMode = true;
         ActiveTool = "Pan";
-        StatusText = "Mobile: Pan mode active";
+        StatusText = "Pan tool selected";
     }
 
-    [RelayCommand]
-    private void SetMobileSelectMode()
+    private void SetSelectTool()
     {
-        IsMobilePanMode = false;
         ActiveTool = "Select";
-        StatusText = "Mobile: Select mode active";
+        StatusText = "Select tool selected";
     }
 
     [RelayCommand]
@@ -227,6 +248,8 @@ public partial class EEWorkspaceViewModel
             Circuit.Title = loaded.Title;
             Circuit.Description = loaded.Description;
             CommandManager.Clear();
+            _sync.OnCircuitReplaced(Circuit);
+            ScriptText = _sync.CurrentScript;
 
 #if WINDOWS
             CurrentFilePath = file.FullPath;
@@ -496,6 +519,7 @@ public partial class EEWorkspaceViewModel
             return;
         }
         comp.Rotation = (comp.Rotation + 90.0) % 360.0;
+        ApplyLogicalSchematicLayout();
         StatusText = $"Rotated {comp.Reference} → {comp.Rotation:F0}°";
         CircuitChanged?.Invoke();
     }
@@ -542,6 +566,7 @@ public partial class EEWorkspaceViewModel
         };
         CommandManager.ExecuteCommand(cmd);
 
+        ApplyLogicalSchematicLayout();
         SelectedComponent = copy;
         OnComponentSelected(copy);
         CircuitChanged?.Invoke();
@@ -573,6 +598,7 @@ public partial class EEWorkspaceViewModel
         };
         CommandManager.ExecuteCommand(cmd);
 
+        ApplyLogicalSchematicLayout();
         SelectedComponent = null;
         SelectedConnection = null;
         CircuitChanged?.Invoke();

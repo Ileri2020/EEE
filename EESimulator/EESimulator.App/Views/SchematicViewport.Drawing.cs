@@ -6,6 +6,9 @@ namespace EESimulator.App.Views;
 
 public partial class SchematicViewport
 {
+    private readonly Dictionary<Guid, List<PointF>> _automaticWirePathCache = new();
+    private int _routeGeometryFingerprint = int.MinValue;
+
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
         canvas.SaveState();
@@ -98,11 +101,22 @@ public partial class SchematicViewport
     {
         if (Circuit == null) return;
         var components = Circuit.FindChildren<ComponentNode>().ToList();
+        var connections = Circuit.FindChildren<ConnectionNode>().ToList();
+        int geometryFingerprint = GetRouteGeometryFingerprint(components, connections);
+        if (geometryFingerprint != _routeGeometryFingerprint)
+        {
+            _automaticWirePathCache.Clear();
+            _routeGeometryFingerprint = geometryFingerprint;
+        }
         var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, ConnectionNode? Connection, int ElectronDirection, float FlowSpeed)>();
 
         foreach (var wire in components.OfType<WireComponent>())
         {
-            var path = SchematicWireRouter.RouteWireComponent(wire, components);
+            if (!_automaticWirePathCache.TryGetValue(wire.Id, out var path))
+            {
+                path = SchematicWireRouter.RouteWireComponent(wire, components);
+                _automaticWirePathCache[wire.Id] = path;
+            }
             double current = SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent);
             double voltage = SampleWaveformValue(wire.WaveformVoltage, wire.LiveVoltage);
             int direction = GetElectronDirection(current);
@@ -110,7 +124,7 @@ public partial class SchematicViewport
             routedWires.Add((path, wire, null, direction, speed));
         }
 
-        foreach (var conn in Circuit.FindChildren<ConnectionNode>())
+        foreach (var conn in connections)
         {
             var fromComp = Circuit.FindChildById<ComponentNode>(conn.FromComponentId);
             var toComp = Circuit.FindChildById<ComponentNode>(conn.ToComponentId);
@@ -119,7 +133,11 @@ public partial class SchematicViewport
             var toPin = toComp.GetPin(conn.ToPin);
             if (fromPin == null || toPin == null) continue;
 
-            var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
+            if (!_automaticWirePathCache.TryGetValue(conn.Id, out var path))
+            {
+                path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
+                _automaticWirePathCache[conn.Id] = path;
+            }
             double fromCurrent = SampleWaveformValue(fromComp.WaveformCurrent, fromComp.LiveCurrent);
             double toCurrent = SampleWaveformValue(toComp.WaveformCurrent, toComp.LiveCurrent);
             double fromPinCurrent = SamplePinCurrent(fromComp, fromPin, fromCurrent);
@@ -132,11 +150,11 @@ public partial class SchematicViewport
                     Math.Max(Math.Abs(fromPinCurrent), Math.Abs(toPinCurrent)))));
         }
 
-        for (int index = 0; index < routedWires.Count; index++)
+        var previousPaths = new List<List<PointF>>(routedWires.Count);
+        foreach (var wire in routedWires)
         {
-            var wire = routedWires[index];
-            var previousPaths = routedWires.Take(index).Select(item => item.Path).ToList();
             DrawRoutedWire(canvas, wire.Path, previousPaths);
+            previousPaths.Add(wire.Path);
             if (wire.Connection == _selectedConnection)
             {
                 canvas.StrokeColor = Color.FromArgb("#D2A8FF");
@@ -150,6 +168,46 @@ public partial class SchematicViewport
             if (wire.Owner is WireComponent owner && (owner.ShowLiveProbe || LiveMeasurementsVisible))
                 DrawWireMeasurement(canvas, owner, wire.Path);
         }
+    }
+
+    private static int GetRouteGeometryFingerprint(
+        IEnumerable<ComponentNode> components,
+        IEnumerable<ConnectionNode> connections)
+    {
+        var hash = new HashCode();
+        foreach (ComponentNode component in components)
+        {
+            hash.Add(component.Id);
+            hash.Add(component.ComponentType, StringComparer.Ordinal);
+            hash.Add(component.Name, StringComparer.Ordinal);
+            hash.Add(component.Reference, StringComparer.Ordinal);
+            hash.Add(component.X);
+            hash.Add(component.Y);
+            hash.Add(component.Rotation);
+            hash.Add(component.ScaleX);
+            hash.Add(component.ScaleY);
+            foreach (ComponentPin pin in component.Pins)
+            {
+                hash.Add(pin.Id, StringComparer.Ordinal);
+                hash.Add(pin.Name, StringComparer.Ordinal);
+                hash.Add(pin.RelativeX);
+                hash.Add(pin.RelativeY);
+            }
+        }
+        foreach (ConnectionNode connection in connections)
+        {
+            hash.Add(connection.Id);
+            hash.Add(connection.FromComponentId);
+            hash.Add(connection.FromPin, StringComparer.Ordinal);
+            hash.Add(connection.ToComponentId);
+            hash.Add(connection.ToPin, StringComparer.Ordinal);
+            foreach (Point2D point in connection.RoutingPoints)
+            {
+                hash.Add(point.X);
+                hash.Add(point.Y);
+            }
+        }
+        return hash.ToHashCode();
     }
 
     private static float CalculateFlowSpeed(double voltageGap, double branchCurrent)
@@ -358,12 +416,11 @@ public partial class SchematicViewport
         float sy = (float)(comp.ScaleY > 0 ? comp.ScaleY : 1.0);
         AdaptiveComponentLayout layout = AdaptiveComponentLayout.Get(comp);
 
-        // Selection outline with resize handles
+        // Selection outline
         if (selected)
         {
             float halfX = GetSelectionHalfWidth(comp);
             float halfY = GetSelectionHalfHeight(comp);
-            const float hSz  = 5f;  // handle half-size
 
             // Glow border
             canvas.StrokeColor = Color.FromArgb("#79C0FF");
@@ -371,31 +428,6 @@ public partial class SchematicViewport
             canvas.StrokeDashPattern = new float[] { 4, 3 };
             canvas.DrawRoundedRectangle(-halfX, -halfY, halfX * 2, halfY * 2, 4);
             canvas.StrokeDashPattern = null;
-
-            // Resize handles at 4 corners and 4 edge midpoints
-            canvas.FillColor = Color.FromArgb("#161B22");
-            canvas.StrokeColor = Color.FromArgb("#79C0FF");
-            canvas.StrokeSize = 1.2f;
-            float[] hx = { -halfX, 0,     halfX,  -halfX, halfX,  -halfX, 0,     halfX };
-            float[] hy = { -halfY, -halfY, -halfY, 0,     0,      halfY,  halfY, halfY };
-            for (int i = 0; i < 8; i++)
-            {
-                canvas.FillRoundedRectangle(hx[i] - hSz, hy[i] - hSz, hSz * 2, hSz * 2, 2);
-                canvas.DrawRoundedRectangle(hx[i] - hSz, hy[i] - hSz, hSz * 2, hSz * 2, 2);
-            }
-
-            // Rotate handle: circle to the right of the selection box
-            float rHx = halfX + 14f;
-            float rHy = 0f;
-            canvas.FillColor = Color.FromArgb("#1C2128");
-            canvas.FillCircle(rHx, rHy, RotateHandleRadius);
-            canvas.StrokeColor = Color.FromArgb("#D2A8FF");
-            canvas.StrokeSize = 1.5f;
-            canvas.DrawCircle(rHx, rHy, RotateHandleRadius);
-            // Curved arrow symbol inside rotate handle
-            canvas.FontColor = Color.FromArgb("#D2A8FF");
-            canvas.FontSize = 8f;
-            canvas.DrawString("⟳", rHx - 5, rHy - 5, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
 
         bool isBroken = comp.IsBrokenDown;

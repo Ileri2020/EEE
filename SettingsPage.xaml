@@ -434,21 +434,15 @@
                                TextColor="#8B949E"
                                FontSize="12"/>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
-                            <!-- Mobile Pan Mode On Startup -->
-                            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                                <Label Grid.Column="0" Text="Default to Pan Mode on Mobile" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
-                                <Switch Grid.Column="1" IsToggled="{Binding MobilePanModeOnStartup}"/>
-                            </Grid>
-
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
                             <!-- Auto Run Simulation -->
-                            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
                                 <Label Grid.Column="0" Text="Auto-Run Simulation on Edit" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
                                 <Switch Grid.Column="1" IsToggled="{Binding AutoRunSimulation}"/>
                             </Grid>
 
                             <!-- Default Palette Category -->
-                            <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
                                 <Label Text="DEFAULT PALETTE CATEGORY" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                 <Picker ItemsSource="{Binding AvailableCategories}"
                                         SelectedItem="{Binding DefaultCategory}"
@@ -456,20 +450,8 @@
                                         TextColor="#C9D1D9"/>
                             </VerticalStackLayout>
 
-                            <!-- Mobile Toolbar Position (note: dock switching is pending implementation) -->
-                            <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
-                                <Label Text="MOBILE TOOLBAR DOCK" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
-                                <Picker ItemsSource="{Binding ToolbarPositions}"
-                                        SelectedItem="{Binding MobileToolbarPosition}"
-                                        BackgroundColor="#0D1117"
-                                        TextColor="#C9D1D9"/>
-                                <Label Text="Note: Bottom Bar and Floating modes are planned for a future update."
-                                       TextColor="#484F58"
-                                       FontSize="10"/>
-                            </VerticalStackLayout>
-
                                 <!-- Keys are fetched only for in-memory use and are not persisted on the device. -->
-                                <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
+                                <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4">
                                     <Label Text="HCVP API BASE URL" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Entry Text="{Binding RemoteApiBaseUrl}"
                                         Placeholder="https://your-hcvp-host"
@@ -484,7 +466,7 @@
                                         TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 
-                                <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
+                                <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
                                     <Label Text="EEE APP TOKEN (OPTIONAL — PERSONAL KEY &amp; PUBLISHING)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                         <Entry Grid.Column="0"
@@ -503,7 +485,7 @@
                                            TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 
-                            <Border Grid.Row="4" Grid.ColumnSpan="2" Padding="14" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
+                            <Border Grid.Row="3" Grid.ColumnSpan="2" Padding="14" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
                                 <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
                                 <VerticalStackLayout Spacing="10">
                                     <Grid ColumnDefinitions="*,Auto">

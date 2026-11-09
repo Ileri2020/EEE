@@ -11,27 +11,7 @@ using Microsoft.Maui.Storage;
 namespace EEE.ViewModels;
 
 /// <summary>
-/// Model for an interactive row in the Control Settings table.
-/// </summary>
-public partial class ControlActionBinding : ObservableObject
-{
-    public string ActionName { get; set; } = string.Empty;
-    public string Category { get; set; } = "Navigation";
-    public string Target { get; set; } = "Canvas";
-    public string Description { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    private string _selectedDesktopControl = string.Empty;
-
-    [ObservableProperty]
-    private string _selectedMobileControl = string.Empty;
-
-    public List<string> DesktopOptions { get; set; } = new();
-    public List<string> MobileOptions { get; set; } = new();
-}
-
-/// <summary>
-/// ViewModel managing Viewport, Workspace, and Control settings for both Mobile and Desktop.
+/// ViewModel managing viewport and workspace settings.
 /// Changes to toggles apply immediately and auto-persist to Preferences (§4.B).
 /// </summary>
 public partial class SettingsViewModel : ObservableObject
@@ -169,16 +149,6 @@ public partial class SettingsViewModel : ObservableObject
     };
 
     [ObservableProperty]
-    private bool _mobilePanModeOnStartup = true;
-
-    partial void OnMobilePanModeOnStartupChanged(bool value) => PersistBool(nameof(MobilePanModeOnStartup), value);
-
-    [ObservableProperty]
-    private string _mobileToolbarPosition = "Left Dock";
-
-    partial void OnMobileToolbarPositionChanged(string value) => PersistString(nameof(MobileToolbarPosition), value);
-
-    [ObservableProperty]
     private string _remoteApiBaseUrl = string.Empty;
 
     partial void OnRemoteApiBaseUrlChanged(string value)
@@ -248,14 +218,6 @@ public partial class SettingsViewModel : ObservableObject
             ShowToast($"Could not open HCVP account: {ex.Message}");
         }
     }
-
-    public List<string> ToolbarPositions { get; } = new()
-    {
-        "Left Dock", "Bottom Bar", "Floating"
-    };
-
-    // ─── Control Settings Table ───────────────────────────────────────────────
-    public ObservableCollection<ControlActionBinding> ControlBindings { get; } = new();
 
     // ─── Control Sidebar Button Customization ─────────────────────────────────
     public ObservableCollection<EEE.Services.CustomControlButton> CustomButtons
@@ -330,7 +292,6 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel()
     {
         LoadFromPreferences();
-        InitializeControlBindings();
     }
 
     // ─── Persistence helpers ──────────────────────────────────────────────────
@@ -358,8 +319,6 @@ public partial class SettingsViewModel : ObservableObject
         DefaultWaveformDrawerVisible = Preferences.Default.Get($"Settings.{nameof(DefaultWaveformDrawerVisible)}", false);
         AutoRunSimulation          = Preferences.Default.Get($"Settings.{nameof(AutoRunSimulation)}",         false);
         DefaultCategory            = Preferences.Default.Get($"Settings.{nameof(DefaultCategory)}",           "All");
-        MobilePanModeOnStartup     = Preferences.Default.Get($"Settings.{nameof(MobilePanModeOnStartup)}",    true);
-        MobileToolbarPosition      = Preferences.Default.Get($"Settings.{nameof(MobileToolbarPosition)}",     "Left Dock");
         EnableTimeScaling = Preferences.Default.Get($"Settings.{nameof(EnableTimeScaling)}", false);
         SimulationTimeUnit = Preferences.Default.Get($"Settings.{nameof(SimulationTimeUnit)}", "seconds");
         DeviceTimeUnit = Preferences.Default.Get($"Settings.{nameof(DeviceTimeUnit)}", "hours");
@@ -372,93 +331,6 @@ public partial class SettingsViewModel : ObservableObject
         _loadingRemoteApiBaseUrl = true;
         RemoteApiBaseUrl = EEE.Services.RemoteEeeApiClient.ApiBaseUrl;
         _loadingRemoteApiBaseUrl = false;
-    }
-
-    // ─── Control Bindings ─────────────────────────────────────────────────────
-
-    private void InitializeControlBindings()
-    {
-        ControlBindings.Clear();
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Pan Viewport", Category = "Navigation", Target = "Workspace",
-            Description = "Scroll and explore different areas of the schematic.",
-            DesktopOptions = new() { "Right-Drag", "Middle-Drag", "Alt + Left-Drag", "Space + Drag" },
-            SelectedDesktopControl = "Right-Drag",
-            MobileOptions = new() { "Pan Mode One-Finger Drag", "Two-Finger Drag", "Pan Button + Drag" },
-            SelectedMobileControl = "Pan Mode One-Finger Drag"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Select Component / Pin", Category = "Selection", Target = "Component / Pin",
-            Description = "Highlight and activate a component or individual pin node.",
-            DesktopOptions = new() { "Left-Click", "Single-Click", "Ctrl + Left-Click" },
-            SelectedDesktopControl = "Left-Click",
-            MobileOptions = new() { "Select Mode Tap", "Single Tap", "Double Tap" },
-            SelectedMobileControl = "Select Mode Tap"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Component Edit Dialog", Category = "Properties", Target = "Component",
-            Description = "Open parameter and probe configuration dialog.",
-            DesktopOptions = new() { "Right-Click (No Drag)", "Double Left-Click", "Shift + Right-Click" },
-            SelectedDesktopControl = "Right-Click (No Drag)",
-            MobileOptions = new() { "Select Mode Long-Press", "Double Tap", "Properties Button" },
-            SelectedMobileControl = "Select Mode Long-Press"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Move Component", Category = "Editing", Target = "Component",
-            Description = "Drag component to reposition it across the circuit canvas.",
-            DesktopOptions = new() { "Right Long-Click + Drag", "Left-Click + Drag", "Shift + Drag" },
-            SelectedDesktopControl = "Right Long-Click + Drag",
-            MobileOptions = new() { "Pan Mode Long-Press + Drag", "Select Mode Drag", "Touch & Move" },
-            SelectedMobileControl = "Pan Mode Long-Press + Drag"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Draw Wire", Category = "Wiring", Target = "Pin Node",
-            Description = "Draw electrical connection wire from pin to another pin or node.",
-            DesktopOptions = new() { "Pin Long-Press + Drag", "Pin Click Then Target Click", "Alt + Pin Drag" },
-            SelectedDesktopControl = "Pin Long-Press + Drag",
-            MobileOptions = new() { "Pin Long-Press + Drag", "Tap Pin Then Target Pin", "Wire Tool Active" },
-            SelectedMobileControl = "Pin Long-Press + Drag"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Zoom In", Category = "View", Target = "Viewport",
-            Description = "Magnify canvas schematic.",
-            DesktopOptions = new() { "Scroll Wheel Up", "Ctrl + Plus", "Toolbar 🔍 Button" },
-            SelectedDesktopControl = "Scroll Wheel Up",
-            MobileOptions = new() { "Pinch Open", "Double-Tap Pinch", "Toolbar Button" },
-            SelectedMobileControl = "Pinch Open"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Zoom Out", Category = "View", Target = "Viewport",
-            Description = "Reduce magnification of canvas schematic.",
-            DesktopOptions = new() { "Scroll Wheel Down", "Ctrl + Minus", "Toolbar ⊖ Button" },
-            SelectedDesktopControl = "Scroll Wheel Down",
-            MobileOptions = new() { "Pinch Close", "Two-Finger Tap", "Toolbar Button" },
-            SelectedMobileControl = "Pinch Close"
-        });
-
-        ControlBindings.Add(new ControlActionBinding
-        {
-            ActionName = "Reset / Fit View", Category = "View", Target = "Viewport",
-            Description = "Center all components within current viewport window.",
-            DesktopOptions = new() { "Double Middle-Click", "Ctrl + 0", "Toolbar ⊡ Button" },
-            SelectedDesktopControl = "Toolbar ⊡ Button",
-            MobileOptions = new() { "Two-Finger Double-Tap", "Toolbar ⊡ Button" },
-            SelectedMobileControl = "Toolbar ⊡ Button"
-        });
     }
 
     // ─── Commands ─────────────────────────────────────────────────────────────
@@ -495,10 +367,6 @@ public partial class SettingsViewModel : ObservableObject
         DefaultWaveformDrawerVisible = false;
         AutoRunSimulation           = false;
         DefaultCategory             = "All";
-        MobilePanModeOnStartup      = true;
-        MobileToolbarPosition       = "Left Dock";
-
-        InitializeControlBindings();
         ShowToast("Settings reset to factory defaults.");
     }
 

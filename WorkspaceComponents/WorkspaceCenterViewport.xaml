@@ -36,62 +36,6 @@
                             ToolTipProperties.Text="Play / Pause Simulation"/>
                 </Frame>
 
-                        <!-- Simple phone toolbar: phone/view visibility is computed by the ViewModel. -->
-                        <Grid IsVisible="{Binding IsMobileSchematicViewActive}"
-                              ZIndex="60"
-                              VerticalOptions="End"
-                              HorizontalOptions="Fill"
-                              Margin="8,0,8,12"
-                              RowDefinitions="Auto,Auto">
-                            <Border Grid.Row="0"
-                                IsVisible="{Binding HasSelectedComponent}"
-                                HorizontalOptions="Center"
-                                Margin="0,0,0,6"
-                                Padding="4"
-                                BackgroundColor="#161B22"
-                                Stroke="#58A6FF"
-                                StrokeThickness="1">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="14"/>
-                            </Border.StrokeShape>
-                            <HorizontalStackLayout Spacing="2">
-                                <Button Text="Properties" Style="{StaticResource ToolBtn}" FontSize="11"
-                                    Command="{Binding EditSelectedComponentCommand}"/>
-                                <Button Text="Duplicate" Style="{StaticResource ToolBtn}" FontSize="11"
-                                    Command="{Binding CopySelectedComponentCommand}"/>
-                                <Button Text="⟳" Style="{StaticResource IconBtn}" FontSize="14"
-                                    Command="{Binding RotateSelectedComponentCommand}"/>
-                                <Button Text="🗑" Style="{StaticResource IconBtn}" FontSize="14"
-                                    TextColor="#F85149"
-                                    Command="{Binding DeleteSelectedComponentCommand}"/>
-                            </HorizontalStackLayout>
-                            </Border>
-                            <Border Grid.Row="1"
-                                HorizontalOptions="Center"
-                                Padding="4"
-                                BackgroundColor="#161B22"
-                                Stroke="#30363D"
-                                StrokeThickness="1">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="16"/>
-                            </Border.StrokeShape>
-                            <HorizontalStackLayout Spacing="2">
-                                <Button Text="Select" Style="{StaticResource ToolBtn}" FontSize="11"
-                                    CommandParameter="Select" Command="{Binding SelectToolCommand}"/>
-                                <Button Text="Wire" Style="{StaticResource ToolBtn}" FontSize="11"
-                                    CommandParameter="Wire" Command="{Binding SelectToolCommand}"/>
-                                <Button Text="Pan" Style="{StaticResource ToolBtn}" FontSize="11"
-                                    Command="{Binding SetMobilePanModeCommand}"/>
-                                <Button Text="↩" Style="{StaticResource IconBtn}" FontSize="14"
-                                    Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}"/>
-                                <Button Text="↪" Style="{StaticResource IconBtn}" FontSize="14"
-                                    Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}"/>
-                                <Button Text="⊡" Style="{StaticResource IconBtn}" FontSize="14"
-                                    Command="{Binding RecenterViewportCommand}"/>
-                            </HorizontalStackLayout>
-                            </Border>
-                        </Grid>
-
                 <!-- Prompt directly from the schematic canvas; results open as reviewable script drafts. -->
                 <Border IsVisible="{Binding IsSchematicViewActive}"
                         ZIndex="45"

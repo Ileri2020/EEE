@@ -53,9 +53,17 @@ public partial class EEWorkspaceViewModel
         var lastParen = call.LastIndexOf(')');
         var argsStr = lastParen > parenIdx ? call[(parenIdx + 1)..lastParen].Trim() : string.Empty;
         var args = SplitArgs(argsStr);
+        var namedArguments = ParseNamedArgs(args);
+        bool hasLogicalCoordinates = namedArguments.ContainsKey("row") || namedArguments.ContainsKey("col");
+        bool hasNamedPosition = namedArguments.ContainsKey("position_x") || namedArguments.ContainsKey("position_y") ||
+            namedArguments.ContainsKey("x") || namedArguments.ContainsKey("y");
 
         try
         {
+            if (method.StartsWith("add_", StringComparison.OrdinalIgnoreCase) &&
+                (hasLogicalCoordinates || hasNamedPosition))
+                return AddScriptComponentWithCoordinates(method, namedArguments, hasLogicalCoordinates);
+
             switch (method)
             {
                 case "add_component" when args.Length >= 4:
@@ -553,6 +561,192 @@ public partial class EEWorkspaceViewModel
         {
             return $"[error] {ex.Message}";
         }
+    }
+
+    private string AddScriptComponentWithCoordinates(string method, Dictionary<string, string> named, bool logicalPlacement)
+    {
+        var normalizedNamed = named.ToDictionary(
+            pair => NormalizeScriptArgumentName(pair.Key), pair => pair.Value, StringComparer.OrdinalIgnoreCase);
+        int row = 0;
+        int column = 0;
+        if (logicalPlacement)
+        {
+            if (!normalizedNamed.TryGetValue("row", out string? rowText) ||
+                !int.TryParse(Unquote(rowText), System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out row) || row < 1)
+                return "[error] logical placement requires a positive 1-based row";
+            if (!normalizedNamed.TryGetValue("col", out string? columnText) ||
+                !int.TryParse(Unquote(columnText), System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out column) || column < 1)
+                return "[error] logical placement requires a positive 1-based column";
+        }
+
+        string apiName = method switch
+        {
+            "add_ttl" or "add_ttl_package" => "AddTtlPackage",
+            "add_dnc" => "AddDoNotConnect",
+            "add_coax" => "AddCoaxialCable",
+            "add_microstrip" => "AddMicrostripLine",
+            _ => "Add" + string.Concat(method[4..].Split('_', StringSplitOptions.RemoveEmptyEntries)
+                .Select(part => char.ToUpperInvariant(part[0]) + part[1..]))
+        };
+        var apiMethod = typeof(PythonApi).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .FirstOrDefault(candidate => candidate.Name.Equals(apiName, StringComparison.OrdinalIgnoreCase));
+        if (apiMethod == null)
+            return $"[error] no Python API component creator is registered for '{method}'";
+
+        var positional = normalizedNamed
+            .Where(pair => pair.Key.StartsWith("arg", StringComparison.Ordinal) &&
+                int.TryParse(pair.Key[3..], System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
+            .OrderBy(pair => int.Parse(pair.Key[3..], System.Globalization.CultureInfo.InvariantCulture))
+            .Select(pair => pair.Value)
+            .ToArray();
+        var parameters = apiMethod.GetParameters();
+        var values = new object?[parameters.Length];
+        int positionalIndex = 0;
+        int nameIndex = -1;
+
+        for (int index = 0; index < parameters.Length; index++)
+        {
+            var parameter = parameters[index];
+            string key = NormalizeScriptArgumentName(parameter.Name ?? string.Empty);
+            if (key == "name") nameIndex = index;
+            if (key is "x" or "y")
+            {
+                if (logicalPlacement)
+                    values[index] = 0.0;
+                else if (normalizedNamed.TryGetValue("position" + key, out string? positionValue))
+                    values[index] = ConvertScriptArgument(positionValue, parameter.ParameterType);
+                else if (normalizedNamed.TryGetValue(key, out string? coordinateValue))
+                    values[index] = ConvertScriptArgument(coordinateValue, parameter.ParameterType);
+                else
+                    values[index] = 0.0;
+                continue;
+            }
+
+            if (normalizedNamed.TryGetValue(key, out string? namedValue))
+            {
+                values[index] = ConvertScriptArgument(namedValue, parameter.ParameterType);
+            }
+            else if (positionalIndex < positional.Length)
+            {
+                values[index] = ConvertScriptArgument(positional[positionalIndex++], parameter.ParameterType);
+            }
+            else if (parameter.HasDefaultValue)
+            {
+                values[index] = parameter.DefaultValue;
+            }
+            else
+            {
+                return $"[error] missing required '{parameter.Name}' argument for {method}";
+            }
+        }
+
+        if (nameIndex < 0 || values[nameIndex] is not string componentName || string.IsNullOrWhiteSpace(componentName))
+            return "[error] a component name is required for logical placement";
+
+        try
+        {
+            apiMethod.Invoke(PythonApi, values);
+        }
+        catch (System.Reflection.TargetInvocationException exception) when (exception.InnerException != null)
+        {
+            throw new InvalidOperationException(exception.InnerException.Message, exception.InnerException);
+        }
+
+        foreach (var pair in normalizedNamed)
+        {
+            if (pair.Key.StartsWith("arg", StringComparison.Ordinal) || pair.Key is "position" or "positionx" or "positiony" or "x" or "y" or "row" or "col")
+                continue;
+            if (parameters.Any(parameter => NormalizeScriptArgumentName(parameter.Name ?? string.Empty) == pair.Key))
+                continue;
+
+            ComponentNode? component = Circuit.FindChild<ComponentNode>(componentName);
+            var property = component?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .FirstOrDefault(candidate => NormalizeScriptPropertyName(candidate.Name) == NormalizeScriptPropertyName(pair.Key) &&
+                    candidate.SetMethod?.IsPublic == true && candidate.GetIndexParameters().Length == 0);
+            if (property != null)
+                PythonApi.SetComponentProperty(componentName, property.Name, ParseScriptValue(pair.Value));
+            else
+                PythonApi.SetCustomProperty(componentName, pair.Key, ParseScriptValue(pair.Value));
+        }
+
+        if (!logicalPlacement)
+            return $"[ok] component {componentName} added at explicit position";
+
+        PythonApi.SetLogicalGridPosition(componentName, row, column);
+        return $"[ok] component {componentName} added at row {row}, column {column}";
+    }
+
+    private static string NormalizeScriptArgumentName(string name) =>
+        name.Replace("_", string.Empty, StringComparison.Ordinal).ToLowerInvariant() switch
+        {
+            "ratedprimaryvoltage" => "primaryvoltage",
+            "ratedsecondaryvoltage" => "secondaryvoltage",
+            "ratedapparentpower" => "apparentpower",
+            "numberofphases" => "phases",
+            "numberofpoles" => "poles",
+            "acmag" => "acmagnitude",
+            "sineamp" => "sineamplitude",
+            "sinefreq" => "sinefrequency",
+            "esr" => "equivalentseriesresistance",
+            "dcr" => "dcresistance",
+            "is" => "isat",
+            "rs" => "seriesresistance",
+            "bv" => "breakdownvoltage",
+            "cj0" => "junctioncapacitance",
+            "tt" => "transittime",
+            "ibv" => "breakdowncurrent",
+            "waveformtype" => "waveform",
+            "inductor1" => "ind1",
+            "inductor2" => "ind2",
+            "gain" => "voltagegain",
+            "selectlocation" => "selectloc",
+            "voltagehigh" => "vhigh",
+            "voltagelow" => "vlow",
+            _ => name.Replace("_", string.Empty, StringComparison.Ordinal).ToLowerInvariant()
+        };
+
+    private static string NormalizeScriptPropertyName(string name) =>
+        name.Replace("_", string.Empty, StringComparison.Ordinal).ToLowerInvariant() switch
+        {
+            "isat" or "is" => "saturationcurrent",
+            "bv" => "breakdownvoltage",
+            "rs" => "seriesresistance",
+            "cj0" => "junctioncapacitance",
+            "tt" => "transittime",
+            "ibv" => "breakdowncurrent",
+            "vf" => "forwardvoltage",
+            "acmag" => "acmagnitude",
+            "sineamp" => "sineamplitude",
+            "sinefreq" => "sinefrequency",
+            "esr" => "equivalentseriesresistance",
+            "dcr" => "dcresistance",
+            _ => name.Replace("_", string.Empty, StringComparison.Ordinal).ToLowerInvariant()
+        };
+
+    private void ApplyLogicalSchematicLayout()
+    {
+        LogicalGridLayoutResult layout = PythonApi.ApplyLogicalGridLayout();
+
+        if (layout.UnresolvedCollisions.Count == 0) return;
+        string examples = string.Join(", ", layout.UnresolvedCollisions.Take(3)
+            .Select(collision => $"{collision.First.Reference}/{collision.Second.Reference}"));
+        string warning = $"Automatic layout left {layout.UnresolvedCollisions.Count} unresolved component collision(s): {examples}.";
+        ConsoleOutput += $"\n[layout] {warning}\n";
+        StatusText = warning;
+    }
+
+    private static object? ConvertScriptArgument(string text, Type destination)
+    {
+        Type target = Nullable.GetUnderlyingType(destination) ?? destination;
+        object value = ParseScriptValue(text);
+        if (target.IsInstanceOfType(value)) return value;
+        if (target.IsEnum)
+            return Enum.Parse(target, Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture)!, true);
+        if (target == typeof(string)) return Unquote(text);
+        return Convert.ChangeType(value, target, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static Dictionary<string, string> ParseNamedArgs(string[] args)

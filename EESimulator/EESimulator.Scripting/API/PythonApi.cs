@@ -68,6 +68,14 @@ public class PythonApi
         _commandManager.ExecuteCommand(cmd);
     }
 
+    public void AddComponentAtGrid(string type, string name, int row, int column, double param = 0)
+    {
+        if (row < 1) throw new ArgumentOutOfRangeException(nameof(row), "Rows are 1-based positive integers.");
+        if (column < 1) throw new ArgumentOutOfRangeException(nameof(column), "Columns are 1-based positive integers.");
+        AddComponent(type, name, 0, 0, param);
+        SetLogicalGridPosition(name, row, column);
+    }
+
     public void AddTtlPackage(string partNumber, string name, double x, double y)
     {
         if (!EESimulator.Core.Components.Electronics.TtlPackageComponent.IsSupported(partNumber))
@@ -531,6 +539,27 @@ public class PythonApi
             Origin = CommandOrigin.Python
         };
         _commandManager.ExecuteCommand(cmd);
+    }
+
+    public void SetLogicalGridPosition(string componentName, int row, int column)
+    {
+        if (row < 1) throw new ArgumentOutOfRangeException(nameof(row), "Rows are 1-based positive integers.");
+        if (column < 1) throw new ArgumentOutOfRangeException(nameof(column), "Columns are 1-based positive integers.");
+        SetComponentProperty(componentName, nameof(ComponentNode.LogicalRow), row);
+        SetComponentProperty(componentName, nameof(ComponentNode.LogicalColumn), column);
+    }
+
+    public LogicalGridLayoutResult ApplyLogicalGridLayout()
+    {
+        LogicalGridLayoutResult layout = LogicalGridSchematicLayout.Calculate(_circuit);
+        foreach (LogicalGridPlacement placement in layout.Placements)
+        {
+            if (Math.Abs(placement.Component.X - placement.X) < 0.01 &&
+                Math.Abs(placement.Component.Y - placement.Y) < 0.01)
+                continue;
+            SetPosition(placement.Component.Name, placement.X, placement.Y);
+        }
+        return layout;
     }
 
     public void SetProperty(string componentName, string propertyName, double value)

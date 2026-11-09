@@ -103,22 +103,12 @@ public partial class SchematicViewport
                 {
                     _selectedComponent = comp;
                     UpdateRotateHandle();
-                    if (DeviceInfo.Platform == DevicePlatform.WinUI && !IsMobilePanMode)
-                    {
-                        // Desktop select mode: long-press → open dialog
-                        _pressedComp = null;
-                        ComponentContextRequested?.Invoke(this, comp);
-                    }
-                    else
-                    {
-                        // Touch and desktop pan mode: long-press → drag component.
-                        _isMovingComponent = true;
-                        _componentDragStartX = (float)comp.X;
-                        _componentDragStartY = (float)comp.Y;
-                        _componentDragStartTotalX = _lastPanTotalX;
-                        _componentDragStartTotalY = _lastPanTotalY;
-                        _componentDragMoved = false;
-                    }
+                    _isMovingComponent = ActiveTool.Equals("Move", StringComparison.OrdinalIgnoreCase);
+                    _componentDragStartX = (float)comp.X;
+                    _componentDragStartY = (float)comp.Y;
+                    _componentDragStartTotalX = _lastPanTotalX;
+                    _componentDragStartTotalY = _lastPanTotalY;
+                    _componentDragMoved = false;
                     Invalidate();
                 });
             }, null, 480, System.Threading.Timeout.Infinite);
@@ -202,12 +192,9 @@ public partial class SchematicViewport
         }
         else
         {
-            if (DeviceInfo.Idiom == DeviceIdiom.Phone)
-                ComponentLongPressRequested?.Invoke(this, component);
-            else
-                ComponentContextRequested?.Invoke(this, component);
         }
         _componentDragMoved = false;
+        _pressedComp = null;
     }
 
     // ── Coordinate helper ─────────────────────────────────────────────────────
@@ -219,6 +206,56 @@ public partial class SchematicViewport
         _zoom = Math.Clamp(_zoom * factor, MinZoom, MaxZoom);
         _panX = screenX - worldPoint.X * _zoom;
         _panY = screenY - worldPoint.Y * _zoom;
+        Invalidate();
+    }
+
+    public void ZoomBy(float factor)
+        => ZoomAt((float)Width / 2f, (float)Height / 2f, factor);
+
+    public void FitToScreen()
+    {
+        if (Circuit == null) return;
+
+        var components = Circuit.FindChildren<ComponentNode>()
+            .Where(component => component is not WireComponent)
+            .ToList();
+        if (components.Count == 0 || Width <= 0 || Height <= 0) return;
+
+        float minX = float.PositiveInfinity;
+        float minY = float.PositiveInfinity;
+        float maxX = float.NegativeInfinity;
+        float maxY = float.NegativeInfinity;
+        foreach (var component in components)
+        {
+            float halfWidth = GetSelectionHalfWidth(component);
+            float halfHeight = GetSelectionHalfHeight(component);
+            float radians = (float)(component.Rotation * Math.PI / 180.0);
+            float extentX = MathF.Abs(MathF.Cos(radians)) * halfWidth +
+                MathF.Abs(MathF.Sin(radians)) * halfHeight;
+            float extentY = MathF.Abs(MathF.Sin(radians)) * halfWidth +
+                MathF.Abs(MathF.Cos(radians)) * halfHeight;
+
+            minX = MathF.Min(minX, (float)component.X - extentX);
+            maxX = MathF.Max(maxX, (float)component.X + extentX);
+            minY = MathF.Min(minY, (float)component.Y - extentY);
+            maxY = MathF.Max(maxY, (float)component.Y + extentY);
+        }
+
+        float centerX = (minX + maxX) / 2f;
+        float centerY = (minY + maxY) / 2f;
+        float contentWidth = MathF.Max(maxX - minX, 1f);
+        float contentHeight = MathF.Max(maxY - minY, 1f);
+        const float padding = 32f;
+        float availableWidth = MathF.Max((float)Width - 2f * padding, 1f);
+        float availableHeight = MathF.Max((float)Height - 2f * padding, 1f);
+
+        RecenterToCircuit();
+        _zoom = Math.Clamp(
+            MathF.Min(availableWidth / contentWidth, availableHeight / contentHeight),
+            MinZoom,
+            MaxZoom);
+        _panX = (float)Width / 2f - centerX * _zoom;
+        _panY = (float)Height / 2f - centerY * _zoom;
         Invalidate();
     }
 

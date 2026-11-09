@@ -514,10 +514,6 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsHelpVisible { get; set; } = false;
 
-    // Mobile interaction mode: Pan (default on mobile) or Select
-    [ObservableProperty]
-    public partial bool IsMobilePanMode { get; set; } = true;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LiveMeasurementEyeText))]
     public partial bool IsLiveMeasurementsVisible { get; set; }
@@ -816,7 +812,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     /// <summary>Raised when the circuit changes so the canvas can Invalidate immediately.</summary>
     public event Action? CircuitChanged;
+    public event Action? AnimationFrameRequested;
     public event Action? ViewportRecenterRequested;
+    public event Action<float>? ViewportZoomRequested;
+    public event Action? ViewportFitToScreenRequested;
 
     // ── Constructor ──────────────────────────────────────────────────────────
     public EEWorkspaceViewModel(RemoteEeeApiClient remoteApi)

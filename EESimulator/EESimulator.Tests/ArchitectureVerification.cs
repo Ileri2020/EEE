@@ -35,6 +35,7 @@ public static class ArchitectureVerification
         TestElectricalTopology();
         TestCommandAndUndoRedo();
         TestPythonTwoWaySync();
+        TestLogicalGridLayout();
         TestSimulationEngine();
         TestSerializationAndImporters();
 
@@ -170,6 +171,65 @@ public static class ArchitectureVerification
         Assert(results.OperatingPointCurrents.ContainsKey("I_total"), "Results must contain I_total");
         double iExpected = 12.0 / 3000.0;
         Assert(Math.Abs(results.OperatingPointCurrents["I_total"] - iExpected) < 1e-6, "Total current matches Ohm's law");
+        Console.WriteLine("OK");
+    }
+
+    private static void TestLogicalGridLayout()
+    {
+        Console.Write("Testing logical grid placement and legacy positions... ");
+        var circuit = new CircuitNode();
+        var commands = new CommandManager();
+        var api = new PythonApi(commands, circuit);
+        var executor = new PythonCommandExecutor(api);
+        const string gridScript = "r1 = circuit.add_component(\"Resistor\", name=\"R1\", row=2, col=3, resistance=2200)\n" +
+                                  "r2 = circuit.add_component(\"Resistor\", name=\"R2\", row=2, col=3)\n" +
+                                  "ram = circuit.add_component(\"RAM\", name=\"RAM1\", row=3, col=4)";
+
+        Assert(executor.ExecuteScript(gridScript, out string gridError), $"Grid script failed: {gridError}");
+        var first = circuit.FindChild<ComponentNode>("R1")!;
+        var second = circuit.FindChild<ComponentNode>("R2")!;
+        var memory = circuit.FindChild<ComponentNode>("RAM1")!;
+        Assert(first.LogicalRow == 2 && first.LogicalColumn == 3, "Grid row/column should be stored on the component");
+        Assert(first.ElectricalParameters.TryGetValue("Resistance", out double resistance) && resistance == 2200,
+            "Named electrical properties should survive logical placement");
+        Assert(memory.LogicalRow == 3 && memory.LogicalColumn == 4, "Grid placement should support large multi-pin components");
+
+        circuit.AddChild(new ConnectionNode(first.Id, "pin1", second.Id, "pin2"));
+        var topologyBefore = NetlistBuilder.BuildTopology(circuit);
+        var layout = LogicalGridSchematicLayout.Calculate(circuit);
+        Assert(layout.Placements.Count == 3, "All logically placed components should receive physical positions");
+        Assert(layout.UnresolvedCollisions.Count == 0, "Adaptive row/column tracks should prevent component collisions");
+        Assert(layout.Placements.Select(placement => (placement.X, placement.Y)).Distinct().Count() == 3,
+            "Components sharing a logical cell should be physically separated");
+
+        foreach (var placement in layout.Placements)
+        {
+            placement.Component.X = placement.X;
+            placement.Component.Y = placement.Y;
+        }
+        var topologyAfter = NetlistBuilder.BuildTopology(circuit);
+        Assert(topologyBefore.Nets.Count == topologyAfter.Nets.Count, "Physical layout must not alter electrical topology");
+        Assert(circuit.Connections.Count == 1, "Physical layout must preserve component connections");
+
+        var roundTrip = EeePlatformSerializer.LoadFromEeeJson(EeePlatformSerializer.ExportToEee(circuit));
+        var restored = roundTrip.FindChild<ComponentNode>("R1")!;
+        Assert(restored.LogicalRow == 2 && restored.LogicalColumn == 3, "Native save/load should preserve logical placement");
+        Assert(Math.Abs(restored.X - first.X) < 0.001 && Math.Abs(restored.Y - first.Y) < 0.001,
+            "Native save/load should preserve computed physical coordinates");
+        string generatedGridScript = PythonCodeGenerator.GenerateFullScript(circuit);
+        Assert(generatedGridScript.Contains("row=2, col=3") && !generatedGridScript.Contains("position=("),
+            "Generated scripts should expose logical placement without physical coordinates");
+
+        var legacyCircuit = new CircuitNode();
+        var legacyExecutor = new PythonCommandExecutor(new PythonApi(new CommandManager(), legacyCircuit));
+        Assert(legacyExecutor.ExecuteScript(
+            "r3 = circuit.add_component(\"Resistor\", name=\"R3\", position=(123, 234))", out string legacyError),
+            $"Legacy position script failed: {legacyError}");
+        var legacy = legacyCircuit.FindChild<ComponentNode>("R3")!;
+        Assert(legacy.X == 123 && legacy.Y == 234, "Legacy pixel positions must remain unchanged");
+        Assert(!legacy.HasLogicalPlacement, "Explicit positions must not be reinterpreted as grid cells");
+        Assert(PythonCodeGenerator.GenerateFullScript(legacyCircuit).Contains("position=(123, 234)"),
+            "Generated scripts should retain manual pixel positions");
         Console.WriteLine("OK");
     }
 
