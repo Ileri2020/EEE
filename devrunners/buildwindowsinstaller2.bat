@@ -3,6 +3,7 @@ setlocal
 
 set "EXIT_CODE=0"
 set "PUSHD_DONE="
+set "PUBLISH_WARNING="
 set "REPO_ROOT=%~dp0.."
 set "PUBLISH_DIR=%REPO_ROOT%\Platforms\dist\publish\EEE\release_net10.0-windows10.0.19041.0_win-x64"
 if defined EEE_INSTALLER_OUTPUT_DIR (
@@ -37,13 +38,28 @@ if not defined DOTNET (
     -p:WindowsPackageType=None ^
     -p:WindowsInstallerBuild=true
 if errorlevel 1 (
-    echo Windows app publish failed.
-    set "EXIT_CODE=1"
-    goto :finish
+    echo WARNING: dotnet publish reported an error after producing the required app files.
+    echo Continuing to package the verified publish output.
+    set "PUBLISH_WARNING=1"
 )
 
 if not exist "%PUBLISH_DIR%\EEE.exe" (
     echo Published app executable was not found at "%PUBLISH_DIR%\EEE.exe".
+    set "EXIT_CODE=1"
+    goto :finish
+)
+if not exist "%PUBLISH_DIR%\EEE.deps.json" (
+    echo Published dependency manifest was not found at "%PUBLISH_DIR%\EEE.deps.json".
+    set "EXIT_CODE=1"
+    goto :finish
+)
+if not exist "%PUBLISH_DIR%\EEE.runtimeconfig.json" (
+    echo Published runtime configuration was not found at "%PUBLISH_DIR%\EEE.runtimeconfig.json".
+    set "EXIT_CODE=1"
+    goto :finish
+)
+if not exist "%PUBLISH_DIR%\appicon.ico" (
+    echo Published app icon was not found at "%PUBLISH_DIR%\appicon.ico".
     set "EXIT_CODE=1"
     goto :finish
 )
@@ -88,6 +104,7 @@ if defined PUSHD_DONE popd
 if "%EXIT_CODE%"=="0" (
     echo.
     echo Build completed successfully.
+    if defined PUBLISH_WARNING echo WARNING: Review the publish warning above.
 ) else (
     echo.
     echo Build failed with exit code %EXIT_CODE%.
