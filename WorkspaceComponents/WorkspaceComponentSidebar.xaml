@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceComponentSidebar" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.Column="{OnIdiom Phone=1, Default=3}"
+                  ZIndex="25"
+                  HorizontalOptions="End"
+                  WidthRequest="{OnIdiom Phone=240, Default=260}"
+                  IsVisible="{Binding IsSidebarVisible}"
+                  BackgroundColor="#161B22"
+                  RowDefinitions="Auto,*,Auto,Auto">
+
+                <!-- Left border -->
+                <BoxView Grid.Row="0" Grid.RowSpan="4"
+                         WidthRequest="1" BackgroundColor="#30363D"
+                         HorizontalOptions="Start"/>
+
+                <!-- Panel header with close toggle and Description toggle -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Padding="12,8,8,6">
+                    <Label Grid.Column="0"
+                           Text="COMPONENTS"
+                           TextColor="#8B949E"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           CharacterSpacing="1"/>
+                    <Button Grid.Column="1"
+                            Text="📋 Description"
+                            Style="{StaticResource ToolBtn}"
+                            FontSize="10"
+                            Padding="6,3"
+                            Command="{Binding ToggleDescriptionSidebarCommand}"
+                            ToolTipProperties.Text="Open Description &amp; Properties Sidebar"/>
+                    <Button Grid.Column="2"
+                            Text="✕"
+                            Style="{StaticResource IconBtn}"
+                            Padding="4"
+                            FontSize="12"
+                            Command="{Binding ToggleSidebarCommand}"
+                            ToolTipProperties.Text="Close sidebar"/>
+                </Grid>
+
+                <!-- ── Grouped palette — each category has a header + 2-per-row grid ── -->
+                <ScrollView Grid.Row="1" Padding="6,4">
+                    <VerticalStackLayout Spacing="0"
+                                        BindableLayout.ItemsSource="{Binding GroupedPalette}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ComponentPaletteGroup">
+                                <VerticalStackLayout Spacing="0" Margin="0,0,0,8">
+
+                                    <!-- Category header -->
+                                    <Label Text="{Binding Header}"
+                                           TextColor="#58A6FF"
+                                           FontSize="10"
+                                           FontAttributes="Bold"
+                                           CharacterSpacing="0.5"
+                                           Padding="4,6,4,4"
+                                           Margin="0,0,0,2"
+                                           BackgroundColor="#0D1117"/>
+
+                                    <!-- 2-per-row FlexLayout of icon tiles -->
+                                    <FlexLayout Wrap="Wrap"
+                                                JustifyContent="Start"
+                                                AlignItems="Start"
+                                                BindableLayout.ItemsSource="{Binding Items}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ComponentPaletteItem">
+                                                <Border WidthRequest="106"
+                                                        Margin="2"
+                                                        BackgroundColor="#1C2128"
+                                                        Stroke="{Binding Color}"
+                                                        StrokeThickness="1"
+                                                        ToolTipProperties.Text="{Binding TooltipText}">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="8"/>
+                                                    </Border.StrokeShape>
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand, x:DataType=vm:EEWorkspaceViewModel}"
+                                                            CommandParameter="{Binding .}"/>
+                                                    </Border.GestureRecognizers>
+
+                                                    <!-- Context flyout -->
+                                                    <FlyoutBase.ContextFlyout>
+                                                        <MenuFlyout>
+                                                            <MenuFlyoutItem Text="{Binding Type, StringFormat='Component: {0}'}" IsEnabled="False"/>
+                                                            <MenuFlyoutItem Text="{Binding Description}" IsEnabled="False"/>
+                                                            <MenuFlyoutSeparator/>
+                                                            <MenuFlyoutItem Text="➕ Insert"
+                                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=AddComponentToCircuitCommand, x:DataType=vm:EEWorkspaceViewModel}"
+                                                                            CommandParameter="{Binding .}"/>
+                                                        </MenuFlyout>
+                                                    </FlyoutBase.ContextFlyout>
+
+                                                    <!-- Icon tile content -->
+                                                    <VerticalStackLayout Padding="4,6" Spacing="2">
+                                                        <Image
+                                                                Source="{Binding ImageSource}"
+                                                            WidthRequest="52"
+                                                            HeightRequest="42"
+                                                            Aspect="AspectFit"
+                                                            HorizontalOptions="Center"
+                                                                IsVisible="{Binding IsCustomCircuit, Converter={StaticResource InvertedBoolConverter}}"
+                                                            InputTransparent="True"/>
+                                                            <Label Text="{Binding Symbol}"
+                                                                IsVisible="{Binding IsCustomWithoutSvg}"
+                                                                   TextColor="{Binding Color}"
+                                                                   FontSize="28"
+                                                                   HeightRequest="42"
+                                                                   HorizontalOptions="Center"
+                                                                   VerticalTextAlignment="Center"/>
+                                                                    <views:CustomSvgIconView Svg="{Binding SvgIcon}"
+                                                                                     IsVisible="{Binding HasCustomSvg}"
+                                                                                     WidthRequest="52"
+                                                                                     HeightRequest="42"/>
+                                                        <Label Text="{Binding Type}"
+                                                               TextColor="#8B949E"
+                                                               FontSize="9"
+                                                               HorizontalOptions="Center"
+                                                               HorizontalTextAlignment="Center"
+                                                               LineBreakMode="TailTruncation"
+                                                               MaxLines="1"/>
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </FlexLayout>
+
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Splitter -->
+                <BoxView Grid.Row="2" HeightRequest="1" BackgroundColor="#30363D"/>
+
+                <!-- Properties panel -->
+                <Grid Grid.Row="3" RowDefinitions="Auto,*" Padding="0" MaximumHeightRequest="130">
+                    <Label Grid.Row="0"
+                           Text="PROPERTIES"
+                           TextColor="#8B949E"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           Padding="12,6,12,4"
+                           CharacterSpacing="1"/>
+
+                    <ScrollView Grid.Row="1" Padding="12,0,12,6">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding ActiveComponentInfo}"
+                                   TextColor="#C9D1D9"
+                                   FontSize="11"
+                                   LineBreakMode="WordWrap"/>
+                            <Label Text="{Binding StatusText}"
+                                   TextColor="#8B949E"
+                                   FontSize="10"
+                                   Margin="0,2,0,0"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Grid>
+            </Grid>
+</ContentView>

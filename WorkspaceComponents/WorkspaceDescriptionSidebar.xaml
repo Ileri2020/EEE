@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceDescriptionSidebar" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Border Grid.Column="{OnIdiom Phone=1, Default=3}"
+                    ZIndex="28"
+                    HorizontalOptions="End"
+                    WidthRequest="{OnIdiom Phone=260, Default=280}"
+                    IsVisible="{Binding IsDescriptionSidebarVisible}"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#0D1117" Padding="12,10" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                            <Label Text="📋" FontSize="14" TextColor="#E3B341" VerticalOptions="Center"/>
+                            <Label Text="DESCRIPTION &amp; PROPERTIES"
+                                   TextColor="#E6EDF3"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   CharacterSpacing="1"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="11"
+                                Padding="4"
+                                Command="{Binding ToggleDescriptionSidebarCommand}"
+                                ToolTipProperties.Text="Close description sidebar"/>
+                    </Grid>
+
+                    <!-- Content -->
+                    <ScrollView Grid.Row="1" Padding="12,10">
+                        <VerticalStackLayout Spacing="10">
+                            <!-- Placeholder when no component is selected -->
+                            <VerticalStackLayout IsVisible="{Binding HasSelectedComponent, Converter={StaticResource InvertedBoolConverter}}"
+                                                Spacing="8"
+                                                Padding="8,24"
+                                                HorizontalOptions="Center">
+                                <Label Text="🔍" FontSize="32" HorizontalOptions="Center" TextColor="#484F58"/>
+                                <Label Text="No Component Selected"
+                                       TextColor="#C9D1D9"
+                                       FontSize="13"
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+                                <Label Text="Select any component on the schematic canvas to inspect and edit its live description, rating, and parameters."
+                                       TextColor="#8B949E"
+                                       FontSize="11"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+
+                            <!-- Inspector when component is selected -->
+                            <VerticalStackLayout IsVisible="{Binding HasSelectedComponent}" Spacing="10">
+                                <!-- Component Card Header -->
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="6"/>
+                                    </Border.StrokeShape>
+                                    <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="8" VerticalOptions="Center">
+                                        <views:ComponentIconView Grid.Column="0"
+                                                                x:Name="SelectedComponentIcon"
+                                                                ComponentType="{Binding SelectedComponent.ComponentType}"
+                                                                Component="{Binding SelectedComponent}"
+                                                                WidthRequest="36"
+                                                                HeightRequest="36"/>
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                            <Label Text="{Binding SelectedComponent.Reference}"
+                                                   TextColor="#58A6FF"
+                                                   FontSize="14"
+                                                   FontAttributes="Bold"/>
+                                            <Label Text="{Binding SelectedComponent.ComponentType}"
+                                                   TextColor="#8B949E"
+                                                   FontSize="11"/>
+                                        </VerticalStackLayout>
+
+                                        <!-- Breakdown status indicator badge -->
+                                        <Border Grid.Column="2"
+                                                Padding="6,3"
+                                                BackgroundColor="#3D1214"
+                                                Stroke="#F85149"
+                                                IsVisible="{Binding SelectedComponent.IsBrokenDown}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="4"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="⚠️ OVERLOAD"
+                                                   FontSize="9"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#FF7B72"/>
+                                        </Border>
+
+                                        <Border Grid.Column="2"
+                                                Padding="6,3"
+                                                BackgroundColor="#132B1E"
+                                                Stroke="#238636"
+                                                IsVisible="{Binding SelectedComponent.IsBrokenDown, Converter={StaticResource InvertedBoolConverter}}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="4"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="✓ NORMAL"
+                                                   FontSize="9"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#56D364"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Reference / Name -->
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="REFERENCE / NAME" TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditName}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Description & Notes (Editable!) -->
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="DESCRIPTION &amp; NOTES" TextColor="#E3B341" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Editor Text="{Binding EditDescription}"
+                                            HeightRequest="65"
+                                            BackgroundColor="#0D1117"
+                                            TextColor="#C9D1D9"
+                                            FontSize="11"
+                                            Placeholder="Enter component description or engineering notes…"/>
+                                </VerticalStackLayout>
+
+                                <!-- Primary Parameter -->
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="{Binding EditParamName}" TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditParamValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Max Breaking Current (Editable!) -->
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="MAX BREAKING CURRENT (A)" TextColor="#F85149" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditBreakingCurrent}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#FF7B72" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Live Measurements Panel -->
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="6"/>
+                                    </Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="LIVE SIMULATION MEASUREMENTS" TextColor="#8B949E" FontSize="9" FontAttributes="Bold" CharacterSpacing="1"/>
+                                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="4">
+                                            <Label Grid.Row="0" Grid.Column="0" Text="Voltage Drop:" TextColor="#8B949E" FontSize="11"/>
+                                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding SelectedComponent.LiveVoltage, StringFormat='{0:F3} V'}" TextColor="#56D364" FontSize="11" FontAttributes="Bold" HorizontalOptions="End"/>
+                                            <Label Grid.Row="1" Grid.Column="0" Text="Branch Current:" TextColor="#8B949E" FontSize="11"/>
+                                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding SelectedComponent.LiveCurrent, StringFormat='{0:F4} A'}" TextColor="#79C0FF" FontSize="11" FontAttributes="Bold" HorizontalOptions="End"/>
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <!-- Component measurement events only target UI surfaces, never circuit components. -->
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1" Padding="8">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="6"/></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="SIMULATION UI EVENTS" TextColor="#D2A8FF" FontSize="9" FontAttributes="Bold" VerticalOptions="Center"/>
+                                            <Button Grid.Column="1" Text="＋ Add" Style="{StaticResource ToolBtn}" FontSize="10" Padding="4"
+                                                    Command="{Binding AddComponentEventTriggerCommand}"/>
+                                        </Grid>
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding SelectedComponentEventTriggers}" Spacing="6">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="core:SimulationEventTrigger">
+                                                    <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="6">
+                                                        <Border.StrokeShape><RoundRectangle CornerRadius="5"/></Border.StrokeShape>
+                                                        <VerticalStackLayout Spacing="4">
+                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                                                                <Entry Text="{Binding Name}" Placeholder="Event name" FontSize="10" HeightRequest="32"
+                                                                       BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                                                                <Button Grid.Column="1" Text="✕" Style="{StaticResource IconBtn}" Padding="2" FontSize="10"
+                                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=RemoveComponentEventTriggerCommand, x:DataType=vm:EEWorkspaceViewModel}"
+                                                                        CommandParameter="{Binding .}"/>
+                                                            </Grid>
+                                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="4">
+                                                                <Picker Grid.Column="0" ItemsSource="{Binding MeasurementOptions}" SelectedItem="{Binding Measurement}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                                <Picker Grid.Column="1" ItemsSource="{Binding ComparisonOptions}" SelectedItem="{Binding Comparison}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                                <Entry Grid.Column="2" Text="{Binding Threshold}" Keyboard="Numeric" FontSize="10"
+                                                                       BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                                                            </Grid>
+                                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                                                                <Picker Grid.Column="0" ItemsSource="{Binding TargetOptions}" SelectedItem="{Binding Target}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                                <Picker Grid.Column="1" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode}"
+                                                                        BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="9"/>
+                                                            </Grid>
+                                                            <Entry Text="{Binding Message}" Placeholder="Short text shown when fired" FontSize="10" HeightRequest="32"
+                                                                   BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                                                        </VerticalStackLayout>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Button Text="Save Event Rules" Style="{StaticResource ToolBtn}" FontSize="10"
+                                                Command="{Binding SaveComponentEventTriggersCommand}"/>
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <!-- Quick Action Buttons: Rotate, Copy, Delete -->
+                                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6" Margin="0,4,0,0">
+                                    <Button Grid.Column="0" Text="⟳ Rotate" Style="{StaticResource ToolBtn}" FontSize="10" Padding="4"
+                                            Command="{Binding RotateSelectedComponentCommand}"/>
+                                    <Button Grid.Column="1" Text="📋 Copy" Style="{StaticResource ToolBtn}" FontSize="10" Padding="4"
+                                            Command="{Binding CopySelectedComponentCommand}"/>
+                                    <Button Grid.Column="2" Text="📈 Wave" Style="{StaticResource ToolBtn}" TextColor="#79C0FF" FontSize="10" Padding="4"
+                                        Command="{Binding ToggleSelectedWaveformCommand}"
+                                        ToolTipProperties.Text="Show or hide this component in the waveform drawer"/>
+                                    <Button Grid.Column="3" Text="🗑 Delete" Style="{StaticResource ToolBtn}" TextColor="#F85149" FontSize="10" Padding="4"
+                                            Command="{Binding DeleteSelectedComponentCommand}"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Footer: Save / Apply Button -->
+                    <Border Grid.Row="2" BackgroundColor="#0D1117" Padding="8,8" StrokeThickness="0">
+                        <Button Text="✓ Save Description Changes"
+                                Style="{StaticResource AccentBtn}"
+                                FontSize="11"
+                                HorizontalOptions="Fill"
+                                Command="{Binding ApplyDescriptionSidebarChangesCommand}"/>
+                    </Border>
+                </Grid>
+            </Border>
+</ContentView>

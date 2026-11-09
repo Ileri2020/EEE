@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceCreateCircuitComponentDialog" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid IsVisible="{Binding IsCreateCircuitComponentDialogVisible}"
+              ZIndex="200"
+              BackgroundColor="#AA000000"
+              Padding="16">
+            <Border MaximumWidthRequest="560" MaximumHeightRequest="680"
+                    HorizontalOptions="Center" VerticalOptions="Center"
+                    BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="16,12" ColumnDefinitions="*,Auto">
+                        <Label Text="CREATE REUSABLE CIRCUIT COMPONENT" TextColor="#D2A8FF"
+                               FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                        <Button Grid.Column="1" Text="✕" Style="{StaticResource IconBtn}" Padding="4"
+                                Command="{Binding CancelCreateCircuitComponentCommand}"/>
+                    </Grid>
+                    <ScrollView Grid.Row="1" Padding="16,12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="The connected circuit containing the selected component will be replaced by a reusable block. Open pins become its named nodes."
+                                   TextColor="#8B949E" FontSize="11" LineBreakMode="WordWrap"/>
+                            <Label Text="COMPONENT NAME" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                            <Entry Text="{Binding NewCircuitComponentName}" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                            <Label Text="EXPOSED NODE NAMES" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding NewCircuitComponentPorts}" Spacing="4">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CustomCircuitPortDraft">
+                                        <Grid ColumnDefinitions="*,Auto,2*" ColumnSpacing="8">
+                                            <Label Grid.Column="0" Text="{Binding ComponentReference}" TextColor="#79C0FF" FontSize="10" VerticalOptions="Center"/>
+                                            <Label Grid.Column="1" Text="{Binding OriginalPinName}" TextColor="#8B949E" FontSize="10" VerticalOptions="Center"/>
+                                            <Entry Grid.Column="2" Text="{Binding Name}" Placeholder="Node name" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="11"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <Label Text="INLINE SVG ICON (scripts and external resources are not allowed)" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                            <Editor Text="{Binding NewCircuitComponentSvg}" HeightRequest="100" AutoSize="TextChanges"
+                                    BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="10"/>
+                            <Label Text="{Binding CreateCircuitComponentStatus}" TextColor="#E3B341" FontSize="10" LineBreakMode="WordWrap"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="12,10" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <Button Grid.Column="1" Text="Save Locally" Style="{StaticResource ToolBtn}"
+                            Command="{Binding CreateSelectedCircuitComponentLocallyCommand}"/>
+                        <Button Grid.Column="2" Text="Save Local + Online" Style="{StaticResource AccentBtn}"
+                            Command="{Binding CreateSelectedCircuitComponentAndPublishCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+</ContentView>

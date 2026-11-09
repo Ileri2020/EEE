@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceSaveDialog" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsSaveAsModalVisible}"
+              BackgroundColor="#CC000000"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+
+            <Border MaximumWidthRequest="520"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1"
+                    Margin="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14"/>
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="16,12" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="💾" FontSize="18" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="Save &amp; Export Schematic Project"
+                                   TextColor="#C9D1D9"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1" Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="12"
+                                Padding="4"
+                                Command="{Binding CloseSaveAsDialogCommand}"/>
+                    </Grid>
+
+                    <!-- Content -->
+                    <ScrollView Grid.Row="1" MaximumHeightRequest="460" Padding="16,14">
+                        <VerticalStackLayout Spacing="14">
+
+                            <!-- File Name -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="PROJECT / FILE NAME"
+                                       TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <Entry Grid.Column="0"
+                                           Text="{Binding SaveFileName}"
+                                           Placeholder="e.g. InvertingAmplifier"
+                                           BackgroundColor="#0D1117"
+                                           TextColor="#C9D1D9"
+                                           FontSize="13"/>
+                                    <!-- Format suffix badge -->
+                                    <Border Grid.Column="1" BackgroundColor="#21262D" Stroke="#30363D" StrokeThickness="1" Padding="10,0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <Label VerticalOptions="Center"
+                                               FontSize="12"
+                                               FontAttributes="Bold"
+                                               TextColor="#58A6FF">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding SelectedSaveFormat}" Value="eee">
+                                                    <Setter Property="Text" Value=".eee"/>
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding SelectedSaveFormat}" Value="kicad">
+                                                    <Setter Property="Text" Value=".kicad_sch"/>
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding SelectedSaveFormat}" Value="spice">
+                                                    <Setter Property="Text" Value=".cir"/>
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding SelectedSaveFormat}" Value="eesim">
+                                                    <Setter Property="Text" Value=".eesim"/>
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding SelectedSaveFormat}" Value="python">
+                                                    <Setter Property="Text" Value=".py"/>
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <!-- Format Selection -->
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="CHOOSE FORMAT TO SAVE"
+                                       TextColor="#E3B341" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+
+                                <!-- Option 1: Platform EEE Format -->
+                                <Border StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatEee}" Value="True">
+                                            <Setter Property="Stroke" Value="#58A6FF"/>
+                                            <Setter Property="BackgroundColor" Value="#1C2838"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatEee}" Value="False">
+                                            <Setter Property="Stroke" Value="#30363D"/>
+                                            <Setter Property="BackgroundColor" Value="#0D1117"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectSaveFormatCommand}" CommandParameter="eee"/>
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" Text="⚡" FontSize="18" TextColor="#56D364" VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Label Text="Platform EEE Format (*.eee)" FontSize="12" FontAttributes="Bold" TextColor="#C9D1D9"/>
+                                                <Border BackgroundColor="#238636" StrokeThickness="0" Padding="6,1">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="4"/>
+                                                    </Border.StrokeShape>
+                                                    <Label Text="RECOMMENDED" FontSize="8" FontAttributes="Bold" TextColor="#FFFFFF"/>
+                                                </Border>
+                                            </HorizontalStackLayout>
+                                            <Label Text="Complete native project format. Preserves full hierarchy, live states, components, ratings, wire netlists &amp; layout."
+                                                   FontSize="10" TextColor="#8B949E"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="✓" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"
+                                               IsVisible="{Binding IsFormatEee}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Option 2: KiCad Schematic -->
+                                <Border StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatKiCad}" Value="True">
+                                            <Setter Property="Stroke" Value="#58A6FF"/>
+                                            <Setter Property="BackgroundColor" Value="#1C2838"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatKiCad}" Value="False">
+                                            <Setter Property="Stroke" Value="#30363D"/>
+                                            <Setter Property="BackgroundColor" Value="#0D1117"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectSaveFormatCommand}" CommandParameter="kicad"/>
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" Text="📐" FontSize="18" TextColor="#58A6FF" VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="KiCad Schematic Schema (*.kicad_sch)" FontSize="12" FontAttributes="Bold" TextColor="#C9D1D9"/>
+                                            <Label Text="Standard open-source visual EDA schematic exchange format for KiCad 7 / 8."
+                                                   FontSize="10" TextColor="#8B949E"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="✓" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"
+                                               IsVisible="{Binding IsFormatKiCad}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Option 3: SPICE Netlist -->
+                                <Border StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatSpice}" Value="True">
+                                            <Setter Property="Stroke" Value="#58A6FF"/>
+                                            <Setter Property="BackgroundColor" Value="#1C2838"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatSpice}" Value="False">
+                                            <Setter Property="Stroke" Value="#30363D"/>
+                                            <Setter Property="BackgroundColor" Value="#0D1117"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectSaveFormatCommand}" CommandParameter="spice"/>
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" Text="⚡" FontSize="18" TextColor="#E3B341" VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="SPICE Netlist Schema (*.cir / *.sp)" FontSize="12" FontAttributes="Bold" TextColor="#C9D1D9"/>
+                                            <Label Text="Simulation netlist interchange for SpiceSharp, LTspice, Ngspice, and PSpice."
+                                                   FontSize="10" TextColor="#8B949E"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="✓" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"
+                                               IsVisible="{Binding IsFormatSpice}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Option 4: EESim JSON Schema -->
+                                <Border StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatEesim}" Value="True">
+                                            <Setter Property="Stroke" Value="#58A6FF"/>
+                                            <Setter Property="BackgroundColor" Value="#1C2838"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatEesim}" Value="False">
+                                            <Setter Property="Stroke" Value="#30363D"/>
+                                            <Setter Property="BackgroundColor" Value="#0D1117"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectSaveFormatCommand}" CommandParameter="eesim"/>
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" Text="{}{ }" FontSize="16" TextColor="#79C0FF" VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="EESim Circuit Schema (*.eesim / *.json)" FontSize="12" FontAttributes="Bold" TextColor="#C9D1D9"/>
+                                            <Label Text="Standard JSON object hierarchy representing root node circuit graph."
+                                                   FontSize="10" TextColor="#8B949E"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="✓" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"
+                                               IsVisible="{Binding IsFormatEesim}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Option 5: Python Script Schema -->
+                                <Border StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatPython}" Value="True">
+                                            <Setter Property="Stroke" Value="#58A6FF"/>
+                                            <Setter Property="BackgroundColor" Value="#1C2838"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFormatPython}" Value="False">
+                                            <Setter Property="Stroke" Value="#30363D"/>
+                                            <Setter Property="BackgroundColor" Value="#0D1117"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectSaveFormatCommand}" CommandParameter="python"/>
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" Text="🐍" FontSize="18" TextColor="#56D364" VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Python Schematic Script (*.py)" FontSize="12" FontAttributes="Bold" TextColor="#C9D1D9"/>
+                                            <Label Text="Executable Python script to programmatically regenerate and automate the circuit."
+                                                   FontSize="10" TextColor="#8B949E"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="✓" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"
+                                               IsVisible="{Binding IsFormatPython}"/>
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <!-- Destination folder -->
+                            <VerticalStackLayout Spacing="3">
+                                <Label Text="DESTINATION DIRECTORY"
+                                       TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1" Padding="10,6">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="6"/>
+                                    </Border.StrokeShape>
+                                    <Label Text="{Binding SaveDestinationFolder}"
+                                           TextColor="#8B949E"
+                                           FontSize="11"
+                                           FontFamily="Consolas, monospace"
+                                           LineBreakMode="CharacterWrap"/>
+                                </Border>
+                            </VerticalStackLayout>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Footer Actions -->
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="14,10" ColumnDefinitions="*,Auto,Auto">
+                        <Button Grid.Column="1"
+                                Text="Cancel"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding CloseSaveAsDialogCommand}"
+                                Margin="0,0,6,0"/>
+                        <Button Grid.Column="2"
+                            Text="☁ Save online"
+                            Style="{StaticResource ToolBtn}"
+                            Command="{Binding SaveProjectAsOnlineCommand}"
+                            Margin="0,0,6,0"/>
+                        <Button Grid.Column="3"
+                                Text="💾 Save File"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding ConfirmSaveAsCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+</ContentView>

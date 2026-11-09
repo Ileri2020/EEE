@@ -15,22 +15,22 @@ public partial class WorkspacePage : ContentPage
         BindingContext = vm;
 
         // Wire canvas selection events to ViewModel
-        SchematicCanvas.ComponentSelected += (_, comp) =>
+        MainWorkspace.SchematicCanvas.ComponentSelected += (_, comp) =>
             vm.OnComponentSelected(comp);
-        SchematicCanvas.ConnectionSelected += (_, connection) =>
+        MainWorkspace.SchematicCanvas.ConnectionSelected += (_, connection) =>
             vm.OnConnectionSelected(connection);
-        vm.ViewportRecenterRequested += SchematicCanvas.RecenterToCircuit;
-        SchematicCanvas.ComponentMoveCommitted += (_, move) =>
+        vm.ViewportRecenterRequested += MainWorkspace.SchematicCanvas.RecenterToCircuit;
+        MainWorkspace.SchematicCanvas.ComponentMoveCommitted += (_, move) =>
             vm.CommitComponentMove(move.Component, move.OldX, move.OldY, move.NewX, move.NewY);
 
         // Wire pin/node selection event
-        SchematicCanvas.PinSelected += (_, tuple) =>
+        MainWorkspace.SchematicCanvas.PinSelected += (_, tuple) =>
             vm.OnPinSelected(tuple.Component, tuple.Pin);
 
         // Wire right-click / long-press context event to open Edit Dialog
-        SchematicCanvas.ComponentContextRequested += (_, comp) =>
+        MainWorkspace.SchematicCanvas.ComponentContextRequested += (_, comp) =>
             vm.OpenEditDialog(comp);
-        SchematicCanvas.ComponentLongPressRequested += async (_, comp) =>
+        MainWorkspace.SchematicCanvas.ComponentLongPressRequested += async (_, comp) =>
         {
             vm.SelectedComponent = comp;
             var action = await DisplayActionSheetAsync(
@@ -58,7 +58,7 @@ public partial class WorkspacePage : ContentPage
         };
 
         // Wire rotate handle click → rotate component and redraw
-        SchematicCanvas.ComponentRotateRequested += (_, comp) =>
+        MainWorkspace.SchematicCanvas.ComponentRotateRequested += (_, comp) =>
         {
             vm.SelectedComponent = comp;
             vm.RotateSelectedComponentCommand.Execute(null);
@@ -66,14 +66,14 @@ public partial class WorkspacePage : ContentPage
 
 
         // Wire completed wire connection → add ConnectionNode to circuit
-        SchematicCanvas.WireConnected += (_, args) =>
+        MainWorkspace.SchematicCanvas.WireConnected += (_, args) =>
         {
             var (fromComp, fromPin, toComp, toPin) = args;
             vm.ConnectPins(fromComp, fromPin, toComp, toPin);
         };
 
         // Wire cut wire turning into node
-        SchematicCanvas.WireCutIntoNode += (_, junc) =>
+        MainWorkspace.SchematicCanvas.WireCutIntoNode += (_, junc) =>
         {
             vm.StatusText = $"Cut wire → Created node {junc.Reference}";
             vm.SelectedComponent = junc;
@@ -84,41 +84,41 @@ public partial class WorkspacePage : ContentPage
         vm.CircuitChanged += () =>
             Dispatcher.Dispatch(() =>
             {
-                SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
-                SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
-                SchematicCanvas.Invalidate();
-                WaveformCanvas.Invalidate();
-                SelectedComponentIcon.Invalidate();
+                MainWorkspace.SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
+                MainWorkspace.SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
+                MainWorkspace.SchematicCanvas.Invalidate();
+                MainWorkspace.WaveformCanvas.Invalidate();
+                MainWorkspace.SelectedComponentIcon.Invalidate();
             });
 
         // Initialize ActiveTool
-        SchematicCanvas.ActiveTool = vm.ActiveTool;
+        MainWorkspace.SchematicCanvas.ActiveTool = vm.ActiveTool;
 
         // Sync IsMobilePanMode property from ViewModel to viewport
         vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(EEWorkspaceViewModel.IsMobilePanMode))
             {
-                SchematicCanvas.IsMobilePanMode = vm.IsMobilePanMode;
-                SchematicCanvas.Invalidate();
+                MainWorkspace.SchematicCanvas.IsMobilePanMode = vm.IsMobilePanMode;
+                MainWorkspace.SchematicCanvas.Invalidate();
 
                 // Update button visual states for Pan/Select mode
                 Dispatcher.Dispatch(() =>
                 {
-                    BtnMobilePan.BackgroundColor    = vm.IsMobilePanMode
+                    MainWorkspace.BtnMobilePan.BackgroundColor    = vm.IsMobilePanMode
                         ? Color.FromArgb("#1C4A2B") : Colors.Transparent;
-                    BtnMobileSelect.BackgroundColor = !vm.IsMobilePanMode
+                    MainWorkspace.BtnMobileSelect.BackgroundColor = !vm.IsMobilePanMode
                         ? Color.FromArgb("#1C3060") : Colors.Transparent;
                 });
             }
             else if (e.PropertyName == nameof(EEWorkspaceViewModel.ActiveTool))
             {
-                SchematicCanvas.ActiveTool = vm.ActiveTool;
+                MainWorkspace.SchematicCanvas.ActiveTool = vm.ActiveTool;
             }
         };
 
         // Apply default mobile mode highlight on load
-        BtnMobilePan.BackgroundColor    = Color.FromArgb("#1C4A2B");
-        BtnMobileSelect.BackgroundColor = Colors.Transparent;
+        MainWorkspace.BtnMobilePan.BackgroundColor    = Color.FromArgb("#1C4A2B");
+        MainWorkspace.BtnMobileSelect.BackgroundColor = Colors.Transparent;
     }
 }

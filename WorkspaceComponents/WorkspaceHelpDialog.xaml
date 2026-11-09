@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceHelpDialog" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsHelpVisible}"
+              BackgroundColor="#BB000000"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+
+            <Border MaximumWidthRequest="520"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14"/>
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto">
+
+                    <!-- Help Dialog Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="18,14" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="10" VerticalOptions="Center">
+                            <Label Text="❓" FontSize="18" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="Controls &amp; Help"
+                                   TextColor="#C9D1D9"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1" Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="13"
+                                Padding="5"
+                                Command="{Binding ToggleHelpCommand}"
+                                ToolTipProperties.Text="Close Help"/>
+                    </Grid>
+
+                    <!-- Help Content -->
+                    <ScrollView Grid.Row="1" MaximumHeightRequest="500" Padding="18,14">
+                        <VerticalStackLayout Spacing="14">
+
+                            <!-- Desktop Controls -->
+                            <Label Text="🖥  DESKTOP CONTROLS"
+                                   TextColor="#58A6FF"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="0.5"/>
+
+                            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="6" ColumnSpacing="12">
+                                <!-- Row 0 -->
+                                <Label Grid.Row="0" Grid.Column="0" Text="Left-click" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="Select component or pin node" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 1 -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="Right-click + drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="Pan the viewport" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 2 -->
+                                <Label Grid.Row="2" Grid.Column="0" Text="Right-click (no drag)" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="2" Grid.Column="1" Text="Open component edit dialog" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 3 -->
+                                <Label Grid.Row="3" Grid.Column="0" Text="Scroll wheel" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="3" Grid.Column="1" Text="Zoom in / out" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 4 -->
+                                <Label Grid.Row="4" Grid.Column="0" Text="Pin long-press + drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="4" Grid.Column="1" Text="Draw a wire from that pin to another pin" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 5 -->
+                                <Label Grid.Row="5" Grid.Column="0" Text="Right long-press + drag" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="5" Grid.Column="1" Text="Move (drag) the component" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 6 -->
+                                <Label Grid.Row="6" Grid.Column="0" Text="Double-click" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="6" Grid.Column="1" Text="Open component edit dialog" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 7 -->
+                                <Label Grid.Row="7" Grid.Column="0" Text="Ctrl+Z / Ctrl+Y" TextColor="#E3B341" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="7" Grid.Column="1" Text="Undo / Redo" TextColor="#C9D1D9" FontSize="12"/>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" Color="#30363D" Margin="0,4"/>
+
+                            <!-- Mobile Controls -->
+                            <Label Text="📱  MOBILE CONTROLS"
+                                   TextColor="#56D364"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="0.5"/>
+
+                            <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="6" ColumnSpacing="12">
+                                <!-- Row 0 -->
+                                <Label Grid.Row="0" Grid.Column="0" Text="✋ Pan mode + touch" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="Pan / scroll the viewport" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 1 -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="↖ Select mode + tap" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="Select a component or pin" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 2 -->
+                                <Label Grid.Row="2" Grid.Column="0" Text="Pan mode + long-press component" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="2" Grid.Column="1" Text="Move / drag the component" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 3 -->
+                                <Label Grid.Row="3" Grid.Column="0" Text="Long-press pin + drag" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="3" Grid.Column="1" Text="Draw a wire from pin to another pin" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 4 -->
+                                <Label Grid.Row="4" Grid.Column="0" Text="Long-press component (select mode)" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="4" Grid.Column="1" Text="Open component edit dialog" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 5 -->
+                                <Label Grid.Row="5" Grid.Column="0" Text="Pinch" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="5" Grid.Column="1" Text="Zoom in / out" TextColor="#C9D1D9" FontSize="12"/>
+                                <!-- Row 6 -->
+                                <Label Grid.Row="6" Grid.Column="0" Text="Toolbar ↩ / ↪" TextColor="#56D364" FontSize="12" FontAttributes="Bold"/>
+                                <Label Grid.Row="6" Grid.Column="1" Text="Undo / Redo" TextColor="#C9D1D9" FontSize="12"/>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" Color="#30363D" Margin="0,4"/>
+
+                            <!-- Tips -->
+                            <Label Text="💡  TIPS"
+                                   TextColor="#D2A8FF"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="0.5"/>
+                            <Label Text="• Small blue circles on components are pin terminals — click or tap them to select or start a wire."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                            <Label Text="• Right-click any sidebar component tile to see its details before inserting."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                            <Label Text="• Use the 👁 Live Probe toggle in the edit dialog to display real-time voltage &amp; current on a component."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+                            <Label Text="• Use the 📈 Waveform toggle to open the oscilloscope drawer for a component."
+                                   TextColor="#C9D1D9" FontSize="12" LineBreakMode="WordWrap"/>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Close Footer -->
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="14,10" HorizontalOptions="Fill">
+                        <Button Text="Got it!"
+                                Style="{StaticResource AccentBtn}"
+                                HorizontalOptions="End"
+                                Command="{Binding ToggleHelpCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+</ContentView>

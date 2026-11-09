@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceSimulationSettingsDialog" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsSimSettingsVisible}"
+              BackgroundColor="#BB000000"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+
+            <Border MaximumWidthRequest="480"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14"/>
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="16,12" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="⚙" FontSize="16" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="Simulation Analysis Setup"
+                                   TextColor="#C9D1D9"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1" Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="12"
+                                Padding="4"
+                                Command="{Binding CloseSimSettingsCommand}"
+                                ToolTipProperties.Text="Close Dialog"/>
+                    </Grid>
+
+                    <!-- Content -->
+                    <ScrollView Grid.Row="1" MaximumHeightRequest="420" Padding="16,12">
+                        <VerticalStackLayout Spacing="12">
+                            <!-- Analysis Selection -->
+                            <Label Text="ANALYSIS TYPE"
+                                   TextColor="#8B949E"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="1"/>
+
+                            <!-- Radio / Button Selector -->
+                            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
+                                <Button Grid.Column="0" Text="DC OP"
+                                        Style="{StaticResource PaletteBtn}"
+                                        FontSize="11"
+                                        Padding="4"
+                                        Command="{Binding SetSelectedAnalysisTypeCommand}"
+                                        CommandParameter="OperatingPoint"/>
+                                <Button Grid.Column="1" Text="Transient"
+                                        Style="{StaticResource PaletteBtn}"
+                                        FontSize="11"
+                                        Padding="4"
+                                        Command="{Binding SetSelectedAnalysisTypeCommand}"
+                                        CommandParameter="Transient"/>
+                                <Button Grid.Column="2" Text="AC Sweep"
+                                        Style="{StaticResource PaletteBtn}"
+                                        FontSize="11"
+                                        Padding="4"
+                                        Command="{Binding SetSelectedAnalysisTypeCommand}"
+                                        CommandParameter="AC"/>
+                                <Button Grid.Column="3" Text="DC Sweep"
+                                        Style="{StaticResource PaletteBtn}"
+                                        FontSize="11"
+                                        Padding="4"
+                                        Command="{Binding SetSelectedAnalysisTypeCommand}"
+                                        CommandParameter="DCSweep"/>
+                            </Grid>
+
+                            <Label Text="{Binding SelectedAnalysisType, StringFormat='Active: {0}'}"
+                                   TextColor="#58A6FF" FontSize="12" FontAttributes="Bold"/>
+
+                            <!-- Transient Options -->
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="TRANSIENT PARAMETERS (TIME DOMAIN)"
+                                       TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="Start (s)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimTransientStartTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="Stop (s)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimTransientStopTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                        <Label Text="Step (s)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimTransientStepTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <!-- AC Sweep Options -->
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="AC FREQUENCY SWEEP PARAMETERS (BODE)"
+                                       TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="Sweep Type" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimAcSweepType}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="Start Freq (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimAcStartFrequency}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                        <Label Text="Stop Freq (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimAcStopFrequency}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <!-- DC Parameter Sweep Options -->
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="DC PARAMETER SWEEP"
+                                       TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="Source" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimDcSweepSource}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="Start (V)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimDcStart}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                        <Label Text="Stop (V)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimDcStop}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="3" Spacing="2">
+                                        <Label Text="Step (V)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding SimDcStep}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Footer Actions -->
+                    <Grid Grid.Row="2" BackgroundColor="#1C2128" Padding="14,10" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Button Grid.Column="0"
+                                Text="📋 SPICE Netlist"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding ViewSpiceNetlistCommand}"/>
+                        <Button Grid.Column="2"
+                                Text="Cancel"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding CloseSimSettingsCommand}"
+                                Margin="0,0,6,0"/>
+                        <Button Grid.Column="3"
+                                Text="▶ Run Simulation"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding RunConfiguredSimulationCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+</ContentView>

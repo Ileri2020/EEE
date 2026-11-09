@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceCenterViewport" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.Column="{OnIdiom Phone=1, Default=2}">
+                <!-- Schematic Viewport -->
+                <views:SchematicViewport
+                    x:Name="SchematicCanvas"
+                    Circuit="{Binding Circuit}"
+                    LiveMeasurementsVisible="{Binding IsLiveMeasurementsVisible}"
+                    IsVisible="{Binding IsSchematicViewActive}"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill"/>
+
+                <!-- ── Floating Play/Pause FAB ─────────────────────────────── -->
+                <Frame IsVisible="{Binding IsSchematicViewActive}"
+                       ZIndex="50"
+                       HorizontalOptions="End"
+                       VerticalOptions="End"
+                      Margin="20,20,20,82"
+                       Padding="0"
+                       CornerRadius="32"
+                       BackgroundColor="#1C2128"
+                       BorderColor="#30363D"
+                       HasShadow="True"
+                       WidthRequest="56"
+                       HeightRequest="56">
+                    <Button Text="{Binding PlayPauseFabText}"
+                            FontSize="18"
+                            Padding="0"
+                            WidthRequest="56"
+                            HeightRequest="56"
+                            CornerRadius="28"
+                            BackgroundColor="Transparent"
+                            TextColor="{Binding SimPlayBtnColor}"
+                            Command="{Binding ToggleSimulationPlaybackCommand}"
+                            ToolTipProperties.Text="Play / Pause Simulation"/>
+                </Frame>
+
+                        <!-- Simple phone toolbar: phone/view visibility is computed by the ViewModel. -->
+                        <Grid IsVisible="{Binding IsMobileSchematicViewActive}"
+                              ZIndex="60"
+                              VerticalOptions="End"
+                              HorizontalOptions="Fill"
+                              Margin="8,0,8,12"
+                              RowDefinitions="Auto,Auto">
+                            <Border Grid.Row="0"
+                                IsVisible="{Binding HasSelectedComponent}"
+                                HorizontalOptions="Center"
+                                Margin="0,0,0,6"
+                                Padding="4"
+                                BackgroundColor="#161B22"
+                                Stroke="#58A6FF"
+                                StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="14"/>
+                            </Border.StrokeShape>
+                            <HorizontalStackLayout Spacing="2">
+                                <Button Text="Properties" Style="{StaticResource ToolBtn}" FontSize="11"
+                                    Command="{Binding EditSelectedComponentCommand}"/>
+                                <Button Text="Duplicate" Style="{StaticResource ToolBtn}" FontSize="11"
+                                    Command="{Binding CopySelectedComponentCommand}"/>
+                                <Button Text="⟳" Style="{StaticResource IconBtn}" FontSize="14"
+                                    Command="{Binding RotateSelectedComponentCommand}"/>
+                                <Button Text="🗑" Style="{StaticResource IconBtn}" FontSize="14"
+                                    TextColor="#F85149"
+                                    Command="{Binding DeleteSelectedComponentCommand}"/>
+                            </HorizontalStackLayout>
+                            </Border>
+                            <Border Grid.Row="1"
+                                HorizontalOptions="Center"
+                                Padding="4"
+                                BackgroundColor="#161B22"
+                                Stroke="#30363D"
+                                StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16"/>
+                            </Border.StrokeShape>
+                            <HorizontalStackLayout Spacing="2">
+                                <Button Text="Select" Style="{StaticResource ToolBtn}" FontSize="11"
+                                    CommandParameter="Select" Command="{Binding SelectToolCommand}"/>
+                                <Button Text="Wire" Style="{StaticResource ToolBtn}" FontSize="11"
+                                    CommandParameter="Wire" Command="{Binding SelectToolCommand}"/>
+                                <Button Text="Pan" Style="{StaticResource ToolBtn}" FontSize="11"
+                                    Command="{Binding SetMobilePanModeCommand}"/>
+                                <Button Text="↩" Style="{StaticResource IconBtn}" FontSize="14"
+                                    Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}"/>
+                                <Button Text="↪" Style="{StaticResource IconBtn}" FontSize="14"
+                                    Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}"/>
+                                <Button Text="⊡" Style="{StaticResource IconBtn}" FontSize="14"
+                                    Command="{Binding RecenterViewportCommand}"/>
+                            </HorizontalStackLayout>
+                            </Border>
+                        </Grid>
+
+                <!-- Prompt directly from the schematic canvas; results open as reviewable script drafts. -->
+                <Border IsVisible="{Binding IsSchematicViewActive}"
+                        ZIndex="45"
+                        HorizontalOptions="Center"
+                        VerticalOptions="End"
+                        MaximumWidthRequest="680"
+                        Margin="16,0,16,154"
+                        Padding="10,8"
+                        BackgroundColor="#161B22"
+                        Stroke="#30363D"
+                        StrokeThickness="1">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" RowSpacing="4">
+                        <Entry Grid.Row="0" Grid.Column="0"
+                               Text="{Binding AiSchemaPrompt}"
+                               Placeholder="{Binding AiSchemaInputPlaceholder}"
+                               BackgroundColor="#0D1117"
+                               TextColor="#C9D1D9"
+                               PlaceholderColor="#6E7681"
+                               FontSize="12"
+                               ReturnType="Send"
+                               IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Text="✨ Draft"
+                                Style="{StaticResource ToolBtn}"
+                                TextColor="#D2A8FF"
+                                Command="{Binding GenerateSchemaScriptCommand}"
+                                IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                        <Label Grid.Row="1" Grid.ColumnSpan="2"
+                               Text="{Binding AiSchemaStatus}"
+                               TextColor="#8B949E"
+                               FontSize="10"
+                               LineBreakMode="WordWrap"/>
+                        <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="6">
+                            <Switch IsToggled="{Binding IsAiEditMode}" Scale="0.8"/>
+                            <Label Text="Edit current workspace script" TextColor="#8B949E" FontSize="10" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Third viewport: circuit analytics -->
+                <Grid IsVisible="{Binding IsAnalyticsViewActive}"
+                      BackgroundColor="#0D1117"
+                      RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" BackgroundColor="#161B22"
+                          ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="12,8">
+                        <Label Grid.Column="0" Text="ANALYTICS" TextColor="#58A6FF"
+                               FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                        <Picker Grid.Column="1" ItemsSource="{Binding AnalyticsModes}"
+                                SelectedItem="{Binding SelectedAnalyticsMode}"
+                                Title="Select analysis"
+                                BackgroundColor="#0D1117" TextColor="#C9D1D9"
+                                FontSize="12"/>
+                        <Button Grid.Column="2" Text="Run Analysis" Style="{StaticResource AccentBtn}"
+                                Command="{Binding RunAnalyticsCommand}"
+                                IsEnabled="{Binding IsAnalyticsRunning, Converter={StaticResource InvertedBoolConverter}}"/>
+                    </Grid>
+                    <ScrollView Grid.Row="1" Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Results use a fresh operating-point simulation. Select a two-terminal component before choosing Thevenin analysis."
+                                   TextColor="#8B949E" FontSize="11" LineBreakMode="WordWrap"/>
+                            <Border BackgroundColor="#161B22" Stroke="#30363D" StrokeThickness="1" Padding="12">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                                <Editor Text="{Binding AnalyticsOutput}" IsReadOnly="True" AutoSize="TextChanges"
+                                        BackgroundColor="Transparent" TextColor="#56D364"
+                                        FontFamily="Courier New" FontSize="12"/>
+                            </Border>
+                            <ActivityIndicator IsRunning="{Binding IsAnalyticsRunning}"
+                                               IsVisible="{Binding IsAnalyticsRunning}"
+                                               Color="#58A6FF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Grid>
+
+                <!-- Script Viewport -->
+                <Grid IsVisible="{Binding IsScriptViewActive}"
+                      BackgroundColor="#0D1117"
+                        RowDefinitions="Auto,Auto,*,8,200">
+
+                    <!-- Script editor header (Undo/Redo removed per §2.C: schematic history != script text history) -->
+                    <Grid Grid.Row="0"
+                          BackgroundColor="#161B22"
+                          HeightRequest="36"
+                          ColumnDefinitions="*,Auto,Auto"
+                          Padding="12,0">
+                        <Label Grid.Column="0"
+                               Text="● script.py"
+                               TextColor="#58A6FF"
+                               FontSize="12"
+                               VerticalOptions="Center"/>
+                        <Button Grid.Column="1"
+                                Text="▶  Run"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding RunScriptCommand}"
+                                Margin="0,4,8,4"/>
+                        <Button Grid.Column="2"
+                                Text="Clear"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding ClearConsoleCommand}"/>
+                    </Grid>
+
+                          <!-- AI schema-to-script drafting (the app calls Gemini directly) -->
+                          <Grid Grid.Row="1"
+                             BackgroundColor="#12161D"
+                             RowDefinitions="Auto,Auto,Auto"
+                             ColumnDefinitions="*,Auto"
+                             Padding="10,8"
+                             ColumnSpacing="8"
+                             RowSpacing="4">
+                           <Entry Grid.Row="0" Grid.Column="0"
+                               Text="{Binding AiSchemaPrompt}"
+                               Placeholder="{Binding AiSchemaInputPlaceholder}"
+                               BackgroundColor="#0D1117"
+                               TextColor="#C9D1D9"
+                               PlaceholderColor="#6E7681"
+                               FontSize="12"
+                               ReturnType="Send"
+                               IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                           <Button Grid.Row="0" Grid.Column="1"
+                                Text="✨ Draft script"
+                                Style="{StaticResource ToolBtn}"
+                                TextColor="#D2A8FF"
+                                Command="{Binding GenerateSchemaScriptCommand}"
+                                IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                           <Label Grid.Row="1" Grid.ColumnSpan="2"
+                               Text="{Binding AiSchemaStatus}"
+                               TextColor="#8B949E"
+                               FontSize="10"
+                               LineBreakMode="WordWrap"/>
+                           <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="6">
+                               <Switch IsToggled="{Binding IsAiEditMode}" Scale="0.8"/>
+                               <Label Text="Edit current workspace script" TextColor="#8B949E" FontSize="10" VerticalOptions="Center"/>
+                           </HorizontalStackLayout>
+                          </Grid>
+
+                    <!-- Code editor -->
+                          <Border Grid.Row="2"
+                            BackgroundColor="#0D1117"
+                            Padding="0"
+                            Stroke="#30363D"
+                            StrokeThickness="1"
+                            Margin="0">
+                        <Editor x:Name="ScriptEditor"
+                                Text="{Binding ScriptText, Mode=TwoWay}"
+                                BackgroundColor="#0D1117"
+                                TextColor="#C9D1D9"
+                                FontFamily="Courier New"
+                                FontSize="13"
+                                Placeholder="# Python script…"
+                                PlaceholderColor="#484F58"
+                                AutoSize="TextChanges"
+                                Keyboard="Text"/>
+                    </Border>
+
+                    <!-- Splitter -->
+                    <BoxView Grid.Row="3" BackgroundColor="#21262D"/>
+
+                    <!-- Console output -->
+                    <Grid Grid.Row="4" BackgroundColor="#0D1117" RowDefinitions="Auto,*">
+                        <Label Grid.Row="0"
+                               Text="Console Output"
+                               TextColor="#8B949E"
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               Padding="12,4"/>
+                        <ScrollView Grid.Row="1">
+                            <Label Text="{Binding ConsoleOutput}"
+                                   TextColor="#56D364"
+                                   FontFamily="Courier New"
+                                   FontSize="12"
+                                   Padding="12,4"
+                                   LineBreakMode="WordWrap"/>
+                        </ScrollView>
+                    </Grid>
+                </Grid>
+
+                <!-- ─── Waveform Drawer Overlay ─────────────────────────────── -->
+                <Grid IsVisible="{Binding IsWaveformDrawerOpen}"
+                      VerticalOptions="End"
+                      HeightRequest="230"
+                      BackgroundColor="#0A0E14"
+                      RowDefinitions="36,*">
+
+                    <!-- Drawer Header -->
+                    <Grid Grid.Row="0"
+                          BackgroundColor="#161B22"
+                          ColumnDefinitions="Auto,*,Auto"
+                          Padding="12,0">
+
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="📈 Oscilloscope / Waveforms"
+                                   TextColor="#58A6FF"
+                                   FontAttributes="Bold"
+                                   FontSize="12"
+                                   VerticalOptions="Center"/>
+                            <Label Text="{Binding WaveformComponent.Reference, StringFormat='[{0}]'}"
+                                   TextColor="#56D364"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Grid.Column="2" Spacing="4" VerticalOptions="Center">
+                            <Button Text="Simulate"
+                                    Style="{StaticResource ToolBtn}"
+                                    FontSize="11"
+                                    Padding="8,4"
+                                    Command="{Binding RunConfiguredSimulationCommand}"/>
+
+                            <Button Text="✕"
+                                    Style="{StaticResource IconBtn}"
+                                    FontSize="12"
+                                    Padding="6"
+                                    Command="{Binding CloseWaveformDrawerCommand}"
+                                    ToolTipProperties.Text="Close Waveform Drawer"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+
+                    <!-- Waveform Oscilloscope Viewport -->
+                    <views:WaveformViewport Grid.Row="1"
+                                            x:Name="WaveformCanvas"
+                                            MonitoredComponent="{Binding WaveformComponent}"
+                                            Signals="{Binding WaveformSignals}"
+                                            HorizontalOptions="Fill"
+                                            VerticalOptions="Fill"/>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsWaveformTracePickerVisible}"
+                      ZIndex="260"
+                      BackgroundColor="#AA000000"
+                      HorizontalOptions="Fill"
+                      VerticalOptions="Fill">
+                    <Border MaximumWidthRequest="460"
+                            MaximumHeightRequest="560"
+                            Margin="18"
+                            Padding="0"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center"
+                            BackgroundColor="#161B22"
+                            Stroke="#30363D"
+                            StrokeThickness="1">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                        <Grid RowDefinitions="Auto,Auto,*,Auto">
+                            <Grid Grid.Row="0" Padding="16,12" BackgroundColor="#1C2128" ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="Select terminal waveforms" TextColor="#58A6FF" FontAttributes="Bold" FontSize="14"/>
+                                    <Label Text="{Binding WaveformTracePickerComponent.Reference, StringFormat='Choose one or more signals from {0}'}"
+                                           TextColor="#8B949E" FontSize="11"/>
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Text="✕" Style="{StaticResource IconBtn}" Command="{Binding CancelWaveformTraceSelectionCommand}"/>
+                            </Grid>
+                            <HorizontalStackLayout Grid.Row="1" Padding="14,8" Spacing="8">
+                                <Button Text="Select all" Style="{StaticResource ToolBtn}" FontSize="11"
+                                        Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="True"/>
+                                <Button Text="Clear" Style="{StaticResource ToolBtn}" FontSize="11"
+                                        Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="False"/>
+                            </HorizontalStackLayout>
+                            <ScrollView Grid.Row="2" Padding="12,4">
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding WaveformSignals}" Spacing="4">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="core:WaveformSignal">
+                                            <Border Padding="8,4" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
+                                                <Border.StrokeShape><RoundRectangle CornerRadius="6"/></Border.StrokeShape>
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Color="#56D364" VerticalOptions="Center"/>
+                                                    <Label Grid.Column="1" Text="{Binding Label}" TextColor="#C9D1D9" FontSize="12" VerticalOptions="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </ScrollView>
+                            <Grid Grid.Row="3" Padding="14,10" BackgroundColor="#1C2128" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Button Grid.Column="1" Text="Cancel" Style="{StaticResource ToolBtn}" Command="{Binding CancelWaveformTraceSelectionCommand}"/>
+                                <Button Grid.Column="2" Text="Add selected graphs" Style="{StaticResource AccentBtn}" Command="{Binding ConfirmWaveformTraceSelectionCommand}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+</ContentView>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceMainLayout" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.Row="1"
+              ColumnDefinitions="{OnIdiom Phone='52,*', Default='52,Auto,*,Auto'}">
+
+            <!-- ─── Left toolbar ─────────────────────────────────────────── -->
+            <parts:WorkspaceLeftToolbar x:Name="LeftToolbar" Grid.Column="0" />
+
+            <!-- ─── Column 1: Control Sidebar (Custom 3-letter action buttons) ───────── -->
+            <parts:WorkspaceControlsSidebar Grid.Column="{OnIdiom Phone=1, Default=1}" ZIndex="25" IsVisible="{Binding IsControlSidebarVisible}" />
+
+            <!-- ─── Center: Schematic OR Script viewport ──────────────────── -->
+            <parts:WorkspaceCenterViewport x:Name="CenterView" Grid.Column="{OnIdiom Phone=1, Default=2}" />
+
+            <!-- ─── Right panel: Component palette + Properties ────────────── -->
+            <parts:WorkspaceComponentSidebar Grid.Column="{OnIdiom Phone=1, Default=3}" ZIndex="25" IsVisible="{Binding IsSidebarVisible}" />
+
+            <!-- ── Right-Edge Trigger: Description & Component Sidebar ─────── -->
+            <parts:WorkspaceSidebarTrigger Grid.Column="{OnIdiom Phone=1, Default=2}" ZIndex="35" />
+
+            <!-- ── Description & Properties Sidebar (Right) ────────────────── -->
+            <parts:WorkspaceDescriptionSidebar x:Name="DescriptionSidebar" Grid.Column="{OnIdiom Phone=1, Default=3}" ZIndex="28" IsVisible="{Binding IsDescriptionSidebarVisible}" />
+        </Grid>
+</ContentView>

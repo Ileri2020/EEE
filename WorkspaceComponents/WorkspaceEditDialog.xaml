@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceEditDialog" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsEditDialogVisible}"
+              BackgroundColor="#99000000"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+
+            <Border MaximumWidthRequest="480"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <!-- Dialog Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#1C2128" Padding="16,12" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="⚙" FontSize="16" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="{Binding EditType, StringFormat='Edit {0}'}"
+                                   TextColor="#C9D1D9"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                            <Label Text="{Binding EditName, StringFormat='[{0}]'}"
+                                   TextColor="#8B949E"
+                                   FontSize="12"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1" Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="12"
+                                Padding="4"
+                                Command="{Binding CloseEditDialogCommand}"
+                                ToolTipProperties.Text="Close Dialog"/>
+                    </Grid>
+
+                    <!-- Tab Navigation Bar -->
+                    <Grid Grid.Row="1" BackgroundColor="#0D1117" ColumnDefinitions="*,*,*,*" Padding="8,6" ColumnSpacing="4">
+                        <Button Grid.Column="0" Text="⚡ General"
+                                Style="{StaticResource PaletteBtn}"
+                                FontSize="11" Padding="4"
+                                Command="{Binding SelectEditTabCommand}"
+                                CommandParameter="General"/>
+                        <Button Grid.Column="1" Text="〰 Waveform"
+                                Style="{StaticResource PaletteBtn}"
+                                FontSize="11" Padding="4"
+                                Command="{Binding SelectEditTabCommand}"
+                                CommandParameter="Waveform"/>
+                        <Button Grid.Column="2" Text="⚙ Advanced"
+                                Style="{StaticResource PaletteBtn}"
+                                FontSize="11" Padding="4"
+                                Command="{Binding SelectEditTabCommand}"
+                                CommandParameter="Advanced"/>
+                        <Button Grid.Column="3" Text="📍 Pins"
+                                Style="{StaticResource PaletteBtn}"
+                                FontSize="11" Padding="4"
+                                Command="{Binding SelectEditTabCommand}"
+                                CommandParameter="Pins"/>
+                    </Grid>
+
+                    <!-- Dialog Form Content Area -->
+                    <ScrollView Grid.Row="2" MaximumHeightRequest="420" Padding="16,12">
+                        <VerticalStackLayout Spacing="12">
+
+                            <!-- ─── TAB 1: GENERAL & ELECTRICAL ─────────────── -->
+                            <VerticalStackLayout Spacing="12" IsVisible="{Binding IsEditTabGeneral}">
+                                <Border IsVisible="{Binding IsPowerSystemComponent}" Padding="12" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="POWER-SYSTEM MODEL PROPERTIES" TextColor="#79C0FF" FontAttributes="Bold" FontSize="11"/>
+                                        <Label Text="Editable configuration is saved to the schematic. Calculated results are read-only." TextColor="#8B949E" FontSize="10"/>
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding PowerSystemProperties}" Spacing="4">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:PowerSystemPropertyItem">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="4,2">
+                                                        <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                                                            <Label Text="{Binding Name}" TextColor="#C9D1D9" FontSize="10"/>
+                                                            <Label Text="{Binding TypeName}" TextColor="#6E7681" FontSize="8"/>
+                                                        </VerticalStackLayout>
+                                                        <Entry Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" IsReadOnly="{Binding IsEditable, Converter={StaticResource InvertedBoolConverter}}"
+                                                               ReturnCommand="{Binding ReturnCommand}"
+                                                               WidthRequest="145" BackgroundColor="#161B22" TextColor="#C9D1D9" FontSize="10">
+                                                        </Entry>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Label Text="Edit text/number fields and press Enter to apply. Enums and operating schedules remain explicit string options." TextColor="#6E7681" FontSize="9"/>
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <!-- Eye (Probe) and Graph (Waveform) Icon Toggles -->
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,2,0,4">
+                                    <Button Grid.Column="0"
+                                            Text="👁 Live Probe"
+                                            Style="{StaticResource PaletteBtn}"
+                                            TextColor="#56D364"
+                                            BorderColor="#56D364"
+                                            Command="{Binding ToggleEditLiveProbeCommand}"
+                                            ToolTipProperties.Text="Toggle Realtime Voltage &amp; Current Display"/>
+                                    <Button Grid.Column="1"
+                                            Text="📈 Waveform"
+                                            Style="{StaticResource PaletteBtn}"
+                                            TextColor="#79C0FF"
+                                            BorderColor="#79C0FF"
+                                            Command="{Binding ToggleEditWaveformCommand}"
+                                            ToolTipProperties.Text="Toggle Oscilloscope Waveform Drawer"/>
+                                </Grid>
+
+                                <!-- Name / Reference -->
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="COMPONENT NAME / REFERENCE"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditName}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Primary Parameter (Resistance, Capacitance, Voltage, etc.) -->
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding EditParamName}"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditParamValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Max Breaking Current (device breakdown threshold) -->
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="MAX BREAKING CURRENT (A)" TextColor="#F85149" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditBreakingCurrent}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#FF7B72" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Component Description / Notes -->
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="DESCRIPTION &amp; NOTES"
+                                           TextColor="#E3B341" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Editor Text="{Binding EditDescription}"
+                                            HeightRequest="60"
+                                            BackgroundColor="#0D1117"
+                                            TextColor="#C9D1D9"
+                                            FontSize="12"
+                                            Placeholder="Enter component description or engineering notes…"/>
+                                </VerticalStackLayout>
+
+                                <!-- Wire Parasitic Resistance -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsWireComponent}">
+                                    <Label Text="WIRE RESISTANCE (Ω) [0 = Ideal]"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditWireResistance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- BJT Polarity -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsBjtComponent}">
+                                    <Label Text="TRANSISTOR POLARITY (NPN / PNP)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditBjtPolarity}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- MOSFET Channel -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsMosfetComponent}">
+                                    <Label Text="MOSFET CHANNEL (NChannel / PChannel)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditMosfetChannel}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- JFET Channel -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsJfetComponent}">
+                                    <Label Text="JFET CHANNEL (NChannel / PChannel)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditJfetChannel}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Controlling Source (for CCVS, CCCS, CurrentSwitch) -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsControlledSourceComponent}">
+                                    <Label Text="CONTROLLING SOURCE (Optional if sensing pins wired)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditControllingSource}" Placeholder="e.g. V1" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Switch Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsSwitchComponent}">
+                                    <Label Text="SWITCH PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="OFF Resistance (Roff, Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditResistanceOff}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Threshold (V or A)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditThreshold}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Hysteresis (V or A)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditHysteresis}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Mutual Inductance Coupled Pair -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsMutualInductanceComponent}">
+                                    <Label Text="COUPLED INDUCTORS"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Entry Grid.Column="0" Text="{Binding EditInductor1}" Placeholder="Inductor 1 (L1)" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        <Entry Grid.Column="1" Text="{Binding EditInductor2}" Placeholder="Inductor 2 (L2)" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Transmission Line Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsTransmissionLineComponent}">
+                                    <Label Text="TRANSMISSION LINE PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Impedance Z0 (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditCharacteristicImpedance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Delay TD (s)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditDelayTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Frequency F (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLineFrequency}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Normalized Length NL" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditNormalizedLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Voltage Delay Element -->
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsVoltageDelayComponent}">
+                                    <Label Text="PROPAGATION DELAY (s)" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditDelayTime}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Clock Pulse Generator -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsClockComponent}">
+                                    <Label Text="CLOCK GENERATOR PARAMETERS (Logisim &amp; Live Sim)" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Frequency (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockFrequency}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Duty Cycle (0.01 - 0.99)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockDutyCycle}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="High Voltage (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockHighVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Low Voltage (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockLowVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="High Dur (ticks)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockHighDuration}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Low Dur (ticks)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockLowDuration}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Text="Phase (ticks)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditClockPhase}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Named I/O Pin -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsPinComponent}">
+                                    <Label Text="PIN I/O PORT PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Direction (Input / Output)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinDirection}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Bit Width (1 - 32)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Behavior (Tristate/PullUp/PullDown)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinBehavior}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Initial / Reset Value" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinInitialValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Radix" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinRadix}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="High V (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinHighVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Text="Low V (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPinLowVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Power Rail (+VCC) -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsPowerComponent}">
+                                    <Label Text="POWER SUPPLY RAIL PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Supply Voltage (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPowerVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Pull Resistor -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsPullResistorComponent}">
+                                    <Label Text="PULL RESISTOR PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Mode (PullUp / PullDown / Floating)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPullMode}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Resistance (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPullResistance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Rail Voltage (V)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditPullRailVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Tunnel / Net Label -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsTunnelComponent}">
+                                    <Label Text="NET TUNNEL / LABEL JUNCTION" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Tunnel Label (Net Name)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTunnelLabel}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Bit Width (1 - 32)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTunnelBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Probe Measurement Point -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsProbeComponent}">
+                                    <Label Text="PROBE MEASUREMENT POINT" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Radix (Binary/Decimal/Hex)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditProbeRadix}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Input Impedance (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditProbeInputImpedance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Digital Switch Transistor -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsDigitalTransistorComponent}">
+                                    <Label Text="DIGITAL SWITCH TRANSISTOR" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Type (NType / PType)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransistorType}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Gate Location (TopRight / BottomLeft)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransistorGateLocation}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Bit Width" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransistorBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Ron (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransistorRon}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Text="Threshold (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransistorThreshold}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Transmission Gate -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsTransmissionGateComponent}">
+                                    <Label Text="CMOS TRANSMISSION GATE" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Select Location" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransmissionGateSelectLoc}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Bit Width" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransmissionGateBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Ron (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransmissionGateRon}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Roff (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransmissionGateRoff}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Bit Extender -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsBitExtenderComponent}">
+                                    <Label Text="BUS BIT EXTENDER" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="In Bit Width (1-32)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditBitExtenderInWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Out Bit Width (1-64)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditBitExtenderOutWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Extension Type (SignExtend / ZeroExtend / OneExtend / InputExtend)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditBitExtenderType}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Constant Source -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsConstantComponent}">
+                                    <Label Text="CONSTANT VALUE SOURCE" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Value (Hex / Integer)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditConstantValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Bit Width (1-32)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditConstantBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Voltage High (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditConstantVoltageHigh}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Voltage Low (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditConstantVoltageLow}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- 74-Series TTL package options -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsTtlPackageComponent}">
+                                    <Label Text="74-SERIES TTL PACKAGE" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0" Text="Expose VCC and GND pins" TextColor="#C9D1D9" FontSize="11" VerticalOptions="Center"/>
+                                        <Switch Grid.Column="1" IsToggled="{Binding EditTtlExposeSupplyPins}"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0" Text="Show internal structure" TextColor="#C9D1D9" FontSize="11" VerticalOptions="Center"/>
+                                        <Switch Grid.Column="1" IsToggled="{Binding EditTtlShowInternalStructure}"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Do Not Connect Marker -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsDoNotConnectComponent}">
+                                    <Label Text="DO NOT CONNECT (DNC) MARKER" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Bit Width (1-32)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditDncBitWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Lossy Transmission Line -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsLossyTransmissionLineComponent}">
+                                    <Label Text="LOSSY TRANSMISSION LINE (RLGC MODEL)" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Resistance R (Ω/m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLossyResistance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Inductance L (H/m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLossyInductance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Conductance G (S/m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLossyConductance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Capacitance C (F/m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLossyCapacitance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Text="Length (m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditLossyLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Coaxial Cable -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsCoaxialCableComponent}">
+                                    <Label Text="COAXIAL CABLE PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Impedance Z0 (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditCoaxZ0}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Velocity Factor VF (0.1 - 1.0)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditCoaxVF}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Cable Length (m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditCoaxLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Attenuation (dB/m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditCoaxAttenuation}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Microstrip Line -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsMicrostripLineComponent}">
+                                    <Label Text="PCB MICROSTRIP LINE PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Trace Width W (m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditMicrostripWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Substrate Height H (m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditMicrostripHeight}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Dielectric Constant (Er)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditMicrostripEr}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Trace Length (m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditMicrostripLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                            <!-- ─── TAB 2: AC & WAVEFORMS ───────────────────── -->
+                            <VerticalStackLayout Spacing="10" IsVisible="{Binding IsEditTabWaveform}">
+                                <VerticalStackLayout Spacing="8" IsVisible="{Binding IsSourceComponent}">
+                                    <Label Text="WAVEFORM TYPE (DC, SINE, PULSE, AM, SFFM, PWL)"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Entry Text="{Binding EditWaveformType}" BackgroundColor="#0D1117" TextColor="#56D364" FontSize="13"/>
+
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="AC Magnitude (V/A)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditAcMagnitude}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="AC Phase (°)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditAcPhase}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+
+                                    <Label Text="SINE WAVEFORM PARAMETERS"
+                                           TextColor="#79C0FF" FontSize="10" FontAttributes="Bold" Margin="0,4,0,0"/>
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Offset (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSineOffset}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Amplitude (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSineAmplitude}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Text="Freq (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSineFrequency}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+
+                                    <Label Text="PULSE WAVEFORM PARAMETERS"
+                                           TextColor="#79C0FF" FontSize="10" FontAttributes="Bold" Margin="0,4,0,0"/>
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Initial (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPulseInitial}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Pulsed (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPulsePulsed}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Text="Period (s)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditPulsePeriod}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" Padding="12" IsVisible="{Binding IsSourceComponent, Converter={StaticResource InvertedBoolConverter}}">
+                                    <Label Text="📈 This component is passive/non-generator. Waveforms through this component can be observed in the Oscilloscope drawer below."
+                                           TextColor="#8B949E" FontSize="12" LineBreakMode="WordWrap"/>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <!-- ─── TAB 3: ADVANCED & MODEL PARAMETERS ──────── -->
+                            <VerticalStackLayout Spacing="10" IsVisible="{Binding IsEditTabAdvanced}">
+                                <!-- Diode Model Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsDiodeComponent}">
+                                    <Label Text="DIODE SPICE MODEL PARAMETERS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Emission Coeff (N)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditEmissionCoefficient}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Breakdown V (Bv)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditBreakdownVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Series Res (Rs, Ω)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSeriesResistance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Junction Cap (Cj0, F)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditJunctionCapacitance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- BJT Model Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsBjtComponent}">
+                                    <Label Text="BJT TRANSISTOR MODEL" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Forward Beta (Bf)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditGainBeta}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Early Voltage (Vaf, V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditEarlyVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- MOSFET Model Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsMosfetComponent}">
+                                    <Label Text="MOSFET LEVEL 1 MODEL" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Threshold V (Vto)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditThresholdVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Transconductance (Kp)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransconductance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Width (W, m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditChannelWidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Length (L, m)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditChannelLength}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- JFET Model Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsJfetComponent}">
+                                    <Label Text="JFET SHICHMAN-HODGES MODEL" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Pinch-off V (Vto, V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditThresholdVoltage}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Transconductance (Beta, A/V²)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditTransconductance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Channel Mod (Lambda, 1/V)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditLambda}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- OpAmp Model Parameters -->
+                                <VerticalStackLayout Spacing="6" IsVisible="{Binding IsOpAmpComponent}">
+                                    <Label Text="OP-AMP FREQUENCY &amp; RAILS" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="GBW (Hz)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditGainBandwidth}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Slew Rate (V/μs)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSlewRate}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="Vcc+ Rail (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSupplyPositive}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="Vee- Rail (V)" TextColor="#8B949E" FontSize="10"/>
+                                            <Entry Text="{Binding EditSupplyNegative}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <!-- Parasitics, Temperature, and Initial Conditions -->
+                                <Label Text="PARASITICS &amp; TEMPERATURE MODELING" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="Temperature (°C)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditTemperature}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="Initial Condition (IC)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditInitialCondition}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="TempCo TC1" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditTempCoeff1}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="ESR / Rdc (Ω)" TextColor="#8B949E" FontSize="10"/>
+                                        <Entry Text="{Binding EditEquivalentSeriesResistance}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <!-- ─── TAB 4: NODES & TERMINALS ────────────────── -->
+                            <VerticalStackLayout Spacing="6" IsVisible="{Binding IsEditTabPins}">
+                                <Label Text="COMPONENT TERMINAL PINS"
+                                       TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding EditPins}" Spacing="6">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:PinEditItem">
+                                            <Grid ColumnDefinitions="60,*" ColumnSpacing="8">
+                                                <Label Grid.Column="0"
+                                                       Text="{Binding Id, StringFormat='Pin: {0}'}"
+                                                       TextColor="#8B949E"
+                                                       FontSize="11"
+                                                       VerticalOptions="Center"/>
+                                                <Entry Grid.Column="1"
+                                                       Text="{Binding Name}"
+                                                       BackgroundColor="#0D1117"
+                                                       TextColor="#C9D1D9"
+                                                       FontSize="12"
+                                                       HeightRequest="36"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Dialog Actions Footer -->
+                    <Grid Grid.Row="3" BackgroundColor="#1C2128" Padding="14,10" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Button Grid.Column="0"
+                                Text="Delete"
+                                Style="{StaticResource ToolBtn}"
+                                TextColor="#F78166"
+                                Command="{Binding DeleteEditingComponentCommand}"/>
+
+                        <Button Grid.Column="2"
+                                Text="Cancel"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding CloseEditDialogCommand}"
+                                Margin="0,0,6,0"/>
+
+                        <Button Grid.Column="3"
+                                Text="Apply"
+                                Style="{StaticResource AccentBtn}"
+                                Command="{Binding ApplyEditDialogCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+</ContentView>

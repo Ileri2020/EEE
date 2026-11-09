@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceControlsSidebar" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
+    <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
+    <Border Grid.Column="{OnIdiom Phone=1, Default=1}"
+                    ZIndex="25"
+                    HorizontalOptions="Start"
+                    WidthRequest="220"
+                    IsVisible="{Binding IsControlSidebarVisible}"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Sidebar Header -->
+                    <Grid Grid.Row="0" BackgroundColor="#0D1117" Padding="12,10" ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                            <Label Text="🎛" FontSize="14" TextColor="#58A6FF" VerticalOptions="Center"/>
+                            <Label Text="CONTROLS"
+                                   TextColor="#E6EDF3"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   CharacterSpacing="1"/>
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="✕"
+                                Style="{StaticResource IconBtn}"
+                                FontSize="11"
+                                Padding="4"
+                                Command="{Binding ToggleControlSidebarCommand}"
+                                ToolTipProperties.Text="Close control sidebar"/>
+                    </Grid>
+
+                    <!-- Buttons list with 3-letter label badge and connected action dropdown -->
+                    <ScrollView Grid.Row="1" Padding="8,6">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="CUSTOM CONTROL BUTTONS"
+                                   TextColor="#8B949E"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   CharacterSpacing="1"
+                                   Margin="4,2,0,2"/>
+
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding CustomControlButtons}" Spacing="6">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:CustomControlButton">
+                                        <Border BackgroundColor="#1C2128"
+                                                Stroke="#30363D"
+                                                StrokeThickness="1"
+                                                Padding="8,6">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="6"/>
+                                            </Border.StrokeShape>
+
+                                            <Grid RowDefinitions="Auto,Auto" RowSpacing="4">
+                                                <!-- Row 0: 3-letter Action Button + Delete Button -->
+                                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <!-- 3-letter Action Button -->
+                                                    <Button Grid.Column="0"
+                                                            Text="{Binding Label}"
+                                                            Style="{StaticResource AccentBtn}"
+                                                            HeightRequest="34"
+                                                            FontSize="12"
+                                                            FontAttributes="Bold"
+                                                            Padding="6,2"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=ExecuteCustomActionCommand, x:DataType=vm:EEWorkspaceViewModel}"
+                                                            CommandParameter="{Binding .}"
+                                                            ToolTipProperties.Text="{Binding Description}"/>
+
+                                                    <!-- Delete Button -->
+                                                    <Button Grid.Column="1"
+                                                            Text="✕"
+                                                            Style="{StaticResource IconBtn}"
+                                                            FontSize="11"
+                                                            TextColor="#F78166"
+                                                            Padding="4,2"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EEWorkspaceViewModel}}, Path=DeleteCustomButtonCommand, x:DataType=vm:EEWorkspaceViewModel}"
+                                                            CommandParameter="{Binding .}"
+                                                            ToolTipProperties.Text="Delete / disconnect button"/>
+                                                </Grid>
+
+                                                <!-- Row 1: Dropdown UI showing connected action -->
+                                                <Picker Grid.Row="1"
+                                                        ItemsSource="{Binding AvailableActions}"
+                                                        SelectedItem="{Binding ActionName}"
+                                                        BackgroundColor="#0D1117"
+                                                        TextColor="#58A6FF"
+                                                        FontSize="10"
+                                                        HeightRequest="30"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Footer link to Settings -->
+                    <Border Grid.Row="2" BackgroundColor="#0D1117" Padding="8,8" StrokeThickness="0">
+                        <Button Text="⚙ Customize in Settings"
+                                Style="{StaticResource ToolBtn}"
+                                FontSize="11"
+                                HorizontalOptions="Fill"
+                                Command="{Binding OpenSettingsCommand}"/>
+                    </Border>
+                </Grid>
+            </Border>
+</ContentView>
