@@ -5,7 +5,7 @@
                   BackgroundColor="#161B22"
                   RowDefinitions="*,Auto">
 
-                <ScrollView Grid.Row="0" Orientation="Vertical" VerticalScrollBarVisibility="Auto">
+                <ScrollView Grid.Row="0" Orientation="Vertical" VerticalScrollBarVisibility="Always">
                     <VerticalStackLayout Spacing="4" Padding="6,8">
                         <!-- Sidebar toggles stacked vertically together -->
                         <Button Text="🧩"
