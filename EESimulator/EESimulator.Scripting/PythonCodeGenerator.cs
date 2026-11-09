@@ -118,14 +118,6 @@ public class PythonCodeGenerator
             CurrentSwitchComponent csw =>
                 $"{varName} = circuit.add_current_switch(\"{comp.Name}\", position=({x}, {y}), ron={csw.ResistanceOn}, roff={csw.ResistanceOff}, threshold={csw.Threshold}, hysteresis={csw.Hysteresis}, controlling_source=\"{csw.ControllingSource}\")",
 
-            RelayComponent relay =>
-                $"{varName} = circuit.add_component(\"Relay\", name=\"{comp.Name}\", position=({x}, {y}))\n" +
-                $"eesim.set_component_property(\"{comp.Name}\", \"CoilResistance\", {relay.CoilResistance})\n" +
-                $"eesim.set_component_property(\"{comp.Name}\", \"PullInVoltage\", {relay.PullInVoltage})\n" +
-                $"eesim.set_component_property(\"{comp.Name}\", \"DropoutVoltage\", {relay.DropoutVoltage})\n" +
-                $"eesim.set_component_property(\"{comp.Name}\", \"ContactResistance\", {relay.ContactResistance})\n" +
-                $"eesim.set_component_property(\"{comp.Name}\", \"OpenResistance\", {relay.OpenResistance})",
-
             VoltageDelayComponent vd =>
                 $"{varName} = circuit.add_voltage_delay(\"{comp.Name}\", position=({x}, {y}), delay={vd.Delay}, bandwidth={vd.Bandwidth})",
 
@@ -142,15 +134,6 @@ public class PythonCodeGenerator
             // ── Digital / Core Wiring ──────────────────────────────────────────
             ClockComponent clk =>
                 $"{varName} = circuit.add_clock(\"{comp.Name}\", position=({x}, {y}), frequency={clk.Frequency}, duty_cycle={clk.DutyCycle}, high_voltage={clk.HighVoltage}, phase={clk.Phase})",
-
-            CounterComponent counter =>
-                $"{varName} = circuit.add_counter(\"{comp.Name}\", position=({x}, {y}), bit_width={counter.BitWidth}, max_value={counter.MaxValue}, initial_value={counter.Value}, goal_action=\"{counter.GoalAction}\")",
-
-            ROMComponent rom =>
-                $"{varName} = circuit.add_rom(\"{comp.Name}\", position=({x}, {y}), address_bit_width={rom.AddressBitWidth}, data_bit_width={rom.DataBitWidth}, contents_hex=\"{rom.ContentsHex.Replace("\"", "\\\"")}\")",
-
-            SevenSegmentComponent sevenSegment =>
-                $"{varName} = circuit.add_seven_segment(\"{comp.Name}\", position=({x}, {y}))",
 
             PinComponent pin =>
                 $"{varName} = circuit.add_pin(\"{comp.Name}\", position=({x}, {y}), direction=\"{pin.Direction}\", bit_width={pin.BitWidth}, value={pin.Value})",
@@ -183,9 +166,6 @@ public class PythonCodeGenerator
             JFETComponent jfet =>
                 $"{varName} = circuit.add_jfet(\"{comp.Name}\", position=({x}, {y}), channel=\"{jfet.Channel}\", vto={jfet.ThresholdVoltage}, beta={jfet.Transconductance:G3}, lambda_={jfet.Lambda}, dr={jfet.DrainResistance}, sr={jfet.SourceResistance})",
 
-            VernierDiodeComponent vernier =>
-                $"{varName} = circuit.add_vernier_diode(\"{comp.Name}\", position=({x}, {y}), vernier_position={vernier.VernierPosition}, minimum_forward_voltage={vernier.MinimumForwardVoltage}, maximum_forward_voltage={vernier.MaximumForwardVoltage})",
-
             DiodeComponent d =>
                 $"{varName} = circuit.add_diode(\"{comp.Name}\", position=({x}, {y}), is_={d.SaturationCurrent:G3}, n={d.EmissionCoefficient}, rs={d.SeriesResistance:G3}, cj0={d.JunctionCapacitance:G3}, tt={d.TransitTime:G3}, bv={d.BreakdownVoltage}, ibv={d.BreakdownCurrent:G3})",
 
@@ -207,13 +187,13 @@ public class PythonCodeGenerator
 
             // ── Power Systems, Machines, Loads & Storage ──────────────────
             SinglePhaseTransmissionLineComponent line1 =>
-                $"{varName} = circuit.add_single_phase_transmission_line(\"{comp.Name}\", position=({x}, {y}), rated_voltage={line1.RatedVoltage}, frequency={line1.Frequency}, length_km={line1.LengthKm}, resistance_per_km={line1.ResistancePerKm}, inductance_per_km={line1.InductancePerKm}, capacitance_per_km={line1.CapacitancePerKm}, conductance_per_km={line1.ConductancePerKm}, model_type=\"{line1.ModelType}\", supply_mode=\"{line1.SupplyMode}\", fixed_voltage_rms={line1.FixedVoltageRms})",
+                $"{varName} = circuit.add_single_phase_transmission_line(\"{comp.Name}\", position=({x}, {y}), rated_voltage={line1.RatedVoltage}, frequency={line1.Frequency}, length_km={line1.LengthKm}, resistance_per_km={line1.ResistancePerKm}, inductance_per_km={line1.InductancePerKm}, capacitance_per_km={line1.CapacitancePerKm}, conductance_per_km={line1.ConductancePerKm}, model_type=\"{line1.ModelType}\")",
 
             TwoPhaseTransmissionLineComponent line2 =>
-                $"{varName} = circuit.add_two_phase_transmission_line(\"{comp.Name}\", position=({x}, {y}), rated_voltage={line2.RatedLineVoltage}, frequency={line2.Frequency}, length_km={line2.LengthKm}, phase_displacement={line2.PhaseDisplacementDegrees}, configuration=\"{line2.ConductorConfiguration}\", supply_mode=\"{line2.SupplyMode}\", fixed_voltage_rms={line2.FixedVoltageRms})",
+                $"{varName} = circuit.add_two_phase_transmission_line(\"{comp.Name}\", position=({x}, {y}), rated_voltage={line2.RatedLineVoltage}, frequency={line2.Frequency}, length_km={line2.LengthKm}, phase_displacement={line2.PhaseDisplacementDegrees}, configuration=\"{line2.ConductorConfiguration}\")",
 
             ThreePhaseTransmissionLineComponent line3 =>
-                $"{varName} = circuit.add_three_phase_transmission_line(\"{comp.Name}\", position=({x}, {y}), rated_line_voltage={line3.RatedLineVoltage}, frequency={line3.Frequency}, length_km={line3.LengthKm}, phase_sequence=\"{line3.PhaseSequence}\", connection=\"{line3.Connection}\", model_type=\"{line3.ModelType}\", supply_mode=\"{line3.SupplyMode}\", fixed_phase_voltage_rms={line3.FixedPhaseVoltageRms})",
+                $"{varName} = circuit.add_three_phase_transmission_line(\"{comp.Name}\", position=({x}, {y}), rated_line_voltage={line3.RatedLineVoltage}, frequency={line3.Frequency}, length_km={line3.LengthKm}, phase_sequence=\"{line3.PhaseSequence}\", connection=\"{line3.Connection}\", model_type=\"{line3.ModelType}\")",
 
             ACTransformerComponent transformer =>
                 $"{varName} = circuit.add_ac_transformer(\"{comp.Name}\", position=({x}, {y}), primary_voltage={transformer.RatedPrimaryVoltage}, secondary_voltage={transformer.RatedSecondaryVoltage}, apparent_power={transformer.RatedApparentPower}, frequency={transformer.Frequency}, connection=\"{transformer.WindingConnection}\")",
