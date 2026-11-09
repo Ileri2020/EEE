@@ -1,0 +1,1293 @@
+{
+    "FileType":  "EEE_PLATFORM_SCHEMATIC",
+    "FormatVersion":  "1.1.0",
+    "Application":  "EESimulator",
+    "Title":  "8-bit ALU with RAM and Address Counter",
+    "Description":  "Corrected ALU/RAM/counter demo. Displays show ALU result directly.",
+    "Author":  "",
+    "CreatedAt":  "2026-11-06T17:32:40.2911943Z",
+    "SavedAt":  "2026-11-06T17:32:40.2911993Z",
+    "Revision":  "2",
+    "Tags":  [
+
+             ],
+    "SimulationSettings":  {
+                               "AnalysisType":  "Transient",
+                               "TransientStartTime":  0,
+                               "TransientStopTime":  0.01,
+                               "TransientStepTime":  1E-05,
+                               "AcSweepType":  "Decade",
+                               "AcPoints":  10,
+                               "AcStartFrequency":  1,
+                               "AcStopFrequency":  100000,
+                               "DcSweepSource":  "V1",
+                               "DcStart":  0,
+                               "DcStop":  5,
+                               "DcStep":  0.1
+                           },
+    "Components":  [
+                       {
+                           "Id":  "346d6786-32e0-48b7-9756-4744f07232aa",
+                           "StableTypeId":  "electrical.power",
+                           "ComponentType":  "Power",
+                           "Reference":  "VCC_5V",
+                           "Name":  "VCC_5V",
+                           "Description":  "Positive Supply Rail (+VCC / VDD)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "Voltage":  5
+                                                    },
+                           "StringParameters":  {
+                                                    "LogicalRow":  "6",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "cbd5fdbe-e38b-4970-9e6d-af3ce25904ae",
+                           "StableTypeId":  "electrical.ground",
+                           "ComponentType":  "Ground",
+                           "Reference":  "GND",
+                           "Name":  "GND",
+                           "Description":  "Circuit ground reference (Node 0)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "LogicalRow":  "7",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "207af709-43e7-463c-b5af-30ef1d780162",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumA_0",
+                           "Name":  "NumA_0",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "a1d910b4-dfc7-42f0-9aa5-87c788a02efe",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumA_1",
+                           "Name":  "NumA_1",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "3bcd757c-d11a-4dde-a602-f5540044f47a",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumA_2",
+                           "Name":  "NumA_2",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "3dc11af8-6511-4c2a-bad5-2ad54bfe7d78",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumA_3",
+                           "Name":  "NumA_3",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "9062b08f-9069-4b6c-b405-49a78500ba07",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumB_0",
+                           "Name":  "NumB_0",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "1a7d0552-44c8-4850-9c97-a227e857bead",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumB_1",
+                           "Name":  "NumB_1",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "23788827-f75a-4201-a46a-fab948760bb7",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumB_2",
+                           "Name":  "NumB_2",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "41e77ba2-c677-4255-b7a3-fdeed1245e94",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "NumB_3",
+                           "Name":  "NumB_3",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "AddSubtract_Control",
+                           "Name":  "AddSubtract_Control",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "3",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "9c029c38-36b3-4e74-b38f-6704622898e3",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "MemWriteEnable_Control",
+                           "Name":  "MemWriteEnable_Control",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  1
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "True",
+                                                    "LogicalRow":  "4",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "facc028d-9242-4de3-b16b-907978c44dc8",
+                           "StableTypeId":  "electronics.logicinput",
+                           "ComponentType":  "LogicInput",
+                           "Reference":  "AddressCounter_Reset",
+                           "Name":  "AddressCounter_Reset",
+                           "Description":  "Digital Logic Toggle Input (0/1)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0,
+                                                        "State":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "State":  "False",
+                                                    "LogicalRow":  "5",
+                                                    "LogicalColumn":  "1"
+                                                }
+                       },
+                       {
+                           "Id":  "e485e9cf-4080-4924-9135-615253bbc5c7",
+                           "StableTypeId":  "electronics.clock",
+                           "ComponentType":  "Clock",
+                           "Reference":  "CPU_Clock",
+                           "Name":  "CPU_Clock",
+                           "Description":  "Digital Clock Pulse Generator",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "Frequency":  1000,
+                                                        "DutyCycle":  0.5,
+                                                        "HighVoltage":  5,
+                                                        "LowVoltage":  0
+                                                    },
+                           "StringParameters":  {
+                                                    "LogicalRow":  "4",
+                                                    "LogicalColumn":  "4"
+                                                }
+                       },
+                       {
+                           "Id":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                           "StableTypeId":  "electronics.bitextender",
+                           "ComponentType":  "BitExtender",
+                           "Reference":  "Extender_A",
+                           "Name":  "Extender_A",
+                           "Description":  "Bus Bit Extender (Sign / Zero / One Extend)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "InputBitWidth":  4,
+                                                        "OutputBitWidth":  8
+                                                    },
+                           "StringParameters":  {
+                                                    "ExtensionType":  "ZeroExtend",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "2"
+                                                }
+                       },
+                       {
+                           "Id":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                           "StableTypeId":  "electronics.bitextender",
+                           "ComponentType":  "BitExtender",
+                           "Reference":  "Extender_B",
+                           "Name":  "Extender_B",
+                           "Description":  "Bus Bit Extender (Sign / Zero / One Extend)",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "InputBitWidth":  4,
+                                                        "OutputBitWidth":  8
+                                                    },
+                           "StringParameters":  {
+                                                    "ExtensionType":  "ZeroExtend",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "2"
+                                                }
+                       },
+                       {
+                           "Id":  "c508b544-899e-480d-9fc7-60f4d26b878c",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B0",
+                           "Name":  "XOR_B0",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "4a3bbbbb-9387-45ef-b3e3-cce5143b192a",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B1",
+                           "Name":  "XOR_B1",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "e707f317-e38e-42a5-945a-d9485946aa05",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B2",
+                           "Name":  "XOR_B2",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "46f9a717-cb94-414e-ac74-932a4ac6c63c",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B3",
+                           "Name":  "XOR_B3",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "5cf00b56-6d0d-48cd-a7f3-c2a60bc35276",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B4",
+                           "Name":  "XOR_B4",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "3",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "e6656cf2-9a05-4452-b424-f68e3609c496",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B5",
+                           "Name":  "XOR_B5",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "3",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "2ba84ff3-d77e-4fee-a0f6-46cd1ed1c751",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B6",
+                           "Name":  "XOR_B6",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "4",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "9731b20c-5107-4ba2-8969-0e6980812ecf",
+                           "StableTypeId":  "electronics.xor",
+                           "ComponentType":  "XOR",
+                           "Reference":  "XOR_B7",
+                           "Name":  "XOR_B7",
+                           "Description":  "2-Input XOR Gate",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  0.05,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:out":  "False",
+                                                    "Output:out":  "False",
+                                                    "OutputVoltage:out":  "0",
+                                                    "LogicalRow":  "4",
+                                                    "LogicalColumn":  "3"
+                                                }
+                       },
+                       {
+                           "Id":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                           "StableTypeId":  "arith.adder",
+                           "ComponentType":  "Adder",
+                           "Reference":  "ALU_8bit",
+                           "Name":  "ALU_8bit",
+                           "Description":  "N-bit binary adder",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "BitWidth":  8
+                                                    },
+                           "StringParameters":  {
+                                                    "HighZ:Y0":  "False",
+                                                    "Output:Y0":  "False",
+                                                    "OutputVoltage:Y0":  "0",
+                                                    "HighZ:Y1":  "False",
+                                                    "Output:Y1":  "False",
+                                                    "OutputVoltage:Y1":  "0",
+                                                    "HighZ:Y2":  "False",
+                                                    "Output:Y2":  "False",
+                                                    "OutputVoltage:Y2":  "0",
+                                                    "HighZ:Y3":  "False",
+                                                    "Output:Y3":  "False",
+                                                    "OutputVoltage:Y3":  "0",
+                                                    "HighZ:Y4":  "False",
+                                                    "Output:Y4":  "False",
+                                                    "OutputVoltage:Y4":  "0",
+                                                    "HighZ:Y5":  "False",
+                                                    "Output:Y5":  "False",
+                                                    "OutputVoltage:Y5":  "0",
+                                                    "HighZ:Y6":  "False",
+                                                    "Output:Y6":  "False",
+                                                    "OutputVoltage:Y6":  "0",
+                                                    "HighZ:Y7":  "False",
+                                                    "Output:Y7":  "False",
+                                                    "OutputVoltage:Y7":  "0",
+                                                    "HighZ:cout":  "False",
+                                                    "Output:cout":  "False",
+                                                    "OutputVoltage:cout":  "0",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "4"
+                                                }
+                       },
+                       {
+                           "Id":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                           "StableTypeId":  "electronics.ram",
+                           "ComponentType":  "RAM",
+                           "Reference":  "Data_RAM",
+                           "Name":  "Data_RAM",
+                           "Description":  "Random-access read/write memory",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "AddressBitWidth":  4,
+                                                        "DataBitWidth":  8
+                                                    },
+                           "StringParameters":  {
+                                                    "HasOutputEnable":  "True",
+                                                    "AsynchronousRead":  "False",
+                                                    "ReadAddress":  "0",
+                                                    "HighZ:dout0":  "True",
+                                                    "HighZ:dout1":  "True",
+                                                    "HighZ:dout2":  "True",
+                                                    "HighZ:dout3":  "True",
+                                                    "HighZ:dout4":  "True",
+                                                    "HighZ:dout5":  "True",
+                                                    "HighZ:dout6":  "True",
+                                                    "HighZ:dout7":  "True",
+                                                    "LogicalRow":  "2",
+                                                    "LogicalColumn":  "5"
+                                                }
+                       },
+                       {
+                           "Id":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                           "StableTypeId":  "electronics.counter",
+                           "ComponentType":  "Counter",
+                           "Reference":  "Program_Counter",
+                           "Name":  "Program_Counter",
+                           "Description":  "Up/Down binary counter with load and carry",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+                                                        "BitWidth":  4,
+                                                        "MaxValue":  15
+                                                    },
+                           "StringParameters":  {
+                                                    "Value":  "0",
+                                                    "Trigger":  "FallingEdge",
+                                                    "GoalAction":  "Wrap",
+                                                    "HighZ:Q0":  "False",
+                                                    "Output:Q0":  "False",
+                                                    "OutputVoltage:Q0":  "0",
+                                                    "HighZ:Q1":  "False",
+                                                    "Output:Q1":  "False",
+                                                    "OutputVoltage:Q1":  "0",
+                                                    "HighZ:Q2":  "False",
+                                                    "Output:Q2":  "False",
+                                                    "OutputVoltage:Q2":  "0",
+                                                    "HighZ:Q3":  "False",
+                                                    "Output:Q3":  "False",
+                                                    "OutputVoltage:Q3":  "0",
+                                                    "HighZ:carry":  "False",
+                                                    "Output:carry":  "False",
+                                                    "OutputVoltage:carry":  "0",
+                                                    "LogicalRow":  "4",
+                                                    "LogicalColumn":  "5"
+                                                }
+                       },
+                       {
+                           "Id":  "59b354c8-183a-452c-9112-65ae5a562855",
+                           "StableTypeId":  "io.hexdigit",
+                           "ComponentType":  "HexDigit",
+                           "Reference":  "Result_HexUpper",
+                           "Name":  "Result_HexUpper",
+                           "Description":  "Four-bit hexadecimal digit display",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "RenderedValue":  "0",
+                                                    "LogicalRow":  "1",
+                                                    "LogicalColumn":  "6"
+                                                }
+                       },
+                       {
+                           "Id":  "72e8a6be-944d-4015-a38d-5066bee14798",
+                           "StableTypeId":  "io.hexdigit",
+                           "ComponentType":  "HexDigit",
+                           "Reference":  "Result_HexLower",
+                           "Name":  "Result_HexLower",
+                           "Description":  "Four-bit hexadecimal digit display",
+                           "X":  0,
+                           "Y":  0,
+                           "Rotation":  0,
+                           "ScaleX":  1,
+                           "ScaleY":  1,
+                           "BreakingCurrent":  1,
+                           "ElectricalParameters":  {
+
+                                                    },
+                           "StringParameters":  {
+                                                    "RenderedValue":  "0",
+                                                    "LogicalRow":  "3",
+                                                    "LogicalColumn":  "6"
+                                                }
+                       }
+                   ],
+    "Connections":  [
+                        {
+                            "Id":  "e11cab3e-5062-4b77-834b-470d683a0ddc",
+                            "FromComponentId":  "207af709-43e7-463c-b5af-30ef1d780162",
+                            "FromPin":  "out",
+                            "ToComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "ToPin":  "in0",
+                            "NetName":  "Net_ca0edc"
+                        },
+                        {
+                            "Id":  "50a8332a-b629-457e-b768-a04896f41200",
+                            "FromComponentId":  "a1d910b4-dfc7-42f0-9aa5-87c788a02efe",
+                            "FromPin":  "out",
+                            "ToComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_dc0c59"
+                        },
+                        {
+                            "Id":  "426827ae-e1d8-4d7f-a766-15b063d7cf5a",
+                            "FromComponentId":  "3bcd757c-d11a-4dde-a602-f5540044f47a",
+                            "FromPin":  "out",
+                            "ToComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_04adcb"
+                        },
+                        {
+                            "Id":  "f981c19f-2f74-4b75-9019-caa418947407",
+                            "FromComponentId":  "3dc11af8-6511-4c2a-bad5-2ad54bfe7d78",
+                            "FromPin":  "out",
+                            "ToComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "ToPin":  "in3",
+                            "NetName":  "Net_1ce85d"
+                        },
+                        {
+                            "Id":  "f6ce7b42-b1df-4cb2-a708-46f135c3b5fb",
+                            "FromComponentId":  "9062b08f-9069-4b6c-b405-49a78500ba07",
+                            "FromPin":  "out",
+                            "ToComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "ToPin":  "in0",
+                            "NetName":  "Net_ccb123"
+                        },
+                        {
+                            "Id":  "7852805e-e7ab-4351-b1c7-222af85eab86",
+                            "FromComponentId":  "1a7d0552-44c8-4850-9c97-a227e857bead",
+                            "FromPin":  "out",
+                            "ToComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_d22863"
+                        },
+                        {
+                            "Id":  "574da82d-62f4-4db5-b805-a6d2cc6c3573",
+                            "FromComponentId":  "23788827-f75a-4201-a46a-fab948760bb7",
+                            "FromPin":  "out",
+                            "ToComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_edf14c"
+                        },
+                        {
+                            "Id":  "f036dac2-b9a0-4608-b11a-d91cc825a953",
+                            "FromComponentId":  "41e77ba2-c677-4255-b7a3-fdeed1245e94",
+                            "FromPin":  "out",
+                            "ToComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "ToPin":  "in3",
+                            "NetName":  "Net_93a648"
+                        },
+                        {
+                            "Id":  "4d4308bb-be8b-48b4-a88e-f5a3a1ca9e07",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out0",
+                            "ToComponentId":  "c508b544-899e-480d-9fc7-60f4d26b878c",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_806430"
+                        },
+                        {
+                            "Id":  "a66aa2fe-ff82-4a35-b47f-c65fc46ece46",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "c508b544-899e-480d-9fc7-60f4d26b878c",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_5ecaf7"
+                        },
+                        {
+                            "Id":  "ee3a6df1-85ed-445d-8626-35c20689b94b",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out1",
+                            "ToComponentId":  "4a3bbbbb-9387-45ef-b3e3-cce5143b192a",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_763281"
+                        },
+                        {
+                            "Id":  "1c4b6179-28ba-4d8d-8e11-7837e4f168c5",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "4a3bbbbb-9387-45ef-b3e3-cce5143b192a",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_11478d"
+                        },
+                        {
+                            "Id":  "636b491d-84ad-49e0-ad88-cdb20a76013e",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out2",
+                            "ToComponentId":  "e707f317-e38e-42a5-945a-d9485946aa05",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_2b27e9"
+                        },
+                        {
+                            "Id":  "02a4c74a-c12b-443f-9832-4d20abd4142b",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "e707f317-e38e-42a5-945a-d9485946aa05",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_029f48"
+                        },
+                        {
+                            "Id":  "2a36d9b1-669b-4f67-8f4b-252251257b8c",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out3",
+                            "ToComponentId":  "46f9a717-cb94-414e-ac74-932a4ac6c63c",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_cea92c"
+                        },
+                        {
+                            "Id":  "a85c147b-4e32-463d-9754-596015030087",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "46f9a717-cb94-414e-ac74-932a4ac6c63c",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_df031c"
+                        },
+                        {
+                            "Id":  "1b31c6b6-48d0-43e3-b3ae-fabf5b13c14e",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out4",
+                            "ToComponentId":  "5cf00b56-6d0d-48cd-a7f3-c2a60bc35276",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_3313ec"
+                        },
+                        {
+                            "Id":  "397355ce-aa32-4312-9974-a40438075397",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "5cf00b56-6d0d-48cd-a7f3-c2a60bc35276",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_5b1132"
+                        },
+                        {
+                            "Id":  "ffec74d5-6885-46ed-af87-6ce9398f8e65",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out5",
+                            "ToComponentId":  "e6656cf2-9a05-4452-b424-f68e3609c496",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_d88a9b"
+                        },
+                        {
+                            "Id":  "b957f279-79af-4cf1-b39c-2e33addecc7d",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "e6656cf2-9a05-4452-b424-f68e3609c496",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_d04494"
+                        },
+                        {
+                            "Id":  "c7f0d709-4468-4e7a-9bc7-762a92bdbbc4",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out6",
+                            "ToComponentId":  "2ba84ff3-d77e-4fee-a0f6-46cd1ed1c751",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_4e5509"
+                        },
+                        {
+                            "Id":  "639d0878-cca0-4e40-b7c2-9694105f9c85",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "2ba84ff3-d77e-4fee-a0f6-46cd1ed1c751",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_3c09c0"
+                        },
+                        {
+                            "Id":  "64030281-df13-46ee-903b-a5b71ade5bf0",
+                            "FromComponentId":  "eed219da-b32d-43b6-9ce1-111d6df5ad2f",
+                            "FromPin":  "out7",
+                            "ToComponentId":  "9731b20c-5107-4ba2-8969-0e6980812ecf",
+                            "ToPin":  "in1",
+                            "NetName":  "Net_f5881e"
+                        },
+                        {
+                            "Id":  "b0441633-5a83-4564-9758-fe1417b781cb",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "9731b20c-5107-4ba2-8969-0e6980812ecf",
+                            "ToPin":  "in2",
+                            "NetName":  "Net_2b7463"
+                        },
+                        {
+                            "Id":  "e2ab1cb1-c187-4a6e-bf86-b9ef6ddacfe5",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out0",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A0",
+                            "NetName":  "Net_eb4ab0"
+                        },
+                        {
+                            "Id":  "005e3bf1-53cf-4155-bf24-c7c40b9f9323",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out1",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A1",
+                            "NetName":  "Net_5143a3"
+                        },
+                        {
+                            "Id":  "e0888225-228d-4fc0-bb19-7410c16bd9d0",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out2",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A2",
+                            "NetName":  "Net_e17751"
+                        },
+                        {
+                            "Id":  "6c0e126a-5b2b-48cb-9926-cf34634b6545",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out3",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A3",
+                            "NetName":  "Net_411b3e"
+                        },
+                        {
+                            "Id":  "96c7159e-2b5d-4b07-abda-69c6f186048c",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out4",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A4",
+                            "NetName":  "Net_de963f"
+                        },
+                        {
+                            "Id":  "3765882f-42b1-445a-84af-45666d2015e9",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out5",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A5",
+                            "NetName":  "Net_f8c23d"
+                        },
+                        {
+                            "Id":  "e00b77e3-1943-4f89-95f7-7489a317904e",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out6",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A6",
+                            "NetName":  "Net_a935a6"
+                        },
+                        {
+                            "Id":  "114214ae-7ee3-4fc6-b669-ec82f1aaca99",
+                            "FromComponentId":  "3e159dcd-fc4a-46aa-8e1e-ea4481f5e7cf",
+                            "FromPin":  "out7",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "A7",
+                            "NetName":  "Net_998578"
+                        },
+                        {
+                            "Id":  "c2b0585d-3f1c-4bc0-9504-bd34011887d9",
+                            "FromComponentId":  "c508b544-899e-480d-9fc7-60f4d26b878c",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B0",
+                            "NetName":  "Net_4f3ce0"
+                        },
+                        {
+                            "Id":  "66b5767d-2d89-473d-b1a6-c81e0e92b1d4",
+                            "FromComponentId":  "4a3bbbbb-9387-45ef-b3e3-cce5143b192a",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B1",
+                            "NetName":  "Net_3c81a0"
+                        },
+                        {
+                            "Id":  "9e317f4b-1929-4d1d-8de9-a08829eeff27",
+                            "FromComponentId":  "e707f317-e38e-42a5-945a-d9485946aa05",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B2",
+                            "NetName":  "Net_030175"
+                        },
+                        {
+                            "Id":  "c5f6c915-3e06-4c12-8941-f4e531e9f63a",
+                            "FromComponentId":  "46f9a717-cb94-414e-ac74-932a4ac6c63c",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B3",
+                            "NetName":  "Net_79aa6a"
+                        },
+                        {
+                            "Id":  "e481a9fe-ba27-4693-8bd1-a47962a8e626",
+                            "FromComponentId":  "5cf00b56-6d0d-48cd-a7f3-c2a60bc35276",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B4",
+                            "NetName":  "Net_075683"
+                        },
+                        {
+                            "Id":  "c7d737f6-ed2b-4501-815f-68e447b34ce0",
+                            "FromComponentId":  "e6656cf2-9a05-4452-b424-f68e3609c496",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B5",
+                            "NetName":  "Net_74894f"
+                        },
+                        {
+                            "Id":  "856e8b63-d03e-40f0-b324-7aad87928436",
+                            "FromComponentId":  "2ba84ff3-d77e-4fee-a0f6-46cd1ed1c751",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B6",
+                            "NetName":  "Net_9445d2"
+                        },
+                        {
+                            "Id":  "6263721a-cdc2-4086-a57f-447fc550de1f",
+                            "FromComponentId":  "9731b20c-5107-4ba2-8969-0e6980812ecf",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "B7",
+                            "NetName":  "Net_67c16c"
+                        },
+                        {
+                            "Id":  "f171daa4-4415-4f80-8a0c-51848ff1c232",
+                            "FromComponentId":  "7fdcfe90-e73a-4130-9767-adf8d5c156ac",
+                            "FromPin":  "out",
+                            "ToComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "ToPin":  "cin",
+                            "NetName":  "Net_d0dfe1"
+                        },
+                        {
+                            "Id":  "a2ffbd16-f151-4c2c-8a55-af692ccb033f",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y0",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din0",
+                            "NetName":  "Net_b52ba3"
+                        },
+                        {
+                            "Id":  "9135da62-04eb-4f92-805b-d5c71cd8a131",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y1",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din1",
+                            "NetName":  "Net_2b275e"
+                        },
+                        {
+                            "Id":  "714d9076-4a2e-4861-80aa-4dbdd3b45bb7",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y2",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din2",
+                            "NetName":  "Net_729ad3"
+                        },
+                        {
+                            "Id":  "fbbc0e29-9059-4199-89af-557dcfeed620",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y3",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din3",
+                            "NetName":  "Net_8f5436"
+                        },
+                        {
+                            "Id":  "f71ff532-7ab7-4b4d-9a20-ded0e27a0a2d",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y4",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din4",
+                            "NetName":  "Net_4aa131"
+                        },
+                        {
+                            "Id":  "4eb8b8bf-c961-43d5-9d12-b0af28742f96",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y5",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din5",
+                            "NetName":  "Net_8ad745"
+                        },
+                        {
+                            "Id":  "8406b7e2-a950-46ac-a280-ab61867907fd",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y6",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din6",
+                            "NetName":  "Net_99c775"
+                        },
+                        {
+                            "Id":  "74660b5c-f0d9-4c53-b743-bceb751293d9",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y7",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "din7",
+                            "NetName":  "Net_24832f"
+                        },
+                        {
+                            "Id":  "f8dc1269-ef3f-4f44-a456-868f43efac05",
+                            "FromComponentId":  "9c029c38-36b3-4e74-b38f-6704622898e3",
+                            "FromPin":  "out",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "we",
+                            "NetName":  "Net_330cdc"
+                        },
+                        {
+                            "Id":  "d5936aca-eca5-4c23-81d9-e650baf899af",
+                            "FromComponentId":  "e485e9cf-4080-4924-9135-615253bbc5c7",
+                            "FromPin":  "out",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "clk",
+                            "NetName":  "Net_c9ccde"
+                        },
+                        {
+                            "Id":  "0a1b2c3d-1111-4222-8333-444455556666",
+                            "FromComponentId":  "346d6786-32e0-48b7-9756-4744f07232aa",
+                            "FromPin":  "out",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "oe",
+                            "NetName":  "Net_VCC_OE"
+                        },
+                        {
+                            "Id":  "91671b96-cdf9-4eff-92e0-83762cb4e981",
+                            "FromComponentId":  "e485e9cf-4080-4924-9135-615253bbc5c7",
+                            "FromPin":  "out",
+                            "ToComponentId":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                            "ToPin":  "CLK",
+                            "NetName":  "Net_81b37d"
+                        },
+                        {
+                            "Id":  "6d165e4c-0747-4ef0-abd5-5dff1179248c",
+                            "FromComponentId":  "facc028d-9242-4de3-b16b-907978c44dc8",
+                            "FromPin":  "out",
+                            "ToComponentId":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                            "ToPin":  "clr",
+                            "NetName":  "Net_6a4004"
+                        },
+                        {
+                            "Id":  "8bd2249c-b0d4-4d99-9208-ea76ef3bb737",
+                            "FromComponentId":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                            "FromPin":  "Q0",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "addr0",
+                            "NetName":  "Net_c88181"
+                        },
+                        {
+                            "Id":  "9d8b5b53-f52f-4a16-a930-50433b35dd8e",
+                            "FromComponentId":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                            "FromPin":  "Q1",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "addr1",
+                            "NetName":  "Net_74664b"
+                        },
+                        {
+                            "Id":  "7b75f0fc-d8a1-48f9-bc7f-269e83efba2c",
+                            "FromComponentId":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                            "FromPin":  "Q2",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "addr2",
+                            "NetName":  "Net_69f81e"
+                        },
+                        {
+                            "Id":  "108727bc-bb54-44c0-812f-ea77eeb53e23",
+                            "FromComponentId":  "1f78edea-9e89-4926-82e3-6a27647b421c",
+                            "FromPin":  "Q3",
+                            "ToComponentId":  "7ee2e7fd-bfb1-4f2c-9f9e-fee86e6dc479",
+                            "ToPin":  "addr3",
+                            "NetName":  "Net_f93a1c"
+                        },
+                        {
+                            "Id":  "1a2b3c4d-2222-4333-8444-555566667777",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y0",
+                            "ToComponentId":  "72e8a6be-944d-4015-a38d-5066bee14798",
+                            "ToPin":  "D0",
+                            "NetName":  "Net_ALU_Y0_LowD0"
+                        },
+                        {
+                            "Id":  "2b3c4d5e-3333-4444-8555-666677778888",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y1",
+                            "ToComponentId":  "72e8a6be-944d-4015-a38d-5066bee14798",
+                            "ToPin":  "D1",
+                            "NetName":  "Net_ALU_Y1_LowD1"
+                        },
+                        {
+                            "Id":  "3c4d5e6f-4444-4555-8666-777788889999",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y2",
+                            "ToComponentId":  "72e8a6be-944d-4015-a38d-5066bee14798",
+                            "ToPin":  "D2",
+                            "NetName":  "Net_ALU_Y2_LowD2"
+                        },
+                        {
+                            "Id":  "4d5e6f70-5555-4666-8777-88889999aaaa",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y3",
+                            "ToComponentId":  "72e8a6be-944d-4015-a38d-5066bee14798",
+                            "ToPin":  "D3",
+                            "NetName":  "Net_ALU_Y3_LowD3"
+                        },
+                        {
+                            "Id":  "5e6f7081-6666-4777-8888-9999aaaabbbb",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y4",
+                            "ToComponentId":  "59b354c8-183a-452c-9112-65ae5a562855",
+                            "ToPin":  "D0",
+                            "NetName":  "Net_ALU_Y4_UpD0"
+                        },
+                        {
+                            "Id":  "6f708192-7777-4888-8999-aaaabbbbcccc",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y5",
+                            "ToComponentId":  "59b354c8-183a-452c-9112-65ae5a562855",
+                            "ToPin":  "D1",
+                            "NetName":  "Net_ALU_Y5_UpD1"
+                        },
+                        {
+                            "Id":  "708192a3-8888-4999-8aaa-bbbbccccdddd",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y6",
+                            "ToComponentId":  "59b354c8-183a-452c-9112-65ae5a562855",
+                            "ToPin":  "D2",
+                            "NetName":  "Net_ALU_Y6_UpD2"
+                        },
+                        {
+                            "Id":  "8192a3b4-9999-4aaa-8bbb-ccccddddeeee",
+                            "FromComponentId":  "d8270770-5386-498e-8dac-2c171eb722d3",
+                            "FromPin":  "Y7",
+                            "ToComponentId":  "59b354c8-183a-452c-9112-65ae5a562855",
+                            "ToPin":  "D3",
+                            "NetName":  "Net_ALU_Y7_UpD3"
+                        }
+                    ]
+}

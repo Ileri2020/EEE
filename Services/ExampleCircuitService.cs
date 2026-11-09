@@ -84,7 +84,13 @@ public static class ExampleCircuitService
         // Construct circuit from DTO
         string tempFile = Path.Combine(FileSystem.CacheDirectory, $"{example.Id}.eee");
         File.WriteAllText(tempFile, json);
-        return EeePlatformSerializer.LoadFromEee(tempFile);
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(tempFile);
+        foreach (LogicalGridPlacement placement in LogicalGridSchematicLayout.Calculate(circuit).Placements)
+        {
+            placement.Component.X = placement.X;
+            placement.Component.Y = placement.Y;
+        }
+        return circuit;
     }
 
     public static async Task<string> ExportExampleAsync(CircuitExampleItem example, string targetDirectory)
@@ -248,6 +254,18 @@ public static class ExampleCircuitService
             Description = "Connect two interactive logic inputs to one NAND gate inside a 7400 quad TTL package and observe its output.",
             ComponentSummary = "2x Logic Inputs, 1x 7400 TTL IC, 1x Logic Output",
             ResourcePath = "Examples/ttl_nand_gate.eee"
+        });
+
+        _examples.Add(new CircuitExampleItem
+        {
+            Id = "alu_ram_counter",
+            Title = "8-bit ALU with RAM and Address Counter",
+            Category = "Digital Logic",
+            Icon = "∑",
+            Badge = "CPU DEMO",
+            Description = "An interactive 8-bit ALU demo with input controls, RAM, a clocked address counter, and hexadecimal result displays.",
+            ComponentSummary = "11x Logic Inputs, 2x Bit Extenders, 8x XOR Gates, 1x 8-bit Adder, 1x RAM, 1x Counter, 1x Clock, 2x Hex Displays",
+            ResourcePath = "Examples/alu_ram_counter.eee"
         });
     }
 }
