@@ -28,7 +28,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         public long StructureVersion;
         public CircuitMacroExpansion? MacroExpansion;
         public CircuitNode ExpandedCircuit = null!;
-        public NetlistTopology Topology = null!;
+        public CircuitTopology Topology = null!;
         public SpiceSharp.Circuit SpiceCircuit = null!;
         public List<(ComponentNode Comp, string NodeA, string NodeB)> ComponentsWithPins = new();
         public List<MutualInductanceComponent> MutualInductances = new();
