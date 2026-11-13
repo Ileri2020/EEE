@@ -138,15 +138,30 @@ public class WaveformViewport : GraphicsView, IDrawable
 
         bool hasVoltage = traces.Any(trace => trace.Signal.Kind != WaveformSignalKind.ComponentCurrent);
         bool hasCurrent = traces.Any(trace => trace.Signal.Kind == WaveformSignalKind.ComponentCurrent);
-        var voltageValues = traces.Where(trace => trace.Signal.Kind != WaveformSignalKind.ComponentCurrent)
-            .SelectMany(trace => trace.Values).ToList();
-        var currentValues = traces.Where(trace => trace.Signal.Kind == WaveformSignalKind.ComponentCurrent)
-            .SelectMany(trace => trace.Values).ToList();
-        static (double Min, double Span) GetScale(System.Collections.Generic.List<double> values)
+
+        static (double Min, double Span) ComputeScale(System.Collections.Generic.IEnumerable<(WaveformSignal Signal, System.Collections.Generic.List<double> Times, System.Collections.Generic.List<double> Values)> traceList, bool isCurrent)
         {
-            if (values.Count == 0) return (0, 1);
-            double min = values.Min();
-            double span = values.Max() - min;
+            double min = double.MaxValue;
+            double max = double.MinValue;
+            bool found = false;
+
+            foreach (var trace in traceList)
+            {
+                bool match = (trace.Signal.Kind == WaveformSignalKind.ComponentCurrent) == isCurrent;
+                if (!match) continue;
+
+                var vals = trace.Values;
+                for (int i = 0; i < vals.Count; i++)
+                {
+                    double v = vals[i];
+                    if (v < min) min = v;
+                    if (v > max) max = v;
+                    found = true;
+                }
+            }
+
+            if (!found) return (0, 1);
+            double span = max - min;
             if (span < 1e-15)
             {
                 min -= 0.5;
@@ -154,8 +169,9 @@ public class WaveformViewport : GraphicsView, IDrawable
             }
             return (min, span);
         }
-        var voltageScale = GetScale(voltageValues);
-        var currentScale = GetScale(currentValues);
+
+        var voltageScale = ComputeScale(traces, false);
+        var currentScale = ComputeScale(traces, true);
         float topPad = 34f;
         float botPad = 20f;
         float plotH = h - topPad - botPad;

@@ -40,6 +40,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public UIRootNode UI { get; } = new UIRootNode();
 
     private readonly SimulationManager _simManager;
+    private readonly SimulationWorker _simWorker;
+    public SimulationSnapshot? CurrentSimulationSnapshot { get; private set; }
     private readonly RemoteEeeApiClient _remoteApi;
     private string? _lastSimulationCircuitSnapshot;
     private readonly HashSet<string> _activeSimulationEventIds = new(StringComparer.OrdinalIgnoreCase);
@@ -831,6 +833,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         _remoteApi = remoteApi ?? throw new ArgumentNullException(nameof(remoteApi));
         IsAiPromptExpanded = true;
         _simManager = new SimulationManager();
+        _simWorker  = new SimulationWorker(_simManager);
         PythonApi   = new PythonApi(CommandManager, Circuit, _simManager, UI);
         _sync       = new ScriptSynchronizer(CommandManager, Circuit);
 

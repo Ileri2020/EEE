@@ -104,6 +104,7 @@ public partial class SchematicViewport
         _isMovingComponent = false;
         if (_componentDragMoved)
         {
+            InvalidateWireGeometryCache();
             ComponentMoveCommitted?.Invoke(this, (
                 component,
                 _componentDragStartX,

@@ -22,6 +22,31 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 {
     public string EngineName => "SpiceSharp Engine";
 
+    private sealed class CompiledSpiceContext
+    {
+        public CircuitNode OriginalCircuit = null!;
+        public long StructureVersion;
+        public CircuitMacroExpansion? MacroExpansion;
+        public CircuitNode ExpandedCircuit = null!;
+        public NetlistTopology Topology = null!;
+        public SpiceSharp.Circuit SpiceCircuit = null!;
+        public List<(ComponentNode Comp, string NodeA, string NodeB)> ComponentsWithPins = new();
+        public List<MutualInductanceComponent> MutualInductances = new();
+        public Func<Guid, string, string> GetNetForPin = null!;
+        public Func<ComponentNode, string, int, string> GetPinNode = null!;
+    }
+
+    private CompiledSpiceContext? _cachedContext;
+    private readonly object _circuitBuildLock = new();
+
+    public void InvalidateCompiledCircuit()
+    {
+        lock (_circuitBuildLock)
+        {
+            _cachedContext = null;
+        }
+    }
+
     public SimulationResultsData RunSimulation(CircuitNode circuit, SimulationSettings settings)
     {
         var results = new SimulationResultsData();
@@ -37,44 +62,75 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 
         try
         {
-            macroExpansion = CircuitMacroExpander.Expand(circuit);
-            circuit = macroExpansion.Circuit;
-            // Resolve digital logic before building the analog netlist. Digital devices
-            // are represented to SpiceSharp as ideal voltage drivers at their output pins.
+            CompiledSpiceContext context;
+            lock (_circuitBuildLock)
+            {
+                if (_cachedContext != null &&
+                    _cachedContext.OriginalCircuit == originalCircuit &&
+                    _cachedContext.StructureVersion == originalCircuit.StructureVersion)
+                {
+                    context = _cachedContext;
+                    macroExpansion = context.MacroExpansion;
+                    circuit = context.ExpandedCircuit;
+                }
+                else
+                {
+                    macroExpansion = CircuitMacroExpander.Expand(circuit);
+                    circuit = macroExpansion.Circuit;
+                    DigitalLogicSimulator.EvaluateCombinational(circuit);
+
+                    var topology = NetlistBuilder.BuildTopology(circuit);
+
+                    string GetNetForPin(Guid compId, string pinId)
+                    {
+                        var net = topology.Nets.FirstOrDefault(n =>
+                            n.ConnectedPins.Any(p => p.ComponentId == compId && p.PinId == pinId));
+                        if (net == null || net.IsGround) return "0";
+                        return net.NetName;
+                    }
+
+                    string GetPinNode(ComponentNode comp, string pinIdOrName, int fallbackIndex = 0)
+                    {
+                        var p = comp.Pins.FirstOrDefault(x => x.Id.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase) ||
+                                                              x.Name.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase));
+                        if (p != null) return GetNetForPin(comp.Id, p.Id);
+                        if (comp.Pins.Count > fallbackIndex) return GetNetForPin(comp.Id, comp.Pins[fallbackIndex].Id);
+                        return "0";
+                    }
+
+                    var spiceCircuit = new SpiceSharp.Circuit();
+                    var componentsWithPins = new List<(ComponentNode Comp, string NodeA, string NodeB)>();
+                    var mutualInductances = new List<MutualInductanceComponent>();
+
+                    BuildSpiceCircuitComponents(circuit, spiceCircuit, settings, componentsWithPins,
+                        mutualInductances, GetNetForPin, GetPinNode, results);
+
+                    context = new CompiledSpiceContext
+                    {
+                        OriginalCircuit = originalCircuit,
+                        StructureVersion = originalCircuit.StructureVersion,
+                        MacroExpansion = macroExpansion,
+                        ExpandedCircuit = circuit,
+                        Topology = topology,
+                        SpiceCircuit = spiceCircuit,
+                        ComponentsWithPins = componentsWithPins,
+                        MutualInductances = mutualInductances,
+                        GetNetForPin = GetNetForPin,
+                        GetPinNode = GetPinNode
+                    };
+                    _cachedContext = context;
+                }
+            }
+
+            var topology = context.Topology;
+            var spiceCircuit = context.SpiceCircuit;
+            var componentsWithPins = context.ComponentsWithPins;
+            var GetNetForPin = context.GetNetForPin;
+            var GetPinNode = context.GetPinNode;
+
             DigitalLogicSimulator.EvaluateCombinational(circuit);
-
-            // 1. Build nodal network topology from the circuit connections
-            var topology = NetlistBuilder.BuildTopology(circuit);
-
-            string GetNetForPin(Guid compId, string pinId)
-            {
-                var net = topology.Nets.FirstOrDefault(n =>
-                    n.ConnectedPins.Any(p => p.ComponentId == compId && p.PinId == pinId));
-                if (net == null || net.IsGround) return "0";
-                return net.NetName;
-            }
-
-            string GetPinNode(ComponentNode comp, string pinIdOrName, int fallbackIndex = 0)
-            {
-                var p = comp.Pins.FirstOrDefault(x => x.Id.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase) ||
-                                                      x.Name.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase));
-                if (p != null) return GetNetForPin(comp.Id, p.Id);
-                if (comp.Pins.Count > fallbackIndex) return GetNetForPin(comp.Id, comp.Pins[fallbackIndex].Id);
-                return "0";
-            }
-
-            // 2. Instantiate SpiceSharp Circuit
-            var spiceCircuit = new SpiceSharp.Circuit();
-
             foreach (var panel in circuit.Components.OfType<SolarPanelComponent>())
                 panel.ApplyIrradianceProfile(settings.DeviceTimeSeconds);
-
-
-            var componentsWithPins = new List<(ComponentNode Comp, string NodeA, string NodeB)>();
-            var mutualInductances = new List<MutualInductanceComponent>();
-
-            BuildSpiceCircuitComponents(circuit, spiceCircuit, settings, componentsWithPins,
-                mutualInductances, GetNetForPin, GetPinNode, results);
 
             // 3. Run SpiceSharp Operating Point (DC) analysis
             var op = new OP("DC_OP");
@@ -418,9 +474,11 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         double start = Math.Max(0.0, settings.StartTime);
         double stop = settings.StopTime > start ? settings.StopTime : start + 0.02;
         double duration = stop - start;
-        double requestedStep = settings.StepTime > 0 ? settings.StepTime : duration / 500.0;
-        double maxStep = Math.Clamp(requestedStep, duration / 2000.0, duration / 2.0);
-        var transient = new Transient("EESimulator_Waveform", maxStep, stop, maxStep)
+        // Adaptive time step: allow SpiceSharp's internal LTE (local truncation error) controller
+        // to expand the time step up to maxStep during smooth periods and refine during transitions.
+        double initialStep = settings.StepTime > 0 ? settings.StepTime : Math.Min(duration / 50.0, 1e-4);
+        double maxStep = Math.Max(initialStep * 4.0, Math.Min(duration / 20.0, 0.005));
+        var transient = new Transient("EESimulator_Waveform", initialStep, stop, maxStep)
         {
             TimeParameters = { StartTime = start }
         };
@@ -439,16 +497,22 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                 component.WaveformCurrent.Clear();
                 component.WaveformNodeVoltages.Clear();
                 component.WaveformPinCurrents.Clear();
-                pins = component.Pins.Select(pin =>
-                {
-                    component.WaveformNodeVoltages[pin.Id] = new List<double>();
-                    string net = getNetForPin(component.Id, pin.Id);
-                    var pinCurrent = CreatePinCurrentExport(component, pin.Id, transient);
-                    if (pinCurrent.Export != null)
-                        component.WaveformPinCurrents[pin.Id] = new List<double>();
-                    return (Id: pin.Id, Export: VoltageAt(net),
-                        ExportCurrent: pinCurrent.Export, Multiplier: pinCurrent.Multiplier);
-                }).ToList();
+
+                // Only create per-pin exports if specifically requested or component has few pins (<= 4).
+                // Avoid allocating dozens of pin exports for complex ICs/ALUs unless monitored.
+                bool capturePins = settings.CaptureAllWaveforms || component.ShowWaveform || component.Pins.Count <= 4;
+                pins = capturePins
+                    ? component.Pins.Select(pin =>
+                    {
+                        component.WaveformNodeVoltages[pin.Id] = new List<double>();
+                        string net = getNetForPin(component.Id, pin.Id);
+                        var pinCurrent = CreatePinCurrentExport(component, pin.Id, transient);
+                        if (pinCurrent.Export != null)
+                            component.WaveformPinCurrents[pin.Id] = new List<double>();
+                        return (Id: pin.Id, Export: VoltageAt(net),
+                            ExportCurrent: pinCurrent.Export, Multiplier: pinCurrent.Multiplier);
+                    }).ToList()
+                    : new List<(string Id, RealVoltageExport? Export, RealCurrentExport? ExportCurrent, double Multiplier)>();
             }
 
             return (
@@ -461,8 +525,16 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     : null);
         }).ToList();
 
+        const int maxWaveformPoints = 1000;
+        int pointsCaptured = 0;
+
         foreach (int _ in transient.Run(spiceCircuit, Transient.ExportTransient))
         {
+            pointsCaptured++;
+            // Subsample if solver takes an unusually large number of sub-steps to conserve memory
+            if (pointsCaptured > maxWaveformPoints && (pointsCaptured % 2 != 0))
+                continue;
+
             double time = transient.Time;
             foreach (var capture in captures)
             {

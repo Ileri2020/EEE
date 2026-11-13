@@ -200,7 +200,8 @@ public partial class EEWorkspaceViewModel
                 _animTimer = Application.Current?.Dispatcher?.CreateTimer() ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
                 if (_animTimer != null)
                 {
-                    _animTimer.Interval = TimeSpan.FromMilliseconds(40);
+                    int targetFps = Math.Clamp(SimulationPerformanceProfile.Current.TargetAnimationFps, 15, 60);
+                    _animTimer.Interval = TimeSpan.FromMilliseconds(1000.0 / targetFps);
                     _animTimer.Tick += (s, e) =>
                     {
                         if (IsSimulationPlaying)
@@ -213,7 +214,7 @@ public partial class EEWorkspaceViewModel
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
                             AnimationFrameRequested?.Invoke();
                             if (!IsSimulating && !_playbackSolveRunning &&
-                                DateTime.UtcNow - _lastPlaybackSolveUtc >= TimeSpan.FromMilliseconds(250))
+                                DateTime.UtcNow - _lastPlaybackSolveUtc >= SimulationPerformanceProfile.Current.SolveInterval)
                                 _ = RefreshPlaybackSimulationAsync();
                         }
                     };
@@ -257,12 +258,9 @@ public partial class EEWorkspaceViewModel
                 settings.StartTime = Math.Max(0, settings.StopTime - waveformWindow);
             }
             settings.StepTime = Math.Max(settings.StepTime,
-                Math.Max(settings.StopTime - settings.StartTime, 0.02) / 500.0);
-            var results = await Task.Run(() =>
-            {
-                DigitalLogicSimulator.Advance(Circuit, settings.SolverElapsedTimeSeconds);
-                return _simManager.Run(Circuit, settings);
-            });
+                Math.Max(settings.StopTime - settings.StartTime, 0.02) / 50.0);
+            var (results, snapshot) = await _simWorker.ExecuteAsync(Circuit, settings);
+            CurrentSimulationSnapshot = snapshot;
             if (DateTime.UtcNow - _lastPlaybackConsoleUpdateUtc >= TimeSpan.FromSeconds(1))
             {
                 ConsoleOutput = FormatResults(results);
@@ -723,7 +721,8 @@ public partial class EEWorkspaceViewModel
             ConsoleOutput = "";
 
             var settings = BuildSimulationSettings();
-            var results  = await Task.Run(() => _simManager.Run(Circuit, settings));
+            var (results, snapshot) = await _simWorker.ExecuteAsync(Circuit, settings);
+            CurrentSimulationSnapshot = snapshot;
             if (settings.Analysis == AnalysisType.Transient)
             {
                 double scale = settings.TimeScalingEnabled ? settings.DeviceTimeScale : 1.0;
@@ -731,7 +730,10 @@ public partial class EEWorkspaceViewModel
                 _deviceTimeSeconds = settings.DeviceTimeSeconds +
                     Math.Max(0, settings.StopTime - settings.StartTime) * scale;
             }
-            _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+            _ = Task.Run(() =>
+            {
+                _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
+            });
             DispatchTriggeredUiEvents();
 
             ConsoleOutput = FormatResults(results);

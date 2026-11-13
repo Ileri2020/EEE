@@ -14,9 +14,19 @@ public class CircuitNode : RootNode
 
     public string Version { get; set; } = "1.0.0";
 
+    public long StructureVersion { get; private set; } = 1;
+
+    public void InvalidateStructure()
+    {
+        StructureVersion++;
+    }
+
     public CircuitNode()
     {
         Name = "CircuitRoot";
+        OnChildAdded += (_, _) => StructureVersion++;
+        OnChildRemoved += (_, _) => StructureVersion++;
+        OnModified += (_, _) => StructureVersion++;
     }
 
     public IEnumerable<ComponentNode> Components => FindChildren<ComponentNode>();

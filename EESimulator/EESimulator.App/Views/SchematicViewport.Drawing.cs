@@ -1,3 +1,4 @@
+using EESimulator.Engine.Simulation;
 using Microsoft.Maui.Graphics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Models;
@@ -6,8 +7,36 @@ namespace EESimulator.App.Views;
 
 public partial class SchematicViewport
 {
-    private readonly Dictionary<Guid, List<PointF>> _automaticWirePathCache = new();
-    private int _routeGeometryFingerprint = int.MinValue;
+    private sealed class CachedWireSegment
+    {
+        public PointF Start;
+        public PointF End;
+        public bool Horizontal;
+        public List<float> Crossings = new();
+    }
+
+    private sealed class CachedWireRoute
+    {
+        public Guid Id;
+        public ComponentNode? Owner;
+        public ConnectionNode? Connection;
+        public ComponentNode? FromComp;
+        public ComponentNode? ToComp;
+        public ComponentPin? FromPin;
+        public ComponentPin? ToPin;
+        public List<PointF> Path = new();
+        public List<CachedWireSegment> Segments = new();
+        public float TotalLength;
+    }
+
+    private readonly List<CachedWireRoute> _cachedWireRoutes = new();
+    private bool _isWireGeometryDirty = true;
+    private int _cachedCircuitChildCount = -1;
+
+    public void InvalidateWireGeometryCache()
+    {
+        _isWireGeometryDirty = true;
+    }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
@@ -21,7 +50,7 @@ public partial class SchematicViewport
         if (Circuit != null)
         {
             DrawConnections(canvas);
-            DrawComponents(canvas);
+            DrawComponents(canvas, dirtyRect);
             DrawWireInProgress(canvas);
         }
 
@@ -97,33 +126,38 @@ public partial class SchematicViewport
         canvas.DrawLine(0, -30, 0, 30);
     }
 
-    private void DrawConnections(ICanvas canvas)
+    private void EnsureWireRoutesBuilt()
     {
-        if (Circuit == null) return;
+        if (Circuit == null)
+        {
+            _cachedWireRoutes.Clear();
+            _isWireGeometryDirty = false;
+            return;
+        }
+
+        // Fast structural check: if dirty flag or child count changed, rebuild routes
+        int childCount = Circuit.Children.Count;
+        if (!_isWireGeometryDirty && childCount == _cachedCircuitChildCount)
+            return;
+
+        _cachedCircuitChildCount = childCount;
+        _isWireGeometryDirty = false;
+        _cachedWireRoutes.Clear();
+
         var components = Circuit.FindChildren<ComponentNode>().ToList();
         var connections = Circuit.FindChildren<ConnectionNode>().ToList();
-        int geometryFingerprint = GetRouteGeometryFingerprint(components, connections);
-        if (geometryFingerprint != _routeGeometryFingerprint)
-        {
-            _automaticWirePathCache.Clear();
-            _routeGeometryFingerprint = geometryFingerprint;
-        }
-        var routedWires = new List<(List<PointF> Path, ComponentNode? Owner, ConnectionNode? Connection, int ElectronDirection, float FlowSpeed)>();
+        var allPriorPaths = new List<List<PointF>>();
 
+        // 1. Process wire components
         foreach (var wire in components.OfType<WireComponent>())
         {
-            if (!_automaticWirePathCache.TryGetValue(wire.Id, out var path))
-            {
-                path = SchematicWireRouter.RouteWireComponent(wire, components);
-                _automaticWirePathCache[wire.Id] = path;
-            }
-            double current = SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent);
-            double voltage = SampleWaveformValue(wire.WaveformVoltage, wire.LiveVoltage);
-            int direction = GetElectronDirection(current);
-            float speed = CalculateFlowSpeed(Math.Abs(voltage), Math.Abs(current));
-            routedWires.Add((path, wire, null, direction, speed));
+            var path = SchematicWireRouter.RouteWireComponent(wire, components);
+            var route = BuildCachedRoute(wire.Id, wire, null, null, null, null, null, path, allPriorPaths);
+            _cachedWireRoutes.Add(route);
+            allPriorPaths.Add(path);
         }
 
+        // 2. Process connection nodes
         foreach (var conn in connections)
         {
             var fromComp = Circuit.FindChildById<ComponentNode>(conn.FromComponentId);
@@ -133,81 +167,102 @@ public partial class SchematicViewport
             var toPin = toComp.GetPin(conn.ToPin);
             if (fromPin == null || toPin == null) continue;
 
-            if (!_automaticWirePathCache.TryGetValue(conn.Id, out var path))
-            {
-                path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
-                _automaticWirePathCache[conn.Id] = path;
-            }
-            double fromCurrent = SampleWaveformValue(fromComp.WaveformCurrent, fromComp.LiveCurrent);
-            double toCurrent = SampleWaveformValue(toComp.WaveformCurrent, toComp.LiveCurrent);
-            double fromPinCurrent = SamplePinCurrent(fromComp, fromPin, fromCurrent);
-            double toPinCurrent = SamplePinCurrent(toComp, toPin, toCurrent);
-            routedWires.Add((path, null, conn,
-                GetElectronDirection(fromPinCurrent, toPinCurrent),
-                CalculateFlowSpeed(
-                    Math.Abs(SampleWaveformValue(fromComp.WaveformVoltage, fromComp.LiveVoltage) -
-                             SampleWaveformValue(toComp.WaveformVoltage, toComp.LiveVoltage)),
-                    Math.Max(Math.Abs(fromPinCurrent), Math.Abs(toPinCurrent)))));
-        }
-
-        var previousPaths = new List<List<PointF>>(routedWires.Count);
-        foreach (var wire in routedWires)
-        {
-            DrawRoutedWire(canvas, wire.Path, previousPaths);
-            previousPaths.Add(wire.Path);
-            if (wire.Connection == _selectedConnection)
-            {
-                canvas.StrokeColor = Color.FromArgb("#D2A8FF");
-                canvas.StrokeSize = 4f;
-                for (int segment = 0; segment < wire.Path.Count - 1; segment++)
-                    canvas.DrawLine(wire.Path[segment], wire.Path[segment + 1]);
-            }
-            if (IsSimulationPlaying && wire.ElectronDirection != 0 && wire.FlowSpeed > 0.01f)
-                DrawElectricityDots(canvas, wire.Path, wire.ElectronDirection, wire.FlowSpeed);
-
-            if (wire.Owner is WireComponent owner && (owner.ShowLiveProbe || LiveMeasurementsVisible))
-                DrawWireMeasurement(canvas, owner, wire.Path);
+            var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
+            var route = BuildCachedRoute(conn.Id, null, conn, fromComp, toComp, fromPin, toPin, path, allPriorPaths);
+            _cachedWireRoutes.Add(route);
+            allPriorPaths.Add(path);
         }
     }
 
-    private static int GetRouteGeometryFingerprint(
-        IEnumerable<ComponentNode> components,
-        IEnumerable<ConnectionNode> connections)
+    private static CachedWireRoute BuildCachedRoute(
+        Guid id,
+        ComponentNode? owner,
+        ConnectionNode? connection,
+        ComponentNode? fromComp,
+        ComponentNode? toComp,
+        ComponentPin? fromPin,
+        ComponentPin? toPin,
+        List<PointF> path,
+        List<List<PointF>> priorPaths)
     {
-        var hash = new HashCode();
-        foreach (ComponentNode component in components)
+        var route = new CachedWireRoute
         {
-            hash.Add(component.Id);
-            hash.Add(component.ComponentType, StringComparer.Ordinal);
-            hash.Add(component.Name, StringComparer.Ordinal);
-            hash.Add(component.Reference, StringComparer.Ordinal);
-            hash.Add(component.X);
-            hash.Add(component.Y);
-            hash.Add(component.Rotation);
-            hash.Add(component.ScaleX);
-            hash.Add(component.ScaleY);
-            foreach (ComponentPin pin in component.Pins)
-            {
-                hash.Add(pin.Id, StringComparer.Ordinal);
-                hash.Add(pin.Name, StringComparer.Ordinal);
-                hash.Add(pin.RelativeX);
-                hash.Add(pin.RelativeY);
-            }
-        }
-        foreach (ConnectionNode connection in connections)
+            Id = id,
+            Owner = owner,
+            Connection = connection,
+            FromComp = fromComp,
+            ToComp = toComp,
+            FromPin = fromPin,
+            ToPin = toPin,
+            Path = path
+        };
+
+        float length = 0;
+        for (int i = 0; i < path.Count - 1; i++)
         {
-            hash.Add(connection.Id);
-            hash.Add(connection.FromComponentId);
-            hash.Add(connection.FromPin, StringComparer.Ordinal);
-            hash.Add(connection.ToComponentId);
-            hash.Add(connection.ToPin, StringComparer.Ordinal);
-            foreach (Point2D point in connection.RoutingPoints)
+            var start = path[i];
+            var end = path[i + 1];
+            bool horizontal = MathF.Abs(start.Y - end.Y) < 0.01f;
+            var crossings = FindCrossings(start, end, horizontal, priorPaths);
+            route.Segments.Add(new CachedWireSegment
             {
-                hash.Add(point.X);
-                hash.Add(point.Y);
-            }
+                Start = start,
+                End = end,
+                Horizontal = horizontal,
+                Crossings = crossings
+            });
+            length += MathF.Abs(end.X - start.X) + MathF.Abs(end.Y - start.Y);
         }
-        return hash.ToHashCode();
+        route.TotalLength = length;
+        return route;
+    }
+
+    private void DrawConnections(ICanvas canvas)
+    {
+        if (Circuit == null) return;
+        EnsureWireRoutesBuilt();
+
+        foreach (var route in _cachedWireRoutes)
+        {
+            DrawCachedWireRoute(canvas, route);
+
+            if (route.Connection == _selectedConnection)
+            {
+                canvas.StrokeColor = Color.FromArgb("#D2A8FF");
+                canvas.StrokeSize = 4f;
+                for (int segment = 0; segment < route.Path.Count - 1; segment++)
+                    canvas.DrawLine(route.Path[segment], route.Path[segment + 1]);
+            }
+
+            int direction = 0;
+            float speed = 0f;
+
+            if (route.Owner is WireComponent wire)
+            {
+                double current = SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent);
+                double voltage = SampleWaveformValue(wire.WaveformVoltage, wire.LiveVoltage);
+                direction = GetElectronDirection(current);
+                speed = CalculateFlowSpeed(Math.Abs(voltage), Math.Abs(current));
+
+                if (wire.ShowLiveProbe || LiveMeasurementsVisible)
+                    DrawWireMeasurement(canvas, wire, route.Path);
+            }
+            else if (route.Connection != null && route.FromComp != null && route.ToComp != null && route.FromPin != null && route.ToPin != null)
+            {
+                double fromCurrent = SampleWaveformValue(route.FromComp.WaveformCurrent, route.FromComp.LiveCurrent);
+                double toCurrent = SampleWaveformValue(route.ToComp.WaveformCurrent, route.ToComp.LiveCurrent);
+                double fromPinCurrent = SamplePinCurrent(route.FromComp, route.FromPin, fromCurrent);
+                double toPinCurrent = SamplePinCurrent(route.ToComp, route.ToPin, toCurrent);
+                direction = GetElectronDirection(fromPinCurrent, toPinCurrent);
+                speed = CalculateFlowSpeed(
+                    Math.Abs(SampleWaveformValue(route.FromComp.WaveformVoltage, route.FromComp.LiveVoltage) -
+                             SampleWaveformValue(route.ToComp.WaveformVoltage, route.ToComp.LiveVoltage)),
+                    Math.Max(Math.Abs(fromPinCurrent), Math.Abs(toPinCurrent)));
+            }
+
+            if (IsSimulationPlaying && direction != 0 && speed > 0.01f && route.TotalLength > 1f)
+                DrawElectricityDots(canvas, route.Path, direction, speed, route.TotalLength);
+        }
     }
 
     private static float CalculateFlowSpeed(double voltageGap, double branchCurrent)
@@ -249,20 +304,29 @@ public partial class SchematicViewport
         return samples[index];
     }
 
-    private static void DrawRoutedWire(ICanvas canvas, List<PointF> path, List<List<PointF>> previousPaths)
+    private static void DrawCachedWireRoute(ICanvas canvas, CachedWireRoute route)
     {
         canvas.StrokeColor = Color.FromArgb("#58A6FF");
         canvas.StrokeSize = 1.7f;
-        for (int segmentIndex = 0; segmentIndex < path.Count - 1; segmentIndex++)
+
+        bool renderBridges = SimulationPerformanceProfile.Current.EnableWireBridges;
+
+        foreach (var seg in route.Segments)
         {
-            var start = path[segmentIndex];
-            var end = path[segmentIndex + 1];
-            bool horizontal = MathF.Abs(start.Y - end.Y) < 0.01f;
-            var crossings = FindCrossings(start, end, horizontal, previousPaths);
+            var start = seg.Start;
+            var end = seg.End;
+            bool horizontal = seg.Horizontal;
+
+            if (!renderBridges || seg.Crossings.Count == 0)
+            {
+                canvas.DrawLine(start.X, start.Y, end.X, end.Y);
+                continue;
+            }
+
             float cursor = horizontal ? Math.Min(start.X, end.X) : Math.Min(start.Y, end.Y);
             float finish = horizontal ? Math.Max(start.X, end.X) : Math.Max(start.Y, end.Y);
 
-            foreach (float crossing in crossings)
+            foreach (float crossing in seg.Crossings)
             {
                 const float radius = 7f;
                 float clearStart = Math.Max(cursor, crossing - radius);
@@ -279,11 +343,11 @@ public partial class SchematicViewport
             DrawAxisLine(canvas, horizontal, start, cursor, finish);
         }
 
-        if (path.Count > 0)
+        if (route.Path.Count > 0)
         {
             canvas.FillColor = Color.FromArgb("#58A6FF");
-            canvas.FillCircle(path[0].X, path[0].Y, 3f);
-            canvas.FillCircle(path[^1].X, path[^1].Y, 3f);
+            canvas.FillCircle(route.Path[0].X, route.Path[0].Y, 3f);
+            canvas.FillCircle(route.Path[^1].X, route.Path[^1].Y, 3f);
         }
     }
 
@@ -345,14 +409,12 @@ public partial class SchematicViewport
         canvas.DrawPath(bridge);
     }
 
-    private void DrawElectricityDots(ICanvas canvas, List<PointF> path, int electronDirection, float flowSpeed)
+    private void DrawElectricityDots(ICanvas canvas, List<PointF> path, int electronDirection, float flowSpeed, float totalLength)
     {
-        float totalLength = 0;
-        for (int i = 0; i < path.Count - 1; i++)
-            totalLength += MathF.Abs(path[i + 1].X - path[i].X) + MathF.Abs(path[i + 1].Y - path[i].Y);
-        if (totalLength < 1f) return;
+        if (totalLength < 1f || path.Count < 2) return;
 
-        int dotCount = Math.Clamp((int)(totalLength / 28f), 2, 6);
+        float density = SimulationPerformanceProfile.Current.ParticleDensityMultiplier;
+        int dotCount = Math.Clamp((int)((totalLength / 28f) * density), 1, 6);
         for (int i = 0; i < dotCount; i++)
         {
             float norm = ((float)i / dotCount + ElectricityAnimPhase * flowSpeed) % 1.0f;
@@ -392,13 +454,34 @@ public partial class SchematicViewport
         canvas.DrawString($"{wire.LiveCurrent * 1000:F1} mA", midpoint.X + 8, midpoint.Y - 5, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
-    private void DrawComponents(ICanvas canvas)
+    private void DrawComponents(ICanvas canvas, RectF dirtyRect)
     {
         if (Circuit == null) return;
         _liveMeasurementBadgeBounds.Clear();
+
+        bool enableCulling = SimulationPerformanceProfile.Current.EnableViewportCulling && dirtyRect.Width > 0 && dirtyRect.Height > 0;
+        float minVx = 0, maxVx = 0, minVy = 0, maxVy = 0;
+        if (enableCulling)
+        {
+            minVx = (-_panX / _zoom) - 80f;
+            maxVx = minVx + (dirtyRect.Width / _zoom) + 160f;
+            minVy = (-_panY / _zoom) - 80f;
+            maxVy = minVy + (dirtyRect.Height / _zoom) + 160f;
+        }
+
         foreach (var comp in Circuit.FindChildren<ComponentNode>())
         {
+            if (comp is WireComponent) continue;
+
             bool selected = comp == _selectedComponent;
+            if (enableCulling && !selected)
+            {
+                float cx = (float)comp.X;
+                float cy = (float)comp.Y;
+                if (cx < minVx || cx > maxVx || cy < minVy || cy > maxVy)
+                    continue;
+            }
+
             DrawComponent(canvas, comp, selected);
         }
     }

@@ -26,7 +26,10 @@ public partial class WorkspacePage : ContentPage
         vm.ViewportFitToScreenRequested += MainWorkspace.SchematicCanvas.FitToScreen;
         vm.ViewportComponentPlacementRequested += MainWorkspace.SchematicCanvas.GetVisibleTopRightWorldPosition;
         MainWorkspace.SchematicCanvas.ComponentMoveCommitted += (_, move) =>
+        {
+            MainWorkspace.SchematicCanvas.InvalidateWireGeometryCache();
             vm.CommitComponentMove(move.Component, move.OldX, move.OldY, move.NewX, move.NewY);
+        };
 
         // Wire pin/node selection event
         MainWorkspace.SchematicCanvas.PinSelected += (_, tuple) =>
@@ -35,6 +38,7 @@ public partial class WorkspacePage : ContentPage
         // Wire completed wire connection → add ConnectionNode to circuit
         MainWorkspace.SchematicCanvas.WireConnected += (_, args) =>
         {
+            MainWorkspace.SchematicCanvas.InvalidateWireGeometryCache();
             var (fromComp, fromPin, toComp, toPin) = args;
             vm.ConnectPins(fromComp, fromPin, toComp, toPin);
         };
@@ -42,6 +46,7 @@ public partial class WorkspacePage : ContentPage
         // Wire cut wire turning into node
         MainWorkspace.SchematicCanvas.WireCutIntoNode += (_, junc) =>
         {
+            MainWorkspace.SchematicCanvas.InvalidateWireGeometryCache();
             vm.StatusText = $"Cut wire → Created node {junc.Reference}";
             vm.SelectedComponent = junc;
         };
@@ -53,8 +58,10 @@ public partial class WorkspacePage : ContentPage
                 MainWorkspace.SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
                 MainWorkspace.SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
                 MainWorkspace.SchematicCanvas.Invalidate();
-                MainWorkspace.WaveformCanvas.Invalidate();
-                MainWorkspace.SelectedComponentIcon.Invalidate();
+                if (vm.IsWaveformDrawerOpen)
+                    MainWorkspace.WaveformCanvas.Invalidate();
+                if (vm.IsDescriptionSidebarVisible)
+                    MainWorkspace.SelectedComponentIcon.Invalidate();
             });
 
         vm.AnimationFrameRequested += () =>

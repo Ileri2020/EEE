@@ -156,12 +156,17 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                 cur.OnChildRemoved += vp.OnCircuitStructureChanged;
                 cur.OnModified     += vp.OnCircuitStructureChanged;
             }
+            vp.InvalidateWireGeometryCache();
             vp.Invalidate();
         }
     }
 
     private void OnCircuitStructureChanged(object? sender, EventArgs e)
-        => Dispatcher.Dispatch(Invalidate);
+        => Dispatcher.Dispatch(() =>
+        {
+            InvalidateWireGeometryCache();
+            Invalidate();
+        });
 
     // ── Rotate handle helpers ─────────────────────────────────────────────────
     /// <summary>
