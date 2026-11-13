@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -154,6 +155,9 @@ public abstract class ComponentNode : RootNode
     public List<double> WaveformCurrent { get; private set; } = new();
 
     [JsonIgnore]
+    public ConcurrentDictionary<string, double> LivePinVoltages { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    [JsonIgnore]
     public Dictionary<string, List<double>> WaveformNodeVoltages { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
 
     [JsonIgnore]
@@ -199,6 +203,9 @@ public abstract class ComponentNode : RootNode
         clone.WaveformTime = new List<double>(WaveformTime);
         clone.WaveformVoltage = new List<double>(WaveformVoltage);
         clone.WaveformCurrent = new List<double>(WaveformCurrent);
+        clone.LivePinVoltages = new ConcurrentDictionary<string, double>(
+            LivePinVoltages,
+            StringComparer.OrdinalIgnoreCase);
         clone.WaveformNodeVoltages = WaveformNodeVoltages.ToDictionary(
             pair => pair.Key,
             pair => new List<double>(pair.Value),
@@ -283,4 +290,3 @@ public class LogicOutputNode : EESimulator.Core.Components.Electronics.LogicOutp
     public LogicOutputNode() : base() { }
     public LogicOutputNode(string name, double threshold = 2.5) : base(name, threshold) { }
 }
-

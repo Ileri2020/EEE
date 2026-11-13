@@ -78,27 +78,10 @@ public class BulbComponent : ElectricalComponent
     }
 
     /// <summary>
-    /// Indicates whether the light bulb is currently illuminated.
+    /// Indicates whether electrical voltage or current is illuminating the bulb.
     /// </summary>
     public bool IsOn
-    {
-        get
-        {
-            if (CustomProperties.TryGetValue("IsOn", out var val) && val is bool bVal)
-                return bVal;
-
-            if (ElectricalParameters.TryGetValue("IsOn", out var pVal))
-                return pVal > 0.5;
-
-            return LiveVoltage >= ThresholdVoltage || LiveCurrent >= 0.02;
-        }
-        set
-        {
-            CustomProperties["IsOn"] = value;
-            ElectricalParameters["IsOn"] = value ? 1.0 : 0.0;
-            NotifyModified(nameof(IsOn));
-        }
-    }
+        => Math.Abs(LiveVoltage) >= ThresholdVoltage || Math.Abs(LiveCurrent) >= 0.02;
 
     public BulbComponent()
     {

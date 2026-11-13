@@ -23,13 +23,19 @@ public static partial class DigitalLogicSimulator
         {
             foreach (var clock in context.Components.OfType<ClockComponent>())
             {
-                var phase = Number(clock, "_simPhase", 0) + Math.Max(0.01, clock.Frequency) * elapsedSeconds;
+                var previousPhase = Number(clock, "_simPhase", 0);
+                var previousState = clock.State;
+                var phase = previousPhase + Math.Max(0.01, clock.Frequency) * elapsedSeconds;
                 var wholeCycles = (long)Math.Floor(phase);
                 var duty = Math.Clamp(clock.DutyCycle, 0.01, 0.99);
-                var falls = CountBoundaryCrossings(Number(clock, "_simPhase", 0), phase, duty);
-                SetNumber(clock, "_simRisingEdges", Number(clock, "_simRisingEdges", 0) + wholeCycles);
+                var falls = CountBoundaryCrossings(previousPhase, phase, duty);
+                var rises = wholeCycles - (long)Math.Floor(previousPhase);
+                if (!Bool(clock, "_simInitialized", false) && previousPhase == 0 && !previousState)
+                    rises++;
+                SetNumber(clock, "_simRisingEdges", Number(clock, "_simRisingEdges", 0) + rises);
                 SetNumber(clock, "_simFallingEdges", Number(clock, "_simFallingEdges", 0) + falls);
                 SetNumber(clock, "_simPhase", phase - wholeCycles);
+                SetBool(clock, "_simInitialized", true);
                 clock.State = phase - wholeCycles < duty;
             }
         }

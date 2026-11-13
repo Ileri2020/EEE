@@ -284,8 +284,11 @@ public partial class SchematicViewport
     private void DrawJunction(ICanvas canvas, ComponentNode comp)
     {
         var pin = comp.Pins.FirstOrDefault();
-        int connCount = pin != null ? GetPinConnectionCount(comp, pin) : 0;
-        Color c = GetNodeConnectionColor(connCount);
+        double voltage = pin != null ? Math.Abs(SamplePinVoltage(comp, pin)) : 0.0;
+        double current = pin != null
+            ? Math.Abs(SamplePinCurrent(comp, pin, comp.LiveCurrent))
+            : Math.Abs(comp.LiveCurrent);
+        Color c = GetElectricalStateColor(voltage, current);
         canvas.FillColor = c;
         canvas.FillCircle(0, 0, 4.5f);
         canvas.StrokeColor = Colors.White;

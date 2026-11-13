@@ -240,8 +240,11 @@ public partial class SchematicViewport
             if (route.Owner is WireComponent wire)
             {
                 double current = SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent);
-                double voltage = SampleWaveformValue(wire.WaveformVoltage, wire.LiveVoltage);
                 direction = GetElectronDirection(current);
+                double voltage = wire.Pins
+                    .Select(pin => Math.Abs(SamplePinVoltage(wire, pin)))
+                    .DefaultIfEmpty()
+                    .Max();
                 speed = CalculateFlowSpeed(Math.Abs(voltage), Math.Abs(current));
 
                 if (wire.ShowLiveProbe || LiveMeasurementsVisible)
@@ -304,9 +307,10 @@ public partial class SchematicViewport
         return samples[index];
     }
 
-    private static void DrawCachedWireRoute(ICanvas canvas, CachedWireRoute route)
+    private void DrawCachedWireRoute(ICanvas canvas, CachedWireRoute route)
     {
-        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        Color routeColor = GetWireRouteColor(route);
+        canvas.StrokeColor = routeColor;
         canvas.StrokeSize = 1.7f;
 
         bool renderBridges = SimulationPerformanceProfile.Current.EnableWireBridges;
@@ -335,7 +339,7 @@ public partial class SchematicViewport
                 canvas.StrokeColor = Color.FromArgb("#0D1117");
                 canvas.StrokeSize = 4f;
                 DrawAxisLine(canvas, horizontal, start, clearStart, clearEnd);
-                canvas.StrokeColor = Color.FromArgb("#58A6FF");
+                canvas.StrokeColor = routeColor;
                 canvas.StrokeSize = 1.7f;
                 DrawBridge(canvas, horizontal, start, crossing, radius);
                 cursor = clearEnd;
@@ -345,10 +349,59 @@ public partial class SchematicViewport
 
         if (route.Path.Count > 0)
         {
-            canvas.FillColor = Color.FromArgb("#58A6FF");
+            canvas.FillColor = routeColor;
             canvas.FillCircle(route.Path[0].X, route.Path[0].Y, 3f);
             canvas.FillCircle(route.Path[^1].X, route.Path[^1].Y, 3f);
         }
+    }
+
+    private Color GetWireRouteColor(CachedWireRoute route)
+    {
+        if (route.Owner is WireComponent wire)
+        {
+            double voltage = wire.Pins
+                .Select(pin => Math.Abs(SamplePinVoltage(wire, pin)))
+                .DefaultIfEmpty(0)
+                .Max();
+            double current = Math.Abs(SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent));
+            return GetElectricalStateColor(voltage, current);
+        }
+
+        if (route.FromComp == null || route.ToComp == null ||
+            route.FromPin == null || route.ToPin == null)
+            return Color.FromArgb("#6E7681");
+
+        double fromVoltage = Math.Abs(SamplePinVoltage(route.FromComp, route.FromPin));
+        double toVoltage = Math.Abs(SamplePinVoltage(route.ToComp, route.ToPin));
+        double fromCurrent = Math.Abs(SamplePinCurrent(route.FromComp, route.FromPin, route.FromComp.LiveCurrent));
+        double toCurrent = Math.Abs(SamplePinCurrent(route.ToComp, route.ToPin, route.ToComp.LiveCurrent));
+        return GetElectricalStateColor(Math.Max(fromVoltage, toVoltage), Math.Max(fromCurrent, toCurrent));
+    }
+
+    private static Color GetElectricalStateColor(double voltage, double current)
+    {
+        // 1. Conduction: active branch current flowing through wire/node
+        if (current >= 1e-6)
+            return Color.FromArgb("#3FB950"); // Vivid energized green for active current flow
+
+        // 2. Logic level / potential present with negligible current (CMOS gate inputs, logic lines)
+        if (voltage >= 0.5)
+            return Color.FromArgb("#58A6FF"); // Electric cyan-blue for logic high / potential presence
+
+        // 3. Intermediate / weak voltage state (0.05V to 0.5V)
+        if (voltage >= 0.05)
+            return Color.FromArgb("#D2A8FF"); // Lavender purple for floating/intermediate potential
+
+        // 4. Ground / unenergized / zero state (0V and 0A)
+        return Color.FromArgb("#6E7681"); // Muted slate gray for ground and inactive nets
+    }
+
+    private double SamplePinVoltage(ComponentNode component, ComponentPin pin)
+    {
+        double liveVoltage = component.LivePinVoltages.TryGetValue(pin.Id, out var voltage) ? voltage : 0.0;
+        return component.WaveformNodeVoltages.TryGetValue(pin.Id, out var samples)
+            ? SampleWaveformValue(samples, liveVoltage)
+            : liveVoltage;
     }
 
     private static List<float> FindCrossings(PointF start, PointF end, bool horizontal, List<List<PointF>> previousPaths)

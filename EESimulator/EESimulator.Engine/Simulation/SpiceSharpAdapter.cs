@@ -175,6 +175,24 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     }
                 }
 
+                foreach (var component in circuit.Components)
+                {
+                    component.LivePinVoltages.Clear();
+                    foreach (var pin in component.Pins)
+                    {
+                        var pinReference = new PinReference(component.Id, pin.Id);
+                        if (!topology.PinToNetMap.TryGetValue(pinReference, out var net))
+                            continue;
+
+                        double pinVoltage = net.IsGround
+                            ? 0.0
+                            : voltageExports.TryGetValue(net.Name, out var pinVoltageExport)
+                                ? pinVoltageExport.Value
+                                : 0.0;
+                        component.LivePinVoltages[pin.Id] = pinVoltage;
+                    }
+                }
+
                 // Update live probe values on each component
                 foreach (var (comp, expA, expB) in compExports.Select(kv => (kv.Key, kv.Value.ExpA, kv.Value.ExpB)))
                 {
@@ -185,24 +203,28 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     comp.LiveVoltage = signedVoltage;
                     comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var branchCurrent) ? branchCurrent.Value : 0.0;
 
-                    if (comp is ResistorComponent r && r.Resistance > 0)
+                    if (comp is ResistorComponent r)
                     {
+                        double temperatureDelta = r.Temperature - 27.0;
+                        double resistanceScale = 1.0 + r.TemperatureCoefficient1 * temperatureDelta +
+                            r.TemperatureCoefficient2 * temperatureDelta * temperatureDelta;
+                        double effectiveResistance = Math.Max(r.Resistance * Math.Max(resistanceScale, 1e-6), 1e-6);
+                        comp.LiveCurrent = signedVoltage / effectiveResistance;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
-                    else if (comp is BulbComponent b && b.Resistance > 0)
+                    else if (comp is BulbComponent b)
                     {
+                        comp.LiveCurrent = signedVoltage / Math.Max(b.Resistance, 1e-6);
                         b.Brightness = Math.Clamp(vDrop / Math.Max(b.RatedVoltage, 0.1), 0.0, 1.0);
-                        b.IsOn = vDrop >= b.ThresholdVoltage || Math.Abs(comp.LiveCurrent) >= 0.02;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
                     else if (comp is WireComponent)
                     {
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
-                    else if (comp is LEDComponent led)
+                    else if (comp is LEDComponent)
                     {
                         comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var ledCurrent) ? ledCurrent.Value : 0.0;
-                        led.IsOn = vDrop >= Math.Min(led.ForwardVoltage * 0.75, 1.5) || Math.Abs(comp.LiveCurrent) >= 0.001;
                         results.OperatingPointVoltages[$"V({comp.Name})"] = signedVoltage;
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
@@ -211,10 +233,9 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                         comp.LiveVoltage = lin.State ? lin.HighVoltage : lin.LowVoltage;
                         results.OperatingPointVoltages[$"V({comp.Name})"] = comp.LiveVoltage;
                     }
-                    else if (comp is LogicOutputComponent lout)
+                    else if (comp is LogicOutputComponent)
                     {
                         comp.LiveVoltage = va;
-                        lout.IsOn = va >= lout.Threshold;
                         results.OperatingPointVoltages[$"V({comp.Name})"] = va;
                     }
                     else if (comp is VoltageSourceComponent v)
@@ -312,7 +333,10 @@ public partial class SpiceSharpAdapter : ISimulationEngine
             }
 
             results.Success = true;
-            results.Message = $"Spice# {settings.Analysis} simulation completed: {topology.Nets.Count} nets, {spiceCircuit.Count} Spice elements.";
+            string completionMessage = $"Spice# {settings.Analysis} simulation completed: {topology.Nets.Count} nets, {spiceCircuit.Count} Spice elements.";
+            results.Message = string.IsNullOrEmpty(results.Message)
+                ? completionMessage
+                : $"{completionMessage}{results.Message}";
         }
         catch (Exception ex)
         {
@@ -563,18 +587,14 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                 capture.Component.LiveVoltage = capture.Component.WaveformVoltage[^1];
                 capture.Component.LiveCurrent = capture.Component.WaveformCurrent[^1];
                 double drop = Math.Abs(capture.Component.LiveVoltage);
-                if (capture.Component is LEDComponent led)
-                    led.IsOn = drop >= Math.Min(led.ForwardVoltage * 0.75, 1.5) || Math.Abs(led.LiveCurrent) >= 0.001;
-                else if (capture.Component is BulbComponent bulb)
+                if (capture.Component is BulbComponent bulb)
                 {
                     bulb.Brightness = Math.Clamp(drop / Math.Max(bulb.RatedVoltage, 0.1), 0.0, 1.0);
-                    bulb.IsOn = drop >= bulb.ThresholdVoltage || Math.Abs(bulb.LiveCurrent) >= 0.02;
                 }
-                else if (capture.Component is LogicOutputComponent logicOutput && capture.Pins.Count > 0)
+                else if (capture.Component is LogicOutputComponent && capture.Pins.Count > 0)
                 {
                     double terminalVoltage = capture.Pins[0].Export?.Value ?? 0.0;
-                    logicOutput.LiveVoltage = terminalVoltage;
-                    logicOutput.IsOn = terminalVoltage >= logicOutput.Threshold;
+                    capture.Component.LiveVoltage = terminalVoltage;
                 }
             }
         }

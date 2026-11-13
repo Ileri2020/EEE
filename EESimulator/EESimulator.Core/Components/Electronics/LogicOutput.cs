@@ -53,24 +53,7 @@ public class LogicOutputComponent : ElectronicComponent
     /// Evaluates whether the probe is currently ON (Logic 1).
     /// </summary>
     public bool IsOn
-    {
-        get
-        {
-            if (CustomProperties.TryGetValue("IsOn", out var val) && val is bool bVal)
-                return bVal;
-
-            if (ElectricalParameters.TryGetValue("IsOn", out var pVal))
-                return pVal > 0.5;
-
-            return LiveVoltage >= Threshold;
-        }
-        set
-        {
-            CustomProperties["IsOn"] = value;
-            ElectricalParameters["IsOn"] = value ? 1.0 : 0.0;
-            NotifyModified(nameof(IsOn));
-        }
-    }
+        => LiveVoltage >= Threshold;
 
     public LogicOutputComponent()
     {

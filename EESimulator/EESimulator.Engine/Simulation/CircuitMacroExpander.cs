@@ -117,7 +117,6 @@ internal static class CircuitMacroExpander
                 flattened is EESimulator.Core.Components.Electrical.BulbComponent flatBulb)
             {
                 originalBulb.Brightness = flatBulb.Brightness;
-                originalBulb.IsOn = flatBulb.IsOn;
             }
         }
 
