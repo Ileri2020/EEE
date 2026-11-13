@@ -47,6 +47,24 @@ public partial class SchematicViewport
             }
         }
 
+        // Desktop-only: begin background pan when left-clicking on empty canvas.
+        // The PanGestureRecognizer covers mobile swipe; on Windows we supplement it
+        // with direct pointer tracking so the pan works with the mouse.
+        if (!_isStretchingComponent &&
+            !_isDrawingWire &&
+            !ActiveTool.Equals("Wire", StringComparison.OrdinalIgnoreCase) &&
+            !ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase) &&
+            !ActiveTool.Equals("Move", StringComparison.OrdinalIgnoreCase) &&
+            HitTest(w) == null &&
+            HitTestPin(w) == null)
+        {
+            _isBackgroundPanning = true;
+            _bgPanStartX = _panX;
+            _bgPanStartY = _panY;
+            // Store screen coords (not world) for delta calculation
+            _bgPanStartScreen = new PointF((float)pos.Value.X, (float)pos.Value.Y);
+        }
+
     }
 
 
@@ -55,6 +73,17 @@ public partial class SchematicViewport
     {
         var pos = e.GetPosition(this);
         if (pos == null) return;
+
+        // Desktop background pan via pointer drag
+        if (_isBackgroundPanning && !_isStretchingComponent)
+        {
+            float dx = (float)pos.Value.X - _bgPanStartScreen.X;
+            float dy = (float)pos.Value.Y - _bgPanStartScreen.Y;
+            _panX = _bgPanStartX + dx;
+            _panY = _bgPanStartY + dy;
+            Invalidate();
+            return;
+        }
 
         if (_isStretchingComponent && _selectedComponent != null)
         {
@@ -92,6 +121,7 @@ public partial class SchematicViewport
 
     private void OnPointerReleased(object? sender, PointerEventArgs e)
     {
+        _isBackgroundPanning = false;
         _isStretchingComponent = false;
         _stretchHandleIndex = -1;
     }

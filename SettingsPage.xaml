@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:EEE.ViewModels"
@@ -476,9 +476,9 @@
                                                BackgroundColor="#0D1117"
                                                TextColor="#C9D1D9"
                                                PlaceholderColor="#484F58"/>
-                                        <Button Grid.Column="1" Text="Save securely" Style="{StaticResource ToolBtn}"
+                                        <Button Grid.Column="1" Text="Save securely" Style="{StaticResource StandardBtn}"
                                                 Command="{Binding SaveRemoteApiAccessTokenCommand}"/>
-                                        <Button Grid.Column="2" Text="Clear" Style="{StaticResource ToolBtn}"
+                                        <Button Grid.Column="2" Text="Clear" Style="{StaticResource StandardBtn}"
                                                 Command="{Binding ClearRemoteApiAccessTokenCommand}"/>
                                     </Grid>
                                      <Label Text="Without a token, the app uses the HCVP server-key pool. Those keys are delivered to the app and can be copied by anyone who can access the key endpoint. With a token, your saved personal key is used first; keys are kept only in memory. Never paste a Gemini key or database password here."

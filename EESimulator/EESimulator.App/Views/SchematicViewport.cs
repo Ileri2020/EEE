@@ -1,4 +1,4 @@
-using Microsoft.Maui.Graphics;
+﻿using Microsoft.Maui.Graphics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Models;
@@ -111,6 +111,11 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private ComponentNode? _wireSourceComp;
     private ComponentPin?  _wireSourcePin;
     private PointF         _wireCursorWorld;
+
+    // Background pan (swipe on mobile / left-click drag on desktop over empty canvas)
+    private bool   _isBackgroundPanning;
+    private float  _bgPanStartX,  _bgPanStartY;   // _panX / _panY at the start of the gesture
+    private PointF _bgPanStartScreen;              // screen-space position where pointer pan began (desktop)
 
     public SchematicViewport()
     {
@@ -310,6 +315,26 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                     _componentDragStartTotalY = 0;
                     _componentDragMoved = false;
                 }
+
+                // Detect background pan: starts when no component is under the touch point
+                // and we are not in Wire/Cut/Move tool modes (those need their own touch logic).\n                // On desktop, _isBackgroundPanning may already be set true by OnPointerPressed
+                // (which has the precise click coordinates for hit-testing). On mobile, the
+                // PanGestureRecognizer does not give us start coordinates, so we allow panning
+                // whenever no component drag is active and the tool isn't a wire/cut mode.
+                if (!_isMovingComponent &&
+                    !ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase) &&
+                    !ActiveTool.Equals("Wire", StringComparison.OrdinalIgnoreCase) &&
+                    !ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase) &&
+                    !_isDrawingWire &&
+                    !_isBackgroundPanning)   // desktop already set this in OnPointerPressed
+                {
+                    // Mobile: allow pan over empty canvas.
+                    // We cannot hit-test here (no start position), so we permit it and
+                    // rely on the fact that component drags are handled by _isMovingComponent.
+                    _isBackgroundPanning = true;
+                    _bgPanStartX = _panX;
+                    _bgPanStartY = _panY;
+                }
                 break;
 
             case GestureStatus.Running:
@@ -320,11 +345,25 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                     _componentDragMoved = true;
                     Invalidate();
                 }
-                else if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase))
+                else if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase) ||
+                         _isBackgroundPanning)
                 {
+                    // On desktop, background panning is driven by OnPointerMoved for
+                    // sub-pixel accuracy; skip PanGestureRecognizer updates here so
+                    // both handlers don't fight over _panX / _panY.
+#if !WINDOWS
                     _panX = _lastPanX + (float)e.TotalX;
                     _panY = _lastPanY + (float)e.TotalY;
                     Invalidate();
+#else
+                    if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _panX = _lastPanX + (float)e.TotalX;
+                        _panY = _lastPanY + (float)e.TotalY;
+                        Invalidate();
+                    }
+                    // Background pan on Windows: handled by OnPointerMoved instead.
+#endif
                 }
                 _lastPanTotalX = (float)e.TotalX;
                 _lastPanTotalY = (float)e.TotalY;
@@ -332,6 +371,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
+                _isBackgroundPanning = false;
                 FinishComponentDrag();
                 break;
         }
@@ -344,6 +384,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             case GestureStatus.Started:
                 _isPinching = true;
                 _lastPinchScale = 1f;
+                _isBackgroundPanning = false;
                 FinishComponentDrag();
                 break;
 
