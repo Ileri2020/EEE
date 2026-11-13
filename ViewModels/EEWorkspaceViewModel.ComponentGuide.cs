@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Maui.Storage;
 using EEE.Services;
 using EESimulator.Core.Models;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
@@ -85,11 +86,11 @@ public partial class EEWorkspaceViewModel
                 StatusText = $"Saved all component guides: {result.FilePath}";
             }
             return;
-#endif
-
+#else
             string outputPath = Path.Combine(GetDefaultSaveDirectory(), fileName);
             await File.WriteAllTextAsync(outputPath, content, Encoding.UTF8);
             StatusText = $"Saved guides for {guides.Count} components: {outputPath}";
+#endif
         }
         catch (Exception ex)
         {
