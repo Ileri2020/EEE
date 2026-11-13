@@ -79,31 +79,31 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     circuit = macroExpansion.Circuit;
                     DigitalLogicSimulator.EvaluateCombinational(circuit);
 
-                    var topology = NetlistBuilder.BuildTopology(circuit);
+                    var builtTopology = NetlistBuilder.BuildTopology(circuit);
 
-                    string GetNetForPin(Guid compId, string pinId)
+                    string ResolveBuiltNetForPin(Guid compId, string pinId)
                     {
-                        var net = topology.Nets.FirstOrDefault(n =>
+                        var net = builtTopology.Nets.FirstOrDefault(n =>
                             n.ConnectedPins.Any(p => p.ComponentId == compId && p.PinId == pinId));
                         if (net == null || net.IsGround) return "0";
                         return net.NetName;
                     }
 
-                    string GetPinNode(ComponentNode comp, string pinIdOrName, int fallbackIndex = 0)
+                    string ResolveBuiltPinNode(ComponentNode comp, string pinIdOrName, int fallbackIndex = 0)
                     {
                         var p = comp.Pins.FirstOrDefault(x => x.Id.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase) ||
                                                               x.Name.Equals(pinIdOrName, StringComparison.OrdinalIgnoreCase));
-                        if (p != null) return GetNetForPin(comp.Id, p.Id);
-                        if (comp.Pins.Count > fallbackIndex) return GetNetForPin(comp.Id, comp.Pins[fallbackIndex].Id);
+                        if (p != null) return ResolveBuiltNetForPin(comp.Id, p.Id);
+                        if (comp.Pins.Count > fallbackIndex) return ResolveBuiltNetForPin(comp.Id, comp.Pins[fallbackIndex].Id);
                         return "0";
                     }
 
-                    var spiceCircuit = new SpiceSharp.Circuit();
-                    var componentsWithPins = new List<(ComponentNode Comp, string NodeA, string NodeB)>();
-                    var mutualInductances = new List<MutualInductanceComponent>();
+                    var builtSpiceCircuit = new SpiceSharp.Circuit();
+                    var builtComponentsWithPins = new List<(ComponentNode Comp, string NodeA, string NodeB)>();
+                    var builtMutualInductances = new List<MutualInductanceComponent>();
 
-                    BuildSpiceCircuitComponents(circuit, spiceCircuit, settings, componentsWithPins,
-                        mutualInductances, GetNetForPin, GetPinNode, results);
+                    BuildSpiceCircuitComponents(circuit, builtSpiceCircuit, settings, builtComponentsWithPins,
+                        builtMutualInductances, ResolveBuiltNetForPin, ResolveBuiltPinNode, results);
 
                     context = new CompiledSpiceContext
                     {
@@ -111,12 +111,12 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                         StructureVersion = originalCircuit.StructureVersion,
                         MacroExpansion = macroExpansion,
                         ExpandedCircuit = circuit,
-                        Topology = topology,
-                        SpiceCircuit = spiceCircuit,
-                        ComponentsWithPins = componentsWithPins,
-                        MutualInductances = mutualInductances,
-                        GetNetForPin = GetNetForPin,
-                        GetPinNode = GetPinNode
+                        Topology = builtTopology,
+                        SpiceCircuit = builtSpiceCircuit,
+                        ComponentsWithPins = builtComponentsWithPins,
+                        MutualInductances = builtMutualInductances,
+                        GetNetForPin = ResolveBuiltNetForPin,
+                        GetPinNode = ResolveBuiltPinNode
                     };
                     _cachedContext = context;
                 }
