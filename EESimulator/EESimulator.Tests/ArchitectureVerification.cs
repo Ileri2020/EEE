@@ -202,6 +202,26 @@ public static class ArchitectureVerification
         Assert(layout.Placements.Select(placement => (placement.X, placement.Y)).Distinct().Count() == 3,
             "Components sharing a logical cell should be physically separated");
 
+        var rotatedCircuit = new CircuitNode();
+        var rotated = (ComponentNode)ComponentRegistry.CreateInstance("Resistor", "R_rotated");
+        rotated.LogicalRow = 1;
+        rotated.LogicalColumn = 1;
+        rotated.Rotation = 90;
+        var adjacent = (ComponentNode)ComponentRegistry.CreateInstance("Resistor", "R_adjacent");
+        adjacent.LogicalRow = 2;
+        adjacent.LogicalColumn = 2;
+        rotatedCircuit.AddChild(rotated);
+        rotatedCircuit.AddChild(adjacent);
+        var rotatedLayout = LogicalGridSchematicLayout.Calculate(rotatedCircuit);
+        var rotatedPlacement = rotatedLayout.Placements.Single(item => item.Component == rotated);
+        var adjacentPlacement = rotatedLayout.Placements.Single(item => item.Component == adjacent);
+        var rotatedExtents = LogicalGridSchematicLayout.GetVisualHalfExtents(rotated);
+        var adjacentExtents = LogicalGridSchematicLayout.GetVisualHalfExtents(adjacent);
+        Assert(Math.Abs(adjacentPlacement.X - rotatedPlacement.X - rotatedExtents.HalfWidth - adjacentExtents.HalfWidth - 20) < 0.01,
+            "Adjacent columns should leave only the wire corridor and account for rotated component bounds");
+        Assert(Math.Abs(adjacentPlacement.Y - rotatedPlacement.Y - rotatedExtents.HalfHeight - adjacentExtents.HalfHeight - 20) < 0.01,
+            "Adjacent rows should leave only the wire corridor and account for rotated component bounds");
+
         foreach (var placement in layout.Placements)
         {
             placement.Component.X = placement.X;

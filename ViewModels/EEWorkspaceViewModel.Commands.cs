@@ -30,7 +30,19 @@ namespace EEE.ViewModels;
 public partial class EEWorkspaceViewModel
 {
     [RelayCommand]
-    private void SelectTool(string tool) => ActiveTool = tool;
+    private void SelectTool(string tool)
+    {
+        ActiveTool = tool;
+        StatusText = tool switch
+        {
+            "Wire" => "Wire tool selected: tap a source pin, then a destination pin",
+            "Pan" => "Pan tool selected: drag the viewport",
+            "Move" => "Move tool selected: drag the selected component",
+            "Cut" => "Cut tool selected: tap a wire",
+            "Label" => "Label tool selected",
+            _ => "Select tool selected"
+        };
+    }
 
     [RelayCommand]
     private void RecenterViewport()
@@ -85,6 +97,9 @@ public partial class EEWorkspaceViewModel
 
     [RelayCommand]
     private void ToggleHelp() => IsHelpVisible = !IsHelpVisible;
+
+    [RelayCommand]
+    private void ToggleAiPrompt() => IsAiPromptExpanded = !IsAiPromptExpanded;
 
     [RelayCommand]
     private async Task OpenSettings()

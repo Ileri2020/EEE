@@ -82,19 +82,26 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsAiSchemaRequestInProgress { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSchematicAiPromptVisible))]
+    public partial bool IsAiPromptExpanded { get; set; }
+
+    [ObservableProperty]
     public partial bool IsSimulating { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
     [NotifyPropertyChangedFor(nameof(IsMobileSchematicViewActive))]
+    [NotifyPropertyChangedFor(nameof(IsSchematicAiPromptVisible))]
     public partial bool IsScriptViewActive { get; set; } = false;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
     [NotifyPropertyChangedFor(nameof(IsMobileSchematicViewActive))]
+    [NotifyPropertyChangedFor(nameof(IsSchematicAiPromptVisible))]
     public partial bool IsAnalyticsViewActive { get; set; }
 
     public bool IsSchematicViewActive => !IsScriptViewActive && !IsAnalyticsViewActive;
+    public bool IsSchematicAiPromptVisible => IsSchematicViewActive && IsAiPromptExpanded;
     public bool IsMobileSchematicViewActive => DeviceInfo.Idiom == DeviceIdiom.Phone && IsSchematicViewActive;
 
     public ObservableCollection<string> AnalyticsModes { get; } = new()
@@ -816,11 +823,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public event Action? ViewportRecenterRequested;
     public event Action<float>? ViewportZoomRequested;
     public event Action? ViewportFitToScreenRequested;
+    public event Func<(double X, double Y)>? ViewportComponentPlacementRequested;
 
     // ── Constructor ──────────────────────────────────────────────────────────
     public EEWorkspaceViewModel(RemoteEeeApiClient remoteApi)
     {
         _remoteApi = remoteApi ?? throw new ArgumentNullException(nameof(remoteApi));
+        IsAiPromptExpanded = true;
         _simManager = new SimulationManager();
         PythonApi   = new PythonApi(CommandManager, Circuit, _simManager, UI);
         _sync       = new ScriptSynchronizer(CommandManager, Circuit);

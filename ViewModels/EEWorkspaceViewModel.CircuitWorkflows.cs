@@ -767,10 +767,9 @@ public partial class EEWorkspaceViewModel
     private void AddComponentToCircuit(ComponentPaletteItem item)
     {
         var name = GetNextReference(item.Type);
-        int count = Circuit.FindChildren<ComponentNode>().Count();
-        // Place on a grid pattern, offset from centre of view
-        double cx = 100 + (count % 6) * 90;
-        double cy = 100 + (count / 6) * 90;
+        (double X, double Y) position = ViewportComponentPlacementRequested?.Invoke() ?? (200, 150);
+        double cx = position.X;
+        double cy = position.Y;
 
         if (item.Type.StartsWith("custom:", StringComparison.OrdinalIgnoreCase))
         {
@@ -842,6 +841,13 @@ public partial class EEWorkspaceViewModel
         string paramStr = param.Key != null ? $"{param.Key}={param.Value:G4}" : "";
         ActiveComponentInfo = $"{comp.Reference}  [{comp.ComponentType}]  ({comp.X:F0}, {comp.Y:F0})  {paramStr}";
         StatusText = $"Selected {comp.Reference} [{comp.ComponentType}]";
+    }
+
+    public void OnLogicInputToggled(ComponentNode component)
+    {
+        StatusText = $"{component.Reference} toggled";
+        RequestSimulationRefresh();
+        CircuitChanged?.Invoke();
     }
 
     public void OnConnectionSelected(ConnectionNode connection)

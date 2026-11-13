@@ -17,11 +17,14 @@ public partial class WorkspacePage : ContentPage
         // Wire canvas selection events to ViewModel
         MainWorkspace.SchematicCanvas.ComponentSelected += (_, comp) =>
             vm.OnComponentSelected(comp);
+        MainWorkspace.SchematicCanvas.LogicInputToggled += (_, comp) =>
+            vm.OnLogicInputToggled(comp);
         MainWorkspace.SchematicCanvas.ConnectionSelected += (_, connection) =>
             vm.OnConnectionSelected(connection);
         vm.ViewportRecenterRequested += MainWorkspace.SchematicCanvas.RecenterToCircuit;
         vm.ViewportZoomRequested += MainWorkspace.SchematicCanvas.ZoomBy;
         vm.ViewportFitToScreenRequested += MainWorkspace.SchematicCanvas.FitToScreen;
+        vm.ViewportComponentPlacementRequested += MainWorkspace.SchematicCanvas.GetVisibleTopRightWorldPosition;
         MainWorkspace.SchematicCanvas.ComponentMoveCommitted += (_, move) =>
             vm.CommitComponentMove(move.Component, move.OldX, move.OldY, move.NewX, move.NewY);
 

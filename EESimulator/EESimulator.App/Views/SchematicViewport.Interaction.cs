@@ -12,17 +12,6 @@ public partial class SchematicViewport
         if (pos == null || Circuit == null) return;
 
         var w = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
-        _pressWorldPos = w;
-
-        // Cut tool handling on pointer press
-        if (ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase))
-        {
-            if (TryCutWireToNode(w))
-            {
-                Invalidate();
-                return;
-            }
-        }
 
         // Check rotate handle first
         if (_rotateHandleVisible)
@@ -58,61 +47,6 @@ public partial class SchematicViewport
             }
         }
 
-        // ── Pin long-press → wire draw ─────────────────────────────────
-        var hitPin = HitTestPin(w);
-        if (hitPin != null)
-        {
-            var (pinComp, pin) = hitPin.Value;
-            _pressedPin = pin;
-            _longPressTimer?.Dispose();
-            _longPressTimer = new System.Threading.Timer(_ =>
-            {
-                Dispatcher.Dispatch(() =>
-                {
-                    _isDrawingWire   = true;
-                    _wireSourceComp  = pinComp;
-                    _wireSourcePin   = pin;
-                    _wireCursorWorld = SchematicWireRouter.GetPinWorldPosition(pinComp, pin);
-                    Invalidate();
-                });
-            }, null, 350, System.Threading.Timeout.Infinite);
-            return;
-        }
-
-        // ── Component long-press: hold, then drag to move; release opens component actions ─
-        _pressedPin  = null;
-        _pressedComp = HitTest(w);
-        if (_pressedComp != null)
-        {
-            // Immediate select on component touch (both pan and select modes)
-            _selectedComponent = _pressedComp;
-            UpdateRotateHandle();
-            ComponentSelected?.Invoke(this, _pressedComp);
-            Invalidate();
-
-            var comp = _pressedComp;
-            var sx   = (float)pos.Value.X;
-            var sy   = (float)pos.Value.Y;
-            _lastMoveScreen = new PointF(sx, sy);
-
-            _longPressTimer?.Dispose();
-            _longPressTimer = new System.Threading.Timer(_ =>
-            {
-                if (_pressedComp != comp) return;
-                Dispatcher.Dispatch(() =>
-                {
-                    _selectedComponent = comp;
-                    UpdateRotateHandle();
-                    _isMovingComponent = ActiveTool.Equals("Move", StringComparison.OrdinalIgnoreCase);
-                    _componentDragStartX = (float)comp.X;
-                    _componentDragStartY = (float)comp.Y;
-                    _componentDragStartTotalX = _lastPanTotalX;
-                    _componentDragStartTotalY = _lastPanTotalY;
-                    _componentDragMoved = false;
-                    Invalidate();
-                });
-            }, null, 480, System.Threading.Timeout.Infinite);
-        }
     }
 
 
@@ -158,21 +92,8 @@ public partial class SchematicViewport
 
     private void OnPointerReleased(object? sender, PointerEventArgs e)
     {
-        _longPressTimer?.Dispose();
-        _longPressTimer = null;
         _isStretchingComponent = false;
         _stretchHandleIndex = -1;
-
-        if (_isDrawingWire)
-        {
-            var pos = e.GetPosition(this);
-            TryCompleteWire(pos != null ? ToWorld((float)pos.Value.X, (float)pos.Value.Y) : _wireCursorWorld);
-            return;
-        }
-
-        FinishComponentDrag();
-        _pressedComp       = null;
-        _pressedPin        = null;
     }
 
     private void FinishComponentDrag()
@@ -211,6 +132,18 @@ public partial class SchematicViewport
 
     public void ZoomBy(float factor)
         => ZoomAt((float)Width / 2f, (float)Height / 2f, factor);
+
+    public (double X, double Y) GetVisibleTopRightWorldPosition()
+    {
+        if (Width <= 0 || Height <= 0)
+            return (0, 0);
+
+        const float screenMargin = 80f;
+        float screenX = Math.Clamp((float)Width - screenMargin, 0f, (float)Width);
+        float screenY = Math.Clamp(screenMargin, 0f, (float)Height);
+        PointF world = ToWorld(screenX, screenY);
+        return (world.X, world.Y);
+    }
 
     public void FitToScreen()
     {

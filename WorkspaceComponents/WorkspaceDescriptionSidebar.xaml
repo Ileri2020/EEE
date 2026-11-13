@@ -9,7 +9,7 @@
                     BackgroundColor="#161B22"
                     Stroke="#30363D"
                     StrokeThickness="1">
-                <Grid RowDefinitions="Auto,*,Auto">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
                     <!-- Header -->
                     <Grid Grid.Row="0" BackgroundColor="#0D1117" Padding="12,10" ColumnDefinitions="*,Auto">
                         <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
@@ -30,8 +30,33 @@
                                 ToolTipProperties.Text="Close description sidebar"/>
                     </Grid>
 
+                    <!-- The existing inspector remains the default tab. -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*" Padding="8,6" ColumnSpacing="6">
+                        <Button Grid.Column="0" Text="Properties"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding SelectDescriptionTabCommand}"
+                                CommandParameter="Properties">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding SelectedDescriptionTab}" Value="Properties">
+                                    <Setter Property="BackgroundColor" Value="#1C3060"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="1" Text="Component Guide"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding SelectDescriptionTabCommand}"
+                                CommandParameter="Guide">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding SelectedDescriptionTab}" Value="Guide">
+                                    <Setter Property="BackgroundColor" Value="#1C3060"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Grid>
+
                     <!-- Content -->
-                    <ScrollView Grid.Row="1" Padding="12,10">
+                    <ScrollView Grid.Row="2" Padding="12,10"
+                                IsVisible="{Binding IsDescriptionPropertiesTab}">
                         <VerticalStackLayout Spacing="10">
                             <!-- Placeholder when no component is selected -->
                             <VerticalStackLayout IsVisible="{Binding HasSelectedComponent, Converter={StaticResource InvertedBoolConverter}}"
@@ -214,8 +239,76 @@
                         </VerticalStackLayout>
                     </ScrollView>
 
+                    <ScrollView Grid.Row="2" Padding="12,10"
+                                IsVisible="{Binding IsDescriptionGuideTab}">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button Grid.Column="0" Text="⧉"
+                                        Style="{StaticResource IconBtn}"
+                                        IsEnabled="{Binding HasSelectedComponent}"
+                                        Command="{Binding CopySelectedComponentGuideCommand}"
+                                        ToolTipProperties.Text="Copy the selected component guide"/>
+                                <Button Grid.Column="1" Text="▤"
+                                        Style="{StaticResource IconBtn}"
+                                        Command="{Binding ExportAllComponentGuidesCommand}"
+                                        ToolTipProperties.Text="Save guides for all components in the app"/>
+                            </Grid>
+
+                            <VerticalStackLayout IsVisible="{Binding HasSelectedComponent, Converter={StaticResource InvertedBoolConverter}}"
+                                                 Spacing="8" Padding="8,24" HorizontalOptions="Center">
+                                <Label Text="📖" FontSize="32" HorizontalOptions="Center" TextColor="#484F58"/>
+                                <Label Text="No Component Selected"
+                                       TextColor="#C9D1D9" FontSize="13" FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+                                <Label Text="Select a component on the schematic to view its guide."
+                                       TextColor="#8B949E" FontSize="11" HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout IsVisible="{Binding HasSelectedComponent}" Spacing="12">
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="COMPONENT" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.Name}" TextColor="#E6EDF3" FontSize="16" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.Reference, StringFormat='Reference: {0}'}"
+                                           TextColor="#8B949E" FontSize="11"/>
+                                    <Label Text="{Binding SelectedComponentGuide.Category}" TextColor="#79C0FF" FontSize="11"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="VARIANT" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.Variant}" TextColor="#C9D1D9" FontSize="11"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="DESCRIPTION" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.Description}"
+                                           TextColor="#C9D1D9" FontSize="11" LineBreakMode="WordWrap"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="CONNECTIONS" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.ConnectionText}"
+                                           TextColor="#C9D1D9" FontSize="11" LineBreakMode="WordWrap"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="EDITABLE PROPERTIES" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.EditablePropertiesText}"
+                                           TextColor="#C9D1D9" FontSize="11" LineBreakMode="WordWrap"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="PYTHON API CALLS" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.PythonCallsText}"
+                                           TextColor="#79C0FF" FontSize="10"
+                                           FontFamily="Consolas" LineBreakMode="WordWrap"/>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </ScrollView>
+
                     <!-- Footer: Save / Apply Button -->
-                    <Border Grid.Row="2" BackgroundColor="#0D1117" Padding="8,8" StrokeThickness="0">
+                    <Border Grid.Row="3" BackgroundColor="#0D1117" Padding="8,8" StrokeThickness="0"
+                            IsVisible="{Binding IsDescriptionPropertiesTab}">
                         <Button Text="✓ Save Description Changes"
                                 Style="{StaticResource AccentBtn}"
                                 FontSize="11"

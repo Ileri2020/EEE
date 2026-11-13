@@ -29,10 +29,8 @@ public static class LogicalGridSchematicLayout
 {
     private const double OriginX = 96;
     private const double OriginY = 80;
-    private const double MinimumTrackSize = 72;
-    private const double MinimumWireCorridor = 84;
-    private const double WireLaneSpacing = 14;
-    private const double SameCellGap = 48;
+    private const double WireCorridor = 20;
+    private const double SameCellGap = 20;
     private const double ReferenceLabelHeight = 18;
 
     private readonly record struct Footprint(double HalfWidth, double HalfHeight)
@@ -72,20 +70,18 @@ public static class LogicalGridSchematicLayout
             .ToDictionary(group => group.Key, group => group.ToList());
         var componentsByColumn = logicalComponents.GroupBy(component => component.LogicalColumn!.Value)
             .ToDictionary(group => group.Key, group => group.ToList());
-        double wireCorridor = CalculateWireCorridor(circuit, logicalComponents);
-
-        double columnCursor = Math.Max(OriginX, GetManualRightEdge(circuit, footprints) + wireCorridor);
+        double columnCursor = Math.Max(OriginX, GetManualRightEdge(circuit, footprints) + WireCorridor);
         var columnCenters = new Dictionary<int, double>();
         int previousColumn = 0;
         foreach (int column in componentsByColumn.Keys.OrderBy(value => value))
         {
             int emptyColumns = previousColumn == 0 ? column - 1 : column - previousColumn - 1;
-            columnCursor += (double)emptyColumns * (MinimumTrackSize + wireCorridor);
+            columnCursor += (double)emptyColumns * WireCorridor;
             double componentWidth = componentsByColumn[column]
-                .Max(component => footprints[component].HalfWidth * 2);
-            double columnWidth = Math.Max(MinimumTrackSize, componentWidth);
+                .Max(component => footprints[component].Rotate(component.Rotation).HalfWidth * 2);
+            double columnWidth = componentWidth;
             columnCenters[column] = columnCursor + columnWidth / 2;
-            columnCursor += columnWidth + wireCorridor;
+            columnCursor += columnWidth + WireCorridor;
             previousColumn = column;
         }
 
@@ -94,9 +90,9 @@ public static class LogicalGridSchematicLayout
         foreach (var row in cellsByRow)
         {
             double tallestCell = row.Value.Max(cell =>
-                cell.Value.Sum(component => footprints[component].HalfHeight * 2) +
+                cell.Value.Sum(component => footprints[component].Rotate(component.Rotation).HalfHeight * 2) +
                 Math.Max(0, cell.Value.Count - 1) * SameCellGap);
-            rowHeights[row.Key] = Math.Max(MinimumTrackSize, tallestCell);
+            rowHeights[row.Key] = tallestCell;
         }
 
         double rowCursor = OriginY;
@@ -104,9 +100,9 @@ public static class LogicalGridSchematicLayout
         foreach (int row in rowHeights.Keys.OrderBy(value => value))
         {
             int emptyRows = previousRow == 0 ? row - 1 : row - previousRow - 1;
-            rowCursor += (double)emptyRows * (MinimumTrackSize + wireCorridor);
+            rowCursor += (double)emptyRows * WireCorridor;
             rowCenters[row] = rowCursor + rowHeights[row] / 2;
-            rowCursor += rowHeights[row] + wireCorridor;
+            rowCursor += rowHeights[row] + WireCorridor;
             previousRow = row;
         }
 
@@ -114,12 +110,12 @@ public static class LogicalGridSchematicLayout
         foreach (var cell in cells.OrderBy(pair => pair.Key.Row).ThenBy(pair => pair.Key.Column))
         {
             var stack = cell.Value.OrderBy(component => component.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            double stackHeight = stack.Sum(component => footprints[component].HalfHeight * 2) +
+            double stackHeight = stack.Sum(component => footprints[component].Rotate(component.Rotation).HalfHeight * 2) +
                 Math.Max(0, stack.Count - 1) * SameCellGap;
             double cursorY = rowCenters[cell.Key.Row] - stackHeight / 2;
             foreach (var component in stack)
             {
-                Footprint footprint = footprints[component];
+                Footprint footprint = footprints[component].Rotate(component.Rotation);
                 double y = cursorY + footprint.HalfHeight;
                 placements.Add(new LogicalGridPlacement(component, columnCenters[cell.Key.Column], y));
                 cursorY += footprint.HalfHeight * 2 + SameCellGap;
@@ -143,57 +139,6 @@ public static class LogicalGridSchematicLayout
         return new LogicalGridLayoutResult(placements, collisions);
     }
 
-    private static double CalculateWireCorridor(CircuitNode circuit, IReadOnlyCollection<ComponentNode> logicalComponents)
-    {
-        var logicalById = logicalComponents.ToDictionary(component => component.Id);
-        var columnEvents = new Dictionary<int, int>();
-        var rowEvents = new Dictionary<int, int>();
-        var pinFanOut = new Dictionary<(Guid ComponentId, string PinId), int>();
-        foreach (ConnectionNode connection in circuit.FindChildren<ConnectionNode>())
-        {
-            Increment(pinFanOut, (connection.FromComponentId, connection.FromPin));
-            Increment(pinFanOut, (connection.ToComponentId, connection.ToPin));
-            if (!logicalById.TryGetValue(connection.FromComponentId, out ComponentNode? from) ||
-                !logicalById.TryGetValue(connection.ToComponentId, out ComponentNode? to))
-                continue;
-
-            AddCrossing(columnEvents, from.LogicalColumn!.Value, to.LogicalColumn!.Value);
-            AddCrossing(rowEvents, from.LogicalRow!.Value, to.LogicalRow!.Value);
-        }
-
-        int maxTraffic = Math.Max(MaximumCrossings(columnEvents), MaximumCrossings(rowEvents));
-        int maxFanOut = pinFanOut.Values.DefaultIfEmpty(0).Max();
-        int laneCount = Math.Max(maxTraffic, maxFanOut);
-        return Math.Max(MinimumWireCorridor, 32 + laneCount * WireLaneSpacing);
-    }
-
-    private static void Increment(Dictionary<(Guid ComponentId, string PinId), int> counts,
-        (Guid ComponentId, string PinId) pin)
-    {
-        counts[pin] = counts.GetValueOrDefault(pin) + 1;
-    }
-
-    private static void AddCrossing(Dictionary<int, int> events, int firstTrack, int secondTrack)
-    {
-        if (firstTrack == secondTrack) return;
-        int lower = Math.Min(firstTrack, secondTrack);
-        int upper = Math.Max(firstTrack, secondTrack);
-        events[lower] = events.GetValueOrDefault(lower) + 1;
-        events[upper] = events.GetValueOrDefault(upper) - 1;
-    }
-
-    private static int MaximumCrossings(Dictionary<int, int> events)
-    {
-        int active = 0;
-        int maximum = 0;
-        foreach (var item in events.OrderBy(pair => pair.Key))
-        {
-            active += item.Value;
-            maximum = Math.Max(maximum, active);
-        }
-        return maximum;
-    }
-
     public static (double HalfWidth, double HalfHeight) GetVisualHalfExtents(ComponentNode component)
     {
         Footprint footprint = GetFootprint(component).Rotate(component.Rotation);
@@ -211,7 +156,7 @@ public static class LogicalGridSchematicLayout
             Footprint footprint = footprints[component].Rotate(component.Rotation);
             right = Math.Max(right, footprint.Right(component.X));
         }
-        return double.IsNegativeInfinity(right) ? OriginX - MinimumWireCorridor : right;
+        return double.IsNegativeInfinity(right) ? OriginX - WireCorridor : right;
     }
 
     private static Footprint GetFootprint(ComponentNode component)

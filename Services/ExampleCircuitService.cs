@@ -263,8 +263,8 @@ public static class ExampleCircuitService
             Category = "Digital Logic",
             Icon = "∑",
             Badge = "CPU DEMO",
-            Description = "An interactive 8-bit ALU demo with input controls, RAM, a clocked address counter, and hexadecimal result displays.",
-            ComponentSummary = "11x Logic Inputs, 2x Bit Extenders, 8x XOR Gates, 1x 8-bit Adder, 1x RAM, 1x Counter, 1x Clock, 2x Hex Displays",
+            Description = "An interactive four-bit add/subtract demo with zero-extended inputs, an 8-bit ALU, clocked RAM, and a four-bit address counter. A 5 V rail enables RAM output; hexadecimal displays show the ALU result.",
+            ComponentSummary = "11x Logic Inputs, 2x Logic Constants, 1x 5 V Power Rail, 8x XOR Gates, 1x 8-bit Adder, 1x RAM, 1x 4-bit Counter, 1x Clock, 2x Hex Displays",
             ResourcePath = "Examples/alu_ram_counter.eee"
         });
     }

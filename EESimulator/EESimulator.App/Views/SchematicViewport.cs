@@ -1,5 +1,6 @@
 using Microsoft.Maui.Graphics;
 using EESimulator.Core.Components.General;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Models;
 
 namespace EESimulator.App.Views;
@@ -43,10 +44,13 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private const float MinZoom = 0.2f;
     private const float MaxZoom = 5.0f;
     private float _lastPanX, _lastPanY;
+    private float _lastPinchScale = 1f;
+    private bool _isPinching;
     private const float GridSize = 20f;
 
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<ComponentNode>? ComponentSelected;
+    public event EventHandler<ComponentNode>? LogicInputToggled;
     public event EventHandler<ConnectionNode>? ConnectionSelected;
     public event EventHandler<(ComponentNode Component, ComponentPin Pin)>? PinSelected;
     public event EventHandler<(ComponentNode Component, double OldX, double OldY, double NewX, double NewY)>? ComponentMoveCommitted;
@@ -63,6 +67,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         ActiveTool = tool;
         if (!tool.Equals("Wire", StringComparison.OrdinalIgnoreCase))
             CancelWire();
+        Invalidate();
     }
 
     // Interaction state ────────────────────────────────────────────────────
@@ -92,15 +97,10 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private static float GetSelectionHalfHeight(ComponentNode component)
         => (float)AdaptiveComponentLayout.Get(component).HalfHeight;
 
-    // Long-press timer
-    private System.Threading.Timer? _longPressTimer;
-    private ComponentNode?           _pressedComp;
-    private ComponentPin?            _pressedPin;
-    private PointF                   _pressWorldPos;
+    private ComponentNode? _pressedComp;
 
     // Component drag/move
     private bool   _isMovingComponent;
-    private PointF _lastMoveScreen;   // screen coords at last move sample
     private float _componentDragStartX, _componentDragStartY;
     private float _componentDragStartTotalX, _componentDragStartTotalY;
     private float _lastPanTotalX, _lastPanTotalY;
@@ -117,19 +117,25 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         Drawable        = this;
         BackgroundColor = Color.FromArgb("#0D1117");
 
-        // One-finger pan (also drives component move when _isMovingComponent)
+        // Drag gestures pan the viewport or move the selected component, depending on the active tool.
         var panGesture = new PanGestureRecognizer();
         panGesture.PanUpdated += OnPan;
         GestureRecognizers.Add(panGesture);
+
+        var pinchGesture = new PinchGestureRecognizer();
+        pinchGesture.PinchUpdated += OnPinchUpdated;
+        GestureRecognizers.Add(pinchGesture);
 
         // Canvas taps are interpreted by the active toolbar tool.
         var tapGesture = new TapGestureRecognizer();
         tapGesture.Tapped += OnTapped;
         GestureRecognizers.Add(tapGesture);
 
-        // Pointer movement updates the in-progress wire preview.
+        // Pointer events handle mouse-only controls; taps and drags use the shared gestures below.
         var pointerGesture = new PointerGestureRecognizer();
+        pointerGesture.PointerPressed += OnPointerPressed;
         pointerGesture.PointerMoved    += OnPointerMoved;
+        pointerGesture.PointerReleased += OnPointerReleased;
         GestureRecognizers.Add(pointerGesture);
     }
 
@@ -222,13 +228,9 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 
 
 
-    // ── Windows native right-drag-to-pan + scroll-to-zoom ──────────────────
+    // ── Windows native pointer interaction ─────────────────────────────────
 #if WINDOWS
-    private bool                     _isRightPanning;
-    private bool                     _isRightCompMove;
-    private ComponentNode?           _rightClickedComp;
-    private Windows.Foundation.Point _lastNativeRightPos;
-    private double                   _rightPanTotalDist;
+    private Microsoft.UI.Xaml.UIElement? _nativeInputElement;
 
     public new void Invalidate()
     {
@@ -249,154 +251,42 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 
     protected override void OnHandlerChanged()
     {
-        base.OnHandlerChanged();
-    }
+        if (_nativeInputElement != null)
+        {
+            _nativeInputElement.PointerPressed -= OnNativePtrPressed;
+            _nativeInputElement.PointerReleased -= OnNativePtrReleased;
+            _nativeInputElement = null;
+        }
 
-    private void OnNativePtrWheel(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        var p     = e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement);
-        float dir = p.Properties.MouseWheelDelta > 0 ? 1.1f : (1f / 1.1f);
-        _zoom = Math.Clamp(_zoom * dir, MinZoom, MaxZoom);
-        Invalidate();
-        e.Handled = true;
+        base.OnHandlerChanged();
+
+        if (Handler?.PlatformView is Microsoft.UI.Xaml.UIElement nativeElement)
+        {
+            _nativeInputElement = nativeElement;
+            nativeElement.PointerPressed += OnNativePtrPressed;
+            nativeElement.PointerReleased += OnNativePtrReleased;
+        }
     }
 
     private void OnNativePtrPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        var p = e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement);
-        if (p.Properties.IsRightButtonPressed)
-        {
-            var w = ToWorld((float)p.Position.X, (float)p.Position.Y);
-            var hitComp = HitTest(w.X, w.Y);
-            if (hitComp != null)
-            {
-                _isRightCompMove    = true;
-                _isRightPanning     = false;
-                _rightClickedComp   = hitComp;
-                _selectedComponent  = hitComp;
-                UpdateRotateHandle();
-                _rightPanTotalDist  = 0;
-                _lastNativeRightPos = p.Position;
-                (sender as Microsoft.UI.Xaml.UIElement)?.CapturePointer(e.Pointer);
-                Invalidate();
-                e.Handled = true;
-            }
-            else
-            {
-                _isRightPanning     = true;
-                _isRightCompMove    = false;
-                _rightClickedComp   = null;
-                _rightPanTotalDist  = 0;
-                _lastNativeRightPos = p.Position;
-                (sender as Microsoft.UI.Xaml.UIElement)?.CapturePointer(e.Pointer);
-                e.Handled = true;
-            }
-        }
-    }
-
-
-    private void OnNativePtrMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        var p = e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement);
-        float dx = (float)(p.Position.X - _lastNativeRightPos.X);
-        float dy = (float)(p.Position.Y - _lastNativeRightPos.Y);
-
-        if (_isRightCompMove && _rightClickedComp != null)
-        {
-            _rightPanTotalDist += Math.Abs(dx) + Math.Abs(dy);
-            _rightClickedComp.X += dx / _zoom;
-            _rightClickedComp.Y += dy / _zoom;
-            _lastNativeRightPos  = p.Position;
-            Invalidate();
+        if (e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement).Properties.IsRightButtonPressed)
             e.Handled = true;
-        }
-        else if (_isRightPanning)
-        {
-            _rightPanTotalDist  += Math.Abs(dx) + Math.Abs(dy);
-            _panX += dx;
-            _panY += dy;
-            _lastNativeRightPos  = p.Position;
-            Invalidate();
-            e.Handled = true;
-        }
-
-        if (_isStretchingComponent && _selectedComponent != null)
-        {
-            var w = ToWorld((float)p.Position.X, (float)p.Position.Y);
-            float ddx = w.X - _stretchStartWorld.X;
-            float ddy = w.Y - _stretchStartWorld.Y;
-            float rad = (float)(-_selectedComponent.Rotation * Math.PI / 180.0);
-            float cos = (float)Math.Cos(rad);
-            float sin = (float)Math.Sin(rad);
-            float ldx = (ddx * cos - ddy * sin) / _stretchScaleWidth;
-            float ldy = (ddx * sin + ddy * cos) / _stretchScaleHeight;
-
-            double newSx = _initialScaleX;
-            double newSy = _initialScaleY;
-
-            if (_stretchHandleIndex is 2 or 4 or 7) newSx = Math.Clamp(_initialScaleX + ldx, 0.3, 5.0);
-            else if (_stretchHandleIndex is 0 or 3 or 5) newSx = Math.Clamp(_initialScaleX - ldx, 0.3, 5.0);
-
-            if (_stretchHandleIndex is 5 or 6 or 7) newSy = Math.Clamp(_initialScaleY + ldy, 0.3, 5.0);
-            else if (_stretchHandleIndex is 0 or 1 or 2) newSy = Math.Clamp(_initialScaleY - ldy, 0.3, 5.0);
-
-            _selectedComponent.ScaleX = newSx;
-            _selectedComponent.ScaleY = newSy;
-            UpdateRotateHandle();
-            Invalidate();
-            e.Handled = true;
-            return;
-        }
-
-        if (_isDrawingWire)
-        {
-            _wireCursorWorld = ToWorld((float)p.Position.X, (float)p.Position.Y);
-            Invalidate();
-        }
-
-        if (_isMovingComponent && _pressedComp != null)
-        {
-            float sx = (float)p.Position.X;
-            float sy = (float)p.Position.Y;
-            _pressedComp.X += (sx - _lastMoveScreen.X) / _zoom;
-            _pressedComp.Y += (sy - _lastMoveScreen.Y) / _zoom;
-            _lastMoveScreen  = new PointF(sx, sy);
-            _componentDragMoved = true;
-            Invalidate();
-        }
     }
 
     private void OnNativePtrReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        var p = e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement);
         _isStretchingComponent = false;
         _stretchHandleIndex = -1;
-        if (_isRightCompMove && _rightClickedComp != null)
-        {
-            (sender as Microsoft.UI.Xaml.UIElement)?.ReleasePointerCapture(e.Pointer);
-            _isRightCompMove  = false;
-            _rightClickedComp = null;
-            e.Handled = true;
-        }
-        else if (_isRightPanning)
-        {
-            _isRightPanning = false;
-            (sender as Microsoft.UI.Xaml.UIElement)?.ReleasePointerCapture(e.Pointer);
-            e.Handled = true;
-        }
-
-        if (_isDrawingWire)
-        {
-            TryCompleteWire(ToWorld((float)p.Position.X, (float)p.Position.Y));
-            e.Handled = true;
-        }
-        FinishComponentDrag();
     }
 #endif
 
     // ── Cross-platform gesture handlers ───────────────────────────────────
     private void OnPan(object? sender, PanUpdatedEventArgs e)
     {
+        if (_isPinching)
+            return;
+
         switch (e.StatusType)
         {
             case GestureStatus.Started:
@@ -438,6 +328,33 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
                 FinishComponentDrag();
+                break;
+        }
+    }
+
+    private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
+    {
+        switch (e.Status)
+        {
+            case GestureStatus.Started:
+                _isPinching = true;
+                _lastPinchScale = 1f;
+                FinishComponentDrag();
+                break;
+
+            case GestureStatus.Running:
+                if (e.Scale <= 0 || !float.IsFinite((float)e.Scale))
+                    return;
+
+                float scaleDelta = (float)e.Scale / _lastPinchScale;
+                _lastPinchScale = (float)e.Scale;
+                ZoomAt((float)(e.ScaleOrigin.X * Width), (float)(e.ScaleOrigin.Y * Height), scaleDelta);
+                break;
+
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                _isPinching = false;
+                _lastPinchScale = 1f;
                 break;
         }
     }
@@ -526,9 +443,15 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             Invalidate();
             return;
         }
+
+        if (_selectedComponent is LogicInputComponent logicInput)
+        {
+            logicInput.Toggle();
+            LogicInputToggled?.Invoke(this, logicInput);
+        }
+
         Invalidate();
-        if (_selectedComponent != null)
-            ComponentSelected?.Invoke(this, _selectedComponent);
+        ComponentSelected?.Invoke(this, _selectedComponent);
     }
 
 }

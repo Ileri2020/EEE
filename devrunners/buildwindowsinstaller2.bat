@@ -6,6 +6,7 @@ set "PUSHD_DONE="
 set "PUBLISH_WARNING="
 set "REPO_ROOT=%~dp0.."
 set "PUBLISH_DIR=%REPO_ROOT%\Platforms\dist\publish\EEE\release_net10.0-windows10.0.19041.0_win-x64"
+set "BUILD_DIR=%TEMP%\EEEInstallerBuild-%RANDOM%-%RANDOM%\"
 if defined EEE_INSTALLER_OUTPUT_DIR (
     set "DESKTOP=%EEE_INSTALLER_OUTPUT_DIR%"
 ) else (
@@ -36,7 +37,11 @@ if not defined DOTNET (
     --artifacts-path Platforms/dist ^
     -p:PublishReadyToRun=false ^
     -p:WindowsPackageType=None ^
-    -p:WindowsInstallerBuild=true
+    -p:WindowsInstallerBuild=true ^
+    -p:BuildDir="%BUILD_DIR%" ^
+    -m:1 ^
+    -nr:false ^
+    -p:UseSharedCompilation=false
 if errorlevel 1 (
     echo WARNING: dotnet publish reported an error after producing the required app files.
     echo Continuing to package the verified publish output.
@@ -76,8 +81,8 @@ if not defined ISCC (
     goto :finish
 )
 
-if not exist "%DESKTOP%" mkdir "%DESKTOP%"
-if errorlevel 1 (
+if not exist "%DESKTOP%\" mkdir "%DESKTOP%"
+if not exist "%DESKTOP%\" (
     echo Failed to create installer output directory: "%DESKTOP%"
     set "EXIT_CODE=1"
     goto :finish
@@ -100,6 +105,7 @@ echo Installer created: "%DESKTOP%\EEE-Setup.exe"
 goto :finish
 
 :finish
+if defined BUILD_DIR if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%"
 if defined PUSHD_DONE popd
 if "%EXIT_CODE%"=="0" (
     echo.

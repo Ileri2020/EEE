@@ -37,7 +37,7 @@
                 </Frame>
 
                 <!-- Prompt directly from the schematic canvas; results open as reviewable script drafts. -->
-                <Border IsVisible="{Binding IsSchematicViewActive}"
+                <Border IsVisible="{Binding IsSchematicAiPromptVisible}"
                         ZIndex="45"
                         HorizontalOptions="Center"
                         VerticalOptions="End"
@@ -48,7 +48,7 @@
                         Stroke="#30363D"
                         StrokeThickness="1">
                     <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
-                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" RowSpacing="4">
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
                         <Entry Grid.Row="0" Grid.Column="0"
                                Text="{Binding AiSchemaPrompt}"
                                Placeholder="{Binding AiSchemaInputPlaceholder}"
@@ -64,12 +64,17 @@
                                 TextColor="#D2A8FF"
                                 Command="{Binding GenerateSchemaScriptCommand}"
                                 IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
-                        <Label Grid.Row="1" Grid.ColumnSpan="2"
+                        <Button Grid.Row="0" Grid.Column="2"
+                                Text="−"
+                                Style="{StaticResource IconBtn}"
+                                Command="{Binding ToggleAiPromptCommand}"
+                                ToolTipProperties.Text="Minimize AI prompt"/>
+                        <Label Grid.Row="1" Grid.ColumnSpan="3"
                                Text="{Binding AiSchemaStatus}"
                                TextColor="#8B949E"
                                FontSize="10"
                                LineBreakMode="WordWrap"/>
-                        <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="6">
+                        <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="3" Spacing="6">
                             <Switch IsToggled="{Binding IsAiEditMode}" Scale="0.8"/>
                             <Label Text="Edit current workspace script" TextColor="#8B949E" FontSize="10" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
@@ -141,10 +146,11 @@
                           <Grid Grid.Row="1"
                              BackgroundColor="#12161D"
                              RowDefinitions="Auto,Auto,Auto"
-                             ColumnDefinitions="*,Auto"
+                             ColumnDefinitions="*,Auto,Auto"
                              Padding="10,8"
                              ColumnSpacing="8"
-                             RowSpacing="4">
+                             RowSpacing="4"
+                             IsVisible="{Binding IsAiPromptExpanded}">
                            <Entry Grid.Row="0" Grid.Column="0"
                                Text="{Binding AiSchemaPrompt}"
                                Placeholder="{Binding AiSchemaInputPlaceholder}"
@@ -160,12 +166,17 @@
                                 TextColor="#D2A8FF"
                                 Command="{Binding GenerateSchemaScriptCommand}"
                                 IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
-                           <Label Grid.Row="1" Grid.ColumnSpan="2"
+                           <Button Grid.Row="0" Grid.Column="2"
+                                Text="−"
+                                Style="{StaticResource IconBtn}"
+                                Command="{Binding ToggleAiPromptCommand}"
+                                ToolTipProperties.Text="Minimize AI prompt"/>
+                           <Label Grid.Row="1" Grid.ColumnSpan="3"
                                Text="{Binding AiSchemaStatus}"
                                TextColor="#8B949E"
                                FontSize="10"
                                LineBreakMode="WordWrap"/>
-                           <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="6">
+                           <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="3" Spacing="6">
                                <Switch IsToggled="{Binding IsAiEditMode}" Scale="0.8"/>
                                <Label Text="Edit current workspace script" TextColor="#8B949E" FontSize="10" VerticalOptions="Center"/>
                            </HorizontalStackLayout>
@@ -211,6 +222,23 @@
                         </ScrollView>
                     </Grid>
                 </Grid>
+
+                <Border IsVisible="{Binding IsAiPromptExpanded, Converter={StaticResource InvertedBoolConverter}}"
+                        ZIndex="55"
+                        HorizontalOptions="End"
+                        VerticalOptions="End"
+                        Margin="16,0,20,20"
+                        Padding="2"
+                        BackgroundColor="#161B22"
+                        Stroke="#30363D"
+                        StrokeThickness="1">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                    <Button Text="✨ AI"
+                            Style="{StaticResource ToolBtn}"
+                            TextColor="#D2A8FF"
+                            Command="{Binding ToggleAiPromptCommand}"
+                            ToolTipProperties.Text="Restore AI prompt"/>
+                </Border>
 
                 <!-- ─── Waveform Drawer Overlay ─────────────────────────────── -->
                 <Grid IsVisible="{Binding IsWaveformDrawerOpen}"

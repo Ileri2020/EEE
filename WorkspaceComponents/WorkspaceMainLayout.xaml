@@ -17,7 +17,10 @@
             <parts:WorkspaceComponentSidebar Grid.Column="{OnIdiom Phone=1, Default=3}" ZIndex="25" IsVisible="{Binding IsSidebarVisible}" />
 
             <!-- ── Right-Edge Trigger: Description & Component Sidebar ─────── -->
-            <parts:WorkspaceSidebarTrigger Grid.Column="{OnIdiom Phone=1, Default=2}" ZIndex="35" />
+            <parts:WorkspaceSidebarTrigger Grid.Column="{OnIdiom Phone=1, Default=2}"
+                                           HorizontalOptions="End"
+                                           VerticalOptions="Center"
+                                           ZIndex="35" />
 
             <!-- ── Description & Properties Sidebar (Right) ────────────────── -->
             <parts:WorkspaceDescriptionSidebar x:Name="DescriptionSidebar" Grid.Column="{OnIdiom Phone=1, Default=3}" ZIndex="28" IsVisible="{Binding IsDescriptionSidebarVisible}" />
