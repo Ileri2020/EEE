@@ -113,6 +113,9 @@ internal static class CircuitMacroExpander
             if (flattened == null) continue;
             component.LiveVoltage = flattened.LiveVoltage;
             component.LiveCurrent = flattened.LiveCurrent;
+            component.LivePinVoltages.Clear();
+            foreach (var pinVoltage in flattened.LivePinVoltages)
+                component.LivePinVoltages[pinVoltage.Key] = pinVoltage.Value;
             if (component is EESimulator.Core.Components.Electrical.BulbComponent originalBulb &&
                 flattened is EESimulator.Core.Components.Electrical.BulbComponent flatBulb)
             {

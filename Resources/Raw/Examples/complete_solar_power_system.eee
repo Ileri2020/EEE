@@ -1,0 +1,245 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Complete Solar Power System",
+  "Description": "Solar panel, battery storage, DC load, and output test point demonstrate a small stand-alone solar system. Irradiance and battery state of charge can be edited; charge-control protection is not included.",
+  "Components": [
+    {
+      "Id": "08009cb6-e11b-4e9b-a146-6ed41803f188",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "22d41643-7409-4fdd-b13d-0c7670af9f21",
+      "StableTypeId": "source.solar-panel",
+      "ComponentType": "SolarPanel",
+      "Reference": "PV1",
+      "Name": "PV1",
+      "Description": "SolarPanel",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "Enabled": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "OpenCircuitVoltage": 21.0,
+        "ShortCircuitCurrent": 5.0,
+        "SeriesCells": 36.0,
+        "SolarIrradiance": 1000.0,
+        "CellTemperature": 25.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "341db818-6f1d-4481-bb3b-f2044fbe6382",
+      "StableTypeId": "storage.battery",
+      "ComponentType": "Battery",
+      "Reference": "BAT1",
+      "Name": "BAT1",
+      "Description": "Battery",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "NominalVoltage": 12.0,
+        "CapacityAh": 50.0,
+        "InternalResistance": 0.05,
+        "InitialSocPercent": 0.6
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "901062c3-5d71-4fb8-a00d-6eee36467eb6",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ecccc07d-0e5e-4688-a8c7-f177f1cf6e0a",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "D_STATUS",
+      "Name": "D_STATUS",
+      "Description": "LED",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "Color": "Red"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Vf": 2.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "790f4378-b3c7-44fd-8e04-c16de9acde8e",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_DC_BUS",
+      "Name": "TP_DC_BUS",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "2.47670237"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a1272df4-3c3e-4621-ae87-b6c6ef26aed0",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "4ec6842a-9993-42b9-9703-76339ae2163b",
+      "FromComponentId": "22d41643-7409-4fdd-b13d-0c7670af9f21",
+      "FromPin": "negative",
+      "ToComponentId": "08009cb6-e11b-4e9b-a146-6ed41803f188",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "381ab5ee-f25f-4055-ba38-1f38d45765e8",
+      "FromComponentId": "22d41643-7409-4fdd-b13d-0c7670af9f21",
+      "FromPin": "positive",
+      "ToComponentId": "341db818-6f1d-4481-bb3b-f2044fbe6382",
+      "ToPin": "positive",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "bd77956a-efcf-46e6-94b8-90df5d0875dd",
+      "FromComponentId": "341db818-6f1d-4481-bb3b-f2044fbe6382",
+      "FromPin": "negative",
+      "ToComponentId": "08009cb6-e11b-4e9b-a146-6ed41803f188",
+      "ToPin": "gnd",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d438febe-b956-4941-aadf-b8c9059adf35",
+      "FromComponentId": "341db818-6f1d-4481-bb3b-f2044fbe6382",
+      "FromPin": "positive",
+      "ToComponentId": "901062c3-5d71-4fb8-a00d-6eee36467eb6",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5951778b-35e9-4b9b-a7b7-183e8f45e1fe",
+      "FromComponentId": "901062c3-5d71-4fb8-a00d-6eee36467eb6",
+      "FromPin": "pin2",
+      "ToComponentId": "08009cb6-e11b-4e9b-a146-6ed41803f188",
+      "ToPin": "gnd",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "bc869182-de77-4bc7-b9cc-0691202ce54c",
+      "FromComponentId": "341db818-6f1d-4481-bb3b-f2044fbe6382",
+      "FromPin": "positive",
+      "ToComponentId": "ecccc07d-0e5e-4688-a8c7-f177f1cf6e0a",
+      "ToPin": "anode",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "115aad8a-54da-41a7-8457-78174397f95a",
+      "FromComponentId": "ecccc07d-0e5e-4688-a8c7-f177f1cf6e0a",
+      "FromPin": "cathode",
+      "ToComponentId": "08009cb6-e11b-4e9b-a146-6ed41803f188",
+      "ToPin": "gnd",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "935f3675-6cc5-481a-9f82-c2cde3b2e14a",
+      "FromComponentId": "790f4378-b3c7-44fd-8e04-c16de9acde8e",
+      "FromPin": "in",
+      "ToComponentId": "341db818-6f1d-4481-bb3b-f2044fbe6382",
+      "ToPin": "positive",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4f02bf67-19b4-4922-bda6-81a6d4038a9a",
+      "FromComponentId": "a1272df4-3c3e-4621-ae87-b6c6ef26aed0",
+      "FromPin": "in",
+      "ToComponentId": "08009cb6-e11b-4e9b-a146-6ed41803f188",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

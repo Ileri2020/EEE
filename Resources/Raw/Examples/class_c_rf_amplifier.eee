@@ -1,0 +1,423 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Class C RF Amplifier",
+  "Description": "RF tuned transistor-stage study with pulsed drive, NPN device, collector load, LC tank elements and output probes. Harmonic and efficiency behavior are illustrative.",
+  "Components": [
+    {
+      "Id": "4581fe2b-a326-5119-9379-cb47c7e297f6",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "12",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "dea9a79f-7709-5fd7-aea7-7c2774e3378d",
+      "ComponentType": "VoltageSource",
+      "Reference": "VCC",
+      "Name": "VCC",
+      "Description": "Editable low-voltage DC source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 9.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 9.0,
+        "SineFrequency": 100000.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 9.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1cf4a94-3111-57db-8d79-4a3bc40fa7fc",
+      "ComponentType": "VoltageSource",
+      "Reference": "VIN",
+      "Name": "VIN",
+      "Description": "Editable low-voltage Pulse source",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "WaveformType": "Pulse"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 0.05,
+        "SineOffset": 0.0,
+        "SineAmplitude": 0.05,
+        "SineFrequency": 100000.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 0.05,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 2.5e-06,
+        "PulsePeriod": 1e-05
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "ComponentType": "NPN",
+      "Reference": "Q1",
+      "Name": "Q1",
+      "Description": "NPN",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Bf": 100.0,
+        "Is": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b0b8797a-7921-5727-8a9d-f426ef114d29",
+      "ComponentType": "Resistor",
+      "Reference": "R_C",
+      "Name": "R_C",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "85aeae48-f892-50b0-8d29-9516e3c0ac28",
+      "ComponentType": "Resistor",
+      "Reference": "R_B",
+      "Name": "R_B",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 47000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d94ad0d6-bfd1-55be-a98b-ad51af4f1394",
+      "ComponentType": "Resistor",
+      "Reference": "R_E",
+      "Name": "R_E",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 220.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9e042319-4250-5a68-980c-74ec9cede371",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "7925dc50-e97f-583a-a65e-170d3d0d45b3",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "TP_IN",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "0.05"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "b00346be-3a30-54b6-ac7e-b0c6315487d2",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "9"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "2be9b505-2d8d-5358-9e7f-434f207b9752",
+      "ComponentType": "Inductor",
+      "Reference": "L_TANK",
+      "Name": "L_TANK",
+      "Description": "RF tank inductance",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Inductance": 0.0001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e21577ea-7221-5b5f-b98f-92f7d5867e35",
+      "ComponentType": "Capacitor",
+      "Reference": "C_TANK",
+      "Name": "C_TANK",
+      "Description": "RF tank capacitance",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08
+      },
+      "CustomProperties": {}
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "1f56dfd9-fe9d-5792-be86-afece4f08104",
+      "FromComponentId": "dea9a79f-7709-5fd7-aea7-7c2774e3378d",
+      "FromPin": "negative",
+      "ToComponentId": "4581fe2b-a326-5119-9379-cb47c7e297f6",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8580056c-0c8e-5fb2-9e6a-5533ec1f4103",
+      "FromComponentId": "b1cf4a94-3111-57db-8d79-4a3bc40fa7fc",
+      "FromPin": "negative",
+      "ToComponentId": "4581fe2b-a326-5119-9379-cb47c7e297f6",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "fe0f30bb-7097-5b7a-9bb1-2309ae3b5da5",
+      "FromComponentId": "dea9a79f-7709-5fd7-aea7-7c2774e3378d",
+      "FromPin": "positive",
+      "ToComponentId": "b0b8797a-7921-5727-8a9d-f426ef114d29",
+      "ToPin": "pin1",
+      "NetName": "VCC",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "841c07b5-5278-5c37-8216-499a47615cec",
+      "FromComponentId": "b0b8797a-7921-5727-8a9d-f426ef114d29",
+      "FromPin": "pin2",
+      "ToComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "ToPin": "collector",
+      "NetName": "COLLECTOR",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f98bca37-adc1-5d61-a55d-c75319a4fc95",
+      "FromComponentId": "dea9a79f-7709-5fd7-aea7-7c2774e3378d",
+      "FromPin": "positive",
+      "ToComponentId": "85aeae48-f892-50b0-8d29-9516e3c0ac28",
+      "ToPin": "pin1",
+      "NetName": "VCC",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "597294b7-d6f4-5c85-ae71-901df0df84c1",
+      "FromComponentId": "85aeae48-f892-50b0-8d29-9516e3c0ac28",
+      "FromPin": "pin2",
+      "ToComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "ToPin": "base",
+      "NetName": "BASE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "233234ad-b6d2-5595-9f55-6c5c3bfb41f9",
+      "FromComponentId": "b1cf4a94-3111-57db-8d79-4a3bc40fa7fc",
+      "FromPin": "positive",
+      "ToComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "ToPin": "base",
+      "NetName": "BASE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b65d7a00-667f-5d5e-bedc-75ef2ffe88df",
+      "FromComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "FromPin": "emitter",
+      "ToComponentId": "d94ad0d6-bfd1-55be-a98b-ad51af4f1394",
+      "ToPin": "pin1",
+      "NetName": "EMITTER",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a3e495a5-9890-550c-b1a0-0fa42f4e9a2a",
+      "FromComponentId": "d94ad0d6-bfd1-55be-a98b-ad51af4f1394",
+      "FromPin": "pin2",
+      "ToComponentId": "4581fe2b-a326-5119-9379-cb47c7e297f6",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4eeb0b2c-956f-567f-92c0-4ef3119e79df",
+      "FromComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "FromPin": "collector",
+      "ToComponentId": "9e042319-4250-5a68-980c-74ec9cede371",
+      "ToPin": "pin1",
+      "NetName": "OUTPUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ae4b1202-6989-54a1-9c99-5b36ee2e5fcb",
+      "FromComponentId": "9e042319-4250-5a68-980c-74ec9cede371",
+      "FromPin": "pin2",
+      "ToComponentId": "4581fe2b-a326-5119-9379-cb47c7e297f6",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "13da039d-3132-507e-9c0f-994d3f3f87c1",
+      "FromComponentId": "b1cf4a94-3111-57db-8d79-4a3bc40fa7fc",
+      "FromPin": "positive",
+      "ToComponentId": "7925dc50-e97f-583a-a65e-170d3d0d45b3",
+      "ToPin": "in",
+      "NetName": "INPUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7f783ac9-bce2-5160-8fcc-76e759b367f2",
+      "FromComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "FromPin": "collector",
+      "ToComponentId": "b00346be-3a30-54b6-ac7e-b0c6315487d2",
+      "ToPin": "in",
+      "NetName": "OUTPUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "da6d0f84-985d-5a0d-bfb3-ec6797e4776b",
+      "FromComponentId": "dea9a79f-7709-5fd7-aea7-7c2774e3378d",
+      "FromPin": "positive",
+      "ToComponentId": "2be9b505-2d8d-5358-9e7f-434f207b9752",
+      "ToPin": "pin1",
+      "NetName": "VCC",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "923fa45b-3b56-59aa-a14d-6a59cf260af5",
+      "FromComponentId": "2be9b505-2d8d-5358-9e7f-434f207b9752",
+      "FromPin": "pin2",
+      "ToComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "ToPin": "collector",
+      "NetName": "RF_TANK",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0a7ee1cb-9b41-50c8-8e74-cfe245c1d55c",
+      "FromComponentId": "92dd0f92-daf5-520d-b5e5-ef5eff5bcdec",
+      "FromPin": "collector",
+      "ToComponentId": "e21577ea-7221-5b5f-b98f-92f7d5867e35",
+      "ToPin": "pin1",
+      "NetName": "RF_TANK",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ee1de919-65ac-5cba-800d-b53a1a14a3f0",
+      "FromComponentId": "e21577ea-7221-5b5f-b98f-92f7d5867e35",
+      "FromPin": "pin2",
+      "ToComponentId": "4581fe2b-a326-5119-9379-cb47c7e297f6",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

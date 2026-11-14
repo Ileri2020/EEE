@@ -12,13 +12,19 @@
       "Reference": "IN_A",
       "Name": "IN_A",
       "Description": "Binary Input A (Toggleable Logic 0/1)",
-      "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" },
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
-      "ElectricalParameters": { "State": 1.0 },
-      "CustomProperties": { "State": true }
+      "ElectricalParameters": {
+        "State": 1.0
+      },
+      "CustomProperties": {}
     },
     {
       "Id": "55555555-5555-5555-5555-555555550002",
@@ -26,13 +32,19 @@
       "Reference": "IN_B",
       "Name": "IN_B",
       "Description": "Binary Input B (Toggleable Logic 0/1)",
-      "StringParameters": { "LogicalRow": "2", "LogicalColumn": "1" },
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
-      "ElectricalParameters": { "State": 0.0 },
-      "CustomProperties": { "State": false }
+      "ElectricalParameters": {
+        "State": 0.0
+      },
+      "CustomProperties": {}
     },
     {
       "Id": "55555555-5555-5555-5555-555555550003",
@@ -40,7 +52,10 @@
       "Reference": "U1_XOR",
       "Name": "U1_XOR",
       "Description": "2-Input XOR Gate for Bit Sum",
-      "StringParameters": { "LogicalRow": "1", "LogicalColumn": "2" },
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -54,7 +69,10 @@
       "Reference": "U2_AND",
       "Name": "U2_AND",
       "Description": "2-Input AND Gate for Bit Carry",
-      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "2" },
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -68,7 +86,10 @@
       "Reference": "OUT_SUM",
       "Name": "OUT_SUM",
       "Description": "Sum Output Bit (A ⊕ B)",
-      "StringParameters": { "LogicalRow": "1", "LogicalColumn": "3" },
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3"
+      },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -82,13 +103,62 @@
       "Reference": "OUT_CARRY",
       "Name": "OUT_CARRY",
       "Description": "Carry Output Bit (A · B)",
-      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "3" },
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
+      },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
       "ElectricalParameters": {},
       "CustomProperties": {}
+    },
+    {
+      "Id": "3377d192-b72a-41e7-a672-4fd5ca231d9a",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "6aa571b9-43cb-4190-a1b3-81b46240adad",
+      "ComponentType": "Probe",
+      "Name": "TP_SIGNAL",
+      "Reference": "TP_SIGNAL",
+      "Description": "Signal test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
     }
   ],
   "Connections": [
@@ -144,6 +214,24 @@
       "ToComponentId": "55555555-5555-5555-5555-555555550006",
       "ToPin": "in",
       "NetName": "CARRY_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1ee74db5-ef52-4a14-9801-1d1a34a1f200",
+      "FromComponentId": "3377d192-b72a-41e7-a672-4fd5ca231d9a",
+      "FromPin": "in",
+      "ToComponentId": "55555555-5555-5555-5555-555555550002",
+      "ToPin": "out",
+      "NetName": "B_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2f327e42-6b84-447b-8a4a-7005fffdda86",
+      "FromComponentId": "6aa571b9-43cb-4190-a1b3-81b46240adad",
+      "FromPin": "in",
+      "ToComponentId": "55555555-5555-5555-5555-555555550001",
+      "ToPin": "out",
+      "NetName": "A_NET",
       "Resistance": 0.0
     }
   ]

@@ -5,15 +5,161 @@
   "Title": "Resistive Voltage Divider",
   "Description": "A 5 V source and two equal resistors create a 2.5 V midpoint.",
   "Components": [
-    { "Id": "31000000-0000-0000-0000-000000000001", "ComponentType": "VoltageSource", "Name": "V1", "Reference": "V1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" }, "ElectricalParameters": { "Voltage": 5.0 }, "CustomProperties": {} },
-    { "Id": "31000000-0000-0000-0000-000000000002", "ComponentType": "Ground", "Name": "GND1", "Reference": "GND1", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "1" }, "ElectricalParameters": {}, "CustomProperties": {} },
-    { "Id": "31000000-0000-0000-0000-000000000003", "ComponentType": "Resistor", "Name": "R1", "Reference": "R1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "2" }, "ElectricalParameters": { "Resistance": 10000.0 }, "CustomProperties": {} },
-    { "Id": "31000000-0000-0000-0000-000000000004", "ComponentType": "Resistor", "Name": "R2", "Reference": "R2", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "3" }, "ElectricalParameters": { "Resistance": 10000.0 }, "CustomProperties": {} }
+    {
+      "Id": "31000000-0000-0000-0000-000000000001",
+      "ComponentType": "VoltageSource",
+      "Name": "V1",
+      "Reference": "V1",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "ElectricalParameters": {
+        "Voltage": 5.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "31000000-0000-0000-0000-000000000002",
+      "ComponentType": "Ground",
+      "Name": "GND1",
+      "Reference": "GND1",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1"
+      },
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "31000000-0000-0000-0000-000000000003",
+      "ComponentType": "Resistor",
+      "Name": "R1",
+      "Reference": "R1",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "31000000-0000-0000-0000-000000000004",
+      "ComponentType": "Resistor",
+      "Name": "R2",
+      "Reference": "R2",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3"
+      },
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a1587572-246e-40d8-84c8-a6e4cdbe6141",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "TP_REFERENCE voltage test point; expected 0 V.",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "db6b83eb-a80c-4fb3-8c7f-a304e664a052",
+      "ComponentType": "Probe",
+      "Name": "TP_SIGNAL",
+      "Reference": "TP_SIGNAL",
+      "Description": "TP_SIGNAL voltage test point; expected 5 V.",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
   ],
   "Connections": [
-    { "Id": "32000000-0000-0000-0000-000000000001", "FromComponentId": "31000000-0000-0000-0000-000000000001", "FromPin": "negative", "ToComponentId": "31000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 },
-    { "Id": "32000000-0000-0000-0000-000000000002", "FromComponentId": "31000000-0000-0000-0000-000000000001", "FromPin": "positive", "ToComponentId": "31000000-0000-0000-0000-000000000003", "ToPin": "pin1", "NetName": "VCC", "Resistance": 0.0 },
-    { "Id": "32000000-0000-0000-0000-000000000003", "FromComponentId": "31000000-0000-0000-0000-000000000003", "FromPin": "pin2", "ToComponentId": "31000000-0000-0000-0000-000000000004", "ToPin": "pin1", "NetName": "MID", "Resistance": 0.0 },
-    { "Id": "32000000-0000-0000-0000-000000000004", "FromComponentId": "31000000-0000-0000-0000-000000000004", "FromPin": "pin2", "ToComponentId": "31000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 }
+    {
+      "Id": "32000000-0000-0000-0000-000000000001",
+      "FromComponentId": "31000000-0000-0000-0000-000000000001",
+      "FromPin": "negative",
+      "ToComponentId": "31000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "32000000-0000-0000-0000-000000000002",
+      "FromComponentId": "31000000-0000-0000-0000-000000000001",
+      "FromPin": "positive",
+      "ToComponentId": "31000000-0000-0000-0000-000000000003",
+      "ToPin": "pin1",
+      "NetName": "VCC",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "32000000-0000-0000-0000-000000000003",
+      "FromComponentId": "31000000-0000-0000-0000-000000000003",
+      "FromPin": "pin2",
+      "ToComponentId": "31000000-0000-0000-0000-000000000004",
+      "ToPin": "pin1",
+      "NetName": "MID",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "32000000-0000-0000-0000-000000000004",
+      "FromComponentId": "31000000-0000-0000-0000-000000000004",
+      "FromPin": "pin2",
+      "ToComponentId": "31000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "fbe63b0d-2bd2-42d0-8e17-41df030fee59",
+      "FromComponentId": "a1587572-246e-40d8-84c8-a6e4cdbe6141",
+      "FromPin": "in",
+      "ToComponentId": "31000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1dd9a538-1e19-492f-a0f7-703a928a25b9",
+      "FromComponentId": "db6b83eb-a80c-4fb3-8c7f-a304e664a052",
+      "FromPin": "in",
+      "ToComponentId": "31000000-0000-0000-0000-000000000001",
+      "ToPin": "positive",
+      "NetName": "VCC",
+      "Resistance": 0.0
+    }
   ]
 }

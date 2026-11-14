@@ -1,0 +1,248 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Three-Phase Synchronous Generator",
+  "Description": "Synchronous generator model with three phase terminals, neutral reference, resistive phase loads, and a phase-voltage test point.",
+  "Components": [
+    {
+      "Id": "1815d654-683c-4f13-895a-419d1309113d",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "f7032769-5ada-42c8-9250-294933c2cf7c",
+      "StableTypeId": "machine.synchronous-generator",
+      "ComponentType": "SynchronousGenerator",
+      "Reference": "GEN1",
+      "Name": "GEN1",
+      "Description": "SynchronousGenerator",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "ConnectionType": "Star",
+        "GroundingConfiguration": "Grounded neutral",
+        "PhaseSequence": "ABC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "RatedApparentPower": 10000.0,
+        "RatedVoltage": 400.0,
+        "RatedFrequency": 50.0,
+        "NumberOfPhases": 3.0,
+        "NumberOfPoles": 4.0,
+        "RotationalSpeedRpm": 1500.0,
+        "PowerFactor": 0.8,
+        "ArmatureResistance": 0.2,
+        "FieldExcitation": 1.0,
+        "MechanicalInputPower": 8000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ff272464-e173-4de6-a022-c62670e6dd2d",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_A",
+      "Name": "R_A",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "7f14fb84-cd88-417a-95ef-1d7c7eb7ae76",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_B",
+      "Name": "R_B",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "dd423c1d-36b5-45a3-ab9c-33047e5c77c6",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_C",
+      "Name": "R_C",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b77c6c8-2c37-41a9-ae28-0dd0f14b67ce",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_PHASE_A",
+      "Name": "TP_PHASE_A",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "230.8939243"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9dd25cb7-9652-4372-a962-8905d259895f",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "caeabf90-2267-48f7-9aff-b4bee651dfca",
+      "FromComponentId": "f7032769-5ada-42c8-9250-294933c2cf7c",
+      "FromPin": "N",
+      "ToComponentId": "1815d654-683c-4f13-895a-419d1309113d",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f80d2d79-f421-4ff7-980f-cb01fd0ccb22",
+      "FromComponentId": "f7032769-5ada-42c8-9250-294933c2cf7c",
+      "FromPin": "A",
+      "ToComponentId": "ff272464-e173-4de6-a022-c62670e6dd2d",
+      "ToPin": "pin1",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c7066598-91ba-489f-9e7d-0ee0f302635e",
+      "FromComponentId": "ff272464-e173-4de6-a022-c62670e6dd2d",
+      "FromPin": "pin2",
+      "ToComponentId": "1815d654-683c-4f13-895a-419d1309113d",
+      "ToPin": "gnd",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b9efddc7-0866-4593-a439-81556052bb87",
+      "FromComponentId": "f7032769-5ada-42c8-9250-294933c2cf7c",
+      "FromPin": "B",
+      "ToComponentId": "7f14fb84-cd88-417a-95ef-1d7c7eb7ae76",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2c95a972-3a08-416d-9dc7-e318e7210161",
+      "FromComponentId": "7f14fb84-cd88-417a-95ef-1d7c7eb7ae76",
+      "FromPin": "pin2",
+      "ToComponentId": "1815d654-683c-4f13-895a-419d1309113d",
+      "ToPin": "gnd",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8e5eef7a-00a1-4880-a12b-1c55e0da940a",
+      "FromComponentId": "f7032769-5ada-42c8-9250-294933c2cf7c",
+      "FromPin": "C",
+      "ToComponentId": "dd423c1d-36b5-45a3-ab9c-33047e5c77c6",
+      "ToPin": "pin1",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2526fac4-2004-43e4-901b-95cd2d4b2203",
+      "FromComponentId": "dd423c1d-36b5-45a3-ab9c-33047e5c77c6",
+      "FromPin": "pin2",
+      "ToComponentId": "1815d654-683c-4f13-895a-419d1309113d",
+      "ToPin": "gnd",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "535906ad-6beb-4d6d-940f-319bfc4a3668",
+      "FromComponentId": "3b77c6c8-2c37-41a9-ae28-0dd0f14b67ce",
+      "FromPin": "in",
+      "ToComponentId": "f7032769-5ada-42c8-9250-294933c2cf7c",
+      "ToPin": "A",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d8105160-839f-4271-b62f-1e804537386c",
+      "FromComponentId": "9dd25cb7-9652-4372-a962-8905d259895f",
+      "FromPin": "in",
+      "ToComponentId": "1815d654-683c-4f13-895a-419d1309113d",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

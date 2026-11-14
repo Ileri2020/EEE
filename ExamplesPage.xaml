@@ -105,8 +105,8 @@
         <!-- ═══════════════════════════════════════════════════════════════ -->
         <!-- CATEGORY FILTER CHIPS                                            -->
         <!-- ═══════════════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="1" BackgroundColor="#12161D" Padding="16,10">
-            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+        <Grid Grid.Row="1" BackgroundColor="#12161D" Padding="16,10" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <ScrollView Grid.Column="0" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                 <HorizontalStackLayout Spacing="8">
                     <!-- All -->
                     <Border StrokeThickness="1" Padding="14,6">
@@ -229,8 +229,108 @@
                         </Border.GestureRecognizers>
                         <Label Text="⊕ Digital Logic" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
                     </Border>
+
+                    <!-- Additional built-in example categories -->
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Power Electronics">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Power Electronics"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="⚡ Power Electronics" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Analog Electronics">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Analog Electronics"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="◉ Analog Electronics" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Digital Systems">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Digital Systems"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="▦ Digital Systems" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Electrical Machines">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Electrical Machines"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="⚙ Electrical Machines" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Renewable Energy">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Renewable Energy"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="☀ Renewable Energy" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Industrial Control">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Industrial Control"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="⏻ Industrial Control" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
+                    <Border Stroke="#30363D" StrokeThickness="1" BackgroundColor="#161B22" Padding="14,6">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding SelectedCategory}" Value="Electrical Control">
+                                <Setter Property="Stroke" Value="#58A6FF"/>
+                                <Setter Property="BackgroundColor" Value="#1F2837"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" CommandParameter="Electrical Control"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="⟳ Electrical Control" FontSize="12" TextColor="#C9D1D9" FontAttributes="Bold"/>
+                    </Border>
                 </HorizontalStackLayout>
             </ScrollView>
+            <Button Grid.Column="1"
+                    Text="💾 Save All Python"
+                    Style="{StaticResource ToolBtn}"
+                    TextColor="#79C0FF"
+                    Padding="10,6"
+                    Command="{Binding SaveAllPythonScriptsCommand}"
+                    ToolTipProperties.Text="Save Python scripts for all built-in and loaded community examples"/>
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -382,7 +482,7 @@
 
                                         <!-- Copy Python script -->
                                         <Button Grid.Column="2"
-                                                Text="🐍 Copy Script"
+                                                Text="📋 Copy Script"
                                                 Style="{StaticResource ToolBtn}"
                                                 TextColor="#E3B341"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=CopyPythonScriptCommand, x:DataType=vm:ExamplesViewModel}"

@@ -9,6 +9,7 @@ clear = eesim.clear_circuit
 clear_circuit = eesim.clear_circuit
 add_component = eesim.add_component
 set_component_property = eesim.set_component_property
+set_logical_grid_spacing = eesim.set_logical_grid_spacing
 simulate = eesim.simulate
 evaluate_combinational = eesim.evaluate_combinational
 advance_simulation = eesim.advance_simulation

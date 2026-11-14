@@ -190,6 +190,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                                 ? pinVoltageExport.Value
                                 : 0.0;
                         component.LivePinVoltages[pin.Id] = pinVoltage;
+                        results.OperatingPointPinVoltages[(component.Id, pin.Id)] = pinVoltage;
                     }
                 }
 
@@ -762,6 +763,11 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         }
 
         results.Success = true;
-        results.Message = $"Simulation solved (Linear/Nodal): {ex.Message}";
+        string failureDetails = ex is SpiceSharp.Simulations.ValidationFailedException validationFailure
+            ? string.Join("; ", validationFailure.Rules.Violations.Select(violation => violation is SpiceSharp.Validation.FloatingNodeRuleViolation floating
+                ? $"Floating node {floating.FloatingVariable.Name} connected to {floating.FixedVariable.Name} by {floating.Type}"
+                : $"{violation.GetType().Name} ({violation.Rule.GetType().Name})"))
+            : ex.Message;
+        results.Message = $"Fallback approximation used after SpiceSharp failure: {failureDetails}";
     }
 }

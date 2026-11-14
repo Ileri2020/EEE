@@ -1,0 +1,216 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Seven-Segment Display Decoder",
+  "Description": "Four toggleable binary inputs feed the built-in hexadecimal digit/seven-segment decoder; probes monitor the input nibble. A-F values are shown in hexadecimal.",
+  "Components": [
+    {
+      "Id": "786a7914-4be5-5758-898d-dda1daf9bf36",
+      "ComponentType": "LogicInput",
+      "Reference": "BCD0",
+      "Name": "BCD0",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "4a4fb029-0192-58e8-b971-9943e777cc55",
+      "ComponentType": "LogicInput",
+      "Reference": "BCD1",
+      "Name": "BCD1",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "eac5028a-334d-5940-aef8-e8a6a56a21b7",
+      "ComponentType": "LogicInput",
+      "Reference": "BCD2",
+      "Name": "BCD2",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "768ad12e-7e25-5b4c-b9e4-c6d8f2f83f29",
+      "ComponentType": "LogicInput",
+      "Reference": "BCD3",
+      "Name": "BCD3",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c56a069c-25e0-5315-abd0-9652f4e58a01",
+      "ComponentType": "HexDigit",
+      "Reference": "7SEG_HEX",
+      "Name": "7SEG_HEX",
+      "Description": "Nibble-to-seven-segment display/decoder",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "70fc1233-09c5-5b9a-88fc-8528b4751391",
+      "ComponentType": "Probe",
+      "Reference": "TP_BCD0",
+      "Name": "TP_BCD0",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "fb2e89d1-eea1-5f42-aa96-1092bca7d7ea",
+      "ComponentType": "Probe",
+      "Reference": "TP_BCD3",
+      "Name": "TP_BCD3",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "1713f090-8bc0-545e-b9e3-5270921f819a",
+      "FromComponentId": "786a7914-4be5-5758-898d-dda1daf9bf36",
+      "FromPin": "out",
+      "ToComponentId": "c56a069c-25e0-5315-abd0-9652f4e58a01",
+      "ToPin": "D0",
+      "NetName": "BCD0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "dee921ae-88ef-574e-96ec-e3df2c6adf07",
+      "FromComponentId": "4a4fb029-0192-58e8-b971-9943e777cc55",
+      "FromPin": "out",
+      "ToComponentId": "c56a069c-25e0-5315-abd0-9652f4e58a01",
+      "ToPin": "D1",
+      "NetName": "BCD1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4efd08ea-295f-573b-9050-ee918f1b2f04",
+      "FromComponentId": "eac5028a-334d-5940-aef8-e8a6a56a21b7",
+      "FromPin": "out",
+      "ToComponentId": "c56a069c-25e0-5315-abd0-9652f4e58a01",
+      "ToPin": "D2",
+      "NetName": "BCD2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "766711ae-60a6-5be2-b8f0-6210310a6908",
+      "FromComponentId": "768ad12e-7e25-5b4c-b9e4-c6d8f2f83f29",
+      "FromPin": "out",
+      "ToComponentId": "c56a069c-25e0-5315-abd0-9652f4e58a01",
+      "ToPin": "D3",
+      "NetName": "BCD3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d71d6e6b-ab22-51a4-a0c9-c21232412ad1",
+      "FromComponentId": "786a7914-4be5-5758-898d-dda1daf9bf36",
+      "FromPin": "out",
+      "ToComponentId": "70fc1233-09c5-5b9a-88fc-8528b4751391",
+      "ToPin": "in",
+      "NetName": "BCD0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "dc1083e2-654a-5665-afb3-448acc939ef5",
+      "FromComponentId": "768ad12e-7e25-5b4c-b9e4-c6d8f2f83f29",
+      "FromPin": "out",
+      "ToComponentId": "fb2e89d1-eea1-5f42-aa96-1092bca7d7ea",
+      "ToPin": "in",
+      "NetName": "BCD3",
+      "Resistance": 0.0
+    }
+  ]
+}

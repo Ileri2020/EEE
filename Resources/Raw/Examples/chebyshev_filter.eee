@@ -1,0 +1,187 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.0.0",
+  "Application": "EESimulator",
+  "Title": "Chebyshev Low-Pass Filter",
+  "Description": "Second-order passive RLC network illustrating the steeper Chebyshev cutoff and passband-ripple trade-off. Both test points should read approximately 1 V at DC.",
+  "Components": [
+    {
+      "Id": "b1000000-0000-0000-0000-000000000001",
+      "ComponentType": "VoltageSource",
+      "Name": "VIN",
+      "Reference": "VIN",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1"
+      },
+      "ElectricalParameters": {
+        "Voltage": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000002",
+      "ComponentType": "Ground",
+      "Name": "GND",
+      "Reference": "GND",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1"
+      },
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000003",
+      "ComponentType": "Inductor",
+      "Name": "L1",
+      "Reference": "L1",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
+      "ElectricalParameters": {
+        "Inductance": 1.095
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000004",
+      "ComponentType": "Capacitor",
+      "Name": "C1",
+      "Reference": "C1",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "3"
+      },
+      "ElectricalParameters": {
+        "Capacitance": 1e-06
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000005",
+      "ComponentType": "Resistor",
+      "Name": "RLOAD",
+      "Reference": "RLOAD",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "3"
+      },
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000006",
+      "ComponentType": "Probe",
+      "Name": "TP_IN",
+      "Reference": "TP_IN",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "1"
+      },
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000007",
+      "ComponentType": "Probe",
+      "Name": "TP_OUT",
+      "Reference": "TP_OUT",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "4",
+        "ExpectedVoltage": "1"
+      },
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "b2000000-0000-0000-0000-000000000001",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000001",
+      "FromPin": "negative",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000002",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000001",
+      "FromPin": "positive",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000003",
+      "ToPin": "pin1",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000003",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000001",
+      "FromPin": "positive",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000006",
+      "ToPin": "in",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000004",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000003",
+      "FromPin": "pin2",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000004",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000005",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000004",
+      "FromPin": "pin1",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000005",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000006",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000004",
+      "FromPin": "pin1",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000007",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000007",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000004",
+      "FromPin": "pin2",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000008",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000005",
+      "FromPin": "pin2",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

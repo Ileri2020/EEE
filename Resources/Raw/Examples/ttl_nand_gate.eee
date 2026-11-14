@@ -5,14 +5,155 @@
   "Title": "74LS00 NAND Gate",
   "Description": "Two logic inputs drive one gate of a 7400 quad 2-input NAND package.",
   "Components": [
-    { "Id": "51000000-0000-0000-0000-000000000001", "ComponentType": "LogicInput", "Name": "A", "Reference": "A", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" }, "ElectricalParameters": { "State": 1.0 }, "CustomProperties": { "State": true } },
-    { "Id": "51000000-0000-0000-0000-000000000002", "ComponentType": "LogicInput", "Name": "B", "Reference": "B", "StringParameters": { "LogicalRow": "3", "LogicalColumn": "1" }, "ElectricalParameters": { "State": 1.0 }, "CustomProperties": { "State": true } },
-    { "Id": "51000000-0000-0000-0000-000000000003", "ComponentType": "7400", "Name": "U1", "Reference": "U1", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "2" }, "ElectricalParameters": {}, "CustomProperties": { "PartNumber": "7400", "ExposeSupplyPins": true, "ShowInternalStructure": true } },
-    { "Id": "51000000-0000-0000-0000-000000000004", "ComponentType": "LogicOutput", "Name": "Y", "Reference": "Y", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "3" }, "ElectricalParameters": {}, "CustomProperties": {} }
+    {
+      "Id": "51000000-0000-0000-0000-000000000001",
+      "ComponentType": "LogicInput",
+      "Name": "A",
+      "Reference": "A",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "ElectricalParameters": {
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "51000000-0000-0000-0000-000000000002",
+      "ComponentType": "LogicInput",
+      "Name": "B",
+      "Reference": "B",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "ElectricalParameters": {
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "51000000-0000-0000-0000-000000000003",
+      "ComponentType": "7400",
+      "Name": "U1",
+      "Reference": "U1",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2",
+        "PartNumber": "7400",
+        "ExposeSupplyPins": "True",
+        "ShowInternalStructure": "True"
+      },
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "51000000-0000-0000-0000-000000000004",
+      "ComponentType": "LogicOutput",
+      "Name": "Y",
+      "Reference": "Y",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "83c54a12-7a34-4b14-9c21-d85f35f21972",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "TP_REFERENCE voltage test point; expected 5 V.",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "ac19573b-9da3-4563-a615-ee7f820debcd",
+      "ComponentType": "Probe",
+      "Name": "TP_SIGNAL",
+      "Reference": "TP_SIGNAL",
+      "Description": "TP_SIGNAL voltage test point; expected 5 V.",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
   ],
   "Connections": [
-    { "Id": "52000000-0000-0000-0000-000000000001", "FromComponentId": "51000000-0000-0000-0000-000000000001", "FromPin": "out", "ToComponentId": "51000000-0000-0000-0000-000000000003", "ToPin": "pin1", "NetName": "A", "Resistance": 0.0 },
-    { "Id": "52000000-0000-0000-0000-000000000002", "FromComponentId": "51000000-0000-0000-0000-000000000002", "FromPin": "out", "ToComponentId": "51000000-0000-0000-0000-000000000003", "ToPin": "pin2", "NetName": "B", "Resistance": 0.0 },
-    { "Id": "52000000-0000-0000-0000-000000000003", "FromComponentId": "51000000-0000-0000-0000-000000000003", "FromPin": "pin3", "ToComponentId": "51000000-0000-0000-0000-000000000004", "ToPin": "in", "NetName": "Y", "Resistance": 0.0 }
+    {
+      "Id": "52000000-0000-0000-0000-000000000001",
+      "FromComponentId": "51000000-0000-0000-0000-000000000001",
+      "FromPin": "out",
+      "ToComponentId": "51000000-0000-0000-0000-000000000003",
+      "ToPin": "pin1",
+      "NetName": "A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "52000000-0000-0000-0000-000000000002",
+      "FromComponentId": "51000000-0000-0000-0000-000000000002",
+      "FromPin": "out",
+      "ToComponentId": "51000000-0000-0000-0000-000000000003",
+      "ToPin": "pin2",
+      "NetName": "B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "52000000-0000-0000-0000-000000000003",
+      "FromComponentId": "51000000-0000-0000-0000-000000000003",
+      "FromPin": "pin3",
+      "ToComponentId": "51000000-0000-0000-0000-000000000004",
+      "ToPin": "in",
+      "NetName": "Y",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "605f739e-831e-491a-86d1-5f1de242b122",
+      "FromComponentId": "83c54a12-7a34-4b14-9c21-d85f35f21972",
+      "FromPin": "in",
+      "ToComponentId": "51000000-0000-0000-0000-000000000001",
+      "ToPin": "out",
+      "NetName": "A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "be8a7277-803c-4b38-a36e-5527766ae6dc",
+      "FromComponentId": "ac19573b-9da3-4563-a615-ee7f820debcd",
+      "FromPin": "in",
+      "ToComponentId": "51000000-0000-0000-0000-000000000002",
+      "ToPin": "out",
+      "NetName": "B",
+      "Resistance": 0.0
+    }
   ]
 }

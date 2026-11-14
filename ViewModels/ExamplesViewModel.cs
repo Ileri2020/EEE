@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -210,6 +211,48 @@ public partial class ExamplesViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusMessage = $"Script error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task SaveAllPythonScripts()
+    {
+        try
+        {
+            string targetDirectory = Path.Combine(FileSystem.AppDataDirectory, "Examples", "Python");
+            Directory.CreateDirectory(targetDirectory);
+
+            var examples = _allExamples.Concat(_communityExamples)
+                .GroupBy(example => example.Id, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToArray();
+
+            foreach (CircuitExampleItem example in examples)
+            {
+                var circuit = await ExampleCircuitService.LoadCircuitAsync(example);
+                string script = PythonCodeGenerator.GenerateFullScript(circuit);
+                string fileName = string.Concat(example.Id.Select(character =>
+                    Path.GetInvalidFileNameChars().Contains(character) ? '_' : character));
+                string path = Path.Combine(targetDirectory, $"{fileName}.py");
+                await File.WriteAllTextAsync(path, script, Encoding.UTF8);
+            }
+
+            StatusMessage = $"Saved {examples.Length} Python example scripts.";
+            if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
+            {
+                await page.DisplayAlertAsync(
+                    "Python Examples Saved",
+                    $"Saved {examples.Length} scripts to:\n{targetDirectory}",
+                    "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Python export error: {ex.Message}";
+            if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
+            {
+                await page.DisplayAlertAsync("Python Export Error", ex.Message, "OK");
+            }
         }
     }
 

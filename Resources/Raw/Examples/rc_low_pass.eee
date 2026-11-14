@@ -5,15 +5,161 @@
   "Title": "RC Low-Pass Filter",
   "Description": "A 1 kΩ resistor and 100 nF capacitor form a first-order low-pass filter.",
   "Components": [
-    { "Id": "41000000-0000-0000-0000-000000000001", "ComponentType": "VoltageSource", "Name": "V1", "Reference": "V1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" }, "ElectricalParameters": { "Voltage": 1.0 }, "CustomProperties": {} },
-    { "Id": "41000000-0000-0000-0000-000000000002", "ComponentType": "Ground", "Name": "GND1", "Reference": "GND1", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "1" }, "ElectricalParameters": {}, "CustomProperties": {} },
-    { "Id": "41000000-0000-0000-0000-000000000003", "ComponentType": "Resistor", "Name": "R1", "Reference": "R1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "2" }, "ElectricalParameters": { "Resistance": 1000.0 }, "CustomProperties": {} },
-    { "Id": "41000000-0000-0000-0000-000000000004", "ComponentType": "Capacitor", "Name": "C1", "Reference": "C1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "3" }, "ElectricalParameters": { "Capacitance": 1e-7 }, "CustomProperties": {} }
+    {
+      "Id": "41000000-0000-0000-0000-000000000001",
+      "ComponentType": "VoltageSource",
+      "Name": "V1",
+      "Reference": "V1",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "ElectricalParameters": {
+        "Voltage": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "41000000-0000-0000-0000-000000000002",
+      "ComponentType": "Ground",
+      "Name": "GND1",
+      "Reference": "GND1",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1"
+      },
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "41000000-0000-0000-0000-000000000003",
+      "ComponentType": "Resistor",
+      "Name": "R1",
+      "Reference": "R1",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "41000000-0000-0000-0000-000000000004",
+      "ComponentType": "Capacitor",
+      "Name": "C1",
+      "Reference": "C1",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3"
+      },
+      "ElectricalParameters": {
+        "Capacitance": 1e-07
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c6883b36-4fa0-4d00-8d1d-05d8eb0a09dc",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "a981ce88-2dc6-4615-9a44-933ff43b0b8c",
+      "ComponentType": "Probe",
+      "Name": "TP_SIGNAL",
+      "Reference": "TP_SIGNAL",
+      "Description": "Signal test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
   ],
   "Connections": [
-    { "Id": "42000000-0000-0000-0000-000000000001", "FromComponentId": "41000000-0000-0000-0000-000000000001", "FromPin": "negative", "ToComponentId": "41000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 },
-    { "Id": "42000000-0000-0000-0000-000000000002", "FromComponentId": "41000000-0000-0000-0000-000000000001", "FromPin": "positive", "ToComponentId": "41000000-0000-0000-0000-000000000003", "ToPin": "pin1", "NetName": "VIN", "Resistance": 0.0 },
-    { "Id": "42000000-0000-0000-0000-000000000003", "FromComponentId": "41000000-0000-0000-0000-000000000003", "FromPin": "pin2", "ToComponentId": "41000000-0000-0000-0000-000000000004", "ToPin": "pin1", "NetName": "VOUT", "Resistance": 0.0 },
-    { "Id": "42000000-0000-0000-0000-000000000004", "FromComponentId": "41000000-0000-0000-0000-000000000004", "FromPin": "pin2", "ToComponentId": "41000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 }
+    {
+      "Id": "42000000-0000-0000-0000-000000000001",
+      "FromComponentId": "41000000-0000-0000-0000-000000000001",
+      "FromPin": "negative",
+      "ToComponentId": "41000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "42000000-0000-0000-0000-000000000002",
+      "FromComponentId": "41000000-0000-0000-0000-000000000001",
+      "FromPin": "positive",
+      "ToComponentId": "41000000-0000-0000-0000-000000000003",
+      "ToPin": "pin1",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "42000000-0000-0000-0000-000000000003",
+      "FromComponentId": "41000000-0000-0000-0000-000000000003",
+      "FromPin": "pin2",
+      "ToComponentId": "41000000-0000-0000-0000-000000000004",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "42000000-0000-0000-0000-000000000004",
+      "FromComponentId": "41000000-0000-0000-0000-000000000004",
+      "FromPin": "pin2",
+      "ToComponentId": "41000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "61a3fb7e-68b8-4d62-a421-08465b3df75a",
+      "FromComponentId": "c6883b36-4fa0-4d00-8d1d-05d8eb0a09dc",
+      "FromPin": "in",
+      "ToComponentId": "41000000-0000-0000-0000-000000000002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3e491945-dde5-438c-87bb-cd7caef39948",
+      "FromComponentId": "a981ce88-2dc6-4615-9a44-933ff43b0b8c",
+      "FromPin": "in",
+      "ToComponentId": "41000000-0000-0000-0000-000000000001",
+      "ToPin": "positive",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    }
   ]
 }

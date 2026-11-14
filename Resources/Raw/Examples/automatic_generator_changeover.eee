@@ -1,0 +1,397 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Automatic Generator Changeover",
+  "Description": "Low-voltage source-selection demonstration with utility and generator source blocks, a toggleable source-status indicator and test point. It is not a mains transfer switch or safety controller.",
+  "Components": [
+    {
+      "Id": "c004c202-4336-5637-a3bc-9cc87bf88283",
+      "ComponentType": "VoltageSource",
+      "Reference": "UTILITY",
+      "Name": "UTILITY",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "697aecae-6f63-5846-b1c5-d01669af91d6",
+      "ComponentType": "VoltageSource",
+      "Reference": "GENERATOR",
+      "Name": "GENERATOR",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "1c87bcd0-4379-5636-b276-2b2ab3411202",
+      "ComponentType": "LogicInput",
+      "Reference": "SOURCE_SELECT",
+      "Name": "SOURCE_SELECT",
+      "Description": "Toggle between utility and generator indication",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8a64fe0e-7217-5f35-8b51-ce0a4999ed58",
+      "ComponentType": "LogicOutput",
+      "Reference": "SOURCE_STATUS",
+      "Name": "SOURCE_STATUS",
+      "Description": "LogicOutput",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "11a95ff8-6bec-5267-9594-fd939171c3a6",
+      "ComponentType": "Probe",
+      "Reference": "TP_STATUS",
+      "Name": "TP_STATUS",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "e12c4d2a-0e91-5f92-a908-cc825e582e34",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Common return",
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f4",
+      "ComponentType": "Resistor",
+      "Reference": "R_UTILITY",
+      "Name": "R_UTILITY",
+      "Description": "Utility source current limiter",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f5",
+      "ComponentType": "Diode",
+      "Reference": "D_UTILITY",
+      "Name": "D_UTILITY",
+      "Description": "Utility isolation diode equivalent",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f6",
+      "ComponentType": "Resistor",
+      "Reference": "R_GENERATOR",
+      "Name": "R_GENERATOR",
+      "Description": "Generator source current limiter",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f7",
+      "ComponentType": "Diode",
+      "Reference": "D_GENERATOR",
+      "Name": "D_GENERATOR",
+      "Description": "Generator isolation diode equivalent",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f8",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Changeover output load",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f9",
+      "ComponentType": "Bulb",
+      "Reference": "LOAD_LAMP",
+      "Name": "LOAD_LAMP",
+      "Description": "Visible changeover load indicator",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0,
+        "RatedVoltage": 6.0,
+        "ThresholdVoltage": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0db4b43-3ed4-51c8-b5ab-1a515ac33100",
+      "ComponentType": "Probe",
+      "Reference": "TP_LOAD",
+      "Name": "TP_LOAD",
+      "Description": "Load output voltage/current test point",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "7.25770667"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "8187fde6-07ac-50b3-9c79-834bd8b7259a",
+      "FromComponentId": "1c87bcd0-4379-5636-b276-2b2ab3411202",
+      "FromPin": "out",
+      "ToComponentId": "8a64fe0e-7217-5f35-8b51-ce0a4999ed58",
+      "ToPin": "in",
+      "NetName": "SOURCE_STATUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f3e14301-5ba5-56aa-bdce-68f5bfb94838",
+      "FromComponentId": "8a64fe0e-7217-5f35-8b51-ce0a4999ed58",
+      "FromPin": "in",
+      "ToComponentId": "11a95ff8-6bec-5267-9594-fd939171c3a6",
+      "ToPin": "in",
+      "NetName": "SOURCE_STATUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b2",
+      "FromComponentId": "c004c202-4336-5637-a3bc-9cc87bf88283",
+      "FromPin": "positive",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f4",
+      "ToPin": "pin1",
+      "NetName": "UTILITY",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b3",
+      "FromComponentId": "c004c202-4336-5637-a3bc-9cc87bf88283",
+      "FromPin": "negative",
+      "ToComponentId": "e12c4d2a-0e91-5f92-a908-cc825e582e34",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b4",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f4",
+      "FromPin": "pin2",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f5",
+      "ToPin": "anode",
+      "NetName": "UTILITY_RECT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b5",
+      "FromComponentId": "697aecae-6f63-5846-b1c5-d01669af91d6",
+      "FromPin": "positive",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f6",
+      "ToPin": "pin1",
+      "NetName": "GENERATOR",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b6",
+      "FromComponentId": "697aecae-6f63-5846-b1c5-d01669af91d6",
+      "FromPin": "negative",
+      "ToComponentId": "e12c4d2a-0e91-5f92-a908-cc825e582e34",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b7",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f6",
+      "FromPin": "pin2",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f7",
+      "ToPin": "anode",
+      "NetName": "GENERATOR_RECT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b8",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f5",
+      "FromPin": "cathode",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f8",
+      "ToPin": "pin1",
+      "NetName": "LOAD_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068b9",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f7",
+      "FromPin": "cathode",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f8",
+      "ToPin": "pin1",
+      "NetName": "LOAD_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068ba",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f8",
+      "FromPin": "pin1",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f9",
+      "ToPin": "pin1",
+      "NetName": "LOAD_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068bb",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f8",
+      "FromPin": "pin1",
+      "ToComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac33100",
+      "ToPin": "in",
+      "NetName": "LOAD_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068bc",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f8",
+      "FromPin": "pin2",
+      "ToComponentId": "e12c4d2a-0e91-5f92-a908-cc825e582e34",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4459771-f57b-5ed1-a78f-918dcf9068bd",
+      "FromComponentId": "d0db4b43-3ed4-51c8-b5ab-1a515ac330f9",
+      "FromPin": "pin2",
+      "ToComponentId": "e12c4d2a-0e91-5f92-a908-cc825e582e34",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

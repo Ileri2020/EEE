@@ -1,0 +1,335 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Grid-Tied Solar Inverter",
+  "Description": "Low-voltage solar/grid synchronization concept with DC input, inverter AC equivalent, toggleable synchronism input, load indicator and source/output probes. Not a grid-interconnection design.",
+  "Components": [
+    {
+      "Id": "1190c9c2-c870-5ede-9ac5-7e81591cba72",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "12",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "25a2e9d7-4d53-56a2-b9f6-58f709fb855d",
+      "ComponentType": "VoltageSource",
+      "Reference": "VIN",
+      "Name": "VIN",
+      "Description": "Editable low-voltage Sine source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5.0,
+        "SineFrequency": 50.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.009000000000000001,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5d5b72d5-743b-58a9-863f-8a249357edb8",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "TP_IN",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "798f89c7-b38f-563b-9dd4-dafa604bc84c",
+      "ComponentType": "LogicInput",
+      "Reference": "ENABLE",
+      "Name": "ENABLE",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9ce71ddf-4a29-500b-908a-f45c5cb7c9bb",
+      "ComponentType": "VoltageSwitch",
+      "Reference": "S_ENABLE",
+      "Name": "S_ENABLE",
+      "Description": "Toggle-controlled signal path",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Ron": 1.0,
+        "Roff": 1000000.0,
+        "Threshold": 2.5,
+        "Hysteresis": 0.1
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "7a208cff-c108-5f43-9a00-076f51d6332e",
+      "ComponentType": "Inductor",
+      "Reference": "L_FILTER",
+      "Name": "L_FILTER",
+      "Description": "Inductor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2797e619-8889-5eae-aa4c-7386e419258e",
+      "ComponentType": "Capacitor",
+      "Reference": "C_FILTER",
+      "Name": "C_FILTER",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-05
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5a1f7cee-3509-5098-82ff-f796470ac073",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e550cd27-38ca-5ddb-a7fe-b2b73741d4db",
+      "ComponentType": "Bulb",
+      "Reference": "LAMP",
+      "Name": "LAMP",
+      "Description": "Visible low-voltage indicator",
+      "StringParameters": {
+        "LogicalRow": "10",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0,
+        "RatedVoltage": 6.0,
+        "ThresholdVoltage": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "523c46f6-cbd4-5ee3-bfc6-95a5dab17048",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "ae2dbdfc-b94e-577c-88d1-ee551c612aee",
+      "FromComponentId": "25a2e9d7-4d53-56a2-b9f6-58f709fb855d",
+      "FromPin": "negative",
+      "ToComponentId": "1190c9c2-c870-5ede-9ac5-7e81591cba72",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8b4f2914-289e-5cf1-8d7d-6917c583504e",
+      "FromComponentId": "25a2e9d7-4d53-56a2-b9f6-58f709fb855d",
+      "FromPin": "positive",
+      "ToComponentId": "5d5b72d5-743b-58a9-863f-8a249357edb8",
+      "ToPin": "in",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "caec5503-0d37-58f0-a45d-d652900b86a1",
+      "FromComponentId": "25a2e9d7-4d53-56a2-b9f6-58f709fb855d",
+      "FromPin": "positive",
+      "ToComponentId": "9ce71ddf-4a29-500b-908a-f45c5cb7c9bb",
+      "ToPin": "sw_pos",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2c98fa72-c81f-528a-a283-a9654211f6b4",
+      "FromComponentId": "798f89c7-b38f-563b-9dd4-dafa604bc84c",
+      "FromPin": "out",
+      "ToComponentId": "9ce71ddf-4a29-500b-908a-f45c5cb7c9bb",
+      "ToPin": "ctrl_pos",
+      "NetName": "ENABLE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "63bb1be1-ba0e-55ad-ad33-2e2af69e8c79",
+      "FromComponentId": "1190c9c2-c870-5ede-9ac5-7e81591cba72",
+      "FromPin": "gnd",
+      "ToComponentId": "9ce71ddf-4a29-500b-908a-f45c5cb7c9bb",
+      "ToPin": "ctrl_neg",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b0fc7e70-55c6-52e9-8364-5d3d87743e0e",
+      "FromComponentId": "9ce71ddf-4a29-500b-908a-f45c5cb7c9bb",
+      "FromPin": "sw_neg",
+      "ToComponentId": "7a208cff-c108-5f43-9a00-076f51d6332e",
+      "ToPin": "pin1",
+      "NetName": "STAGE_1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "19efcfc4-5b1d-5941-a6ee-a19f86010432",
+      "FromComponentId": "7a208cff-c108-5f43-9a00-076f51d6332e",
+      "FromPin": "pin2",
+      "ToComponentId": "2797e619-8889-5eae-aa4c-7386e419258e",
+      "ToPin": "pin1",
+      "NetName": "STAGE_2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "20c05f67-a16a-5ae4-abc8-44560205e096",
+      "FromComponentId": "2797e619-8889-5eae-aa4c-7386e419258e",
+      "FromPin": "pin2",
+      "ToComponentId": "5a1f7cee-3509-5098-82ff-f796470ac073",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3344e041-a04f-5153-961e-baa474aac51c",
+      "FromComponentId": "2797e619-8889-5eae-aa4c-7386e419258e",
+      "FromPin": "pin2",
+      "ToComponentId": "e550cd27-38ca-5ddb-a7fe-b2b73741d4db",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b8ad519-b594-5fe3-8d63-52c921e740ae",
+      "FromComponentId": "2797e619-8889-5eae-aa4c-7386e419258e",
+      "FromPin": "pin2",
+      "ToComponentId": "523c46f6-cbd4-5ee3-bfc6-95a5dab17048",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "45a40458-8cf1-52a1-aef1-7cffb54c9643",
+      "FromComponentId": "5a1f7cee-3509-5098-82ff-f796470ac073",
+      "FromPin": "pin2",
+      "ToComponentId": "1190c9c2-c870-5ede-9ac5-7e81591cba72",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b8572445-78be-56c4-9356-f44668e69775",
+      "FromComponentId": "e550cd27-38ca-5ddb-a7fe-b2b73741d4db",
+      "FromPin": "pin2",
+      "ToComponentId": "1190c9c2-c870-5ede-9ac5-7e81591cba72",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

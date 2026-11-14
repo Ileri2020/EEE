@@ -1,0 +1,435 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Three-Phase Star-Delta Connection",
+  "Description": "Balanced low-voltage three-phase star-load demonstration with toggleable connection-mode input and phase test points. The delta state is a visual control cue; rewire the branches to compare topologies.",
+  "Components": [
+    {
+      "Id": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "10",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d6c62cff-07b4-50b4-afee-03261366f6ee",
+      "ComponentType": "VoltageSource",
+      "Reference": "VA",
+      "Name": "VA",
+      "Description": "Balanced phase source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 12.0,
+        "SineFrequency": 50.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 12.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5f8b9bd0-5eef-5d4a-981e-3bc5d5032fef",
+      "ComponentType": "Resistor",
+      "Reference": "RA",
+      "Name": "RA",
+      "Description": "Phase winding/load equivalent",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "cae60947-e25d-5d19-8f73-4f1a566d8856",
+      "ComponentType": "Probe",
+      "Reference": "TP_A",
+      "Name": "TP_A",
+      "Description": "Phase test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "9d303b59-7af3-5a22-a5db-ab4112678710",
+      "ComponentType": "VoltageSource",
+      "Reference": "VB",
+      "Name": "VB",
+      "Description": "Balanced phase source",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 12.0,
+        "SineFrequency": 50.0,
+        "SinePhase": -120.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 12.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "958eee4a-f965-5a5d-add8-f0e26b1ba620",
+      "ComponentType": "Resistor",
+      "Reference": "RB",
+      "Name": "RB",
+      "Description": "Phase winding/load equivalent",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "31ea5e05-b58c-5fb8-a64f-1f7112a987ed",
+      "ComponentType": "Probe",
+      "Reference": "TP_B",
+      "Name": "TP_B",
+      "Description": "Phase test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "bd4e4d4b-e51d-5f5a-aad4-3670df7324c5",
+      "ComponentType": "VoltageSource",
+      "Reference": "VC",
+      "Name": "VC",
+      "Description": "Balanced phase source",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 12.0,
+        "SineFrequency": 50.0,
+        "SinePhase": 120.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 12.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ef6fa490-00a0-59d9-b5fc-e2e74c58f676",
+      "ComponentType": "Resistor",
+      "Reference": "RC",
+      "Name": "RC",
+      "Description": "Phase winding/load equivalent",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "fb95f571-598d-5082-a851-29c0ae8da528",
+      "ComponentType": "Probe",
+      "Reference": "TP_C",
+      "Name": "TP_C",
+      "Description": "Phase test point",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "bd9045a1-cb89-5b53-a6f8-d7b49f297e85",
+      "ComponentType": "LogicInput",
+      "Reference": "DELTA_MODE",
+      "Name": "DELTA_MODE",
+      "Description": "Toggle to select the delta teaching mode",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "126b65df-6e0c-569c-bf56-44e9a3e4a39c",
+      "ComponentType": "LogicOutput",
+      "Reference": "MODE_STATUS",
+      "Name": "MODE_STATUS",
+      "Description": "Connection mode indicator",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d8ced6db-1830-5f8a-858c-c5b3e92c57c8",
+      "ComponentType": "Probe",
+      "Reference": "TP_MODE",
+      "Name": "TP_MODE",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "8bc051c6-713b-513e-9ac8-fd4a06d675cc",
+      "FromComponentId": "d6c62cff-07b4-50b4-afee-03261366f6ee",
+      "FromPin": "negative",
+      "ToComponentId": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5e6514ca-8fcf-5f65-a857-4b44fc5e0413",
+      "FromComponentId": "d6c62cff-07b4-50b4-afee-03261366f6ee",
+      "FromPin": "positive",
+      "ToComponentId": "5f8b9bd0-5eef-5d4a-981e-3bc5d5032fef",
+      "ToPin": "pin1",
+      "NetName": "PHASE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5d090aeb-4714-5c4b-880c-deea88f6e61c",
+      "FromComponentId": "5f8b9bd0-5eef-5d4a-981e-3bc5d5032fef",
+      "FromPin": "pin2",
+      "ToComponentId": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ToPin": "gnd",
+      "NetName": "STAR_NEUTRAL",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "351b987b-0211-5fc6-bb09-a51783d1a187",
+      "FromComponentId": "5f8b9bd0-5eef-5d4a-981e-3bc5d5032fef",
+      "FromPin": "pin2",
+      "ToComponentId": "cae60947-e25d-5d19-8f73-4f1a566d8856",
+      "ToPin": "in",
+      "NetName": "PHASE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ef36e394-481d-5070-be9c-4f9d923755f7",
+      "FromComponentId": "9d303b59-7af3-5a22-a5db-ab4112678710",
+      "FromPin": "negative",
+      "ToComponentId": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6570114b-4a21-5f82-a115-15c93bbc4a78",
+      "FromComponentId": "9d303b59-7af3-5a22-a5db-ab4112678710",
+      "FromPin": "positive",
+      "ToComponentId": "958eee4a-f965-5a5d-add8-f0e26b1ba620",
+      "ToPin": "pin1",
+      "NetName": "PHASE_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "47fbc978-a52f-5835-9994-45768499436f",
+      "FromComponentId": "958eee4a-f965-5a5d-add8-f0e26b1ba620",
+      "FromPin": "pin2",
+      "ToComponentId": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ToPin": "gnd",
+      "NetName": "STAR_NEUTRAL",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2fa58155-9bb0-563e-9a16-474236fc7e30",
+      "FromComponentId": "958eee4a-f965-5a5d-add8-f0e26b1ba620",
+      "FromPin": "pin2",
+      "ToComponentId": "31ea5e05-b58c-5fb8-a64f-1f7112a987ed",
+      "ToPin": "in",
+      "NetName": "PHASE_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ff206e47-4715-5581-a967-ecf6eaa66443",
+      "FromComponentId": "bd4e4d4b-e51d-5f5a-aad4-3670df7324c5",
+      "FromPin": "negative",
+      "ToComponentId": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "76206e65-3157-5ebc-80c7-0331cb0291a1",
+      "FromComponentId": "bd4e4d4b-e51d-5f5a-aad4-3670df7324c5",
+      "FromPin": "positive",
+      "ToComponentId": "ef6fa490-00a0-59d9-b5fc-e2e74c58f676",
+      "ToPin": "pin1",
+      "NetName": "PHASE_C",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1e7ecdb3-e48b-52d1-b020-4b74d06a00db",
+      "FromComponentId": "ef6fa490-00a0-59d9-b5fc-e2e74c58f676",
+      "FromPin": "pin2",
+      "ToComponentId": "97f42a54-edd3-5693-99e2-94f7fdc7268c",
+      "ToPin": "gnd",
+      "NetName": "STAR_NEUTRAL",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "02108b46-2687-5f99-aadb-747246a09db2",
+      "FromComponentId": "ef6fa490-00a0-59d9-b5fc-e2e74c58f676",
+      "FromPin": "pin2",
+      "ToComponentId": "fb95f571-598d-5082-a851-29c0ae8da528",
+      "ToPin": "in",
+      "NetName": "PHASE_C",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "88e4f9a3-0e04-51e0-ba71-ce082b4a79ab",
+      "FromComponentId": "bd9045a1-cb89-5b53-a6f8-d7b49f297e85",
+      "FromPin": "out",
+      "ToComponentId": "126b65df-6e0c-569c-bf56-44e9a3e4a39c",
+      "ToPin": "in",
+      "NetName": "MODE_STATUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b8027c64-0918-52b7-a86f-d689c7ba8e77",
+      "FromComponentId": "126b65df-6e0c-569c-bf56-44e9a3e4a39c",
+      "FromPin": "in",
+      "ToComponentId": "d8ced6db-1830-5f8a-858c-c5b3e92c57c8",
+      "ToPin": "in",
+      "NetName": "MODE_STATUS",
+      "Resistance": 0.0
+    }
+  ]
+}

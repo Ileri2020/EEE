@@ -558,6 +558,15 @@ public class PythonApi
         SetComponentProperty(componentName, nameof(ComponentNode.LogicalColumn), column);
     }
 
+    public void SetLogicalGridSpacing(double rowSpacing, double columnSpacing)
+    {
+        var command = new SetLogicalGridSpacingCommand(_circuit, rowSpacing, columnSpacing)
+        {
+            Origin = CommandOrigin.Python
+        };
+        _commandManager.ExecuteCommand(command);
+    }
+
     public LogicalGridLayoutResult ApplyLogicalGridLayout()
     {
         LogicalGridLayoutResult layout = LogicalGridSchematicLayout.Calculate(_circuit);

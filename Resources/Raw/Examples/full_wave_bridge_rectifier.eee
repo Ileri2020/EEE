@@ -1,0 +1,348 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Full-Wave Bridge Rectifier",
+  "Description": "Four-diode bridge rectifier with an AC input, resistive load, filter capacitor, and high-impedance output probe.",
+  "Components": [
+    {
+      "Id": "21b54be1-2d9b-4355-af29-e7ad014865c1",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "252cf5aa-f1cf-4342-8d35-7fb517c7cc30",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_AC",
+      "Name": "V_AC",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12,
+        "SineOffset": 0.0,
+        "SineAmplitude": 12,
+        "SineFrequency": 60,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 12,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "7c8fa83f-0b28-49c9-bdb0-b8189fdbbaf7",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "D1",
+      "Name": "D1",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "97f47fcf-0ea0-4e97-8955-28561def5553",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "D2",
+      "Name": "D2",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e0712685-633b-4862-a706-133174e128e9",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "D3",
+      "Name": "D3",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "752a2817-8d29-4f43-91c8-a02e242119a2",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "D4",
+      "Name": "D4",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "6dd761d1-4b53-4373-9f1f-c36958c7618e",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c12a0e3f-ea5c-4cb9-ac19-4d542a2483e4",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_FILTER",
+      "Name": "C_FILTER",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.00022
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "4b0b74aa-a2a2-400e-a1b7-429263dc5fa1",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_DC_OUT",
+      "Name": "TP_DC_OUT",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "10.56783014"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "67611630-d428-4ec1-a284-186b3b5ebf5f",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "d3656f85-c30d-443a-a832-50838d8446ea",
+      "FromComponentId": "252cf5aa-f1cf-4342-8d35-7fb517c7cc30",
+      "FromPin": "positive",
+      "ToComponentId": "7c8fa83f-0b28-49c9-bdb0-b8189fdbbaf7",
+      "ToPin": "anode",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "62eb567f-45c1-4dfe-9ad6-04e48855a1ad",
+      "FromComponentId": "7c8fa83f-0b28-49c9-bdb0-b8189fdbbaf7",
+      "FromPin": "cathode",
+      "ToComponentId": "6dd761d1-4b53-4373-9f1f-c36958c7618e",
+      "ToPin": "pin1",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "47c56046-33b1-45c5-9a54-701b1e37f71e",
+      "FromComponentId": "97f47fcf-0ea0-4e97-8955-28561def5553",
+      "FromPin": "cathode",
+      "ToComponentId": "6dd761d1-4b53-4373-9f1f-c36958c7618e",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7c34bd9f-1b03-4ac5-86c6-cb02d440e3cb",
+      "FromComponentId": "252cf5aa-f1cf-4342-8d35-7fb517c7cc30",
+      "FromPin": "negative",
+      "ToComponentId": "97f47fcf-0ea0-4e97-8955-28561def5553",
+      "ToPin": "anode",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b9c0a2c9-840f-44ed-b312-d40259dc71c0",
+      "FromComponentId": "21b54be1-2d9b-4355-af29-e7ad014865c1",
+      "FromPin": "gnd",
+      "ToComponentId": "e0712685-633b-4862-a706-133174e128e9",
+      "ToPin": "anode",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "25a923cd-3405-4b8a-9163-88085b30ac5d",
+      "FromComponentId": "e0712685-633b-4862-a706-133174e128e9",
+      "FromPin": "cathode",
+      "ToComponentId": "252cf5aa-f1cf-4342-8d35-7fb517c7cc30",
+      "ToPin": "positive",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "438c9ba3-e461-4cec-a709-6414ae3db192",
+      "FromComponentId": "21b54be1-2d9b-4355-af29-e7ad014865c1",
+      "FromPin": "gnd",
+      "ToComponentId": "752a2817-8d29-4f43-91c8-a02e242119a2",
+      "ToPin": "anode",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "bacb70ef-d408-40f2-8947-5a77c3c5af64",
+      "FromComponentId": "752a2817-8d29-4f43-91c8-a02e242119a2",
+      "FromPin": "cathode",
+      "ToComponentId": "252cf5aa-f1cf-4342-8d35-7fb517c7cc30",
+      "ToPin": "negative",
+      "NetName": "N9",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "731888ec-5c1f-4fcf-8deb-3f9c0f8e7102",
+      "FromComponentId": "6dd761d1-4b53-4373-9f1f-c36958c7618e",
+      "FromPin": "pin2",
+      "ToComponentId": "21b54be1-2d9b-4355-af29-e7ad014865c1",
+      "ToPin": "gnd",
+      "NetName": "N10",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ae8ef950-bbf3-46a0-bb07-4020db14beb0",
+      "FromComponentId": "6dd761d1-4b53-4373-9f1f-c36958c7618e",
+      "FromPin": "pin1",
+      "ToComponentId": "c12a0e3f-ea5c-4cb9-ac19-4d542a2483e4",
+      "ToPin": "pin1",
+      "NetName": "N11",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3325eb90-d10a-4013-8f2f-7adccba01cb2",
+      "FromComponentId": "c12a0e3f-ea5c-4cb9-ac19-4d542a2483e4",
+      "FromPin": "pin2",
+      "ToComponentId": "21b54be1-2d9b-4355-af29-e7ad014865c1",
+      "ToPin": "gnd",
+      "NetName": "N12",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d2e9b321-1850-433c-984b-526472bc84e1",
+      "FromComponentId": "4b0b74aa-a2a2-400e-a1b7-429263dc5fa1",
+      "FromPin": "in",
+      "ToComponentId": "6dd761d1-4b53-4373-9f1f-c36958c7618e",
+      "ToPin": "pin1",
+      "NetName": "N13",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a4ef1829-ab68-4daf-a78e-5e0e8b6dce49",
+      "FromComponentId": "67611630-d428-4ec1-a284-186b3b5ebf5f",
+      "FromPin": "in",
+      "ToComponentId": "21b54be1-2d9b-4355-af29-e7ad014865c1",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

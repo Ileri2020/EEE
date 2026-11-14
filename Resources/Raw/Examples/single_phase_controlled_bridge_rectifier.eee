@@ -1,0 +1,422 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Single-Phase Controlled Bridge Rectifier",
+  "Description": "Low-voltage four-diode bridge rectifier with a toggleable firing-enable input, load lamp and input/output probes. The enable is an educational control indicator; diode conduction is not phase-controlled.",
+  "Components": [
+    {
+      "Id": "f8cee02e-1b62-50f5-ba0d-99681328f3aa",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "12",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "ComponentType": "VoltageSource",
+      "Reference": "VAC",
+      "Name": "VAC",
+      "Description": "Editable low-voltage Sine source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 12.0,
+        "SineFrequency": 50.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 12.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "226f738b-1213-52e6-8a35-a818e0a6cffb",
+      "ComponentType": "Diode",
+      "Reference": "D1",
+      "Name": "D1",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "09f15816-c2f2-57dd-936b-ef0f56ae8b0f",
+      "ComponentType": "Diode",
+      "Reference": "D2",
+      "Name": "D2",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ec2f48fd-8fde-555c-b5f7-fcc462ff6b2d",
+      "ComponentType": "Diode",
+      "Reference": "D3",
+      "Name": "D3",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d0c734a1-b873-5039-b50c-3ccdd78fb2ed",
+      "ComponentType": "Diode",
+      "Reference": "D4",
+      "Name": "D4",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a7acf221-42b6-56f0-8f51-3a1a0e2c13a3",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e2def6a2-c268-5b4c-ad7b-c60e0f8b4244",
+      "ComponentType": "Bulb",
+      "Reference": "LAMP",
+      "Name": "LAMP",
+      "Description": "Visible low-voltage indicator",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0,
+        "RatedVoltage": 6.0,
+        "ThresholdVoltage": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e1162539-2a40-5893-98a2-4aff0910b447",
+      "ComponentType": "LogicInput",
+      "Reference": "FIRING_ENABLE",
+      "Name": "FIRING_ENABLE",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b028e658-f9d4-5497-9f84-f51f2904d581",
+      "ComponentType": "LogicOutput",
+      "Reference": "GATE_STATUS",
+      "Name": "GATE_STATUS",
+      "Description": "LogicOutput",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "75100374-41d4-5d9b-90d5-266a48914d92",
+      "ComponentType": "Probe",
+      "Reference": "TP_AC",
+      "Name": "TP_AC",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "12"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "e52732e7-c623-5950-a8df-ebe505a47636",
+      "ComponentType": "Probe",
+      "Reference": "TP_DC",
+      "Name": "TP_DC",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "11.22220165"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "7c19272d-f86c-5e1e-a979-261405667e50",
+      "ComponentType": "Probe",
+      "Reference": "TP_GATE",
+      "Name": "TP_GATE",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "60f88454-8f3c-5da7-a887-bcce79be174d",
+      "FromComponentId": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "FromPin": "negative",
+      "ToComponentId": "f8cee02e-1b62-50f5-ba0d-99681328f3aa",
+      "ToPin": "gnd",
+      "NetName": "AC_RETURN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5df401f8-65e1-51bd-8bc4-270f63ba1708",
+      "FromComponentId": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "FromPin": "positive",
+      "ToComponentId": "226f738b-1213-52e6-8a35-a818e0a6cffb",
+      "ToPin": "anode",
+      "NetName": "AC_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "31b41d95-8710-564c-9293-4d297f60d0bd",
+      "FromComponentId": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "FromPin": "negative",
+      "ToComponentId": "09f15816-c2f2-57dd-936b-ef0f56ae8b0f",
+      "ToPin": "anode",
+      "NetName": "AC_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f429be04-dc46-528f-8b00-705a91090845",
+      "FromComponentId": "226f738b-1213-52e6-8a35-a818e0a6cffb",
+      "FromPin": "cathode",
+      "ToComponentId": "09f15816-c2f2-57dd-936b-ef0f56ae8b0f",
+      "ToPin": "cathode",
+      "NetName": "DC_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "25fd90ae-ad5c-5ea9-bde1-0f1f669f49a4",
+      "FromComponentId": "ec2f48fd-8fde-555c-b5f7-fcc462ff6b2d",
+      "FromPin": "anode",
+      "ToComponentId": "d0c734a1-b873-5039-b50c-3ccdd78fb2ed",
+      "ToPin": "anode",
+      "NetName": "DC_NEG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "32eccce2-a853-573d-8097-5bd569d49c36",
+      "FromComponentId": "ec2f48fd-8fde-555c-b5f7-fcc462ff6b2d",
+      "FromPin": "cathode",
+      "ToComponentId": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "ToPin": "positive",
+      "NetName": "AC_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "06ce5887-0a25-5075-b4d0-504f47922a1a",
+      "FromComponentId": "d0c734a1-b873-5039-b50c-3ccdd78fb2ed",
+      "FromPin": "cathode",
+      "ToComponentId": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "ToPin": "negative",
+      "NetName": "AC_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "51cb13d3-2c21-56c1-9a76-01f756520083",
+      "FromComponentId": "226f738b-1213-52e6-8a35-a818e0a6cffb",
+      "FromPin": "cathode",
+      "ToComponentId": "a7acf221-42b6-56f0-8f51-3a1a0e2c13a3",
+      "ToPin": "pin1",
+      "NetName": "DC_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "92e27460-ed26-5238-ab98-ef3093308024",
+      "FromComponentId": "a7acf221-42b6-56f0-8f51-3a1a0e2c13a3",
+      "FromPin": "pin1",
+      "ToComponentId": "e2def6a2-c268-5b4c-ad7b-c60e0f8b4244",
+      "ToPin": "pin1",
+      "NetName": "DC_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c697fcb1-866c-5954-adc2-017f4c7ee84e",
+      "FromComponentId": "a7acf221-42b6-56f0-8f51-3a1a0e2c13a3",
+      "FromPin": "pin2",
+      "ToComponentId": "ec2f48fd-8fde-555c-b5f7-fcc462ff6b2d",
+      "ToPin": "anode",
+      "NetName": "DC_NEG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "13a58ce3-f132-51a3-bea5-fa3140565c5d",
+      "FromComponentId": "a7acf221-42b6-56f0-8f51-3a1a0e2c13a3",
+      "FromPin": "pin2",
+      "ToComponentId": "e2def6a2-c268-5b4c-ad7b-c60e0f8b4244",
+      "ToPin": "pin2",
+      "NetName": "DC_NEG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5479d3c2-f4f7-54d0-826b-ace932f07406",
+      "FromComponentId": "e1162539-2a40-5893-98a2-4aff0910b447",
+      "FromPin": "out",
+      "ToComponentId": "b028e658-f9d4-5497-9f84-f51f2904d581",
+      "ToPin": "in",
+      "NetName": "GATE_STATUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6108ae37-af90-5644-9f42-e87845e69766",
+      "FromComponentId": "005d8034-4f08-543b-b9ba-e7f18aa7e7e4",
+      "FromPin": "positive",
+      "ToComponentId": "75100374-41d4-5d9b-90d5-266a48914d92",
+      "ToPin": "in",
+      "NetName": "AC_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "30493642-0bde-5769-af7d-b14dfb43e22d",
+      "FromComponentId": "a7acf221-42b6-56f0-8f51-3a1a0e2c13a3",
+      "FromPin": "pin1",
+      "ToComponentId": "e52732e7-c623-5950-a8df-ebe505a47636",
+      "ToPin": "in",
+      "NetName": "DC_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "24f47334-dba3-56e3-a2f9-900bcb753597",
+      "FromComponentId": "b028e658-f9d4-5497-9f84-f51f2904d581",
+      "FromPin": "in",
+      "ToComponentId": "7c19272d-f86c-5e1e-a979-261405667e50",
+      "ToPin": "in",
+      "NetName": "GATE_STATUS",
+      "Resistance": 0.0
+    }
+  ]
+}

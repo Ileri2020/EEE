@@ -137,6 +137,17 @@ public class PythonCommandExecutor
             return;
         }
 
+        var gridSpacingMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_logical_grid_spacing\s*\(\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (gridSpacingMatch.Success)
+        {
+            double rowSpacing = double.Parse(gridSpacingMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            double columnSpacing = double.Parse(gridSpacingMatch.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            _api.SetLogicalGridSpacing(rowSpacing, columnSpacing);
+            return;
+        }
+
         // Example: eesim.set_component_property("R1", "Resistance", 2200)
         var propertyMatch = Regex.Match(line,
             @"(?:circuit|eesim)\.set_component_property\s*\(\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*(true|false|null|none|""(?:\\.|[^""\\])*""|'[^']*'|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",

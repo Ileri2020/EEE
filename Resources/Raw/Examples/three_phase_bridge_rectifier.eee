@@ -1,0 +1,535 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Three-Phase Bridge Rectifier",
+  "Description": "Six-pulse three-phase diode bridge with three phase-shifted sources, a DC load, and a filter capacitor.",
+  "Components": [
+    {
+      "Id": "f409c16e-44c2-44e2-84b5-da03a5379267",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "893e59f5-c430-4317-b180-0ba13188412d",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_A",
+      "Name": "V_A",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 230,
+        "SineOffset": 0.0,
+        "SineAmplitude": 230,
+        "SineFrequency": 50,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 230,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "aed1e336-e89c-4c40-978d-f316e63b54cb",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_B",
+      "Name": "V_B",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 230,
+        "SineOffset": 0.0,
+        "SineAmplitude": 230,
+        "SineFrequency": 50,
+        "SinePhase": -120,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 230,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "779a9412-a6f3-4a37-9f9a-49164bece621",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_C",
+      "Name": "V_C",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 230,
+        "SineOffset": 0.0,
+        "SineAmplitude": 230,
+        "SineFrequency": 50,
+        "SinePhase": 120,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 230,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "DAH",
+      "Name": "DAH",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "DAL",
+      "Name": "DAL",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "93a21261-9685-4a9b-8706-80ec59ad96d6",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "DBH",
+      "Name": "DBH",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e4298109-80fb-4e05-abfc-542a6fe1f291",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "DBL",
+      "Name": "DBL",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "958cdf36-6bcc-461d-b006-1e4096f066c3",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "DCH",
+      "Name": "DCH",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "6212e0e8-4ded-4d50-946f-750be8e9de74",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "DCL",
+      "Name": "DCL",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "efc6c640-3760-49c0-b497-197b666d6fe1",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_DC_LOAD",
+      "Name": "R_DC_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d31e51c4-3268-40b8-bffb-312588a08634",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_DC_FILTER",
+      "Name": "C_DC_FILTER",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.00047
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b94222d-c70f-4f7c-93c7-226f45bd747b",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_DC_BUS",
+      "Name": "TP_DC_BUS",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "229.2327477"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d253ac21-74d3-4fce-9288-2491c88ddf4a",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "185fd137-cac8-4928-9c15-5d6fbdf41628",
+      "FromComponentId": "893e59f5-c430-4317-b180-0ba13188412d",
+      "FromPin": "negative",
+      "ToComponentId": "f409c16e-44c2-44e2-84b5-da03a5379267",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4b5552ac-780c-4736-b5a5-4943f53c784f",
+      "FromComponentId": "aed1e336-e89c-4c40-978d-f316e63b54cb",
+      "FromPin": "negative",
+      "ToComponentId": "f409c16e-44c2-44e2-84b5-da03a5379267",
+      "ToPin": "gnd",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0da25060-937e-49fd-ab67-e3a2c8f12e14",
+      "FromComponentId": "779a9412-a6f3-4a37-9f9a-49164bece621",
+      "FromPin": "negative",
+      "ToComponentId": "f409c16e-44c2-44e2-84b5-da03a5379267",
+      "ToPin": "gnd",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "95269f32-415f-4ad8-9e4e-28cc18627764",
+      "FromComponentId": "893e59f5-c430-4317-b180-0ba13188412d",
+      "FromPin": "positive",
+      "ToComponentId": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "ToPin": "anode",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "08b4b316-4fb3-4202-a1ed-20be3b3ebdcf",
+      "FromComponentId": "aed1e336-e89c-4c40-978d-f316e63b54cb",
+      "FromPin": "positive",
+      "ToComponentId": "93a21261-9685-4a9b-8706-80ec59ad96d6",
+      "ToPin": "anode",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "11d43b87-6d9f-40d3-b7a3-2e94a4efbc8d",
+      "FromComponentId": "93a21261-9685-4a9b-8706-80ec59ad96d6",
+      "FromPin": "cathode",
+      "ToComponentId": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "ToPin": "cathode",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4293f573-1245-4dcf-bc90-59d5d8e5fed5",
+      "FromComponentId": "779a9412-a6f3-4a37-9f9a-49164bece621",
+      "FromPin": "positive",
+      "ToComponentId": "958cdf36-6bcc-461d-b006-1e4096f066c3",
+      "ToPin": "anode",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8ea4bc55-7ebb-48fc-8f40-b9c43f2397bf",
+      "FromComponentId": "958cdf36-6bcc-461d-b006-1e4096f066c3",
+      "FromPin": "cathode",
+      "ToComponentId": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "ToPin": "cathode",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "56700e17-8f13-4826-a6b7-a8d862a1c26c",
+      "FromComponentId": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "FromPin": "cathode",
+      "ToComponentId": "93a21261-9685-4a9b-8706-80ec59ad96d6",
+      "ToPin": "cathode",
+      "NetName": "N9",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "aea6e5a0-6f1c-4ed7-91f3-cafe776e58e0",
+      "FromComponentId": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "FromPin": "cathode",
+      "ToComponentId": "958cdf36-6bcc-461d-b006-1e4096f066c3",
+      "ToPin": "cathode",
+      "NetName": "N10",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3636292a-c46e-471d-af01-89848d227931",
+      "FromComponentId": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "FromPin": "cathode",
+      "ToComponentId": "893e59f5-c430-4317-b180-0ba13188412d",
+      "ToPin": "positive",
+      "NetName": "N11",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "86e19ed9-aa92-4370-9965-65ce13c65929",
+      "FromComponentId": "e4298109-80fb-4e05-abfc-542a6fe1f291",
+      "FromPin": "cathode",
+      "ToComponentId": "aed1e336-e89c-4c40-978d-f316e63b54cb",
+      "ToPin": "positive",
+      "NetName": "N12",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c6623388-b9fd-4a63-8779-9688309074c7",
+      "FromComponentId": "6212e0e8-4ded-4d50-946f-750be8e9de74",
+      "FromPin": "cathode",
+      "ToComponentId": "779a9412-a6f3-4a37-9f9a-49164bece621",
+      "ToPin": "positive",
+      "NetName": "N13",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f1f2977f-8faa-40c9-b39c-cd9764aa8433",
+      "FromComponentId": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "FromPin": "anode",
+      "ToComponentId": "e4298109-80fb-4e05-abfc-542a6fe1f291",
+      "ToPin": "anode",
+      "NetName": "N14",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "48012812-4fcb-4a03-8077-09464361279c",
+      "FromComponentId": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "FromPin": "anode",
+      "ToComponentId": "6212e0e8-4ded-4d50-946f-750be8e9de74",
+      "ToPin": "anode",
+      "NetName": "N15",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8da35da6-5878-49dd-b0d5-2caf07a17961",
+      "FromComponentId": "3eb43dfc-afce-4ad2-93f0-a9ebeac2e83c",
+      "FromPin": "cathode",
+      "ToComponentId": "efc6c640-3760-49c0-b497-197b666d6fe1",
+      "ToPin": "pin1",
+      "NetName": "N16",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a0adb3ff-acad-4e58-9182-094f6d135729",
+      "FromComponentId": "efc6c640-3760-49c0-b497-197b666d6fe1",
+      "FromPin": "pin2",
+      "ToComponentId": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "ToPin": "anode",
+      "NetName": "N17",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6a93ddb9-f656-41cb-abba-334edc8d7e7c",
+      "FromComponentId": "efc6c640-3760-49c0-b497-197b666d6fe1",
+      "FromPin": "pin1",
+      "ToComponentId": "d31e51c4-3268-40b8-bffb-312588a08634",
+      "ToPin": "pin1",
+      "NetName": "N18",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2f63b6aa-30b9-445c-8206-e6e51180a952",
+      "FromComponentId": "d31e51c4-3268-40b8-bffb-312588a08634",
+      "FromPin": "pin2",
+      "ToComponentId": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "ToPin": "anode",
+      "NetName": "N19",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8536fce5-feac-4a92-954f-0176c274a656",
+      "FromComponentId": "3b94222d-c70f-4f7c-93c7-226f45bd747b",
+      "FromPin": "in",
+      "ToComponentId": "efc6c640-3760-49c0-b497-197b666d6fe1",
+      "ToPin": "pin1",
+      "NetName": "N20",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f2c50867-5aff-4585-9b0c-e7396110e197",
+      "FromComponentId": "9a002bf2-d5ff-4733-a219-3c0269578e66",
+      "FromPin": "anode",
+      "ToComponentId": "f409c16e-44c2-44e2-84b5-da03a5379267",
+      "ToPin": "gnd",
+      "NetName": "N21",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1090a7a8-7a64-44d0-803d-2741133aab55",
+      "FromComponentId": "d253ac21-74d3-4fce-9288-2491c88ddf4a",
+      "FromPin": "in",
+      "ToComponentId": "f409c16e-44c2-44e2-84b5-da03a5379267",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

@@ -34,6 +34,9 @@ public class PythonCodeGenerator
         sb.AppendLine("import eesim");
         sb.AppendLine();
         sb.AppendLine($"circuit = eesim.new_circuit({JsonSerializer.Serialize(circuit.Title)})");
+        sb.AppendLine(
+            $"eesim.set_logical_grid_spacing({FormatNumber(circuit.LogicalGridRowSpacing)}, " +
+            $"{FormatNumber(circuit.LogicalGridColumnSpacing)})");
         sb.AppendLine();
 
         // ── Components ────────────────────────────────────────────────────────

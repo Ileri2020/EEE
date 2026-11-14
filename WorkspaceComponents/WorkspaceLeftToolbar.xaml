@@ -46,6 +46,22 @@
                                 Command="{Binding RedoCommand}"
                                 IsEnabled="{Binding CanRedo}"
                                 ToolTipProperties.Text="Redo"/>
+                        <Button Text="↕+" Style="{StaticResource IconBtn}"
+                                TextColor="#56D364"
+                                Command="{Binding ExpandLogicalGridRowsCommand}"
+                                ToolTipProperties.Text="Expand row spacing"/>
+                        <Button Text="↕−" Style="{StaticResource IconBtn}"
+                                TextColor="#E3B341"
+                                Command="{Binding ContractLogicalGridRowsCommand}"
+                                ToolTipProperties.Text="Reduce row spacing to the safe minimum"/>
+                        <Button Text="↔+" Style="{StaticResource IconBtn}"
+                                TextColor="#56D364"
+                                Command="{Binding ExpandLogicalGridColumnsCommand}"
+                                ToolTipProperties.Text="Expand column spacing"/>
+                        <Button Text="↔−" Style="{StaticResource IconBtn}"
+                                TextColor="#E3B341"
+                                Command="{Binding ContractLogicalGridColumnsCommand}"
+                                ToolTipProperties.Text="Reduce column spacing to the safe minimum"/>
 
                         <!-- Rotate / Copy / Delete selected component -->
                         <Button Text="⟳" Style="{StaticResource IconBtn}"

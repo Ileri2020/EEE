@@ -8,11 +8,29 @@ namespace EESimulator.Core.Models;
 /// </summary>
 public class CircuitNode : RootNode
 {
+    public const double MinimumLogicalGridSpacing = 20;
+    public const double LogicalGridSpacingStep = 20;
+
+    private double _logicalGridRowSpacing = MinimumLogicalGridSpacing;
+    private double _logicalGridColumnSpacing = MinimumLogicalGridSpacing;
+
     public string Title { get; set; } = "Untitled Circuit";
 
     public string Description { get; set; } = string.Empty;
 
     public string Version { get; set; } = "1.0.0";
+
+    public double LogicalGridRowSpacing
+    {
+        get => _logicalGridRowSpacing;
+        set => SetLogicalGridSpacing(ref _logicalGridRowSpacing, value, nameof(LogicalGridRowSpacing));
+    }
+
+    public double LogicalGridColumnSpacing
+    {
+        get => _logicalGridColumnSpacing;
+        set => SetLogicalGridSpacing(ref _logicalGridColumnSpacing, value, nameof(LogicalGridColumnSpacing));
+    }
 
     public long StructureVersion { get; private set; } = 1;
 
@@ -34,4 +52,17 @@ public class CircuitNode : RootNode
     public IEnumerable<ConnectionNode> Connections => FindChildren<ConnectionNode>();
 
     public IEnumerable<GroupNode> Groups => FindChildren<GroupNode>();
+
+    private void SetLogicalGridSpacing(ref double field, double value, string propertyName)
+    {
+        if (!double.IsFinite(value) || value < MinimumLogicalGridSpacing)
+            throw new ArgumentOutOfRangeException(propertyName, $"Logical grid spacing must be at least {MinimumLogicalGridSpacing}.");
+
+        if (field == value)
+            return;
+
+        double oldValue = field;
+        field = value;
+        NotifyModified(propertyName, oldValue, value);
+    }
 }

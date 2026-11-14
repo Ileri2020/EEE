@@ -199,6 +199,34 @@ public partial class EEWorkspaceViewModel
     }
 
     [RelayCommand]
+    private void ExpandLogicalGridRows() =>
+        AdjustLogicalGridSpacing(rows: true, delta: CircuitNode.LogicalGridSpacingStep);
+
+    [RelayCommand]
+    private void ContractLogicalGridRows() =>
+        AdjustLogicalGridSpacing(rows: true, delta: -CircuitNode.LogicalGridSpacingStep);
+
+    [RelayCommand]
+    private void ExpandLogicalGridColumns() =>
+        AdjustLogicalGridSpacing(rows: false, delta: CircuitNode.LogicalGridSpacingStep);
+
+    [RelayCommand]
+    private void ContractLogicalGridColumns() =>
+        AdjustLogicalGridSpacing(rows: false, delta: -CircuitNode.LogicalGridSpacingStep);
+
+    private void AdjustLogicalGridSpacing(bool rows, double delta)
+    {
+        double rowSpacing = Circuit.LogicalGridRowSpacing;
+        double columnSpacing = Circuit.LogicalGridColumnSpacing;
+        if (rows)
+            rowSpacing = Math.Max(CircuitNode.MinimumLogicalGridSpacing, rowSpacing + delta);
+        else
+            columnSpacing = Math.Max(CircuitNode.MinimumLogicalGridSpacing, columnSpacing + delta);
+
+        CommandManager.ExecuteCommand(new SetLogicalGridSpacingCommand(Circuit, rowSpacing, columnSpacing));
+    }
+
+    [RelayCommand]
     public void SaveProject()
     {
         IsFileMenuOpen = false;

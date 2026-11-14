@@ -29,7 +29,6 @@ public static class LogicalGridSchematicLayout
 {
     private const double OriginX = 96;
     private const double OriginY = 80;
-    private const double WireCorridor = 20;
     private const double SameCellGap = 20;
     private const double ReferenceLabelHeight = 18;
 
@@ -70,18 +69,20 @@ public static class LogicalGridSchematicLayout
             .ToDictionary(group => group.Key, group => group.ToList());
         var componentsByColumn = logicalComponents.GroupBy(component => component.LogicalColumn!.Value)
             .ToDictionary(group => group.Key, group => group.ToList());
-        double columnCursor = Math.Max(OriginX, GetManualRightEdge(circuit, footprints) + WireCorridor);
+        double columnSpacing = circuit.LogicalGridColumnSpacing;
+        double rowSpacing = circuit.LogicalGridRowSpacing;
+        double columnCursor = Math.Max(OriginX, GetManualRightEdge(circuit, footprints) + columnSpacing);
         var columnCenters = new Dictionary<int, double>();
         int previousColumn = 0;
         foreach (int column in componentsByColumn.Keys.OrderBy(value => value))
         {
             int emptyColumns = previousColumn == 0 ? column - 1 : column - previousColumn - 1;
-            columnCursor += (double)emptyColumns * WireCorridor;
+            columnCursor += (double)emptyColumns * columnSpacing;
             double componentWidth = componentsByColumn[column]
                 .Max(component => footprints[component].Rotate(component.Rotation).HalfWidth * 2);
             double columnWidth = componentWidth;
             columnCenters[column] = columnCursor + columnWidth / 2;
-            columnCursor += columnWidth + WireCorridor;
+            columnCursor += columnWidth + columnSpacing;
             previousColumn = column;
         }
 
@@ -100,9 +101,9 @@ public static class LogicalGridSchematicLayout
         foreach (int row in rowHeights.Keys.OrderBy(value => value))
         {
             int emptyRows = previousRow == 0 ? row - 1 : row - previousRow - 1;
-            rowCursor += (double)emptyRows * WireCorridor;
+            rowCursor += (double)emptyRows * rowSpacing;
             rowCenters[row] = rowCursor + rowHeights[row] / 2;
-            rowCursor += rowHeights[row] + WireCorridor;
+            rowCursor += rowHeights[row] + rowSpacing;
             previousRow = row;
         }
 
@@ -156,7 +157,7 @@ public static class LogicalGridSchematicLayout
             Footprint footprint = footprints[component].Rotate(component.Rotation);
             right = Math.Max(right, footprint.Right(component.X));
         }
-        return double.IsNegativeInfinity(right) ? OriginX - WireCorridor : right;
+        return double.IsNegativeInfinity(right) ? OriginX - circuit.LogicalGridColumnSpacing : right;
     }
 
     private static Footprint GetFootprint(ComponentNode component)

@@ -1,0 +1,219 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Traffic Light Controller",
+  "Description": "Interactive signal-state demonstrator with toggleable red/green phase controls, a clock-driven amber indicator, and voltage probes. This is a logic teaching circuit, not a road-safety controller.",
+  "Components": [
+    {
+      "Id": "8c0c3d03-f911-5f70-bde1-b84bfd9e1743",
+      "ComponentType": "LogicInput",
+      "Reference": "PHASE",
+      "Name": "PHASE",
+      "Description": "Toggle to alternate the displayed signal phase",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b68f3d89-501b-5207-b02a-3eb1409c1cdc",
+      "ComponentType": "LogicInput",
+      "Reference": "STOP",
+      "Name": "STOP",
+      "Description": "Manual red-signal override",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "1e099cb5-f17d-5f3d-9d9d-13b6bdfe60fa",
+      "ComponentType": "Clock",
+      "Reference": "CLK",
+      "Name": "CLK",
+      "Description": "Clock",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Frequency": 1.0,
+        "DutyCycle": 0.5,
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "0a3bcf2e-c187-5420-b836-e1c27b14892e",
+      "ComponentType": "LogicOutput",
+      "Reference": "RED",
+      "Name": "RED",
+      "Description": "Red signal indicator",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "740ff088-b9d2-5756-b040-2db62a64c915",
+      "ComponentType": "LogicOutput",
+      "Reference": "AMBER",
+      "Name": "AMBER",
+      "Description": "Amber signal indicator",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "0d17572f-9b7f-55d4-b222-c2ea1c63da7e",
+      "ComponentType": "LogicOutput",
+      "Reference": "GREEN",
+      "Name": "GREEN",
+      "Description": "Green signal indicator",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "0873f29d-797e-507a-9dd3-a313ba7a6cd5",
+      "ComponentType": "Probe",
+      "Reference": "TP_RED",
+      "Name": "TP_RED",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "101803e1-1fb9-5b96-b9f3-43f87dc7194c",
+      "ComponentType": "Probe",
+      "Reference": "TP_GREEN",
+      "Name": "TP_GREEN",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "ca652395-02c0-5571-a30a-47b651e229fc",
+      "FromComponentId": "b68f3d89-501b-5207-b02a-3eb1409c1cdc",
+      "FromPin": "out",
+      "ToComponentId": "0a3bcf2e-c187-5420-b836-e1c27b14892e",
+      "ToPin": "in",
+      "NetName": "RED",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c5254f16-75f6-5b45-9713-aaa2df44bec0",
+      "FromComponentId": "8c0c3d03-f911-5f70-bde1-b84bfd9e1743",
+      "FromPin": "out",
+      "ToComponentId": "0d17572f-9b7f-55d4-b222-c2ea1c63da7e",
+      "ToPin": "in",
+      "NetName": "GREEN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3c0a04ef-9fbd-521e-a839-a4ef853bfda6",
+      "FromComponentId": "1e099cb5-f17d-5f3d-9d9d-13b6bdfe60fa",
+      "FromPin": "out",
+      "ToComponentId": "740ff088-b9d2-5756-b040-2db62a64c915",
+      "ToPin": "in",
+      "NetName": "AMBER_CLOCK",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "92f12683-ac45-5a4b-8e95-606271f69526",
+      "FromComponentId": "0a3bcf2e-c187-5420-b836-e1c27b14892e",
+      "FromPin": "in",
+      "ToComponentId": "0873f29d-797e-507a-9dd3-a313ba7a6cd5",
+      "ToPin": "in",
+      "NetName": "RED",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d9c7353a-3e1c-5aca-a81c-58ccb3a74899",
+      "FromComponentId": "0d17572f-9b7f-55d4-b222-c2ea1c63da7e",
+      "FromPin": "in",
+      "ToComponentId": "101803e1-1fb9-5b96-b9f3-43f87dc7194c",
+      "ToPin": "in",
+      "NetName": "GREEN",
+      "Resistance": 0.0
+    }
+  ]
+}

@@ -1,0 +1,278 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Colpitts Oscillator",
+  "Description": "Colpitts LC tank demonstration using a capacitive divider and sinusoidal excitation. The simulator illustrates the resonant network; transistor startup and amplitude limiting are not represented.",
+  "Components": [
+    {
+      "Id": "a178b31d-c2ca-4e92-bfab-328847278c23",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "aa5e5975-b7df-4b7f-a3e0-f58f21052c8c",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_EXCITE",
+      "Name": "V_EXCITE",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 1,
+        "SineOffset": 0.0,
+        "SineAmplitude": 1,
+        "SineFrequency": 10000,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 1,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "54a67e18-9b33-43b8-a215-af8db99c38c4",
+      "StableTypeId": "electrical.inductor",
+      "ComponentType": "Inductor",
+      "Reference": "L_TANK",
+      "Name": "L_TANK",
+      "Description": "Inductor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001,
+        "Rdc": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "37340484-5b22-485b-9587-0e3678e92b4e",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C1",
+      "Name": "C1",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-07
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2a8339df-06da-4518-a5a7-2a1fa2d4125c",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C2",
+      "Name": "C2",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-07
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "487bacd6-2068-45b9-be91-2cdc8c0cf27e",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_DAMP",
+      "Name": "R_DAMP",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "826e5748-944a-48a5-9c9f-a896b73b1d71",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_DIVIDER",
+      "Name": "TP_DIVIDER",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9a612e1d-2c9f-4c16-becb-dfcedbe91791",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "653030e3-e791-4f6e-a14b-b436e308fab8",
+      "FromComponentId": "aa5e5975-b7df-4b7f-a3e0-f58f21052c8c",
+      "FromPin": "negative",
+      "ToComponentId": "a178b31d-c2ca-4e92-bfab-328847278c23",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "061e133a-f706-428c-acce-8c2eea3b4d2c",
+      "FromComponentId": "aa5e5975-b7df-4b7f-a3e0-f58f21052c8c",
+      "FromPin": "positive",
+      "ToComponentId": "54a67e18-9b33-43b8-a215-af8db99c38c4",
+      "ToPin": "pin1",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "436c214d-7316-49fc-8719-c10c175c512f",
+      "FromComponentId": "54a67e18-9b33-43b8-a215-af8db99c38c4",
+      "FromPin": "pin2",
+      "ToComponentId": "a178b31d-c2ca-4e92-bfab-328847278c23",
+      "ToPin": "gnd",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ac587e13-c89b-428f-bd57-fb98eba571ee",
+      "FromComponentId": "54a67e18-9b33-43b8-a215-af8db99c38c4",
+      "FromPin": "pin1",
+      "ToComponentId": "37340484-5b22-485b-9587-0e3678e92b4e",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6e7a2843-413e-4d86-b644-425098107dc6",
+      "FromComponentId": "37340484-5b22-485b-9587-0e3678e92b4e",
+      "FromPin": "pin2",
+      "ToComponentId": "2a8339df-06da-4518-a5a7-2a1fa2d4125c",
+      "ToPin": "pin1",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "78c2318c-076a-44c0-95b3-f58d08ce34cc",
+      "FromComponentId": "2a8339df-06da-4518-a5a7-2a1fa2d4125c",
+      "FromPin": "pin2",
+      "ToComponentId": "a178b31d-c2ca-4e92-bfab-328847278c23",
+      "ToPin": "gnd",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c9db5d66-a2d5-4ef9-9c38-73122c848164",
+      "FromComponentId": "37340484-5b22-485b-9587-0e3678e92b4e",
+      "FromPin": "pin2",
+      "ToComponentId": "487bacd6-2068-45b9-be91-2cdc8c0cf27e",
+      "ToPin": "pin1",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "eecd1138-76d0-4edc-a407-e28f2f6b889b",
+      "FromComponentId": "487bacd6-2068-45b9-be91-2cdc8c0cf27e",
+      "FromPin": "pin2",
+      "ToComponentId": "a178b31d-c2ca-4e92-bfab-328847278c23",
+      "ToPin": "gnd",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0ca46b18-641d-4cf5-8a2a-ad6bebfe87ae",
+      "FromComponentId": "826e5748-944a-48a5-9c9f-a896b73b1d71",
+      "FromPin": "in",
+      "ToComponentId": "37340484-5b22-485b-9587-0e3678e92b4e",
+      "ToPin": "pin2",
+      "NetName": "N9",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b40976d5-5056-40ee-b7d6-8ff2d701ea26",
+      "FromComponentId": "9a612e1d-2c9f-4c16-becb-dfcedbe91791",
+      "FromPin": "in",
+      "ToComponentId": "a178b31d-c2ca-4e92-bfab-328847278c23",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

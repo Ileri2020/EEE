@@ -1,0 +1,753 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Eight-Bit ALU",
+  "Description": "Interactive eight-bit arithmetic datapath with toggleable operands, carry control, hexadecimal outputs and signal probes. The arithmetic core demonstrates the ALU add operation.",
+  "Components": [
+    {
+      "Id": "dde476a4-5e3b-5541-b7e9-885a85507ef1",
+      "ComponentType": "LogicInput",
+      "Reference": "A0",
+      "Name": "A0",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "0281c0ed-38b2-537f-8e31-fb031f3e53b5",
+      "ComponentType": "LogicInput",
+      "Reference": "A1",
+      "Name": "A1",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5b89c969-a665-5227-970c-937aab925e7b",
+      "ComponentType": "LogicInput",
+      "Reference": "A2",
+      "Name": "A2",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "4ae6e268-e82d-504f-a18e-f0953b41f4ca",
+      "ComponentType": "LogicInput",
+      "Reference": "A3",
+      "Name": "A3",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5b5e3256-ddf6-5f5a-a8c3-0cdb24e5ebb7",
+      "ComponentType": "LogicInput",
+      "Reference": "A4",
+      "Name": "A4",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "62674977-e2cd-5868-8462-c8c68ff2e020",
+      "ComponentType": "LogicInput",
+      "Reference": "A5",
+      "Name": "A5",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c32d6e57-0e76-5997-8483-0de4acde9d65",
+      "ComponentType": "LogicInput",
+      "Reference": "A6",
+      "Name": "A6",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "f74abe00-c142-50b0-8096-fe7bd2d8d881",
+      "ComponentType": "LogicInput",
+      "Reference": "A7",
+      "Name": "A7",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5ae4954b-0455-5802-ab84-a67ba7f31e76",
+      "ComponentType": "LogicInput",
+      "Reference": "B0",
+      "Name": "B0",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c96c2495-0c08-504d-8f44-851299e87f75",
+      "ComponentType": "LogicInput",
+      "Reference": "B1",
+      "Name": "B1",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "10",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8acdb29b-4ab6-50a6-8a4c-ff846296591f",
+      "ComponentType": "LogicInput",
+      "Reference": "B2",
+      "Name": "B2",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "11",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c3ea3df4-c243-5694-b229-1d513ca548c1",
+      "ComponentType": "LogicInput",
+      "Reference": "B3",
+      "Name": "B3",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "12",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ac7a75d3-d573-5dd0-9afc-2957350c58f4",
+      "ComponentType": "LogicInput",
+      "Reference": "B4",
+      "Name": "B4",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "13",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "88a8932b-f075-5fb1-a67f-a79959b69a7b",
+      "ComponentType": "LogicInput",
+      "Reference": "B5",
+      "Name": "B5",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "14",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3f78f27b-ee01-54ce-b458-0892da7da5b4",
+      "ComponentType": "LogicInput",
+      "Reference": "B6",
+      "Name": "B6",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "15",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "36aa558c-4dc8-5a93-8774-c01ae1cf1a1c",
+      "ComponentType": "LogicInput",
+      "Reference": "B7",
+      "Name": "B7",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "16",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "498e08c3-c31e-5114-a5ff-e382d5deea88",
+      "ComponentType": "LogicInput",
+      "Reference": "CIN",
+      "Name": "CIN",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "17",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ComponentType": "Adder",
+      "Reference": "ADD8",
+      "Name": "ADD8",
+      "Description": "Adder",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "BitWidth": 8
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3679154d-e58d-5a9a-a1bb-bcd60e89e75d",
+      "ComponentType": "LogicOutput",
+      "Reference": "CARRY",
+      "Name": "CARRY",
+      "Description": "LogicOutput",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "12"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "7776cfd3-1b55-5eda-95de-8eb50c2b46ba",
+      "ComponentType": "HexDigit",
+      "Reference": "HEX0",
+      "Name": "HEX0",
+      "Description": "HexDigit",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d71851f2-e51a-55b1-a0ea-7f341d12ae44",
+      "ComponentType": "Probe",
+      "Reference": "TP_RESULT0",
+      "Name": "TP_RESULT0",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "a8c21f9a-8c9c-5598-8038-37b278316d0c",
+      "ComponentType": "HexDigit",
+      "Reference": "HEX1",
+      "Name": "HEX1",
+      "Description": "HexDigit",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "376991ec-59f5-5aae-a3e7-0673d5058d41",
+      "ComponentType": "Probe",
+      "Reference": "TP_RESULT1",
+      "Name": "TP_RESULT1",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "46525977-3a90-5c60-81ec-934a21aefcc3",
+      "FromComponentId": "dde476a4-5e3b-5541-b7e9-885a85507ef1",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A0",
+      "NetName": "A0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4c5b7ac0-b8d8-57e0-9822-0caf5d33e56d",
+      "FromComponentId": "5ae4954b-0455-5802-ab84-a67ba7f31e76",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B0",
+      "NetName": "B0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e1a93f1d-4a9d-541b-80c0-1ddb16466203",
+      "FromComponentId": "0281c0ed-38b2-537f-8e31-fb031f3e53b5",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A1",
+      "NetName": "A1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d8703149-928e-5e8b-9f4e-5550cac696aa",
+      "FromComponentId": "c96c2495-0c08-504d-8f44-851299e87f75",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B1",
+      "NetName": "B1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d211d756-6d17-5ff6-813d-f92ec946655e",
+      "FromComponentId": "5b89c969-a665-5227-970c-937aab925e7b",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A2",
+      "NetName": "A2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d871f436-e08b-59ad-af97-d540009fec4e",
+      "FromComponentId": "8acdb29b-4ab6-50a6-8a4c-ff846296591f",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B2",
+      "NetName": "B2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9f00a8fa-da1b-5495-897b-6483ffff4ab8",
+      "FromComponentId": "4ae6e268-e82d-504f-a18e-f0953b41f4ca",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A3",
+      "NetName": "A3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "84ebdd36-835f-5ee6-9c6e-ff7fa883569b",
+      "FromComponentId": "c3ea3df4-c243-5694-b229-1d513ca548c1",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B3",
+      "NetName": "B3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "816bdba7-0cb2-5892-b23f-c40b86458e61",
+      "FromComponentId": "5b5e3256-ddf6-5f5a-a8c3-0cdb24e5ebb7",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A4",
+      "NetName": "A4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e9406784-1f76-5019-b584-baf3c2d6df51",
+      "FromComponentId": "ac7a75d3-d573-5dd0-9afc-2957350c58f4",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B4",
+      "NetName": "B4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ffd70d69-1952-53db-8fd4-e5b3eda7d309",
+      "FromComponentId": "62674977-e2cd-5868-8462-c8c68ff2e020",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A5",
+      "NetName": "A5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "65209445-746f-50f6-9f69-2204a752ab8c",
+      "FromComponentId": "88a8932b-f075-5fb1-a67f-a79959b69a7b",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B5",
+      "NetName": "B5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "eb66f54c-e3e2-50da-b50a-c8ad4209b195",
+      "FromComponentId": "c32d6e57-0e76-5997-8483-0de4acde9d65",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A6",
+      "NetName": "A6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "17372925-43d6-55d2-a27f-da921dbcfc69",
+      "FromComponentId": "3f78f27b-ee01-54ce-b458-0892da7da5b4",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B6",
+      "NetName": "B6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "fbd1a6e9-243a-50b7-8b72-092f56f7422a",
+      "FromComponentId": "f74abe00-c142-50b0-8096-fe7bd2d8d881",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "A7",
+      "NetName": "A7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "58c35289-54ad-58e1-8cf1-7d2d51619600",
+      "FromComponentId": "36aa558c-4dc8-5a93-8774-c01ae1cf1a1c",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "B7",
+      "NetName": "B7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "914089f2-e40a-5120-b820-0bb4612713b7",
+      "FromComponentId": "498e08c3-c31e-5114-a5ff-e382d5deea88",
+      "FromPin": "out",
+      "ToComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "ToPin": "cin",
+      "NetName": "CIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "855d5874-3862-528d-9644-64ae85a9598e",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "cout",
+      "ToComponentId": "3679154d-e58d-5a9a-a1bb-bcd60e89e75d",
+      "ToPin": "in",
+      "NetName": "COUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "efba717a-e93d-5178-b50a-7d9e34951488",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y0",
+      "ToComponentId": "7776cfd3-1b55-5eda-95de-8eb50c2b46ba",
+      "ToPin": "D0",
+      "NetName": "Y0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "82e3371c-7e7a-5f16-8d9e-f82141caccb5",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y1",
+      "ToComponentId": "7776cfd3-1b55-5eda-95de-8eb50c2b46ba",
+      "ToPin": "D1",
+      "NetName": "Y1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1b1449bc-ddc0-51d8-95ef-2208c0e9cc32",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y2",
+      "ToComponentId": "7776cfd3-1b55-5eda-95de-8eb50c2b46ba",
+      "ToPin": "D2",
+      "NetName": "Y2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d1caf830-3b17-52dc-8b76-504742029908",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y3",
+      "ToComponentId": "7776cfd3-1b55-5eda-95de-8eb50c2b46ba",
+      "ToPin": "D3",
+      "NetName": "Y3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e45953f2-747b-5e46-87a1-1b6be8ac680b",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y0",
+      "ToComponentId": "d71851f2-e51a-55b1-a0ea-7f341d12ae44",
+      "ToPin": "in",
+      "NetName": "Y0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9bdc6c43-70d0-5157-a86a-de81e0c68d3f",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y4",
+      "ToComponentId": "a8c21f9a-8c9c-5598-8038-37b278316d0c",
+      "ToPin": "D0",
+      "NetName": "Y4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "94cd3dc1-ecbe-5b8e-945c-3fe4a76644ac",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y5",
+      "ToComponentId": "a8c21f9a-8c9c-5598-8038-37b278316d0c",
+      "ToPin": "D1",
+      "NetName": "Y5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "12c9a31c-483d-5d2f-8d0c-39a7b5b651b0",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y6",
+      "ToComponentId": "a8c21f9a-8c9c-5598-8038-37b278316d0c",
+      "ToPin": "D2",
+      "NetName": "Y6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "480e22e9-e988-5fcb-bc85-bdc8421b66ff",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y7",
+      "ToComponentId": "a8c21f9a-8c9c-5598-8038-37b278316d0c",
+      "ToPin": "D3",
+      "NetName": "Y7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "97555b89-a493-52e9-a1cc-f50fa2bee38e",
+      "FromComponentId": "57dd88ef-321b-5e3d-a5eb-52e609327932",
+      "FromPin": "Y4",
+      "ToComponentId": "376991ec-59f5-5aae-a3e7-0673d5058d41",
+      "ToPin": "in",
+      "NetName": "Y4",
+      "Resistance": 0.0
+    }
+  ]
+}

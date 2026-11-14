@@ -1,0 +1,349 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "LLC Resonant Converter",
+  "Description": "LLC resonance study with a low-voltage source, resonant inductor-capacitor elements, rectifier, load and output test points.",
+  "Components": [
+    {
+      "Id": "81644653-3085-5b38-a170-375df5dc375b",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "11dc439e-31f2-5a94-9436-eefe544cf918",
+      "ComponentType": "VoltageSource",
+      "Reference": "VIN",
+      "Name": "VIN",
+      "Description": "Adjustable low-voltage input source",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5.0,
+        "SineFrequency": 20000.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "03c37191-8988-5720-8809-9415ebe49c6d",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "TP_IN",
+      "Description": "Input voltage test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "a2e9da6e-bbf8-5eb7-a80d-d9ae5993bc84",
+      "ComponentType": "Resistor",
+      "Reference": "R_SOURCE",
+      "Name": "R_SOURCE",
+      "Description": "Source and current limiting resistance",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8767d036-8425-5601-962e-ae8d9a0ec01a",
+      "ComponentType": "Inductor",
+      "Reference": "L_R",
+      "Name": "L_R",
+      "Description": "Resonant inductor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "135c0fee-6ee0-57b6-b02d-fff1d94e440d",
+      "ComponentType": "Capacitor",
+      "Reference": "C_R",
+      "Name": "C_R",
+      "Description": "Resonant capacitor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-07
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "fbf9f1f0-d6f1-5fd2-a78b-e416010ab364",
+      "ComponentType": "Inductor",
+      "Reference": "L_M",
+      "Name": "L_M",
+      "Description": "Magnetizing inductance equivalent",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Inductance": 0.005
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "f5d04d26-3cfa-5c03-9dcf-549fe30c474b",
+      "ComponentType": "Diode",
+      "Reference": "D_RECT",
+      "Name": "D_RECT",
+      "Description": "Secondary rectifier equivalent",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Is": 1e-14,
+        "N": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c79d8959-c03d-503c-8f05-ba38f4e7115a",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Output load",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "56628436-77df-5b3d-aba4-91640ff0818e",
+      "ComponentType": "Bulb",
+      "Reference": "LAMP",
+      "Name": "LAMP",
+      "Description": "Visible low-voltage output indicator",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0,
+        "RatedVoltage": 6.0,
+        "ThresholdVoltage": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3c6223e0-716f-5af1-be2f-0ec82ce355b4",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Output voltage and current test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "49ac81ce-e5c0-53cd-b1aa-514502707510",
+      "FromComponentId": "11dc439e-31f2-5a94-9436-eefe544cf918",
+      "FromPin": "negative",
+      "ToComponentId": "81644653-3085-5b38-a170-375df5dc375b",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c2130772-8730-5e50-bf35-37dde66024d3",
+      "FromComponentId": "11dc439e-31f2-5a94-9436-eefe544cf918",
+      "FromPin": "positive",
+      "ToComponentId": "03c37191-8988-5720-8809-9415ebe49c6d",
+      "ToPin": "in",
+      "NetName": "VIN_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d5b28caf-b993-5ee7-b7dd-ee6b3ac83448",
+      "FromComponentId": "11dc439e-31f2-5a94-9436-eefe544cf918",
+      "FromPin": "positive",
+      "ToComponentId": "a2e9da6e-bbf8-5eb7-a80d-d9ae5993bc84",
+      "ToPin": "pin1",
+      "NetName": "VIN_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "94ff824a-5f05-565f-b7ee-6572d560f5a2",
+      "FromComponentId": "a2e9da6e-bbf8-5eb7-a80d-d9ae5993bc84",
+      "FromPin": "pin2",
+      "ToComponentId": "8767d036-8425-5601-962e-ae8d9a0ec01a",
+      "ToPin": "pin1",
+      "NetName": "STAGE_0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c1d35869-3f46-5a81-a791-fabb32532fc0",
+      "FromComponentId": "8767d036-8425-5601-962e-ae8d9a0ec01a",
+      "FromPin": "pin2",
+      "ToComponentId": "135c0fee-6ee0-57b6-b02d-fff1d94e440d",
+      "ToPin": "pin1",
+      "NetName": "STAGE_1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "07c32850-7dc0-5f42-9fde-39b80547b755",
+      "FromComponentId": "135c0fee-6ee0-57b6-b02d-fff1d94e440d",
+      "FromPin": "pin2",
+      "ToComponentId": "fbf9f1f0-d6f1-5fd2-a78b-e416010ab364",
+      "ToPin": "pin1",
+      "NetName": "STAGE_2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "141d555e-29a5-5dd9-93a3-c7b6bd003cfd",
+      "FromComponentId": "fbf9f1f0-d6f1-5fd2-a78b-e416010ab364",
+      "FromPin": "pin2",
+      "ToComponentId": "f5d04d26-3cfa-5c03-9dcf-549fe30c474b",
+      "ToPin": "anode",
+      "NetName": "STAGE_3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "73c37f07-6da9-5f24-b048-a70037a447ee",
+      "FromComponentId": "f5d04d26-3cfa-5c03-9dcf-549fe30c474b",
+      "FromPin": "cathode",
+      "ToComponentId": "c79d8959-c03d-503c-8f05-ba38f4e7115a",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3efb5d17-c624-5be8-93cb-045cfd4ed798",
+      "FromComponentId": "f5d04d26-3cfa-5c03-9dcf-549fe30c474b",
+      "FromPin": "cathode",
+      "ToComponentId": "56628436-77df-5b3d-aba4-91640ff0818e",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "31a06409-5bc6-5684-8fea-9e1dcee8864a",
+      "FromComponentId": "f5d04d26-3cfa-5c03-9dcf-549fe30c474b",
+      "FromPin": "cathode",
+      "ToComponentId": "3c6223e0-716f-5af1-be2f-0ec82ce355b4",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5ea7cfa2-05f5-5b0c-81ba-a3e361540d56",
+      "FromComponentId": "c79d8959-c03d-503c-8f05-ba38f4e7115a",
+      "FromPin": "pin2",
+      "ToComponentId": "81644653-3085-5b38-a170-375df5dc375b",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b119b679-96b1-52ac-a9cc-5bfbf5a7a56c",
+      "FromComponentId": "56628436-77df-5b3d-aba4-91640ff0818e",
+      "FromPin": "pin2",
+      "ToComponentId": "81644653-3085-5b38-a170-375df5dc375b",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

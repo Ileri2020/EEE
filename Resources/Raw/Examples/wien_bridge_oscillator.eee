@@ -1,0 +1,306 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Wien Bridge Oscillator",
+  "Description": "Wien bridge RC frequency-selective network driven by a sinusoidal source. The simulator demonstrates the bridge response; it does not model automatic amplitude stabilization.",
+  "Components": [
+    {
+      "Id": "5bdfa78f-4878-4815-b32b-ea13a5abeb1b",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b3eac386-3cc8-45e3-8ef4-5147b04e011e",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_SIGNAL",
+      "Name": "V_SIGNAL",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 1,
+        "SineOffset": 0.0,
+        "SineAmplitude": 1,
+        "SineFrequency": 1000,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 1,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "937397c2-c30e-471c-a866-809f1e9b5e2e",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_SERIES",
+      "Name": "R_SERIES",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "fa11075c-ad5a-4a8a-96d5-3d8b2736d342",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_SERIES",
+      "Name": "C_SERIES",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b06c3327-36ba-49d4-8443-1cbe9b00b945",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_SHUNT",
+      "Name": "R_SHUNT",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3a09d6f2-6d77-41f8-953c-d689a975af9f",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_SHUNT",
+      "Name": "C_SHUNT",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "85b303d1-5da0-470f-a863-40c91660649c",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "55978bfd-3d25-4403-9721-4d79482c0aaa",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_BRIDGE",
+      "Name": "TP_BRIDGE",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ef088daf-e83b-4094-a43c-1c3caba6ae8d",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "TP_REFERENCE voltage test point; expected 0 V.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "7f39da7c-1cee-4802-9de7-128ca8e0bf7d",
+      "FromComponentId": "b3eac386-3cc8-45e3-8ef4-5147b04e011e",
+      "FromPin": "negative",
+      "ToComponentId": "5bdfa78f-4878-4815-b32b-ea13a5abeb1b",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "219cc9ed-b719-48e5-8511-d887a5498e36",
+      "FromComponentId": "b3eac386-3cc8-45e3-8ef4-5147b04e011e",
+      "FromPin": "positive",
+      "ToComponentId": "937397c2-c30e-471c-a866-809f1e9b5e2e",
+      "ToPin": "pin1",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7f7446a7-2631-4c90-9234-32f893b609c9",
+      "FromComponentId": "937397c2-c30e-471c-a866-809f1e9b5e2e",
+      "FromPin": "pin2",
+      "ToComponentId": "fa11075c-ad5a-4a8a-96d5-3d8b2736d342",
+      "ToPin": "pin1",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "af6f064f-28e2-45e4-bb4f-37da005add08",
+      "FromComponentId": "fa11075c-ad5a-4a8a-96d5-3d8b2736d342",
+      "FromPin": "pin2",
+      "ToComponentId": "b06c3327-36ba-49d4-8443-1cbe9b00b945",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "005c4187-2a35-4e71-bb8d-8593ecf39ef0",
+      "FromComponentId": "b06c3327-36ba-49d4-8443-1cbe9b00b945",
+      "FromPin": "pin2",
+      "ToComponentId": "5bdfa78f-4878-4815-b32b-ea13a5abeb1b",
+      "ToPin": "gnd",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5e26f9d2-bf1e-4f6d-af3c-08fd8d6de053",
+      "FromComponentId": "b06c3327-36ba-49d4-8443-1cbe9b00b945",
+      "FromPin": "pin2",
+      "ToComponentId": "3a09d6f2-6d77-41f8-953c-d689a975af9f",
+      "ToPin": "pin1",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5e6e87df-cfcb-48e6-b2ef-19124bb4ba29",
+      "FromComponentId": "3a09d6f2-6d77-41f8-953c-d689a975af9f",
+      "FromPin": "pin2",
+      "ToComponentId": "5bdfa78f-4878-4815-b32b-ea13a5abeb1b",
+      "ToPin": "gnd",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "81a93bd6-5768-41d4-a370-5c5eb1a0abc9",
+      "FromComponentId": "b06c3327-36ba-49d4-8443-1cbe9b00b945",
+      "FromPin": "pin2",
+      "ToComponentId": "85b303d1-5da0-470f-a863-40c91660649c",
+      "ToPin": "pin1",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d7f78818-c45c-4faa-992e-2821b034ddd7",
+      "FromComponentId": "85b303d1-5da0-470f-a863-40c91660649c",
+      "FromPin": "pin2",
+      "ToComponentId": "5bdfa78f-4878-4815-b32b-ea13a5abeb1b",
+      "ToPin": "gnd",
+      "NetName": "N9",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6c8af6ef-4cec-44c7-9d0b-0471f7532f4b",
+      "FromComponentId": "55978bfd-3d25-4403-9721-4d79482c0aaa",
+      "FromPin": "in",
+      "ToComponentId": "b06c3327-36ba-49d4-8443-1cbe9b00b945",
+      "ToPin": "pin1",
+      "NetName": "N10",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1d31b60f-f59a-4832-82d5-69b64cdeeb0f",
+      "FromComponentId": "ef088daf-e83b-4094-a43c-1c3caba6ae8d",
+      "FromPin": "in",
+      "ToComponentId": "5bdfa78f-4878-4815-b32b-ea13a5abeb1b",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

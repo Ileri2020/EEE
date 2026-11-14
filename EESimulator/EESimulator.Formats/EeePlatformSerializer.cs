@@ -56,6 +56,8 @@ public class EeeProjectDto
     public string Application { get; set; } = "EESimulator";
     public string Title { get; set; } = "Untitled Circuit";
     public string Description { get; set; } = string.Empty;
+    public double LogicalGridRowSpacing { get; set; } = CircuitNode.MinimumLogicalGridSpacing;
+    public double LogicalGridColumnSpacing { get; set; } = CircuitNode.MinimumLogicalGridSpacing;
 
     // ── Provenance metadata ──────────────────────────────────────────────
     public string Author { get; set; } = string.Empty;
@@ -138,6 +140,8 @@ public static class EeePlatformSerializer
         {
             Title = circuit.Title,
             Description = circuit.Description,
+            LogicalGridRowSpacing = circuit.LogicalGridRowSpacing,
+            LogicalGridColumnSpacing = circuit.LogicalGridColumnSpacing,
             SavedAt = DateTime.UtcNow
             // CreatedAt and Author are preserved if round-tripping; otherwise left as UtcNow defaults.
         };
@@ -239,7 +243,9 @@ public static class EeePlatformSerializer
         var circuit = new CircuitNode
         {
             Title = dto.Title,
-            Description = dto.Description
+            Description = dto.Description,
+            LogicalGridRowSpacing = dto.LogicalGridRowSpacing,
+            LogicalGridColumnSpacing = dto.LogicalGridColumnSpacing
         };
 
         var compMap = new Dictionary<Guid, ComponentNode>();

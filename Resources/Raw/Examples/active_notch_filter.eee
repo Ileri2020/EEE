@@ -1,0 +1,465 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Active Notch Filter",
+  "Description": "Twin-T notch response demonstration with adjustable sine-source frequency, RC network, toggleable output path, load lamp and input/output probes. The active gain stage is not modeled.",
+  "Components": [
+    {
+      "Id": "3aeff637-9f58-5791-b4f7-0fa1fed2de82",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "12",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ce2f34d5-7023-56ec-b3af-8357886cba36",
+      "ComponentType": "VoltageSource",
+      "Reference": "VIN",
+      "Name": "VIN",
+      "Description": "Editable low-voltage Sine source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 1.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 1.0,
+        "SineFrequency": 1000.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 1.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.00045,
+        "PulsePeriod": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c46966af-2062-5e95-9ca0-bcc201f248f6",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "TP_IN",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "2d399a6b-3693-58b3-b0e4-b69b37452b69",
+      "ComponentType": "LogicInput",
+      "Reference": "ENABLE",
+      "Name": "ENABLE",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "24fd8781-f488-5294-85bf-ca33f32dd60d",
+      "ComponentType": "VoltageSwitch",
+      "Reference": "S_ENABLE",
+      "Name": "S_ENABLE",
+      "Description": "Toggle-controlled signal path",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Ron": 1.0,
+        "Roff": 1000000.0,
+        "Threshold": 2.5,
+        "Hysteresis": 0.1
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "eec4acb0-a1ab-59c5-b600-3211e5c855e1",
+      "ComponentType": "Resistor",
+      "Reference": "R1",
+      "Name": "R1",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a3d4f45d-1c92-5c23-884c-b7606ac2e235",
+      "ComponentType": "Capacitor",
+      "Reference": "C1",
+      "Name": "C1",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ecc39bc3-fea0-557c-bf8e-bbefa6193ddb",
+      "ComponentType": "Resistor",
+      "Reference": "R2",
+      "Name": "R2",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "ComponentType": "Capacitor",
+      "Reference": "C2",
+      "Name": "C2",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "7"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "857b30fa-3fad-55c9-b8f5-21470e828842",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "f1bb91db-4fbe-5372-84a2-df4f0e57998c",
+      "ComponentType": "Bulb",
+      "Reference": "LAMP",
+      "Name": "LAMP",
+      "Description": "Visible low-voltage indicator",
+      "StringParameters": {
+        "LogicalRow": "10",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0,
+        "RatedVoltage": 6.0,
+        "ThresholdVoltage": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d531b485-675a-58cf-a497-7621064d1d91",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "4.54e-06"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "ef556049-ce58-50f5-a9a8-d2e05e270050",
+      "ComponentType": "Resistor",
+      "Name": "R_BLEED_1",
+      "Reference": "R_BLEED_1",
+      "Description": "High-value DC path across the series capacitor to prevent floating nodes.",
+      "StringParameters": {
+        "LogicalRow": "13",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a4edf45a-8347-5a23-b6ac-185d716fc50f",
+      "ComponentType": "Resistor",
+      "Name": "R_BLEED_2",
+      "Reference": "R_BLEED_2",
+      "Description": "High-value DC path across the series capacitor to prevent floating nodes.",
+      "StringParameters": {
+        "LogicalRow": "14",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000000.0
+      },
+      "CustomProperties": {}
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "31fd0318-944b-5306-a26e-fdc8d17ab703",
+      "FromComponentId": "ce2f34d5-7023-56ec-b3af-8357886cba36",
+      "FromPin": "negative",
+      "ToComponentId": "3aeff637-9f58-5791-b4f7-0fa1fed2de82",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "36e993cb-6130-5cfd-8c67-a7ed2bca8d20",
+      "FromComponentId": "ce2f34d5-7023-56ec-b3af-8357886cba36",
+      "FromPin": "positive",
+      "ToComponentId": "c46966af-2062-5e95-9ca0-bcc201f248f6",
+      "ToPin": "in",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7133e68f-bced-5379-beb6-487efe0d6ab8",
+      "FromComponentId": "ce2f34d5-7023-56ec-b3af-8357886cba36",
+      "FromPin": "positive",
+      "ToComponentId": "24fd8781-f488-5294-85bf-ca33f32dd60d",
+      "ToPin": "sw_pos",
+      "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "233ded03-6903-515c-b351-b60c9a6f046c",
+      "FromComponentId": "2d399a6b-3693-58b3-b0e4-b69b37452b69",
+      "FromPin": "out",
+      "ToComponentId": "24fd8781-f488-5294-85bf-ca33f32dd60d",
+      "ToPin": "ctrl_pos",
+      "NetName": "ENABLE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f360befe-af87-5212-9335-6c72859a3b71",
+      "FromComponentId": "3aeff637-9f58-5791-b4f7-0fa1fed2de82",
+      "FromPin": "gnd",
+      "ToComponentId": "24fd8781-f488-5294-85bf-ca33f32dd60d",
+      "ToPin": "ctrl_neg",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6f6eda93-13b4-58bd-b883-d55dccabb15f",
+      "FromComponentId": "24fd8781-f488-5294-85bf-ca33f32dd60d",
+      "FromPin": "sw_neg",
+      "ToComponentId": "eec4acb0-a1ab-59c5-b600-3211e5c855e1",
+      "ToPin": "pin1",
+      "NetName": "STAGE_1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c3762df9-c915-5a2d-8746-70ad943ee4b0",
+      "FromComponentId": "eec4acb0-a1ab-59c5-b600-3211e5c855e1",
+      "FromPin": "pin2",
+      "ToComponentId": "a3d4f45d-1c92-5c23-884c-b7606ac2e235",
+      "ToPin": "pin1",
+      "NetName": "STAGE_2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d31d632a-115a-5647-8386-5313aa5979e9",
+      "FromComponentId": "a3d4f45d-1c92-5c23-884c-b7606ac2e235",
+      "FromPin": "pin2",
+      "ToComponentId": "ecc39bc3-fea0-557c-bf8e-bbefa6193ddb",
+      "ToPin": "pin1",
+      "NetName": "STAGE_3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8d3db90d-95c5-580b-94b4-5aa0597cebc3",
+      "FromComponentId": "ecc39bc3-fea0-557c-bf8e-bbefa6193ddb",
+      "FromPin": "pin2",
+      "ToComponentId": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "ToPin": "pin1",
+      "NetName": "STAGE_4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4d31c8c8-f147-53a0-bfee-0f29fadf4ab8",
+      "FromComponentId": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "FromPin": "pin2",
+      "ToComponentId": "857b30fa-3fad-55c9-b8f5-21470e828842",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1c009a7b-15c2-5e98-9707-5613b080f83e",
+      "FromComponentId": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "FromPin": "pin2",
+      "ToComponentId": "f1bb91db-4fbe-5372-84a2-df4f0e57998c",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ae002cf3-791a-52e4-9ee6-004ae7eadf87",
+      "FromComponentId": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "FromPin": "pin2",
+      "ToComponentId": "d531b485-675a-58cf-a497-7621064d1d91",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b050d6e0-6f09-53a7-9d1e-fbd0663d4359",
+      "FromComponentId": "857b30fa-3fad-55c9-b8f5-21470e828842",
+      "FromPin": "pin2",
+      "ToComponentId": "3aeff637-9f58-5791-b4f7-0fa1fed2de82",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5cc931b1-7265-5323-bee9-4ae1af947f3a",
+      "FromComponentId": "f1bb91db-4fbe-5372-84a2-df4f0e57998c",
+      "FromPin": "pin2",
+      "ToComponentId": "3aeff637-9f58-5791-b4f7-0fa1fed2de82",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5ff98cc3-2324-5d56-b20f-8ee6873f606a",
+      "FromComponentId": "ef556049-ce58-50f5-a9a8-d2e05e270050",
+      "FromPin": "pin1",
+      "ToComponentId": "a3d4f45d-1c92-5c23-884c-b7606ac2e235",
+      "ToPin": "pin1",
+      "NetName": "R_BLEED_1_PIN1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "98f2f091-40f3-5945-88ab-8459cefb6c1f",
+      "FromComponentId": "ef556049-ce58-50f5-a9a8-d2e05e270050",
+      "FromPin": "pin2",
+      "ToComponentId": "a3d4f45d-1c92-5c23-884c-b7606ac2e235",
+      "ToPin": "pin2",
+      "NetName": "R_BLEED_1_PIN2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8b6b60d3-caf4-5355-be56-f0116b6ff1cc",
+      "FromComponentId": "a4edf45a-8347-5a23-b6ac-185d716fc50f",
+      "FromPin": "pin1",
+      "ToComponentId": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "ToPin": "pin1",
+      "NetName": "R_BLEED_2_PIN1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "180c2c29-2033-536f-805f-d1bdcfe011e4",
+      "FromComponentId": "a4edf45a-8347-5a23-b6ac-185d716fc50f",
+      "FromPin": "pin2",
+      "ToComponentId": "14c5a56a-02ae-5c1f-b002-6543d38bc1e9",
+      "ToPin": "pin2",
+      "NetName": "R_BLEED_2_PIN2",
+      "Resistance": 0.0
+    }
+  ]
+}

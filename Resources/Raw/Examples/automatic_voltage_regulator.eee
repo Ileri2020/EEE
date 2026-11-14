@@ -1,0 +1,311 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Automatic Voltage Regulator (AVR)",
+  "Description": "Generator excitation/control teaching model with synchronous-generator parameters, adjustable reference/excitation sources, toggleable enable and measurement probes. Closed-loop regulation is conceptual.",
+  "Components": [
+    {
+      "Id": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "12",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "dfa86b87-44b4-5b74-97a9-1598aad07b36",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_REF",
+      "Name": "V_REF",
+      "Description": "Editable low-voltage DC source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5.0,
+        "SineFrequency": 50.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "165e9102-3249-51cf-b86d-c85236421958",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_EXC",
+      "Name": "V_EXC",
+      "Description": "Editable low-voltage DC source",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5.0,
+        "SineFrequency": 50.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.005,
+        "PulsePeriod": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "820f8af4-7775-58b9-8ef0-fd1d304d892b",
+      "ComponentType": "SynchronousGenerator",
+      "Reference": "GEN",
+      "Name": "GEN",
+      "Description": "SynchronousGenerator",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "RatedApparentPower": 1000.0,
+        "RatedVoltage": 24.0,
+        "RatedFrequency": 50.0,
+        "NumberOfPhases": 3,
+        "NumberOfPoles": 4,
+        "RotationalSpeedRpm": 1500.0,
+        "PowerFactor": 0.8,
+        "FieldExcitation": 1.0,
+        "MechanicalInputPower": 800.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ad7a83fc-86b9-5cd1-9aaf-7c3daa2a32a0",
+      "ComponentType": "LogicInput",
+      "Reference": "AVR_ENABLE",
+      "Name": "AVR_ENABLE",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c550262a-aac6-5ec8-afab-feff1dd03770",
+      "ComponentType": "LogicOutput",
+      "Reference": "AVR_STATUS",
+      "Name": "AVR_STATUS",
+      "Description": "LogicOutput",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2169fe18-bfd3-58e9-9f30-4537b0d89154",
+      "ComponentType": "Probe",
+      "Reference": "TP_REF",
+      "Name": "TP_REF",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "f781c424-4886-5c3f-b23d-76a4c910c7b6",
+      "ComponentType": "Probe",
+      "Reference": "TP_EXC",
+      "Name": "TP_EXC",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "3bfb8785-043a-5bb9-a706-09bd3181b584",
+      "ComponentType": "Probe",
+      "Reference": "TP_GEN_A",
+      "Name": "TP_GEN_A",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "4",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "585de936-fc1b-5740-a27b-7c518aa5206f",
+      "ComponentType": "Probe",
+      "Reference": "TP_AVR",
+      "Name": "TP_AVR",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "74ff496c-7e69-584f-b9c8-ed658237b732",
+      "FromComponentId": "dfa86b87-44b4-5b74-97a9-1598aad07b36",
+      "FromPin": "negative",
+      "ToComponentId": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1b35ab82-eeec-540f-8e20-234f97e560cb",
+      "FromComponentId": "165e9102-3249-51cf-b86d-c85236421958",
+      "FromPin": "negative",
+      "ToComponentId": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b0822c38-007a-5977-8ee7-c6716270661e",
+      "FromComponentId": "ad7a83fc-86b9-5cd1-9aaf-7c3daa2a32a0",
+      "FromPin": "out",
+      "ToComponentId": "c550262a-aac6-5ec8-afab-feff1dd03770",
+      "ToPin": "in",
+      "NetName": "AVR_STATUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0cfc72e8-2590-5057-8722-4e2c719f7dbb",
+      "FromComponentId": "dfa86b87-44b4-5b74-97a9-1598aad07b36",
+      "FromPin": "positive",
+      "ToComponentId": "2169fe18-bfd3-58e9-9f30-4537b0d89154",
+      "ToPin": "in",
+      "NetName": "V_REF",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4c7e95f8-6f5c-57ca-a27b-2d790f198828",
+      "FromComponentId": "165e9102-3249-51cf-b86d-c85236421958",
+      "FromPin": "positive",
+      "ToComponentId": "f781c424-4886-5c3f-b23d-76a4c910c7b6",
+      "ToPin": "in",
+      "NetName": "V_EXC",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b371c4db-801b-542b-a490-54502ecd690e",
+      "FromComponentId": "820f8af4-7775-58b9-8ef0-fd1d304d892b",
+      "FromPin": "A",
+      "ToComponentId": "3bfb8785-043a-5bb9-a706-09bd3181b584",
+      "ToPin": "in",
+      "NetName": "GEN_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6d5ec9bb-6cc6-5c0a-950f-6b5308d50f2f",
+      "FromComponentId": "c550262a-aac6-5ec8-afab-feff1dd03770",
+      "FromPin": "in",
+      "ToComponentId": "585de936-fc1b-5740-a27b-7c518aa5206f",
+      "ToPin": "in",
+      "NetName": "AVR_STATUS",
+      "Resistance": 0.0
+    }
+  ]
+}

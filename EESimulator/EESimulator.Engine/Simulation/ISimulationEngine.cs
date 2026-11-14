@@ -50,6 +50,7 @@ public class SimulationResultsData
     public string Message { get; set; } = string.Empty;
     public Dictionary<string, double> OperatingPointVoltages { get; } = new();
     public Dictionary<string, double> OperatingPointCurrents { get; } = new();
+    public Dictionary<(Guid ComponentId, string PinId), double> OperatingPointPinVoltages { get; } = new();
     public List<double> TimePoints { get; } = new();
     public Dictionary<string, List<double>> Waveforms { get; } = new();
 }

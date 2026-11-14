@@ -1,0 +1,272 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Digital Clock",
+  "Description": "Clock-and-counter demonstration with adjustable frequency, toggleable enable/direction/reset inputs and a hexadecimal count display.",
+  "Components": [
+    {
+      "Id": "23fd5471-a6da-5946-94cd-a3106793a286",
+      "ComponentType": "Clock",
+      "Reference": "CLK",
+      "Name": "CLK",
+      "Description": "Clock",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Frequency": 1.0,
+        "DutyCycle": 0.5,
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "ComponentType": "Counter",
+      "Reference": "SEC",
+      "Name": "SEC",
+      "Description": "Counter",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "BitWidth": 4,
+        "MaxValue": 9
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "951e98e5-c2b4-5059-8902-7b2c18bec9bb",
+      "ComponentType": "LogicInput",
+      "Reference": "ENABLE",
+      "Name": "ENABLE",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "1d81018e-db37-50ae-adb1-6558e6ebf0b7",
+      "ComponentType": "LogicInput",
+      "Reference": "DIR",
+      "Name": "DIR",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e19dd4f7-9e60-508a-9b9e-c4c2704e4395",
+      "ComponentType": "LogicInput",
+      "Reference": "RESET",
+      "Name": "RESET",
+      "Description": "LogicInput",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "80b3b81e-77a1-561f-97dc-79446d850389",
+      "ComponentType": "HexDigit",
+      "Reference": "SECONDS",
+      "Name": "SECONDS",
+      "Description": "HexDigit",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "563e1a96-96d1-5bd9-a81e-8b60ff010efc",
+      "ComponentType": "Probe",
+      "Reference": "TP_Q0",
+      "Name": "TP_Q0",
+      "Description": "Digital signal test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "7805846d-fb04-4fd4-a7d9-800c37711d3d",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "adfb3f31-22a2-5ee5-93d7-fedf0a9f0cb8",
+      "FromComponentId": "23fd5471-a6da-5946-94cd-a3106793a286",
+      "FromPin": "out",
+      "ToComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "ToPin": "CLK",
+      "NetName": "CLK",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "021ad43e-ebcd-52fd-ad39-af85b6f4dfbb",
+      "FromComponentId": "951e98e5-c2b4-5059-8902-7b2c18bec9bb",
+      "FromPin": "out",
+      "ToComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "ToPin": "en",
+      "NetName": "ENABLE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "096b48e1-72df-5fbe-bbbb-282d1d0ffbaf",
+      "FromComponentId": "1d81018e-db37-50ae-adb1-6558e6ebf0b7",
+      "FromPin": "out",
+      "ToComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "ToPin": "up_down",
+      "NetName": "DIR",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a5c1bf15-5638-503e-a1bb-5f96248d49e2",
+      "FromComponentId": "e19dd4f7-9e60-508a-9b9e-c4c2704e4395",
+      "FromPin": "out",
+      "ToComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "ToPin": "clr",
+      "NetName": "RESET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "dc672e34-944f-5c8d-81ed-d62e0ed2b870",
+      "FromComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "FromPin": "Q0",
+      "ToComponentId": "80b3b81e-77a1-561f-97dc-79446d850389",
+      "ToPin": "D0",
+      "NetName": "Q0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8345eb53-7383-531e-ab8e-100f0b82b4cd",
+      "FromComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "FromPin": "Q1",
+      "ToComponentId": "80b3b81e-77a1-561f-97dc-79446d850389",
+      "ToPin": "D1",
+      "NetName": "Q1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4d924449-e7d2-5e11-bc25-1fdcc6e21c2d",
+      "FromComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "FromPin": "Q2",
+      "ToComponentId": "80b3b81e-77a1-561f-97dc-79446d850389",
+      "ToPin": "D2",
+      "NetName": "Q2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8926ca84-d78d-5aeb-aefa-d6390c5c9e20",
+      "FromComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "FromPin": "Q3",
+      "ToComponentId": "80b3b81e-77a1-561f-97dc-79446d850389",
+      "ToPin": "D3",
+      "NetName": "Q3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d3ac8dff-daff-5d45-a28d-057ad3343b28",
+      "FromComponentId": "52847a16-ca19-5441-861e-e59d5b434b31",
+      "FromPin": "Q0",
+      "ToComponentId": "563e1a96-96d1-5bd9-a81e-8b60ff010efc",
+      "ToPin": "in",
+      "NetName": "Q0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d25285a8-3f10-4fa9-b9bb-29207c37fa28",
+      "FromComponentId": "7805846d-fb04-4fd4-a7d9-800c37711d3d",
+      "FromPin": "in",
+      "ToComponentId": "e19dd4f7-9e60-508a-9b9e-c4c2704e4395",
+      "ToPin": "out",
+      "NetName": "RESET",
+      "Resistance": 0.0
+    }
+  ]
+}

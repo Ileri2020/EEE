@@ -1,0 +1,278 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Operational Amplifier",
+  "Description": "Inverting operational-amplifier stage with input resistor, feedback resistor, bipolar supplies, and an AC test signal.",
+  "Components": [
+    {
+      "Id": "dd35025a-0006-40bb-b700-ed136b7c1205",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b11a5654-6a6c-41b5-8078-523cbc22d294",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_SIGNAL",
+      "Name": "V_SIGNAL",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 0.1,
+        "SineFrequency": 1000,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 0,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "U1",
+      "Description": "OpAmp",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "VccPlus": 12.0,
+        "VccMinus": -12.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9ca3142a-8dae-47fc-ac05-5e47800193cc",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_IN",
+      "Name": "R_IN",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "cd98e050-2bf0-4e02-bf14-d9a115c3a420",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_FEEDBACK",
+      "Name": "R_FEEDBACK",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b585f96d-9bcb-431f-894f-d9a1e8ebc4c8",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c8b10a75-41a7-4c8d-92b9-fde5ff335171",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a61b6976-c64a-4d1e-868d-1fe5719d0e5a",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "6017b066-1d08-4ee3-ab3c-33edfa553e84",
+      "FromComponentId": "b11a5654-6a6c-41b5-8078-523cbc22d294",
+      "FromPin": "negative",
+      "ToComponentId": "dd35025a-0006-40bb-b700-ed136b7c1205",
+      "ToPin": "gnd",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7c2e076b-c918-4ed7-95ff-886582acafd3",
+      "FromComponentId": "b11a5654-6a6c-41b5-8078-523cbc22d294",
+      "FromPin": "positive",
+      "ToComponentId": "9ca3142a-8dae-47fc-ac05-5e47800193cc",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2fb3cf96-50d3-4ed1-b7a8-2105d7517016",
+      "FromComponentId": "9ca3142a-8dae-47fc-ac05-5e47800193cc",
+      "FromPin": "pin2",
+      "ToComponentId": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "ToPin": "in_neg",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "32592717-b05a-48b3-95b6-261224e7a040",
+      "FromComponentId": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "FromPin": "out",
+      "ToComponentId": "cd98e050-2bf0-4e02-bf14-d9a115c3a420",
+      "ToPin": "pin1",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "85bdcf08-2545-470a-8a73-23a886201e2c",
+      "FromComponentId": "cd98e050-2bf0-4e02-bf14-d9a115c3a420",
+      "FromPin": "pin2",
+      "ToComponentId": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "ToPin": "in_neg",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a09fd0b5-0eeb-4640-8283-7ae572d4e737",
+      "FromComponentId": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "FromPin": "in_pos",
+      "ToComponentId": "dd35025a-0006-40bb-b700-ed136b7c1205",
+      "ToPin": "gnd",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ba7987da-982d-4f84-9a95-87cf271274ee",
+      "FromComponentId": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "FromPin": "out",
+      "ToComponentId": "b585f96d-9bcb-431f-894f-d9a1e8ebc4c8",
+      "ToPin": "pin1",
+      "NetName": "N11",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "889a8e61-b02b-4d35-b594-e89eb2eb2491",
+      "FromComponentId": "b585f96d-9bcb-431f-894f-d9a1e8ebc4c8",
+      "FromPin": "pin2",
+      "ToComponentId": "dd35025a-0006-40bb-b700-ed136b7c1205",
+      "ToPin": "gnd",
+      "NetName": "N12",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "bab21cfd-80c2-4ec8-82bf-1be40b66b222",
+      "FromComponentId": "c8b10a75-41a7-4c8d-92b9-fde5ff335171",
+      "FromPin": "in",
+      "ToComponentId": "2408de04-ce69-48b8-a46a-5a2e1546e2d5",
+      "ToPin": "out",
+      "NetName": "N13",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ad315fd7-d57b-4b11-9106-007091a83c16",
+      "FromComponentId": "a61b6976-c64a-4d1e-868d-1fe5719d0e5a",
+      "FromPin": "in",
+      "ToComponentId": "dd35025a-0006-40bb-b700-ed136b7c1205",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

@@ -1,0 +1,312 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Eight-Bit Shift Register",
+  "Description": "Serial-in/parallel-out eight-bit register with toggleable serial data, enable and clear, clock, LED-bar output, and serial/parallel probes.",
+  "Components": [
+    {
+      "Id": "1954f18a-a2ac-520b-a0c3-89a0ffeecf48",
+      "ComponentType": "LogicInput",
+      "Reference": "SERIAL_IN",
+      "Name": "SERIAL_IN",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "01d0fada-969e-51a4-8d27-03be10d80a6b",
+      "ComponentType": "LogicInput",
+      "Reference": "ENABLE",
+      "Name": "ENABLE",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "6a68d354-9241-5c9e-bd20-8bbdf40b571d",
+      "ComponentType": "LogicInput",
+      "Reference": "CLEAR",
+      "Name": "CLEAR",
+      "Description": "User-toggleable input",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "State": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "aa446e65-cb98-5193-8694-53aef0cf2aba",
+      "ComponentType": "Clock",
+      "Reference": "CLK",
+      "Name": "CLK",
+      "Description": "Clock",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Frequency": 1.0,
+        "DutyCycle": 0.5,
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "ComponentType": "ShiftRegister",
+      "Reference": "SHIFT8",
+      "Name": "SHIFT8",
+      "Description": "ShiftRegister",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Length": 8
+      },
+      "CustomProperties": {
+        "HasParallelLoad": false,
+        "Value": 0
+      }
+    },
+    {
+      "Id": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ComponentType": "LedBar",
+      "Reference": "LED_BAR",
+      "Name": "LED_BAR",
+      "Description": "LedBar",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "LedCount": 8
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "aa86e159-c5f1-586e-8876-373f80641adf",
+      "ComponentType": "Probe",
+      "Reference": "TP_SERIAL_OUT",
+      "Name": "TP_SERIAL_OUT",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "8c6384c0-2c38-5b43-a082-45615341bfc7",
+      "ComponentType": "Probe",
+      "Reference": "TP_Q7",
+      "Name": "TP_Q7",
+      "Description": "Voltage/current measurement test point",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "4cb7da78-d360-54f6-831e-ccd686ca3214",
+      "FromComponentId": "1954f18a-a2ac-520b-a0c3-89a0ffeecf48",
+      "FromPin": "out",
+      "ToComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "ToPin": "sin",
+      "NetName": "SERIAL_IN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b875ccb7-eede-5af8-a920-de4c5d050c77",
+      "FromComponentId": "01d0fada-969e-51a4-8d27-03be10d80a6b",
+      "FromPin": "out",
+      "ToComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "ToPin": "en",
+      "NetName": "ENABLE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4c7f8826-6cee-5af2-9f9c-cfc0563ad359",
+      "FromComponentId": "6a68d354-9241-5c9e-bd20-8bbdf40b571d",
+      "FromPin": "out",
+      "ToComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "ToPin": "clr",
+      "NetName": "CLEAR",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "99da56c5-04f0-5cb1-8b5d-cc22f6f2edb3",
+      "FromComponentId": "aa446e65-cb98-5193-8694-53aef0cf2aba",
+      "FromPin": "out",
+      "ToComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "ToPin": "CLK",
+      "NetName": "CLK",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f48b7f66-44d3-53a4-b047-b7fee16f673c",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q0",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D0",
+      "NetName": "Q0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "81e9e64b-e374-551d-aa3b-688b36e8c98e",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q1",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D1",
+      "NetName": "Q1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0d9c9629-dd3e-50d0-ab01-4a0365bd0fb1",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q2",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D2",
+      "NetName": "Q2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4cb4fc16-462c-5753-9103-a848e8b27553",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q3",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D3",
+      "NetName": "Q3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8096853f-671d-58fe-a800-2cdb2445cd58",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q4",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D4",
+      "NetName": "Q4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "23b4ded0-d45e-500d-8d51-c8d3740a7c20",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q5",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D5",
+      "NetName": "Q5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9aedf3a0-407f-5700-a770-b8b946102f70",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q6",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D6",
+      "NetName": "Q6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c69a84e1-70a8-578a-bae5-610f076206f4",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q7",
+      "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "ToPin": "D7",
+      "NetName": "Q7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ed573dd2-41b1-59fc-a566-41910eb43441",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "sout",
+      "ToComponentId": "aa86e159-c5f1-586e-8876-373f80641adf",
+      "ToPin": "in",
+      "NetName": "SERIAL_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d7a44db5-1ea3-55e8-8b5c-01f4c8c36fe2",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q7",
+      "ToComponentId": "8c6384c0-2c38-5b43-a082-45615341bfc7",
+      "ToPin": "in",
+      "NetName": "Q7",
+      "Resistance": 0.0
+    }
+  ]
+}

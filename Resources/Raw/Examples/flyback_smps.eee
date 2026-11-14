@@ -1,0 +1,361 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Flyback SMPS",
+  "Description": "Flyback converter block diagram using primary PWM excitation and an idealized isolated secondary source. Transformer coupling and switching losses are not modeled.",
+  "Components": [
+    {
+      "Id": "90781762-ca40-4a22-b793-602547ba70b6",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3e8851d0-548e-4f47-9674-644a345fb36a",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_IN",
+      "Name": "V_IN",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 24,
+        "SineOffset": 0.0,
+        "SineAmplitude": 24,
+        "SineFrequency": 60,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 24,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "66702bc8-df83-4ce6-9b84-706bec97dae8",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_PRIMARY_PWM",
+      "Name": "V_PRIMARY_PWM",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "WaveformType": "Pulse"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 24,
+        "SineOffset": 0.0,
+        "SineAmplitude": 24,
+        "SineFrequency": 50000,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 24,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 1e-05,
+        "PulsePeriod": 2e-05
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "77fe22d9-02c6-4069-b324-f0c07142bf8e",
+      "StableTypeId": "electrical.inductor",
+      "ComponentType": "Inductor",
+      "Reference": "L_PRIMARY",
+      "Name": "L_PRIMARY",
+      "Description": "Inductor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001,
+        "Rdc": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ea267b78-3fe2-4e25-ac46-db2c495b6fce",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_SECONDARY_EQ",
+      "Name": "V_SECONDARY_EQ",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 12,
+        "SineOffset": 0.0,
+        "SineAmplitude": 12,
+        "SineFrequency": 60,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 12,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9cf85d70-409b-4b9b-98c9-d7eff7c93d1b",
+      "StableTypeId": "electrical.diode",
+      "ComponentType": "Diode",
+      "Reference": "D_OUT",
+      "Name": "D_OUT",
+      "Description": "Diode",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14,
+        "EmissionCoefficient": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e8e5c518-a210-40b2-a6ee-3a5ac09a7392",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_OUT",
+      "Name": "C_OUT",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.00047
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b189cbd8-5678-461e-98b7-09023fc210af",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e1d4e66c-6a9c-411b-af37-dd10a885bc44",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_REGULATED_OUT",
+      "Name": "TP_REGULATED_OUT",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "11.22280645"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b907ba6f-3bb1-4436-8e2b-57d3d11ba0de",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "7cbd2d0f-23e6-4db6-ae2b-342e74c8f1ff",
+      "FromComponentId": "3e8851d0-548e-4f47-9674-644a345fb36a",
+      "FromPin": "negative",
+      "ToComponentId": "90781762-ca40-4a22-b793-602547ba70b6",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "108f6af4-b816-4a03-8d5e-40064af41d0a",
+      "FromComponentId": "3e8851d0-548e-4f47-9674-644a345fb36a",
+      "FromPin": "positive",
+      "ToComponentId": "77fe22d9-02c6-4069-b324-f0c07142bf8e",
+      "ToPin": "pin1",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d261dbe4-8876-462c-88f5-34f9b68bedaf",
+      "FromComponentId": "77fe22d9-02c6-4069-b324-f0c07142bf8e",
+      "FromPin": "pin2",
+      "ToComponentId": "66702bc8-df83-4ce6-9b84-706bec97dae8",
+      "ToPin": "positive",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "50a76015-0de1-46bc-b340-1cadc7fd61cf",
+      "FromComponentId": "66702bc8-df83-4ce6-9b84-706bec97dae8",
+      "FromPin": "negative",
+      "ToComponentId": "90781762-ca40-4a22-b793-602547ba70b6",
+      "ToPin": "gnd",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8f973ef3-4903-4697-8183-160b5f6fab17",
+      "FromComponentId": "ea267b78-3fe2-4e25-ac46-db2c495b6fce",
+      "FromPin": "negative",
+      "ToComponentId": "90781762-ca40-4a22-b793-602547ba70b6",
+      "ToPin": "gnd",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "86110e2a-b1e9-4d92-b166-ebbf000a2f77",
+      "FromComponentId": "ea267b78-3fe2-4e25-ac46-db2c495b6fce",
+      "FromPin": "positive",
+      "ToComponentId": "9cf85d70-409b-4b9b-98c9-d7eff7c93d1b",
+      "ToPin": "anode",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2a402c47-9dd4-46be-a9f7-6817ad4e62a3",
+      "FromComponentId": "9cf85d70-409b-4b9b-98c9-d7eff7c93d1b",
+      "FromPin": "cathode",
+      "ToComponentId": "e8e5c518-a210-40b2-a6ee-3a5ac09a7392",
+      "ToPin": "pin1",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "35c57f44-5889-4f0b-9a98-9e2d1a7a42fe",
+      "FromComponentId": "e8e5c518-a210-40b2-a6ee-3a5ac09a7392",
+      "FromPin": "pin2",
+      "ToComponentId": "90781762-ca40-4a22-b793-602547ba70b6",
+      "ToPin": "gnd",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "21f2e660-182e-4cb8-a2b4-c2fdb1a89e6e",
+      "FromComponentId": "e8e5c518-a210-40b2-a6ee-3a5ac09a7392",
+      "FromPin": "pin1",
+      "ToComponentId": "b189cbd8-5678-461e-98b7-09023fc210af",
+      "ToPin": "pin1",
+      "NetName": "N9",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "10390c73-38ae-4dca-a1f2-2ea93e286eeb",
+      "FromComponentId": "b189cbd8-5678-461e-98b7-09023fc210af",
+      "FromPin": "pin2",
+      "ToComponentId": "90781762-ca40-4a22-b793-602547ba70b6",
+      "ToPin": "gnd",
+      "NetName": "N10",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5267e4c0-5cfe-41d1-9875-b9ef872d30c4",
+      "FromComponentId": "e1d4e66c-6a9c-411b-af37-dd10a885bc44",
+      "FromPin": "in",
+      "ToComponentId": "b189cbd8-5678-461e-98b7-09023fc210af",
+      "ToPin": "pin1",
+      "NetName": "N11",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6863640e-b081-41f5-bb9b-5dd0168d9d73",
+      "FromComponentId": "b907ba6f-3bb1-4436-8e2b-57d3d11ba0de",
+      "FromPin": "in",
+      "ToComponentId": "90781762-ca40-4a22-b793-602547ba70b6",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

@@ -1,0 +1,334 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Star-Delta Motor Starter",
+  "Description": "Star-delta starter teaching diagram with a three-phase induction motor, three-phase supply, and an interactive control input for the starter sequence. The contactor interlock sequence is represented conceptually, not as a switching transient.",
+  "Components": [
+    {
+      "Id": "a360f4bc-68df-44c9-bafd-116d939b3222",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "67c44cb2-2d4c-4683-89f5-4980812a4ace",
+      "StableTypeId": "machine.induction-motor",
+      "ComponentType": "InductionMotor",
+      "Reference": "M1",
+      "Name": "M1",
+      "Description": "InductionMotor",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "ConnectionType": "Star"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "RatedVoltage": 400.0,
+        "RatedPower": 1500.0,
+        "Frequency": 50.0,
+        "NumberOfPoles": 4.0,
+        "RatedSpeedRpm": 1440.0,
+        "Slip": 0.04,
+        "PowerFactor": 0.82,
+        "EfficiencyPercent": 85.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "080036d3-9d8d-44cc-a522-bd05e4947cb1",
+      "StableTypeId": "electronics.logicinput",
+      "ComponentType": "LogicInput",
+      "Reference": "START",
+      "Name": "START",
+      "Description": "Toggleable logic input",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "64979db9-eaa8-4055-9d7e-e665dcd7e0b8",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_A",
+      "Name": "V_A",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 132.79056191361394,
+        "SineOffset": 0.0,
+        "SineAmplitude": 132.79056191361394,
+        "SineFrequency": 50,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 132.79056191361394,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8c5daa97-da35-41c3-ba3a-bf1263413f71",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_B",
+      "Name": "V_B",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 132.79056191361394,
+        "SineOffset": 0.0,
+        "SineAmplitude": 132.79056191361394,
+        "SineFrequency": 50,
+        "SinePhase": -120,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 132.79056191361394,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "12182af4-d030-4243-807d-934538c9397e",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_C",
+      "Name": "V_C",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 132.79056191361394,
+        "SineOffset": 0.0,
+        "SineAmplitude": 132.79056191361394,
+        "SineFrequency": 50,
+        "SinePhase": 120,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 132.79056191361394,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "322856e1-449c-4c4a-bbb9-40dcef6ab7da",
+      "StableTypeId": "electronics.logicoutput",
+      "ComponentType": "LogicOutput",
+      "Reference": "STARTER_ACTIVE",
+      "Name": "STARTER_ACTIVE",
+      "Description": "LogicOutput",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Threshold": 2.5,
+        "HighValue": 1.0,
+        "LowValue": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "9ee648f2-3fb1-4b03-bdb7-a0d990691236",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_PHASE_A",
+      "Name": "TP_PHASE_A",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "132.7905619"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ac5611d6-02b9-48bd-b109-5c52fb5cf0fb",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "15dd7b26-6a05-400a-836b-6ed3edd90367",
+      "FromComponentId": "64979db9-eaa8-4055-9d7e-e665dcd7e0b8",
+      "FromPin": "positive",
+      "ToComponentId": "67c44cb2-2d4c-4683-89f5-4980812a4ace",
+      "ToPin": "A",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d716b7f7-910e-4ef1-8f0c-60e6b03db479",
+      "FromComponentId": "64979db9-eaa8-4055-9d7e-e665dcd7e0b8",
+      "FromPin": "negative",
+      "ToComponentId": "a360f4bc-68df-44c9-bafd-116d939b3222",
+      "ToPin": "gnd",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "4eb1b930-59bf-483b-b1c1-b91c8fd4960d",
+      "FromComponentId": "8c5daa97-da35-41c3-ba3a-bf1263413f71",
+      "FromPin": "positive",
+      "ToComponentId": "67c44cb2-2d4c-4683-89f5-4980812a4ace",
+      "ToPin": "B",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "69be9fb9-bd30-4faa-8bfc-e6cc3f84b000",
+      "FromComponentId": "8c5daa97-da35-41c3-ba3a-bf1263413f71",
+      "FromPin": "negative",
+      "ToComponentId": "a360f4bc-68df-44c9-bafd-116d939b3222",
+      "ToPin": "gnd",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0fa2f9b2-c34c-41cd-b504-e67b2d5335fa",
+      "FromComponentId": "12182af4-d030-4243-807d-934538c9397e",
+      "FromPin": "positive",
+      "ToComponentId": "67c44cb2-2d4c-4683-89f5-4980812a4ace",
+      "ToPin": "C",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "419b3470-de72-421f-9859-6370e20f07d4",
+      "FromComponentId": "12182af4-d030-4243-807d-934538c9397e",
+      "FromPin": "negative",
+      "ToComponentId": "a360f4bc-68df-44c9-bafd-116d939b3222",
+      "ToPin": "gnd",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7a45241c-e115-42fb-b4d5-a535bdfaf220",
+      "FromComponentId": "67c44cb2-2d4c-4683-89f5-4980812a4ace",
+      "FromPin": "N",
+      "ToComponentId": "a360f4bc-68df-44c9-bafd-116d939b3222",
+      "ToPin": "gnd",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d02dd990-9b36-4798-b1fd-3420b95c5ab6",
+      "FromComponentId": "080036d3-9d8d-44cc-a522-bd05e4947cb1",
+      "FromPin": "out",
+      "ToComponentId": "322856e1-449c-4c4a-bbb9-40dcef6ab7da",
+      "ToPin": "in",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ab0315c6-7d9d-4a00-bf47-48a14b4dca80",
+      "FromComponentId": "9ee648f2-3fb1-4b03-bdb7-a0d990691236",
+      "FromPin": "in",
+      "ToComponentId": "67c44cb2-2d4c-4683-89f5-4980812a4ace",
+      "ToPin": "A",
+      "NetName": "N9",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5ce698d4-ffbe-437f-9bb9-326da6332018",
+      "FromComponentId": "ac5611d6-02b9-48bd-b109-5c52fb5cf0fb",
+      "FromPin": "in",
+      "ToComponentId": "a360f4bc-68df-44c9-bafd-116d939b3222",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

@@ -102,6 +102,10 @@ def set_component_property(name, prop, value):
     _call(f"eesim.set_component_property({_quoted(name)}, {_quoted(prop)}, {json.dumps(value, ensure_ascii=False)})")
 
 
+def set_logical_grid_spacing(row_spacing, column_spacing):
+    _call(f"eesim.set_logical_grid_spacing({_number(row_spacing)}, {_number(column_spacing)})")
+
+
 def set_custom_property(name, prop, value):
     _call(f"eesim.set_custom_property({_quoted(name)}, {_quoted(prop)}, {json.dumps(value, ensure_ascii=False)})")
 

@@ -1,0 +1,243 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Lithium-Ion Battery Charger",
+  "Description": "Single-cell CC charging demonstration with a current-limiting resistor, battery model, status LED, and charge-node test point. This is a conceptual low-current circuit, not a complete safety charger.",
+  "Components": [
+    {
+      "Id": "cf6261df-b1df-43e4-930a-615b3e243eeb",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8597364b-7466-466d-b999-e2f392575392",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_CHARGE",
+      "Name": "V_CHARGE",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5,
+        "SineFrequency": 60,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.01,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "720fd2ba-c9e5-4eb3-889c-8e79a067e7de",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LIMIT",
+      "Name": "R_LIMIT",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ac5d1a9b-1d87-495d-b3e7-c07be73d154c",
+      "StableTypeId": "storage.battery",
+      "ComponentType": "Battery",
+      "Reference": "BAT1",
+      "Name": "BAT1",
+      "Description": "Battery",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "NominalVoltage": 3.7,
+        "CapacityAh": 2.5,
+        "InternalResistance": 0.08,
+        "InitialSocPercent": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ec0825b3-30f4-4dd6-aec6-c12d7afacf53",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "D_CHARGE",
+      "Name": "D_CHARGE",
+      "Description": "LED",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "Color": "Red"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Vf": 2.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "1d665974-ffa9-4c43-8ad0-e4a712999b21",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_BATTERY",
+      "Name": "TP_BATTERY",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "2.45398124"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "65ba8d4b-5b6a-48c7-9015-607f14ac733b",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "2cf11717-a07d-41f4-a1e7-bb89fe7491d7",
+      "FromComponentId": "8597364b-7466-466d-b999-e2f392575392",
+      "FromPin": "negative",
+      "ToComponentId": "cf6261df-b1df-43e4-930a-615b3e243eeb",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "322a309f-1f8f-4311-89fb-9d534c7a91ae",
+      "FromComponentId": "8597364b-7466-466d-b999-e2f392575392",
+      "FromPin": "positive",
+      "ToComponentId": "720fd2ba-c9e5-4eb3-889c-8e79a067e7de",
+      "ToPin": "pin1",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e74cfcd3-d8e9-4125-ab44-ea1c9b50f0f4",
+      "FromComponentId": "720fd2ba-c9e5-4eb3-889c-8e79a067e7de",
+      "FromPin": "pin2",
+      "ToComponentId": "ac5d1a9b-1d87-495d-b3e7-c07be73d154c",
+      "ToPin": "positive",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "83f5779a-a564-4864-b24b-5288a468a131",
+      "FromComponentId": "ac5d1a9b-1d87-495d-b3e7-c07be73d154c",
+      "FromPin": "negative",
+      "ToComponentId": "cf6261df-b1df-43e4-930a-615b3e243eeb",
+      "ToPin": "gnd",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c6b47162-aa07-44c8-b7af-d63fa5a96d70",
+      "FromComponentId": "720fd2ba-c9e5-4eb3-889c-8e79a067e7de",
+      "FromPin": "pin2",
+      "ToComponentId": "ec0825b3-30f4-4dd6-aec6-c12d7afacf53",
+      "ToPin": "anode",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6c477089-c796-4aef-88c7-ce9882577221",
+      "FromComponentId": "ec0825b3-30f4-4dd6-aec6-c12d7afacf53",
+      "FromPin": "cathode",
+      "ToComponentId": "cf6261df-b1df-43e4-930a-615b3e243eeb",
+      "ToPin": "gnd",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "290fdf66-9c8d-49ba-adef-c3cb8ab98e3a",
+      "FromComponentId": "1d665974-ffa9-4c43-8ad0-e4a712999b21",
+      "FromPin": "in",
+      "ToComponentId": "ac5d1a9b-1d87-495d-b3e7-c07be73d154c",
+      "ToPin": "positive",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "766f1003-2751-464f-a3ab-180be50c9c0a",
+      "FromComponentId": "65ba8d4b-5b6a-48c7-9015-607f14ac733b",
+      "FromPin": "in",
+      "ToComponentId": "cf6261df-b1df-43e4-930a-615b3e243eeb",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

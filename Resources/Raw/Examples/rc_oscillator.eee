@@ -8,12 +8,17 @@
   "CreatedAt": "2026-11-01T20:30:00Z",
   "SavedAt": "2026-11-01T21:00:00Z",
   "Revision": "2",
-  "Tags": [ "oscillator", "BJT", "RC", "analog" ],
+  "Tags": [
+    "oscillator",
+    "BJT",
+    "RC",
+    "analog"
+  ],
   "SimulationSettings": {
     "AnalysisType": "Transient",
     "TransientStartTime": 0.0,
     "TransientStopTime": 0.002,
-    "TransientStepTime": 1e-7,
+    "TransientStepTime": 1e-07,
     "AcSweepType": "Decade",
     "AcPoints": 10,
     "AcStartFrequency": 1.0,
@@ -38,7 +43,10 @@
         "Voltage": 12.0
       },
       "StringParameters": {
-        "WaveformType": "DC", "LogicalRow": "4", "LogicalColumn": "1"}
+        "WaveformType": "DC",
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110002",
@@ -50,14 +58,17 @@
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "ElectricalParameters": {},
-      "StringParameters": { "LogicalRow": "9", "LogicalColumn": "1" }
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "1"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110003",
       "ComponentType": "Resistor",
       "Reference": "R1",
       "Name": "R1",
-      "Description": "Upper Base Bias Resistor (47k\u03a9)",
+      "Description": "Upper Base Bias Resistor (47kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -65,14 +76,17 @@
       "ElectricalParameters": {
         "Resistance": 47000.0
       },
-      "StringParameters": { "LogicalRow": "2", "LogicalColumn": "2" }
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110004",
       "ComponentType": "Resistor",
       "Reference": "R2",
       "Name": "R2",
-      "Description": "Lower Base Bias Resistor (10k\u03a9)",
+      "Description": "Lower Base Bias Resistor (10kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -80,14 +94,17 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": { "LogicalRow": "7", "LogicalColumn": "2" }
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "2"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110005",
       "ComponentType": "NPN",
       "Reference": "Q1",
       "Name": "Q1",
-      "Description": "Common-Emitter Amplifier NPN BJT (\u03b2=150)",
+      "Description": "Common-Emitter Amplifier NPN BJT (β=150)",
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -98,14 +115,17 @@
         "Vaf": 100.0
       },
       "StringParameters": {
-        "Polarity": "NPN", "LogicalRow": "5", "LogicalColumn": "3"}
+        "Polarity": "NPN",
+        "LogicalRow": "5",
+        "LogicalColumn": "3"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110006",
       "ComponentType": "Resistor",
       "Reference": "Rc",
       "Name": "Rc",
-      "Description": "Collector Load Resistor (4.7k\u03a9)",
+      "Description": "Collector Load Resistor (4.7kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -113,14 +133,17 @@
       "ElectricalParameters": {
         "Resistance": 4700.0
       },
-      "StringParameters": { "LogicalRow": "1", "LogicalColumn": "4" }
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110007",
       "ComponentType": "Resistor",
       "Reference": "Re",
       "Name": "Re",
-      "Description": "Emitter Bias Stabilization Resistor (1k\u03a9)",
+      "Description": "Emitter Bias Stabilization Resistor (1kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -128,22 +151,28 @@
       "ElectricalParameters": {
         "Resistance": 1000.0
       },
-      "StringParameters": { "LogicalRow": "8", "LogicalColumn": "4" }
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "4"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110008",
       "ComponentType": "Capacitor",
       "Reference": "Ce",
       "Name": "Ce",
-      "Description": "Emitter AC Bypass Capacitor (10\u00b5F)",
+      "Description": "Emitter AC Bypass Capacitor (10µF)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.5,
       "ElectricalParameters": {
-        "Capacitance": 1e-5
+        "Capacitance": 1e-05
       },
-      "StringParameters": { "LogicalRow": "8", "LogicalColumn": "5" }
+      "StringParameters": {
+        "LogicalRow": "8",
+        "LogicalColumn": "5"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110009",
@@ -156,16 +185,19 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Capacitance": 1e-8
+        "Capacitance": 1e-08
       },
-      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "6" }
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "6"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110010",
       "ComponentType": "Resistor",
       "Reference": "R3",
       "Name": "R3",
-      "Description": "RC Phase Shift Network Stage 1 Resistor (10k\u03a9)",
+      "Description": "RC Phase Shift Network Stage 1 Resistor (10kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -173,7 +205,10 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": { "LogicalRow": "6", "LogicalColumn": "7" }
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "7"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110011",
@@ -186,16 +221,19 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Capacitance": 1e-8
+        "Capacitance": 1e-08
       },
-      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "8" }
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "8"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110012",
       "ComponentType": "Resistor",
       "Reference": "R4",
       "Name": "R4",
-      "Description": "RC Phase Shift Network Stage 2 Resistor (10k\u03a9)",
+      "Description": "RC Phase Shift Network Stage 2 Resistor (10kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -203,7 +241,10 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": { "LogicalRow": "6", "LogicalColumn": "9" }
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "9"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110013",
@@ -216,16 +257,19 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Capacitance": 1e-8
+        "Capacitance": 1e-08
       },
-      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "10" }
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "10"
+      }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110014",
       "ComponentType": "Resistor",
       "Reference": "R5",
       "Name": "R5",
-      "Description": "RC Phase Shift Network Stage 3 Resistor (10k\u03a9)",
+      "Description": "RC Phase Shift Network Stage 3 Resistor (10kΩ)",
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -233,7 +277,56 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": { "LogicalRow": "6", "LogicalColumn": "11" }
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "11"
+      }
+    },
+    {
+      "Id": "d15ff035-e590-450e-9803-78aaf15bcfd9",
+      "ComponentType": "Probe",
+      "Name": "TP_REFERENCE",
+      "Reference": "TP_REFERENCE",
+      "Description": "Reference test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "10",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "2fd9b45b-c63e-4dc6-90fb-4a053f28a006",
+      "ComponentType": "Probe",
+      "Name": "TP_SIGNAL",
+      "Reference": "TP_SIGNAL",
+      "Description": "Signal test point with expected voltage.",
+      "StringParameters": {
+        "LogicalRow": "11",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "12"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
     }
   ],
   "Connections": [
@@ -404,6 +497,24 @@
       "ToComponentId": "11111111-1111-1111-1111-111111110005",
       "ToPin": "base",
       "NetName": "STAGE3_NET"
+    },
+    {
+      "Id": "e6a141bc-fd2e-4703-bc5e-131095f4c917",
+      "FromComponentId": "d15ff035-e590-450e-9803-78aaf15bcfd9",
+      "FromPin": "in",
+      "ToComponentId": "11111111-1111-1111-1111-111111110002",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "696f0e17-5ccd-4ca0-9a6d-fb925b271ae5",
+      "FromComponentId": "2fd9b45b-c63e-4dc6-90fb-4a053f28a006",
+      "FromPin": "in",
+      "ToComponentId": "11111111-1111-1111-1111-111111110001",
+      "ToPin": "positive",
+      "NetName": "VCC_NET",
+      "Resistance": 0.0
     }
   ]
 }

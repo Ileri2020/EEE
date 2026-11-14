@@ -1,0 +1,292 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "555 Timer Monostable",
+  "Description": "One-shot timing demonstration using a pulse trigger, timing resistor-capacitor network, low-voltage lamp and input/output test points. The timer IC is represented by the equivalent pulse source.",
+  "Components": [
+    {
+      "Id": "5123f603-befc-5c1d-9a2e-91f202ec1b1e",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit return",
+      "StringParameters": {
+        "LogicalRow": "9",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a6979e45-7406-520f-9001-8a61bba8cf8e",
+      "ComponentType": "VoltageSource",
+      "Reference": "VIN",
+      "Name": "VIN",
+      "Description": "Adjustable low-voltage input source",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Pulse"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5.0,
+        "SineFrequency": 60.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.001,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.004,
+        "PulsePeriod": 0.02
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "cc289bfc-df2e-5ab0-ae84-92fc76f2c071",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "TP_IN",
+      "Description": "Input voltage test point",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "aa0cfb00-e10c-5d1d-a4f3-69b4a3ca2660",
+      "ComponentType": "Resistor",
+      "Reference": "R_SOURCE",
+      "Name": "R_SOURCE",
+      "Description": "Source and current limiting resistance",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e7bd061d-91fb-59e4-a217-dc2d319718c8",
+      "ComponentType": "Resistor",
+      "Reference": "R_TIMING",
+      "Name": "R_TIMING",
+      "Description": "Timing resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2dd3ae76-3f06-561d-8d4d-53c7bb261fe5",
+      "ComponentType": "Capacitor",
+      "Reference": "C_TIMING",
+      "Name": "C_TIMING",
+      "Description": "Timing capacitor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-05
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "466b6f85-ffb3-5865-aaaf-5889a6fe1589",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Output load",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b12fc8d3-a2ae-5665-b427-52fc92f74c99",
+      "ComponentType": "Bulb",
+      "Reference": "LAMP",
+      "Name": "LAMP",
+      "Description": "Visible low-voltage output indicator",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0,
+        "RatedVoltage": 6.0,
+        "ThresholdVoltage": 0.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c7b39499-9e12-5963-ae32-4f6a3dc62d82",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Output voltage and current test point",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "bcd00af4-1222-5359-af3e-3fcd17d9635e",
+      "FromComponentId": "a6979e45-7406-520f-9001-8a61bba8cf8e",
+      "FromPin": "negative",
+      "ToComponentId": "5123f603-befc-5c1d-9a2e-91f202ec1b1e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f912c501-3ffb-54e4-8aaf-2db3ef9769ae",
+      "FromComponentId": "a6979e45-7406-520f-9001-8a61bba8cf8e",
+      "FromPin": "positive",
+      "ToComponentId": "cc289bfc-df2e-5ab0-ae84-92fc76f2c071",
+      "ToPin": "in",
+      "NetName": "VIN_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "987103c7-e932-5d51-8a8d-6bf247070830",
+      "FromComponentId": "a6979e45-7406-520f-9001-8a61bba8cf8e",
+      "FromPin": "positive",
+      "ToComponentId": "aa0cfb00-e10c-5d1d-a4f3-69b4a3ca2660",
+      "ToPin": "pin1",
+      "NetName": "VIN_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b51a859b-f08d-51ab-9803-17da92f4306a",
+      "FromComponentId": "aa0cfb00-e10c-5d1d-a4f3-69b4a3ca2660",
+      "FromPin": "pin2",
+      "ToComponentId": "e7bd061d-91fb-59e4-a217-dc2d319718c8",
+      "ToPin": "pin1",
+      "NetName": "STAGE_0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d40373bd-a358-508a-9892-43eb8d7ed628",
+      "FromComponentId": "e7bd061d-91fb-59e4-a217-dc2d319718c8",
+      "FromPin": "pin2",
+      "ToComponentId": "2dd3ae76-3f06-561d-8d4d-53c7bb261fe5",
+      "ToPin": "pin1",
+      "NetName": "STAGE_1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3374bcb3-6fc4-5b14-a09e-8c5b0cbfe384",
+      "FromComponentId": "2dd3ae76-3f06-561d-8d4d-53c7bb261fe5",
+      "FromPin": "pin2",
+      "ToComponentId": "466b6f85-ffb3-5865-aaaf-5889a6fe1589",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2e8720b0-862f-5ed9-b8ac-6603890abf61",
+      "FromComponentId": "2dd3ae76-3f06-561d-8d4d-53c7bb261fe5",
+      "FromPin": "pin2",
+      "ToComponentId": "b12fc8d3-a2ae-5665-b427-52fc92f74c99",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "bc43da75-3218-5b9c-832b-cad4d0dcbe45",
+      "FromComponentId": "2dd3ae76-3f06-561d-8d4d-53c7bb261fe5",
+      "FromPin": "pin2",
+      "ToComponentId": "c7b39499-9e12-5963-ae32-4f6a3dc62d82",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5a649fb2-d22f-5176-bdd8-13c66d23cb87",
+      "FromComponentId": "466b6f85-ffb3-5865-aaaf-5889a6fe1589",
+      "FromPin": "pin2",
+      "ToComponentId": "5123f603-befc-5c1d-9a2e-91f202ec1b1e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "32e77ce2-9345-5a04-ba48-b64fe8e247fa",
+      "FromComponentId": "b12fc8d3-a2ae-5665-b427-52fc92f74c99",
+      "FromPin": "pin2",
+      "ToComponentId": "5123f603-befc-5c1d-9a2e-91f202ec1b1e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    }
+  ]
+}

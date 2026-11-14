@@ -1,0 +1,270 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "555 Astable Oscillator",
+  "Description": "555 astable timing demonstration. A pulse source represents the timer output; R1, R2, and C1 show the external timing network. The internal 555 comparator/latch is not modeled.",
+  "Components": [
+    {
+      "Id": "fc37136d-3372-4692-851f-86e466cb2d5e",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Ground",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "16ea9984-3777-494d-9f4b-ac80694a3551",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "U1_555_OUTPUT",
+      "Name": "U1_555_OUTPUT",
+      "Description": "VoltageSource",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "Pulse"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5,
+        "SineFrequency": 500,
+        "SinePhase": 0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
+        "PulseWidth": 0.0005,
+        "PulsePeriod": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "281b52a1-341e-4227-be44-49dd1117ce11",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R1",
+      "Name": "R1",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 10000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "cd5d5007-2152-478d-84c4-bdd833c09d68",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R2",
+      "Name": "R2",
+      "Description": "Resistor",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 47000
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8bedf1a6-ec7f-4040-ae40-051c361c2b49",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_TIMING",
+      "Name": "C_TIMING",
+      "Description": "Capacitor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "12b1d457-94d2-455b-b454-98462fe618f5",
+      "StableTypeId": "electrical.bulb",
+      "ComponentType": "Bulb",
+      "Reference": "L_OUTPUT",
+      "Name": "L_OUTPUT",
+      "Description": "Bulb",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 330,
+        "RatedVoltage": 5,
+        "ThresholdVoltage": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "1e911e9d-764e-4a51-8212-5542eea1ea98",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "TP_OUT",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "005e4273-34ee-4847-aa5f-8b172b01462e",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_TIMING",
+      "Name": "TP_TIMING",
+      "Description": "Test point: high-impedance voltage measurement",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "4.97166153"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {}
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "14fb8e94-60af-4f0b-99de-268cfc3008a1",
+      "FromComponentId": "16ea9984-3777-494d-9f4b-ac80694a3551",
+      "FromPin": "negative",
+      "ToComponentId": "fc37136d-3372-4692-851f-86e466cb2d5e",
+      "ToPin": "gnd",
+      "NetName": "N1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "cd883e7d-f2be-47e7-8630-e0e0a366ae93",
+      "FromComponentId": "16ea9984-3777-494d-9f4b-ac80694a3551",
+      "FromPin": "positive",
+      "ToComponentId": "281b52a1-341e-4227-be44-49dd1117ce11",
+      "ToPin": "pin1",
+      "NetName": "N2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3d7028fc-24e6-43b3-a796-1d1f083abd6b",
+      "FromComponentId": "281b52a1-341e-4227-be44-49dd1117ce11",
+      "FromPin": "pin2",
+      "ToComponentId": "cd5d5007-2152-478d-84c4-bdd833c09d68",
+      "ToPin": "pin1",
+      "NetName": "N3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8d688432-7c9e-47a9-b799-a13f3c4cb9e0",
+      "FromComponentId": "cd5d5007-2152-478d-84c4-bdd833c09d68",
+      "FromPin": "pin2",
+      "ToComponentId": "8bedf1a6-ec7f-4040-ae40-051c361c2b49",
+      "ToPin": "pin1",
+      "NetName": "N4",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "eba62bc9-b475-49b1-a308-6096d293033a",
+      "FromComponentId": "8bedf1a6-ec7f-4040-ae40-051c361c2b49",
+      "FromPin": "pin2",
+      "ToComponentId": "fc37136d-3372-4692-851f-86e466cb2d5e",
+      "ToPin": "gnd",
+      "NetName": "N5",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "644cfe16-fd81-43af-925a-1b5c4a0115cc",
+      "FromComponentId": "16ea9984-3777-494d-9f4b-ac80694a3551",
+      "FromPin": "positive",
+      "ToComponentId": "12b1d457-94d2-455b-b454-98462fe618f5",
+      "ToPin": "pin1",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8adeafd7-6675-49af-ab24-eab3912de11f",
+      "FromComponentId": "12b1d457-94d2-455b-b454-98462fe618f5",
+      "FromPin": "pin2",
+      "ToComponentId": "fc37136d-3372-4692-851f-86e466cb2d5e",
+      "ToPin": "gnd",
+      "NetName": "N7",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "bf6a45b7-c6f8-42b2-b225-e665da28d62f",
+      "FromComponentId": "1e911e9d-764e-4a51-8212-5542eea1ea98",
+      "FromPin": "in",
+      "ToComponentId": "16ea9984-3777-494d-9f4b-ac80694a3551",
+      "ToPin": "positive",
+      "NetName": "N8",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "da83b450-c0a2-4aaa-b3f4-b01fee8eb31f",
+      "FromComponentId": "005e4273-34ee-4847-aa5f-8b172b01462e",
+      "FromPin": "in",
+      "ToComponentId": "8bedf1a6-ec7f-4040-ae40-051c361c2b49",
+      "ToPin": "pin1",
+      "NetName": "N9",
+      "Resistance": 0.0
+    }
+  ]
+}
