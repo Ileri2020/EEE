@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using EESimulator.Core.Models;
 
 namespace EESimulator.Core.Electrical;
@@ -20,11 +21,15 @@ public class NetlistBuilder
     private class DisjointSet
     {
         private readonly Dictionary<PinReference, PinReference> _parent = new();
+        private readonly Dictionary<PinReference, byte> _rank = new();
 
         public PinReference Find(PinReference pin)
         {
             if (!_parent.ContainsKey(pin))
+            {
                 _parent[pin] = pin;
+                _rank[pin] = 0;
+            }
 
             if (!_parent[pin].Equals(pin))
                 _parent[pin] = Find(_parent[pin]);
@@ -36,8 +41,19 @@ public class NetlistBuilder
         {
             var rootA = Find(a);
             var rootB = Find(b);
-            if (!rootA.Equals(rootB))
+            if (rootA.Equals(rootB))
+                return;
+
+            byte rankA = _rank[rootA];
+            byte rankB = _rank[rootB];
+            if (rankA < rankB)
+                _parent[rootA] = rootB;
+            else
+            {
                 _parent[rootB] = rootA;
+                if (rankA == rankB)
+                    _rank[rootA]++;
+            }
         }
 
         public IEnumerable<PinReference> AllPins => _parent.Keys;
@@ -45,10 +61,13 @@ public class NetlistBuilder
 
     public static CircuitTopology BuildTopology(CircuitNode circuit)
     {
+        ArgumentNullException.ThrowIfNull(circuit);
+        var components = circuit.Components.ToList();
+        var connections = circuit.Connections.ToList();
         var dsu = new DisjointSet();
 
         // Register all pins on all components
-        foreach (var comp in circuit.Components)
+        foreach (var comp in components)
         {
             foreach (var pin in comp.Pins)
             {
@@ -58,7 +77,7 @@ public class NetlistBuilder
         }
 
         // Union connected pins
-        foreach (var conn in circuit.Connections)
+        foreach (var conn in connections)
         {
             var p1 = new PinReference(conn.FromComponentId, conn.FromPin);
             var p2 = new PinReference(conn.ToComponentId, conn.ToPin);
@@ -66,26 +85,27 @@ public class NetlistBuilder
         }
 
         // Union same-labeled Tunnel components across the schematic
-        var tunnelGroups = circuit.Components
+        var tunnelsByLabel = components
             .OfType<EESimulator.Core.Components.General.TunnelComponent>()
-            .GroupBy(t => t.TunnelLabel, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var tGroup in tunnelGroups)
+            .Where(tunnel => !string.IsNullOrWhiteSpace(tunnel.TunnelLabel) && tunnel.Pins.Count > 0)
+            .GroupBy(tunnel => tunnel.TunnelLabel, StringComparer.OrdinalIgnoreCase);
+        var tunnelByComponent = new Dictionary<Guid, EESimulator.Core.Components.General.TunnelComponent>();
+        foreach (var tunnelGroup in tunnelsByLabel)
         {
-            var tunnels = tGroup.ToList();
-            if (tunnels.Count > 1 && tunnels[0].Pins.Count > 0)
+            var tunnels = tunnelGroup.ToList();
+            var first = tunnels[0];
+            var firstPin = new PinReference(first.Id, first.Pins[0].Id);
+            tunnelByComponent[first.Id] = first;
+            for (int i = 1; i < tunnels.Count; i++)
             {
-                var p0 = new PinReference(tunnels[0].Id, tunnels[0].Pins[0].Id);
-                for (int i = 1; i < tunnels.Count; i++)
-                {
-                    if (tunnels[i].Pins.Count > 0)
-                    {
-                        var pi = new PinReference(tunnels[i].Id, tunnels[i].Pins[0].Id);
-                        dsu.Union(p0, pi);
-                    }
-                }
+                var tunnel = tunnels[i];
+                dsu.Union(firstPin, new PinReference(tunnel.Id, tunnel.Pins[0].Id));
+                tunnelByComponent[tunnel.Id] = tunnel;
             }
         }
+        var labelsByComponent = components
+            .OfType<EESimulator.Core.Components.General.LabelComponent>()
+            .ToDictionary(label => label.Id);
 
         // Group pins by their root representative
         var groups = new Dictionary<PinReference, List<PinReference>>();
@@ -101,48 +121,67 @@ public class NetlistBuilder
         }
 
         var topology = new CircuitTopology();
+        var groundCompIds = new HashSet<Guid>(components.Where(component => component is GroundNode).Select(component => component.Id));
+        var groupEntries = groups.Values.ToList();
+        var netNames = new string[groupEntries.Count];
+        var groundNets = new bool[groupEntries.Count];
         int netCounter = 1;
-
-        // Identify ground components
-        var groundCompIds = new HashSet<Guid>(circuit.Components.Where(c => c is GroundNode).Select(c => c.Id));
-
-        foreach (var kvp in groups)
+        for (int i = 0; i < groupEntries.Count; i++)
         {
-            var pinList = kvp.Value;
+            var pinList = groupEntries[i];
             bool isGround = pinList.Any(p => groundCompIds.Contains(p.ComponentId));
-
-            // Check if any connected component is a Tunnel or Label to give the net a descriptive name
+            groundNets[i] = isGround;
             string? descriptiveName = null;
             if (!isGround)
             {
-                var tunnelComp = circuit.Components
-                    .OfType<EESimulator.Core.Components.General.TunnelComponent>()
-                    .FirstOrDefault(t => pinList.Any(p => p.ComponentId == t.Id));
-                if (tunnelComp != null && !string.IsNullOrWhiteSpace(tunnelComp.TunnelLabel))
+                foreach (var pin in pinList)
                 {
-                    descriptiveName = tunnelComp.TunnelLabel;
-                }
-                else
-                {
-                    var labelComp = circuit.Components
-                        .OfType<EESimulator.Core.Components.General.LabelComponent>()
-                        .FirstOrDefault(l => pinList.Any(p => p.ComponentId == l.Id));
-                    if (labelComp != null && !string.IsNullOrWhiteSpace(labelComp.Name))
+                    if (tunnelByComponent.TryGetValue(pin.ComponentId, out var tunnel) &&
+                        !string.IsNullOrWhiteSpace(tunnel.TunnelLabel))
                     {
-                        descriptiveName = labelComp.Name;
+                        descriptiveName = tunnel.TunnelLabel;
+                        break;
+                    }
+                }
+
+                if (descriptiveName == null)
+                {
+                    foreach (var pin in pinList)
+                    {
+                        if (labelsByComponent.TryGetValue(pin.ComponentId, out var label) &&
+                            !string.IsNullOrWhiteSpace(label.Name))
+                        {
+                            descriptiveName = label.Name;
+                            break;
+                        }
                     }
                 }
             }
 
-            string netName = isGround ? "0" : (descriptiveName ?? $"Net_{netCounter++}");
+            netNames[i] = isGround ? "0" : descriptiveName ?? $"Net_{netCounter++}";
+        }
 
-            var netNode = new NetNode(netName, isGround);
+        var resolvedNets = new NetNode[groupEntries.Count];
+        void CreateNet(int index)
+        {
+            var pinList = groupEntries[index];
+            var netNode = new NetNode(netNames[index], groundNets[index]);
             foreach (var p in pinList)
-            {
                 netNode.ConnectedPins.Add(p);
-                topology.PinToNetMap[p] = netNode;
-            }
-            topology.Nets.Add(netNode);
+            resolvedNets[index] = netNode;
+        }
+
+        if (groupEntries.Count >= 128)
+            Parallel.For(0, groupEntries.Count, CreateNet);
+        else
+            for (int i = 0; i < groupEntries.Count; i++)
+                CreateNet(i);
+
+        foreach (var net in resolvedNets)
+        {
+            topology.Nets.Add(net);
+            foreach (var pin in net.ConnectedPins)
+                topology.PinToNetMap[pin] = net;
         }
 
         return topology;

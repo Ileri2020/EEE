@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using EESimulator.Core.Components.Base;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.Electronics;
@@ -14,6 +15,39 @@ namespace EESimulator.Engine.Simulation;
 public static partial class DigitalLogicSimulator
 {
     private const double LogicThreshold = 2.5;
+    private static readonly ConditionalWeakTable<CircuitNode, CircuitSimulationData> CircuitDataCache = new();
+
+    private sealed class CircuitSimulationData
+    {
+        private readonly object _lock = new();
+        private long _structureVersion = -1;
+
+        public List<ComponentNode> Components { get; private set; } = new();
+        public Dictionary<Guid, ComponentNode> ComponentsById { get; private set; } = new();
+        public CircuitTopology Topology { get; private set; } = new();
+
+        public void EnsureCurrent(CircuitNode circuit)
+        {
+            long structureVersion = circuit.StructureVersion;
+            if (_structureVersion == structureVersion)
+                return;
+
+            lock (_lock)
+            {
+                structureVersion = circuit.StructureVersion;
+                if (_structureVersion == structureVersion)
+                    return;
+
+                var components = circuit.Components.ToList();
+                var componentsById = components.ToDictionary(component => component.Id);
+                var topology = NetlistBuilder.BuildTopology(circuit);
+                Components = components;
+                ComponentsById = componentsById;
+                Topology = topology;
+                _structureVersion = structureVersion;
+            }
+        }
+    }
 
     public static void Advance(CircuitNode circuit, double elapsedSeconds)
     {
@@ -183,9 +217,11 @@ public static partial class DigitalLogicSimulator
 
         public Context(CircuitNode circuit)
         {
-            Components = circuit.Components.ToList();
-            _topology = NetlistBuilder.BuildTopology(circuit);
-            _byId = Components.ToDictionary(component => component.Id);
+            CircuitSimulationData data = CircuitDataCache.GetValue(circuit, _ => new CircuitSimulationData());
+            data.EnsureCurrent(circuit);
+            Components = data.Components;
+            _topology = data.Topology;
+            _byId = data.ComponentsById;
         }
 
         public void AdvanceSequential()
