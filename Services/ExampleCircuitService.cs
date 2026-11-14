@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
+using System.Linq;
 using System.Threading.Tasks;
 using EESimulator.Core.Models;
 using EESimulator.Formats;
@@ -73,25 +73,17 @@ public static class ExampleCircuitService
         if (string.IsNullOrWhiteSpace(json))
             throw new InvalidOperationException($"No schematic content found for example '{example.Title}'.");
 
-        var dto = JsonSerializer.Deserialize<EeeProjectDto>(json, new JsonSerializerOptions
+        return await Task.Run(() =>
         {
-            PropertyNameCaseInsensitive = true
+            CircuitNode circuit = EeePlatformSerializer.LoadFromEeeJson(json);
+            EnsureLogicalPlacements(circuit);
+            foreach (LogicalGridPlacement placement in LogicalGridSchematicLayout.Calculate(circuit).Placements)
+            {
+                placement.Component.X = placement.X;
+                placement.Component.Y = placement.Y;
+            }
+            return circuit;
         });
-
-        if (dto == null)
-            throw new InvalidOperationException("Failed to deserialize EEE example schematic.");
-
-        // Construct circuit from DTO
-        string tempFile = Path.Combine(FileSystem.CacheDirectory, $"{example.Id}.eee");
-        File.WriteAllText(tempFile, json);
-        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(tempFile);
-        EnsureLogicalPlacements(circuit);
-        foreach (LogicalGridPlacement placement in LogicalGridSchematicLayout.Calculate(circuit).Placements)
-        {
-            placement.Component.X = placement.X;
-            placement.Component.Y = placement.Y;
-        }
-        return circuit;
     }
 
     internal static void EnsureLogicalPlacements(CircuitNode circuit)

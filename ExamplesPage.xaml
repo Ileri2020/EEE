@@ -324,13 +324,20 @@
                     </Border>
                 </HorizontalStackLayout>
             </ScrollView>
-            <Button Grid.Column="1"
-                    Text="💾 Save All Python"
-                    Style="{StaticResource ToolBtn}"
-                    TextColor="#79C0FF"
-                    Padding="10,6"
-                    Command="{Binding SaveAllPythonScriptsCommand}"
-                    ToolTipProperties.Text="Save Python scripts for all built-in and loaded community examples"/>
+            <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                <Button Text="💾 Save scripts"
+                        Style="{StaticResource ToolBtn}"
+                        TextColor="#79C0FF"
+                        Padding="10,6"
+                        Command="{Binding SaveAllPythonScriptsIndividuallyCommand}"
+                        ToolTipProperties.Text="Save one Python file per built-in and loaded community example"/>
+                <Button Text="📄 Save combined .txt"
+                        Style="{StaticResource ToolBtn}"
+                        TextColor="#79C0FF"
+                        Padding="10,6"
+                        Command="{Binding SaveAllPythonScriptsCombinedCommand}"
+                        ToolTipProperties.Text="Save all built-in and loaded community scripts in one text file"/>
+            </HorizontalStackLayout>
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════════════ -->

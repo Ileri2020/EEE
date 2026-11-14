@@ -23,7 +23,7 @@ if not exist "%TEST_PROJECT%" (
 
 set "LOG_DIR=%PROJECT_DIR%\Platforms\dist\logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
-set "LOG_FILE=%LOG_DIR%\component-tests.log"
+set "LOG_FILE=%LOG_DIR%\test-suite.log"
 
 :parse_args
 if "%~1"=="" goto args_parsed
@@ -38,9 +38,10 @@ goto parse_args
 :args_parsed
 pushd "%PROJECT_DIR%"
 echo ================================================================================
-echo EEE COMPONENT TEST RUNNER
+echo EEE FULL TEST SUITE RUNNER
 echo Target: %TEST_PROJECT%
-echo Includes managed IronPython component suites through PythonScriptPipelineTests.
+echo Runs every C# test in the project, including bundled-example layout, probe, simulation, and Python round-trip tests.
+echo Also runs every EESimulator.Tests\Python\test_*.py suite through the managed IronPython API.
 echo Full output log: %LOG_FILE%
 if defined BUILD_FLAGS echo Mode: reusing the existing build (--no-build --no-restore)
 echo ================================================================================

@@ -179,6 +179,7 @@ public static partial class DigitalLogicSimulator
         public List<ComponentNode> Components { get; }
         private readonly CircuitTopology _topology;
         private readonly Dictionary<Guid, ComponentNode> _byId;
+        private bool _outputsChanged;
 
         public Context(CircuitNode circuit)
         {
@@ -347,6 +348,7 @@ public static partial class DigitalLogicSimulator
             // Fixed-point iteration settles short cascades of combinational gates.
             for (int pass = 0; pass < Math.Clamp(Components.Count, 1, 24); pass++)
             {
+                _outputsChanged = false;
                 foreach (var component in Components)
                 {
                     switch (component)
@@ -518,6 +520,9 @@ public static partial class DigitalLogicSimulator
                             break;
                     }
                 }
+
+                if (!_outputsChanged)
+                    break;
             }
         }
 
@@ -806,18 +811,30 @@ public static partial class DigitalLogicSimulator
             for (int bit = 0; bit < width; bit++) Set(component, $"{prefix}{bit}", ((value >> bit) & 1) != 0, 5, 0);
         }
 
+        private void Set(ComponentNode component, string pinId, bool value, double highVoltage, double lowVoltage)
+        {
+            _outputsChanged |= SetCustomProperty(component, $"HighZ:{pinId}", false);
+            _outputsChanged |= SetCustomProperty(component, $"Output:{pinId}", value);
+            _outputsChanged |= SetCustomProperty(component, $"OutputVoltage:{pinId}", value ? highVoltage : lowVoltage);
+        }
+
+        private void SetHighZ(ComponentNode component, string pinId)
+            => _outputsChanged |= SetCustomProperty(component, $"HighZ:{pinId}", true);
+
+        private static bool SetCustomProperty(ComponentNode component, string key, object value)
+        {
+            if (component.CustomProperties.TryGetValue(key, out object? current) && Equals(current, value))
+                return false;
+
+            component.CustomProperties[key] = value;
+            return true;
+        }
+
     }
 
     private static long Mask(int width) => width >= 63 ? long.MaxValue : (1L << Math.Clamp(width, 1, 62)) - 1;
     private static int ParseTtlPin(string pinId) => pinId.StartsWith("pin", StringComparison.OrdinalIgnoreCase) &&
         int.TryParse(pinId.AsSpan(3), NumberStyles.Integer, CultureInfo.InvariantCulture, out int pinNumber) ? pinNumber : -1;
-    private static void Set(ComponentNode component, string pinId, bool value, double highVoltage, double lowVoltage)
-    {
-        component.CustomProperties[$"HighZ:{pinId}"] = false;
-        component.CustomProperties[$"Output:{pinId}"] = value;
-        component.CustomProperties[$"OutputVoltage:{pinId}"] = value ? highVoltage : lowVoltage;
-    }
-    private static void SetHighZ(ComponentNode component, string pinId) => component.CustomProperties[$"HighZ:{pinId}"] = true;
     private static bool Bool(ComponentNode component, string key, bool fallback) => component.CustomProperties.TryGetValue(key, out var value) && bool.TryParse(value?.ToString(), out var parsed) ? parsed : fallback;
     private static double Number(ComponentNode component, string key, double fallback) => component.CustomProperties.TryGetValue(key, out var value) && double.TryParse(value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed) ? parsed : fallback;
     private static void SetBool(ComponentNode component, string key, bool value) => component.CustomProperties[key] = value;

@@ -12,6 +12,9 @@ using EESimulator.Scripting;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
+#if ANDROID
+using EEE.Platforms.Android;
+#endif
 
 namespace EEE.ViewModels;
 
@@ -144,7 +147,8 @@ public partial class ExamplesViewModel : ObservableObject
         {
             StatusMessage = $"Loading {example.Title}…";
             var circuit = await ExampleCircuitService.LoadCircuitAsync(example);
-            _workspaceVm.LoadCircuit(circuit, $"{example.Title}.eee");
+            string generatedScript = await Task.Run(() => PythonCodeGenerator.GenerateFullScript(circuit));
+            _workspaceVm.LoadCircuit(circuit, $"{example.Title}.eee", generatedScript: generatedScript);
 
             // Navigate back to workspace
             await Shell.Current.GoToAsync("//workspace");
@@ -199,7 +203,7 @@ public partial class ExamplesViewModel : ObservableObject
         try
         {
             var circuit = await ExampleCircuitService.LoadCircuitAsync(example);
-            string script = PythonCodeGenerator.GenerateFullScript(circuit);
+            string script = await Task.Run(() => PythonCodeGenerator.GenerateFullScript(circuit));
             await Clipboard.Default.SetTextAsync(script);
             StatusMessage = $"Copied Python script for {example.Title}";
 
@@ -215,34 +219,26 @@ public partial class ExamplesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task SaveAllPythonScripts()
+    public async Task SaveAllPythonScriptsIndividually()
     {
         try
         {
-            string targetDirectory = Path.Combine(FileSystem.AppDataDirectory, "Examples", "Python");
-            Directory.CreateDirectory(targetDirectory);
-
-            var examples = _allExamples.Concat(_communityExamples)
-                .GroupBy(example => example.Id, StringComparer.OrdinalIgnoreCase)
-                .Select(group => group.First())
-                .ToArray();
+            CircuitExampleItem[] examples = GetAllExamples();
 
             foreach (CircuitExampleItem example in examples)
             {
                 var circuit = await ExampleCircuitService.LoadCircuitAsync(example);
-                string script = PythonCodeGenerator.GenerateFullScript(circuit);
-                string fileName = string.Concat(example.Id.Select(character =>
-                    Path.GetInvalidFileNameChars().Contains(character) ? '_' : character));
-                string path = Path.Combine(targetDirectory, $"{fileName}.py");
-                await File.WriteAllTextAsync(path, script, Encoding.UTF8);
+                string script = await Task.Run(() => PythonCodeGenerator.GenerateFullScript(circuit));
+                await SavePythonFileAsync($"{SanitizeFileName(example.Id)}.py", script);
             }
 
-            StatusMessage = $"Saved {examples.Length} Python example scripts.";
+            string destination = GetPythonExportLocation();
+            StatusMessage = $"Saved {examples.Length} Python scripts to {destination}.";
             if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
             {
                 await page.DisplayAlertAsync(
                     "Python Examples Saved",
-                    $"Saved {examples.Length} scripts to:\n{targetDirectory}",
+                    $"Saved {examples.Length} scripts to:\n{destination}",
                     "OK");
             }
         }
@@ -254,6 +250,88 @@ public partial class ExamplesViewModel : ObservableObject
                 await page.DisplayAlertAsync("Python Export Error", ex.Message, "OK");
             }
         }
+    }
+
+    [RelayCommand]
+    public async Task SaveAllPythonScriptsCombined()
+    {
+        try
+        {
+            CircuitExampleItem[] examples = GetAllExamples();
+            var combined = new StringBuilder("# EESimulator Python example scripts");
+
+            foreach (CircuitExampleItem example in examples)
+            {
+                var circuit = await ExampleCircuitService.LoadCircuitAsync(example);
+                string script = await Task.Run(() => PythonCodeGenerator.GenerateFullScript(circuit));
+                combined.AppendLine();
+                combined.AppendLine($"# ===== {example.Title} ({example.Id}) =====");
+                combined.AppendLine(script.TrimEnd());
+            }
+
+            await SavePythonFileAsync("EESimulator-Examples.txt", combined.ToString());
+            string destination = GetPythonExportLocation();
+            StatusMessage = $"Saved {examples.Length} Python examples in one text file to {destination}.";
+            if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
+            {
+                await page.DisplayAlertAsync(
+                    "Combined Python Examples Saved",
+                    $"Saved all {examples.Length} scripts to:\n{Path.Combine(destination, "EESimulator-Examples.txt")}",
+                    "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Python export error: {ex.Message}";
+            if (Application.Current?.Windows.FirstOrDefault()?.Page is Page page)
+            {
+                await page.DisplayAlertAsync("Python Export Error", ex.Message, "OK");
+            }
+        }
+    }
+
+    private CircuitExampleItem[] GetAllExamples() => _allExamples.Concat(_communityExamples)
+        .GroupBy(example => example.Id, StringComparer.OrdinalIgnoreCase)
+        .Select(group => group.First())
+        .ToArray();
+
+    private static string SanitizeFileName(string name) => string.Concat(name.Select(character =>
+        Path.GetInvalidFileNameChars().Contains(character) || character is '/' or '\\' ? '_' : character));
+
+    private static string GetPythonExportLocation()
+    {
+#if ANDROID
+        return "Downloads/EEEngine";
+#else
+        string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        if (string.IsNullOrWhiteSpace(documents))
+            throw new InvalidOperationException("The Documents folder is unavailable.");
+        return Path.Combine(documents, "EESimulator");
+#endif
+    }
+
+    private static async Task SavePythonFileAsync(string fileName, string contents)
+    {
+#if ANDROID
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            throw new PlatformNotSupportedException("Saving examples to Downloads requires Android 10 or later.");
+
+        string temporaryPath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid():N}.tmp");
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, contents, Encoding.UTF8);
+            await AndroidDownloadSaver.SaveAsync(temporaryPath, fileName);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+        }
+#else
+        string targetDirectory = GetPythonExportLocation();
+        Directory.CreateDirectory(targetDirectory);
+        await File.WriteAllTextAsync(Path.Combine(targetDirectory, fileName), contents, Encoding.UTF8);
+#endif
     }
 
     [RelayCommand]

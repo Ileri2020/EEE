@@ -142,7 +142,11 @@ public partial class EEWorkspaceViewModel
         }
     }
 
-    public void LoadCircuit(CircuitNode newCircuit, string projectName, string? filePath = null)
+    public void LoadCircuit(
+        CircuitNode newCircuit,
+        string projectName,
+        string? filePath = null,
+        string? generatedScript = null)
     {
         if (newCircuit == null) return;
 
@@ -164,7 +168,7 @@ public partial class EEWorkspaceViewModel
         CurrentFilePath = filePath;
 
         // Notify the script synchronizer so the Python script view reflects the loaded circuit (§5.A)
-        _sync.OnCircuitReplaced(Circuit);
+        _sync.OnCircuitReplaced(Circuit, generatedScript);
         ScriptText = _sync.CurrentScript;
 
         StatusText = $"Loaded circuit: {projectName}";

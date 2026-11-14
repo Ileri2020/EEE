@@ -2,6 +2,7 @@ using EESimulator.Commands;
 using EESimulator.Core.Models;
 using EESimulator.Scripting.API;
 using EESimulator.Scripting.Execution;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,21 +25,16 @@ public sealed class PythonScriptPipelineTests
 
         var executor = new PythonCommandExecutor(new PythonApi(new CommandManager(), new CircuitNode()));
         var engine = new ManagedPythonScriptEngine(executor);
-
-        string[] scriptFiles =
-        {
-            "test_all_116_components.py",
-            "test_component_circuit_tests.py",
-            "test_enhanced_component_tests.py",
-            "test_complex_linked_circuit_tests.py"
-        };
+        string[] scriptFiles = Directory.GetFiles(pythonRoot, "test_*.py")
+            .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        Assert.NotEmpty(scriptFiles);
 
         foreach (string scriptFile in scriptFiles)
         {
-            string scriptPath = Path.Combine(pythonRoot, scriptFile);
-            _output.WriteLine($"Running managed Python suite: {scriptFile}");
-            engine.ExecuteFile(scriptPath);
-            _output.WriteLine($"Completed managed Python suite: {scriptFile}");
+            _output.WriteLine($"Running managed Python suite: {Path.GetFileName(scriptFile)}");
+            engine.ExecuteFile(scriptFile);
+            _output.WriteLine($"Completed managed Python suite: {Path.GetFileName(scriptFile)}");
         }
     }
 

@@ -79,7 +79,7 @@ public class ScriptSynchronizer
     /// Called by the workspace ViewModel after any project load or new-circuit operation.
     /// Replaces the tracked circuit reference and regenerates the full auto-generated block (§5.A).
     /// </summary>
-    public void OnCircuitReplaced(CircuitNode newCircuit)
+    public void OnCircuitReplaced(CircuitNode newCircuit, string? generatedScript = null)
     {
         if (newCircuit == null) return;
         _circuit = newCircuit;
@@ -91,7 +91,7 @@ public class ScriptSynchronizer
             _isSynchronizing = true;
 
             // Regenerate the auto block from the full loaded circuit
-            string fullScript = PythonCodeGenerator.GenerateFullScript(_circuit);
+            string fullScript = generatedScript ?? PythonCodeGenerator.GenerateFullScript(_circuit);
             _autoScript.Clear();
             _autoScript.Append(fullScript);
 

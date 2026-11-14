@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Microsoft.Maui.Graphics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Components.Electronics;
@@ -47,6 +49,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private float _lastPinchScale = 1f;
     private bool _isPinching;
     private const float GridSize = 20f;
+    private int _structureRefreshPending;
 
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<ComponentNode>? ComponentSelected;
@@ -167,11 +170,20 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     }
 
     private void OnCircuitStructureChanged(object? sender, EventArgs e)
-        => Dispatcher.Dispatch(() =>
+    {
+        if (Interlocked.Exchange(ref _structureRefreshPending, 1) != 0)
+            return;
+
+        if (!Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(16), () =>
         {
+            Interlocked.Exchange(ref _structureRefreshPending, 0);
             InvalidateWireGeometryCache();
             Invalidate();
-        });
+        }))
+        {
+            Interlocked.Exchange(ref _structureRefreshPending, 0);
+        }
+    }
 
     // ── Rotate handle helpers ─────────────────────────────────────────────────
     /// <summary>
