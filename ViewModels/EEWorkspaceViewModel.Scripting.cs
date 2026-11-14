@@ -66,6 +66,15 @@ public partial class EEWorkspaceViewModel
 
             switch (method)
             {
+                case "new_circuit" when args.Length >= 1:
+                    ClearCircuitForScript();
+                    Circuit.Title = Unquote(args[0]);
+                    return $"[ok] new circuit '{Circuit.Title}' created";
+
+                case "clear_circuit" or "clear":
+                    ClearCircuitForScript();
+                    return "[ok] circuit cleared";
+
                 case "add_component" when args.Length >= 4:
                     PythonApi.AddComponent(Unquote(args[0]), Unquote(args[1]),
                         ParseD(args[2]), ParseD(args[3]),
@@ -125,7 +134,8 @@ public partial class EEWorkspaceViewModel
 
                 case "connect" when args.Length >= 4:
                     PythonApi.Connect(Unquote(args[0]), Unquote(args[1]),
-                        Unquote(args[2]), Unquote(args[3]));
+                        Unquote(args[2]), Unquote(args[3]),
+                        args.Length > 4 ? ParseD(args[4]) : 0.0);
                     return "[ok] connected";
 
                 case "set_position" when args.Length >= 3:

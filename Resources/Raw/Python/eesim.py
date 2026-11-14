@@ -57,17 +57,44 @@ class ComponentRef:
         return self._name
 
 
+class CircuitRef:
+    def add_component(self, comp_type, name=None, **kwargs):
+        if name is None:
+            raise TypeError("add_component requires a component name.")
+
+        if "row" in kwargs or "col" in kwargs:
+            if "row" not in kwargs or "col" not in kwargs:
+                raise TypeError("Logical placement requires both row and col.")
+            _call(
+                f"circuit.add_component({_quoted(comp_type)}, name={_quoted(name)}, "
+                f"row={_number(kwargs['row'])}, col={_number(kwargs['col'])})"
+            )
+        elif "position" in kwargs:
+            position = kwargs["position"]
+            if len(position) != 2:
+                raise TypeError("position must contain x and y coordinates.")
+            _call(
+                f"circuit.add_component({_quoted(comp_type)}, name={_quoted(name)}, "
+                f"position_x={_number(position[0])}, position_y={_number(position[1])})"
+            )
+        else:
+            raise TypeError("add_component requires either position or row and col.")
+        return ComponentRef(str(name))
+
+
 def clear_circuit():
     _call("eesim.clear_circuit()")
 
 
+def new_circuit(name="Untitled Circuit"):
+    _call(f"eesim.new_circuit({_quoted(name)})")
+    return CircuitRef()
+
+
 def add_component(comp_type, name, x=0, y=0, param=0, **kwargs):
     if kwargs:
-        raise TypeError("add_component accepts positional arguments only in the app scripting interface.")
-    _call(
-        f"eesim.add_component({_quoted(comp_type)}, {_quoted(name)}, "
-        f"{_number(x)}, {_number(y)}, {_number(param)})"
-    )
+        return CircuitRef().add_component(comp_type, name=name, **kwargs)
+    _call(f"eesim.add_component({_quoted(comp_type)}, {_quoted(name)}, {_number(x)}, {_number(y)}, {_number(param)})")
     return ComponentRef(str(name))
 
 
@@ -92,11 +119,14 @@ def set_memory_word(name, address, value):
 def connect(*args):
     if len(args) == 2:
         endpoints = args
-    elif len(args) == 4:
+        resistance = None
+    elif len(args) in (4, 5):
         endpoints = (f"{args[0]}.{args[1]}", f"{args[2]}.{args[3]}")
+        resistance = args[4] if len(args) == 5 else None
     else:
-        raise TypeError("connect expects two endpoint names or two component/pin pairs.")
-    _call(f"eesim.connect({_quoted(endpoints[0])}, {_quoted(endpoints[1])})")
+        raise TypeError("connect expects two endpoint names or component/pin pairs.")
+    suffix = f", {_number(resistance)}" if resistance is not None else ""
+    _call(f"eesim.connect({_quoted(endpoints[0])}, {_quoted(endpoints[1])}{suffix})")
 
 
 def evaluate_combinational():
@@ -122,6 +152,18 @@ def read_pin_voltage(name, pin):
 
 def read_digital_output_state(name, pin):
     return _call(f"eesim.read_digital_output_state({_quoted(name)}, {_quoted(pin)})")
+
+
+def set_description(name, description):
+    _call(f"eesim.set_description({_quoted(name)}, {_quoted(description)})")
+
+
+def rotate_component(name, degrees):
+    _call(f"eesim.rotate_component({_quoted(name)}, {_number(degrees)})")
+
+
+def stretch_component(name, scale_x, scale_y):
+    _call(f"eesim.stretch_component({_quoted(name)}, {_number(scale_x)}, {_number(scale_y)})")
 
 
 def print(*args, **kwargs):

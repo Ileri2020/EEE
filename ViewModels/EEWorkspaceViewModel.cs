@@ -10,6 +10,7 @@ using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.UI;
 using EESimulator.Scripting;
 using EESimulator.Scripting.API;
+using EESimulator.Scripting.Execution;
 using EESimulator.Engine;
 using EESimulator.Engine.Simulation;
 using EESimulator.Formats;
@@ -47,6 +48,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private readonly HashSet<string> _activeSimulationEventIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _simulationEventOwnersByTarget = new(StringComparer.OrdinalIgnoreCase);
     public PythonApi PythonApi { get; }
+    private readonly PythonCommandExecutor _pythonCommandExecutor;
+    private readonly ManagedPythonScriptEngine _pythonScriptEngine;
     private readonly ScriptSynchronizer _sync;
     private readonly Dictionary<string, CustomCircuitDefinition> _customCircuitDefinitions = new(StringComparer.OrdinalIgnoreCase);
 
@@ -835,6 +838,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
         _simManager = new SimulationManager();
         _simWorker  = new SimulationWorker(_simManager);
         PythonApi   = new PythonApi(CommandManager, Circuit, _simManager, UI);
+        _pythonCommandExecutor = new PythonCommandExecutor(PythonApi);
+        _pythonScriptEngine = new ManagedPythonScriptEngine(
+            new ManagedPythonScriptBridge(DispatchScriptApiCall));
         _sync       = new ScriptSynchronizer(CommandManager, Circuit);
 
         // Register default UI nodes under RootNode hierarchy

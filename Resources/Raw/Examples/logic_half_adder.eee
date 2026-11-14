@@ -17,8 +17,8 @@
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
-      "ElectricalParameters": { "IsHigh": 1.0 },
-      "CustomProperties": { "IsHigh": true }
+      "ElectricalParameters": { "State": 1.0 },
+      "CustomProperties": { "State": true }
     },
     {
       "Id": "55555555-5555-5555-5555-555555550002",
@@ -31,8 +31,8 @@
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
-      "ElectricalParameters": { "IsHigh": 0.0 },
-      "CustomProperties": { "IsHigh": false }
+      "ElectricalParameters": { "State": 0.0 },
+      "CustomProperties": { "State": false }
     },
     {
       "Id": "55555555-5555-5555-5555-555555550003",
@@ -73,8 +73,8 @@
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
-      "ElectricalParameters": { "IsOn": 1.0 },
-      "CustomProperties": { "IsOn": true }
+      "ElectricalParameters": {},
+      "CustomProperties": {}
     },
     {
       "Id": "55555555-5555-5555-5555-555555550006",
@@ -87,8 +87,8 @@
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 0.05,
-      "ElectricalParameters": { "IsOn": 0.0 },
-      "CustomProperties": { "IsOn": false }
+      "ElectricalParameters": {},
+      "CustomProperties": {}
     }
   ],
   "Connections": [

@@ -85,12 +85,43 @@ public static class ExampleCircuitService
         string tempFile = Path.Combine(FileSystem.CacheDirectory, $"{example.Id}.eee");
         File.WriteAllText(tempFile, json);
         CircuitNode circuit = EeePlatformSerializer.LoadFromEee(tempFile);
+        EnsureLogicalPlacements(circuit);
         foreach (LogicalGridPlacement placement in LogicalGridSchematicLayout.Calculate(circuit).Placements)
         {
             placement.Component.X = placement.X;
             placement.Component.Y = placement.Y;
         }
         return circuit;
+    }
+
+    internal static void EnsureLogicalPlacements(CircuitNode circuit)
+    {
+        ArgumentNullException.ThrowIfNull(circuit);
+        var occupiedCells = circuit.Components
+            .Where(component => component.HasLogicalPlacement)
+            .Select(component => (Row: component.LogicalRow!.Value, Column: component.LogicalColumn!.Value))
+            .ToHashSet();
+        int lastColumn = occupiedCells.Count == 0 ? 1 : occupiedCells.Max(cell => cell.Column);
+
+        int row = 1;
+        int column = 1;
+        foreach (var component in circuit.Components.Where(component => !component.HasLogicalPlacement))
+        {
+            while (occupiedCells.Contains((row, column)))
+            {
+                column++;
+                if (column > lastColumn)
+                {
+                    row++;
+                    column = 1;
+                }
+            }
+
+            component.LogicalRow = row;
+            component.LogicalColumn = column;
+            occupiedCells.Add((row, column));
+            column++;
+        }
     }
 
     public static async Task<string> ExportExampleAsync(CircuitExampleItem example, string targetDirectory)

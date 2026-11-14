@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
@@ -13,32 +14,43 @@ namespace EESimulator.Scripting.Execution;
 /// </summary>
 public sealed class ManagedPythonScriptBridge
 {
-    private readonly PythonCommandExecutor _executor;
+    private readonly Func<string, Dictionary<string, object?>> _execute;
 
     public ManagedPythonScriptBridge(PythonCommandExecutor executor)
     {
-        _executor = executor ?? throw new ArgumentNullException(nameof(executor));
-    }
-
-    public Dictionary<string, object?> Execute(string script)
-    {
-        bool success = _executor.ExecuteScript(script, out string message);
-        return new Dictionary<string, object?>
+        ArgumentNullException.ThrowIfNull(executor);
+        _execute = script =>
         {
-            ["success"] = success,
-            ["message"] = message,
-            ["result"] = _executor.LastResult
+            bool success = executor.ExecuteScript(script, out string message);
+            return new Dictionary<string, object?>
+            {
+                ["success"] = success,
+                ["message"] = message,
+                ["result"] = executor.LastResult
+            };
         };
     }
+
+    public ManagedPythonScriptBridge(Func<string, Dictionary<string, object?>> execute)
+    {
+        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+    }
+
+    public Dictionary<string, object?> Execute(string script) => _execute(script);
 }
 
 public sealed class ManagedPythonScriptEngine
 {
-    private readonly PythonCommandExecutor _executor;
+    private readonly ManagedPythonScriptBridge _bridge;
 
     public ManagedPythonScriptEngine(PythonCommandExecutor executor)
+        : this(new ManagedPythonScriptBridge(executor))
     {
-        _executor = executor ?? throw new ArgumentNullException(nameof(executor));
+    }
+
+    public ManagedPythonScriptEngine(ManagedPythonScriptBridge bridge)
+    {
+        _bridge = bridge ?? throw new ArgumentNullException(nameof(bridge));
     }
 
     public void ExecuteFile(string scriptPath)
@@ -48,12 +60,23 @@ public sealed class ManagedPythonScriptEngine
         if (!File.Exists(scriptPath))
             throw new FileNotFoundException($"Python script not found: {scriptPath}", scriptPath);
 
+        Execute(File.ReadAllText(scriptPath), scriptPath,
+            new[] { Path.GetDirectoryName(scriptPath) ?? string.Empty });
+    }
+
+    public void Execute(string script, string scriptName, IEnumerable<string>? additionalSearchPaths = null,
+        Action<string>? onOutput = null)
+    {
+        if (script is null)
+            throw new ArgumentNullException(nameof(script));
+        if (string.IsNullOrWhiteSpace(scriptName))
+            throw new ArgumentException("Script name is required.", nameof(scriptName));
+
         Console.OutputEncoding = new UTF8Encoding(false);
         ScriptEngine engine = Python.CreateEngine();
         ScriptScope scope = engine.CreateScope();
-        var bridge = new ManagedPythonScriptBridge(_executor);
 
-        scope.SetVariable("app_bridge", bridge);
+        scope.SetVariable("app_bridge", _bridge);
         scope.SetVariable("true", true);
         scope.SetVariable("false", false);
         scope.SetVariable("null", null);
@@ -61,12 +84,17 @@ public sealed class ManagedPythonScriptEngine
         engine.Execute("import builtins; builtins.app_bridge = app_bridge", scope);
 
         var searchPaths = engine.GetSearchPaths();
-        string? scriptDirectory = Path.GetDirectoryName(scriptPath);
-        if (!string.IsNullOrEmpty(scriptDirectory))
-            searchPaths.Add(scriptDirectory);
+        foreach (string searchPath in additionalSearchPaths ?? Enumerable.Empty<string>())
+        {
+            if (!string.IsNullOrWhiteSpace(searchPath) && Directory.Exists(searchPath))
+                searchPaths.Add(searchPath);
+        }
+
+        string runtimePythonPath = Path.Combine(AppContext.BaseDirectory, "Python");
+        if (Directory.Exists(runtimePythonPath))
+            searchPaths.Add(runtimePythonPath);
 
         string stdlibPath = Path.Combine(AppContext.BaseDirectory, "lib");
-
         if (Directory.Exists(stdlibPath))
         {
             searchPaths.Add(stdlibPath);
@@ -74,10 +102,21 @@ public sealed class ManagedPythonScriptEngine
             if (Directory.Exists(sitePackagesPath))
                 searchPaths.Add(sitePackagesPath);
         }
-
         engine.SetSearchPaths(searchPaths);
         engine.Execute("import eesim; import circuit", scope);
 
-        engine.ExecuteFile(scriptPath, scope);
+        using var output = new MemoryStream();
+        engine.Runtime.IO.SetOutput(output, new UTF8Encoding(false));
+        try
+        {
+            engine.CreateScriptSourceFromString(script, scriptName, Microsoft.Scripting.SourceCodeKind.File)
+                .Execute(scope);
+        }
+        finally
+        {
+            output.Flush();
+            if (output.Length > 0)
+                onOutput?.Invoke(Encoding.UTF8.GetString(output.ToArray()));
+        }
     }
 }

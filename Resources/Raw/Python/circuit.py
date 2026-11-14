@@ -14,4 +14,3 @@ evaluate_combinational = eesim.evaluate_combinational
 advance_simulation = eesim.advance_simulation
 read_pin_voltage = eesim.read_pin_voltage
 read_digital_output_state = eesim.read_digital_output_state
-

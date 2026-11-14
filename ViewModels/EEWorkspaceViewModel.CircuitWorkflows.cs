@@ -178,6 +178,7 @@ public partial class EEWorkspaceViewModel
     private bool _playbackSolveRunning;
     private bool _simulationRefreshRequested;
     private bool _isApplyingScript;
+    private bool _scriptExecutionHadErrors;
     private DateTime _lastPlaybackSolveUtc = DateTime.MinValue;
     private DateTime _lastPlaybackConsoleUpdateUtc = DateTime.MinValue;
     private double _pendingSolverElapsedTimeSeconds;
@@ -536,10 +537,66 @@ public partial class EEWorkspaceViewModel
         return null;
     }
 
+    private Dictionary<string, object?> DispatchScriptApiCall(string script)
+    {
+        ConsoleOutput += $">>> {script}\n";
+        string? result = DispatchApiCall(script);
+        object? value = result;
+        bool failed = result is null ||
+            result.StartsWith("[error]", StringComparison.OrdinalIgnoreCase);
+        if (result?.StartsWith("[unknown", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            bool success = _pythonCommandExecutor.ExecuteScript(script, out string message);
+            failed = !success;
+            result = success
+                ? (message == "Success" ? null : message)
+                : $"[error] {message}";
+            value = _pythonCommandExecutor.LastResult;
+        }
+
+        if (result is not null)
+            ConsoleOutput += result + "\n";
+
+        if (failed || result?.StartsWith("[unknown", StringComparison.OrdinalIgnoreCase) == true)
+            _scriptExecutionHadErrors = true;
+
+        return new Dictionary<string, object?>
+        {
+            ["success"] = true,
+            ["message"] = result ?? "Script API call produced no result.",
+            ["result"] = value
+        };
+    }
+
+    private void ClearCircuitForScript()
+    {
+        foreach (var child in Circuit.Children.ToList())
+            Circuit.RemoveChild(child);
+
+        CommandManager.Clear();
+        CanUndo = false;
+        CanRedo = false;
+    }
+
+    private static async Task<string> EnsurePythonModuleDirectoryAsync()
+    {
+        string moduleDirectory = Path.Combine(FileSystem.CacheDirectory, "Python");
+        Directory.CreateDirectory(moduleDirectory);
+
+        foreach (string module in new[] { "eesim.py", "circuit.py" })
+        {
+            await using Stream source = await FileSystem.OpenAppPackageFileAsync($"Python/{module}");
+            await using FileStream destination = File.Create(Path.Combine(moduleDirectory, module));
+            await source.CopyToAsync(destination);
+        }
+
+        return moduleDirectory;
+    }
+
     [RelayCommand]
     private async Task RunScriptAsync()
     {
-        if (IsSimulating || _playbackSolveRunning)
+        if (IsSimulating || _playbackSolveRunning || _isApplyingScript)
         {
             StatusText = "Wait for the current simulation step to finish before running a script.";
             return;
@@ -550,26 +607,14 @@ public partial class EEWorkspaceViewModel
         {
             StatusText    = "Running script…";
             ConsoleOutput = "";
-            bool scriptHadErrors = false;
-
-            foreach (var rawLine in ScriptText.Split('\n'))
-            {
-                var line = rawLine.Trim();
-                if (string.IsNullOrEmpty(line) || line.StartsWith('#'))
-                    continue;
-
-                ConsoleOutput += $">>> {line}\n";
-
-                // Parse "eesim.xxx(...)" calls and dispatch to PythonApi
-                var result = DispatchApiCall(line);
-                if (result != null)
-                {
-                    ConsoleOutput += result + "\n";
-                    if (result.StartsWith("[error]", StringComparison.OrdinalIgnoreCase) ||
-                        result.StartsWith("[unknown", StringComparison.OrdinalIgnoreCase))
-                        scriptHadErrors = true;
-                }
-            }
+            _scriptExecutionHadErrors = false;
+            string pythonModuleDirectory = await EnsurePythonModuleDirectoryAsync();
+            _pythonScriptEngine.Execute(
+                ScriptText,
+                "workspace.py",
+                new[] { pythonModuleDirectory },
+                output => ConsoleOutput += output);
+            bool scriptHadErrors = _scriptExecutionHadErrors;
 
             ApplyLogicalSchematicLayout();
             var commandOutput = ConsoleOutput;

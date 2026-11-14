@@ -5,8 +5,8 @@
   "Title": "74LS00 NAND Gate",
   "Description": "Two logic inputs drive one gate of a 7400 quad 2-input NAND package.",
   "Components": [
-    { "Id": "51000000-0000-0000-0000-000000000001", "ComponentType": "LogicInput", "Name": "A", "Reference": "A", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" }, "ElectricalParameters": { "IsHigh": 1.0 }, "CustomProperties": { "IsHigh": true } },
-    { "Id": "51000000-0000-0000-0000-000000000002", "ComponentType": "LogicInput", "Name": "B", "Reference": "B", "StringParameters": { "LogicalRow": "3", "LogicalColumn": "1" }, "ElectricalParameters": { "IsHigh": 1.0 }, "CustomProperties": { "IsHigh": true } },
+    { "Id": "51000000-0000-0000-0000-000000000001", "ComponentType": "LogicInput", "Name": "A", "Reference": "A", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" }, "ElectricalParameters": { "State": 1.0 }, "CustomProperties": { "State": true } },
+    { "Id": "51000000-0000-0000-0000-000000000002", "ComponentType": "LogicInput", "Name": "B", "Reference": "B", "StringParameters": { "LogicalRow": "3", "LogicalColumn": "1" }, "ElectricalParameters": { "State": 1.0 }, "CustomProperties": { "State": true } },
     { "Id": "51000000-0000-0000-0000-000000000003", "ComponentType": "7400", "Name": "U1", "Reference": "U1", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "2" }, "ElectricalParameters": {}, "CustomProperties": { "PartNumber": "7400", "ExposeSupplyPins": true, "ShowInternalStructure": true } },
     { "Id": "51000000-0000-0000-0000-000000000004", "ComponentType": "LogicOutput", "Name": "Y", "Reference": "Y", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "3" }, "ElectricalParameters": {}, "CustomProperties": {} }
   ],

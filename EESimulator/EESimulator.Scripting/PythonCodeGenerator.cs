@@ -92,7 +92,7 @@ public class PythonCodeGenerator
             "Position", "X", "Y", "Rotation", "ScaleX", "ScaleY", "CustomProperties",
             "ElectricalParameters", "WaveformTime", "WaveformVoltage", "WaveformCurrent",
             "LivePinVoltages", "WaveformNodeVoltages", "WaveformPinCurrents",
-            "LogicalRow", "LogicalColumn"
+            "LogicalRow", "LogicalColumn", "IsHigh", "IsOn"
         };
 
         if (!string.IsNullOrWhiteSpace(component.Description))
@@ -101,6 +101,22 @@ public class PythonCodeGenerator
             yield return $"eesim.rotate_component({name}, {FormatNumber(component.Rotation)})";
         if (Math.Abs(component.ScaleX - 1) > 0.001 || Math.Abs(component.ScaleY - 1) > 0.001)
             yield return $"eesim.stretch_component({name}, {FormatNumber(component.ScaleX)}, {FormatNumber(component.ScaleY)})";
+
+        if (component is LogicInputComponent logicInput)
+        {
+            bool state = logicInput.State;
+            if (!logicInput.CustomProperties.ContainsKey(nameof(LogicInputComponent.State)) &&
+                !logicInput.ElectricalParameters.ContainsKey(nameof(LogicInputComponent.State)))
+            {
+                if (logicInput.CustomProperties.TryGetValue("IsHigh", out object? legacyState))
+                    state = Convert.ToBoolean(legacyState, CultureInfo.InvariantCulture);
+                else if (logicInput.ElectricalParameters.TryGetValue("IsHigh", out double legacyElectricalState))
+                    state = legacyElectricalState > 0.5;
+            }
+
+            yield return $"eesim.set_logic({name}, {state.ToString().ToLowerInvariant()})";
+            emittedProperties.Add(nameof(LogicInputComponent.State));
+        }
 
         foreach (PropertyInfo property in component.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
