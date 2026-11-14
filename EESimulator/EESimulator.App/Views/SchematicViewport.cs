@@ -1,4 +1,4 @@
-﻿using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Graphics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Models;

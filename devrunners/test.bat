@@ -40,15 +40,24 @@ pushd "%PROJECT_DIR%"
 echo ================================================================================
 echo EEE COMPONENT TEST RUNNER
 echo Target: %TEST_PROJECT%
+echo Includes managed IronPython component suites through PythonScriptPipelineTests.
 echo Full output log: %LOG_FILE%
 if defined BUILD_FLAGS echo Mode: reusing the existing build (--no-build --no-restore)
 echo ================================================================================
 "%DOTNET%" test "%TEST_PROJECT%" %BUILD_FLAGS% --logger "console;verbosity=normal" %TEST_ARGS% > "%LOG_FILE%" 2>&1
 set "RESULT=%ERRORLEVEL%"
-popd
 
 echo.
 type "%LOG_FILE%"
+echo.
+
+popd
+
+if not defined RESULT set "RESULT=1"
+if not "%RESULT%"=="0" (
+	echo.
+	echo One or more .NET or Python scripting suites failed.
+)
 echo.
 echo ================================================================================
 if %RESULT% equ 0 (
@@ -61,12 +70,14 @@ echo ===========================================================================
 echo.
 set "CLOSE_INPUT="
 set /p "CLOSE_INPUT=Use Ctrl+A then Ctrl+C to copy output. Type Q and press Enter when you are ready to close. "
+if not defined CLOSE_INPUT exit /b %RESULT%
 if /i not "%CLOSE_INPUT%"=="Q" goto wait_to_close
 exit /b %RESULT%
 
 :wait_to_close
 set "CLOSE_INPUT="
 set /p "CLOSE_INPUT=Type Q and press Enter when you are ready to close. "
+if not defined CLOSE_INPUT exit /b %RESULT%
 if /i not "%CLOSE_INPUT%"=="Q" goto wait_to_close
 exit /b %RESULT%
 
@@ -74,5 +85,6 @@ exit /b %RESULT%
 echo.
 set "CLOSE_INPUT="
 set /p "CLOSE_INPUT=Use Ctrl+A then Ctrl+C to copy the error. Type Q and press Enter to close. "
+if not defined CLOSE_INPUT exit /b 1
 if /i not "%CLOSE_INPUT%"=="Q" goto finish_error
 exit /b 1

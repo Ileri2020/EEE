@@ -102,7 +102,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     var builtComponentsWithPins = new List<(ComponentNode Comp, string NodeA, string NodeB)>();
                     var builtMutualInductances = new List<MutualInductanceComponent>();
 
-                    BuildSpiceCircuitComponents(circuit, builtSpiceCircuit, settings, builtComponentsWithPins,
+                    BuildSpiceCircuitComponents(circuit, builtTopology, builtSpiceCircuit, settings, builtComponentsWithPins,
                         builtMutualInductances, ResolveBuiltNetForPin, ResolveBuiltPinNode, results);
 
                     context = new CompiledSpiceContext

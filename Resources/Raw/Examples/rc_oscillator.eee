@@ -30,8 +30,6 @@
       "Reference": "VCC",
       "Name": "VCC",
       "Description": "Main DC Power Supply (12V)",
-      "X": 100.0,
-      "Y": 180.0,
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -40,8 +38,7 @@
         "Voltage": 12.0
       },
       "StringParameters": {
-        "WaveformType": "DC"
-      }
+        "WaveformType": "DC", "LogicalRow": "4", "LogicalColumn": "1"}
     },
     {
       "Id": "11111111-1111-1111-1111-111111110002",
@@ -49,13 +46,11 @@
       "Reference": "GND1",
       "Name": "GND1",
       "Description": "Circuit Ground Reference",
-      "X": 100.0,
-      "Y": 360.0,
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "ElectricalParameters": {},
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "9", "LogicalColumn": "1" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110003",
@@ -63,8 +58,6 @@
       "Reference": "R1",
       "Name": "R1",
       "Description": "Upper Base Bias Resistor (47k\u03a9)",
-      "X": 220.0,
-      "Y": 100.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -72,7 +65,7 @@
       "ElectricalParameters": {
         "Resistance": 47000.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "2", "LogicalColumn": "2" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110004",
@@ -80,8 +73,6 @@
       "Reference": "R2",
       "Name": "R2",
       "Description": "Lower Base Bias Resistor (10k\u03a9)",
-      "X": 220.0,
-      "Y": 260.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -89,7 +80,7 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "7", "LogicalColumn": "2" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110005",
@@ -97,8 +88,6 @@
       "Reference": "Q1",
       "Name": "Q1",
       "Description": "Common-Emitter Amplifier NPN BJT (\u03b2=150)",
-      "X": 340.0,
-      "Y": 200.0,
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -109,8 +98,7 @@
         "Vaf": 100.0
       },
       "StringParameters": {
-        "Polarity": "NPN"
-      }
+        "Polarity": "NPN", "LogicalRow": "5", "LogicalColumn": "3"}
     },
     {
       "Id": "11111111-1111-1111-1111-111111110006",
@@ -118,8 +106,6 @@
       "Reference": "Rc",
       "Name": "Rc",
       "Description": "Collector Load Resistor (4.7k\u03a9)",
-      "X": 355.0,
-      "Y": 90.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -127,7 +113,7 @@
       "ElectricalParameters": {
         "Resistance": 4700.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "1", "LogicalColumn": "4" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110007",
@@ -135,8 +121,6 @@
       "Reference": "Re",
       "Name": "Re",
       "Description": "Emitter Bias Stabilization Resistor (1k\u03a9)",
-      "X": 355.0,
-      "Y": 310.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -144,7 +128,7 @@
       "ElectricalParameters": {
         "Resistance": 1000.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "8", "LogicalColumn": "4" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110008",
@@ -152,8 +136,6 @@
       "Reference": "Ce",
       "Name": "Ce",
       "Description": "Emitter AC Bypass Capacitor (10\u00b5F)",
-      "X": 420.0,
-      "Y": 310.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -161,7 +143,7 @@
       "ElectricalParameters": {
         "Capacitance": 1e-5
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "8", "LogicalColumn": "5" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110009",
@@ -169,8 +151,6 @@
       "Reference": "C1",
       "Name": "C1",
       "Description": "RC Phase Shift Network Stage 1 Capacitor (10nF)",
-      "X": 480.0,
-      "Y": 140.0,
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -178,7 +158,7 @@
       "ElectricalParameters": {
         "Capacitance": 1e-8
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "6" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110010",
@@ -186,8 +166,6 @@
       "Reference": "R3",
       "Name": "R3",
       "Description": "RC Phase Shift Network Stage 1 Resistor (10k\u03a9)",
-      "X": 540.0,
-      "Y": 250.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -195,7 +173,7 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "6", "LogicalColumn": "7" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110011",
@@ -203,8 +181,6 @@
       "Reference": "C2",
       "Name": "C2",
       "Description": "RC Phase Shift Network Stage 2 Capacitor (10nF)",
-      "X": 600.0,
-      "Y": 140.0,
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -212,7 +188,7 @@
       "ElectricalParameters": {
         "Capacitance": 1e-8
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "8" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110012",
@@ -220,8 +196,6 @@
       "Reference": "R4",
       "Name": "R4",
       "Description": "RC Phase Shift Network Stage 2 Resistor (10k\u03a9)",
-      "X": 660.0,
-      "Y": 250.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -229,7 +203,7 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "6", "LogicalColumn": "9" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110013",
@@ -237,8 +211,6 @@
       "Reference": "C3",
       "Name": "C3",
       "Description": "RC Phase Shift Network Stage 3 Capacitor (10nF)",
-      "X": 720.0,
-      "Y": 140.0,
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -246,7 +218,7 @@
       "ElectricalParameters": {
         "Capacitance": 1e-8
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "3", "LogicalColumn": "10" }
     },
     {
       "Id": "11111111-1111-1111-1111-111111110014",
@@ -254,8 +226,6 @@
       "Reference": "R5",
       "Name": "R5",
       "Description": "RC Phase Shift Network Stage 3 Resistor (10k\u03a9)",
-      "X": 780.0,
-      "Y": 250.0,
       "Rotation": 90.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
@@ -263,7 +233,7 @@
       "ElectricalParameters": {
         "Resistance": 10000.0
       },
-      "StringParameters": {}
+      "StringParameters": { "LogicalRow": "6", "LogicalColumn": "11" }
     }
   ],
   "Connections": [

@@ -15,19 +15,32 @@ public class ConnectorComponent : GeneralComponent
     public override string ComponentType => "Connector";
     public override string Description => "Multi-pin external connector header";
 
-    public int PinCount { get; set; } = 4;
+    private int _pinCount = 4;
+
+    public int PinCount
+    {
+        get => _pinCount;
+        set
+        {
+            int pinCount = Math.Max(value, 1);
+            if (_pinCount == pinCount && Pins.Count == pinCount) return;
+            _pinCount = pinCount;
+            InitializePins(pinCount);
+            NotifyModified(nameof(PinCount));
+        }
+    }
 
     public ConnectorComponent()
     {
-        InitializePins(4);
+        PinCount = 4;
     }
 
     public ConnectorComponent(string name, int pinCount = 4)
+        : this()
     {
         Name = name;
         Reference = name;
         PinCount = pinCount;
-        InitializePins(pinCount);
     }
 
     private void InitializePins(int pinCount)

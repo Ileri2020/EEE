@@ -59,6 +59,15 @@ public class PythonApi
     }
 
     // Circuit Operations
+    public void ClearCircuit()
+    {
+        while (_circuit.Children.Count > 0)
+        {
+            _circuit.RemoveChild(_circuit.Children[0]);
+        }
+        _circuit.InvalidateStructure();
+    }
+
     public void AddComponent(string type, string name, double x, double y, double param = 0)
     {
         var cmd = new AddComponentCommand(_circuit, type, name, x, y, param)
@@ -573,26 +582,68 @@ public class PythonApi
 
     public void SetComponentProperty(string componentName, string propertyName, object? value)
     {
-        var cmd = new SetComponentPropertyCommand(_circuit, componentName, propertyName, value)
+        var component = _circuit.FindChild<ComponentNode>(componentName)
+            ?? throw new KeyNotFoundException($"Component '{componentName}' was not found.");
+        var property = component.GetType().GetProperty(
+            propertyName,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+
+        if (property?.SetMethod?.IsPublic == true &&
+            property.GetIndexParameters().Length == 0 &&
+            propertyName is not nameof(ComponentNode.Position) and
+                not nameof(ComponentNode.X) and not nameof(ComponentNode.Y) and
+                not nameof(ComponentNode.Rotation) and not nameof(ComponentNode.ScaleX) and
+                not nameof(ComponentNode.ScaleY) and not nameof(ComponentNode.CustomProperties) and
+                not nameof(ComponentNode.ElectricalParameters))
         {
-            Origin = CommandOrigin.Python
-        };
-        _commandManager.ExecuteCommand(cmd);
+            var command = new SetComponentPropertyCommand(_circuit, componentName, propertyName, value)
+            {
+                Origin = CommandOrigin.Python
+            };
+            _commandManager.ExecuteCommand(command);
+            return;
+        }
+
+        if (component.ElectricalParameters.ContainsKey(propertyName) &&
+            value != null && double.TryParse(
+                Convert.ToString(value, CultureInfo.InvariantCulture),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out double numericValue))
+        {
+            SetProperty(componentName, propertyName, numericValue);
+            return;
+        }
+
+        if (component.CustomProperties.ContainsKey(propertyName) && value != null)
+        {
+            SetCustomProperty(componentName, propertyName, value);
+            return;
+        }
+
+        throw new InvalidOperationException($"'{propertyName}' is not an editable property on {component.ComponentType}.");
     }
 
     public void SetMemoryWord(string componentName, int address, long value)
     {
+        if (address < 0)
+            throw new ArgumentOutOfRangeException(nameof(address), "Memory addresses must be non-negative.");
+
         var component = _circuit.FindChild<ComponentNode>(componentName);
         switch (component)
         {
-            case EESimulator.Core.Components.Electronics.RAMComponent ram when address >= 0:
+            case EESimulator.Core.Components.Electronics.RAMComponent ram:
                 ram.MemoryData[address] = value;
                 ram.NotifyModified(nameof(ram.MemoryData));
                 break;
-            case EESimulator.Core.Components.Electronics.ROMComponent rom when address >= 0:
+            case EESimulator.Core.Components.Electronics.ROMComponent rom:
                 rom.MemoryData[address] = value;
                 rom.NotifyModified(nameof(rom.MemoryData));
                 break;
+            case null:
+                throw new KeyNotFoundException($"Component '{componentName}' was not found.");
+            default:
+                throw new ArgumentException($"Component '{componentName}' is not RAM or ROM.", nameof(componentName));
         }
     }
 
@@ -721,7 +772,10 @@ public class PythonApi
     }
 
     // Simulation Operations
-    public SimulationResultsData Simulate(string analysisType = "OperatingPoint")
+    public SimulationResultsData Simulate(
+        string analysisType = "OperatingPoint",
+        double? stopTime = null,
+        double? stepTime = null)
     {
         var settings = new SimulationSettings
         {
@@ -734,7 +788,50 @@ public class PythonApi
             }
         };
 
+        if (stopTime is double stop)
+        {
+            if (!double.IsFinite(stop) || stop <= 0)
+                throw new ArgumentOutOfRangeException(nameof(stopTime), "Stop time must be finite and positive.");
+            settings.StopTime = stop;
+        }
+
+        if (stepTime is double step)
+        {
+            if (!double.IsFinite(step) || step <= 0)
+                throw new ArgumentOutOfRangeException(nameof(stepTime), "Step time must be finite and positive.");
+            settings.StepTime = step;
+        }
+
         return _simulationManager.Run(_circuit, settings);
+    }
+
+    public void EvaluateCombinational()
+    {
+        DigitalLogicSimulator.EvaluateCombinational(_circuit);
+    }
+
+    public void AdvanceSimulation(double elapsedSeconds)
+    {
+        if (!double.IsFinite(elapsedSeconds) || elapsedSeconds < 0)
+            throw new ArgumentOutOfRangeException(nameof(elapsedSeconds), "Elapsed simulation time must be finite and non-negative.");
+
+        DigitalLogicSimulator.Advance(_circuit, elapsedSeconds);
+    }
+
+    public bool ReadDigitalOutputState(string componentName, string pinId)
+    {
+        var component = _circuit.FindChild<ComponentNode>(componentName)
+            ?? throw new KeyNotFoundException($"Component '{componentName}' was not found.");
+        return DigitalLogicSimulator.ReadOutputState(component, pinId);
+    }
+
+    public double ReadPinVoltage(string componentName, string pinId)
+    {
+        var component = _circuit.FindChild<ComponentNode>(componentName)
+            ?? throw new KeyNotFoundException($"Component '{componentName}' was not found.");
+        if (!component.LivePinVoltages.TryGetValue(pinId, out double voltage))
+            throw new KeyNotFoundException($"Pin '{pinId}' on component '{componentName}' has no measured voltage.");
+        return voltage;
     }
 
     // Application & Viewport Operations
@@ -1086,5 +1183,3 @@ public class PythonApi
         SetComponentProperty(name, "Chemistry", chemistry);
     }
 }
-
-

@@ -94,6 +94,8 @@
 		<PackageReference Include="UraniumUI.Material" Version="3.0.0" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="IronPython" Version="3.4.2" />
+		<PackageReference Include="IronPython.StdLib" Version="3.4.2" />
 	</ItemGroup>
 
 	<ItemGroup>

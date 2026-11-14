@@ -5,10 +5,10 @@
   "Title": "RC Low-Pass Filter",
   "Description": "A 1 kΩ resistor and 100 nF capacitor form a first-order low-pass filter.",
   "Components": [
-    { "Id": "41000000-0000-0000-0000-000000000001", "ComponentType": "VoltageSource", "Name": "V1", "Reference": "V1", "X": 100, "Y": 100, "ElectricalParameters": { "Voltage": 1.0 }, "CustomProperties": {} },
-    { "Id": "41000000-0000-0000-0000-000000000002", "ComponentType": "Ground", "Name": "GND1", "Reference": "GND1", "X": 100, "Y": 220, "ElectricalParameters": {}, "CustomProperties": {} },
-    { "Id": "41000000-0000-0000-0000-000000000003", "ComponentType": "Resistor", "Name": "R1", "Reference": "R1", "X": 220, "Y": 100, "ElectricalParameters": { "Resistance": 1000.0 }, "CustomProperties": {} },
-    { "Id": "41000000-0000-0000-0000-000000000004", "ComponentType": "Capacitor", "Name": "C1", "Reference": "C1", "X": 340, "Y": 100, "ElectricalParameters": { "Capacitance": 1e-7 }, "CustomProperties": {} }
+    { "Id": "41000000-0000-0000-0000-000000000001", "ComponentType": "VoltageSource", "Name": "V1", "Reference": "V1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "1" }, "ElectricalParameters": { "Voltage": 1.0 }, "CustomProperties": {} },
+    { "Id": "41000000-0000-0000-0000-000000000002", "ComponentType": "Ground", "Name": "GND1", "Reference": "GND1", "StringParameters": { "LogicalRow": "2", "LogicalColumn": "1" }, "ElectricalParameters": {}, "CustomProperties": {} },
+    { "Id": "41000000-0000-0000-0000-000000000003", "ComponentType": "Resistor", "Name": "R1", "Reference": "R1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "2" }, "ElectricalParameters": { "Resistance": 1000.0 }, "CustomProperties": {} },
+    { "Id": "41000000-0000-0000-0000-000000000004", "ComponentType": "Capacitor", "Name": "C1", "Reference": "C1", "StringParameters": { "LogicalRow": "1", "LogicalColumn": "3" }, "ElectricalParameters": { "Capacitance": 1e-7 }, "CustomProperties": {} }
   ],
   "Connections": [
     { "Id": "42000000-0000-0000-0000-000000000001", "FromComponentId": "41000000-0000-0000-0000-000000000001", "FromPin": "negative", "ToComponentId": "41000000-0000-0000-0000-000000000002", "ToPin": "gnd", "NetName": "0", "Resistance": 0.0 },

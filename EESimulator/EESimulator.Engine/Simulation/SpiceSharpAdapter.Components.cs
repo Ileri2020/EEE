@@ -16,6 +16,7 @@ public partial class SpiceSharpAdapter
 {
     private static void BuildSpiceCircuitComponents(
         CircuitNode circuit,
+        CircuitTopology topology,
         SpiceSharp.Circuit spiceCircuit,
         SimulationSettings settings,
         List<(ComponentNode Comp, string NodeA, string NodeB)> componentsWithPins,
@@ -546,7 +547,10 @@ public partial class SpiceSharpAdapter
                         string gNode = GetPinNode(m, "gate", 0);
                         string sNode = GetPinNode(m, "source", 2);
                         string bNode = GetPinNode(m, "body", 3);
-                        if (bNode == "0" && sNode != "0")
+                        bool bodyConnected =
+                            topology.PinToNetMap.TryGetValue(new PinReference(m.Id, "body"), out var bodyNet) &&
+                            bodyNet.ConnectedPins.Count > 1;
+                        if (!bodyConnected)
                         {
                             // If bulk/body pin is not wired externally, tie to source
                             bNode = sNode;

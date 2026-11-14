@@ -285,6 +285,12 @@
                                 </VerticalStackLayout>
 
                                 <VerticalStackLayout Spacing="3">
+                                    <Label Text="OPERATING REQUIREMENTS" TextColor="#E3B341" FontSize="10" FontAttributes="Bold"/>
+                                    <Label Text="{Binding SelectedComponentGuide.OperatingNotesText}"
+                                           TextColor="#C9D1D9" FontSize="11" LineBreakMode="WordWrap"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Spacing="3">
                                     <Label Text="CONNECTIONS" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
                                     <Label Text="{Binding SelectedComponentGuide.ConnectionText}"
                                            TextColor="#C9D1D9" FontSize="11" LineBreakMode="WordWrap"/>
