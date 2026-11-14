@@ -31,9 +31,9 @@ jobs:
 
       - name: Build standalone Windows installer
         shell: cmd
-        run: |
-          set "EEE_INSTALLER_OUTPUT_DIR=%GITHUB_WORKSPACE%\Platforms\installer"
-          call devrunners\buildwindowsinstaller2.bat
+        env:
+          EEE_INSTALLER_OUTPUT_DIR: ${{ github.workspace }}\Platforms\installer
+        run: call devrunners\buildwindowsinstaller2.bat
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4

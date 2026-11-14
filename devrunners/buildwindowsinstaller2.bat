@@ -5,7 +5,7 @@ set "EXIT_CODE=0"
 set "PUSHD_DONE="
 set "REPO_ROOT=%~dp0.."
 set "PUBLISH_DIR=%REPO_ROOT%\Platforms\dist\publish\EEE\release_net10.0-windows10.0.19041.0_win-x64"
-set "BUILD_DIR=%TEMP%\EEEInstallerBuild-%RANDOM%-%RANDOM%\"
+set "BUILD_DIR=%TEMP%\EEEInstallerBuild-%RANDOM%-%RANDOM%"
 if defined EEE_INSTALLER_OUTPUT_DIR (
     set "DESKTOP=%EEE_INSTALLER_OUTPUT_DIR%"
 ) else (
@@ -44,7 +44,7 @@ if exist "%PUBLISH_DIR%" (
     -p:PublishReadyToRun=false ^
     -p:WindowsPackageType=None ^
     -p:WindowsInstallerBuild=true ^
-    -p:BuildDir="%BUILD_DIR%" ^
+    -p:BuildDir="%BUILD_DIR%/" ^
     -m:1 ^
     -nr:false ^
     -p:UseSharedCompilation=false
