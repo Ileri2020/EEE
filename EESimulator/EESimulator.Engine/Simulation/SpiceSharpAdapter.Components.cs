@@ -22,6 +22,26 @@ public partial class SpiceSharpAdapter
             (connection.ToComponentId == componentId &&
              connection.ToPin.Equals(pinId, StringComparison.OrdinalIgnoreCase)));
 
+    private static bool HasExternalSupplySource(
+        CircuitNode circuit,
+        string supplyNode,
+        Func<ComponentNode, string, int, string> getPinNode)
+    {
+        foreach (ComponentNode component in circuit.Components)
+        {
+            if (component is VoltageSourceComponent &&
+                (getPinNode(component, "positive", 0) == supplyNode ||
+                 getPinNode(component, "negative", 1) == supplyNode))
+                return true;
+
+            if (component is PowerComponent &&
+                getPinNode(component, "vcc", 0) == supplyNode)
+                return true;
+        }
+
+        return false;
+    }
+
     private static bool ReadControlPinState(
         CircuitNode circuit,
         CircuitTopology topology,
@@ -1188,11 +1208,11 @@ public partial class SpiceSharpAdapter
                         var vcvs = new SpiceSharp.Components.VoltageControlledVoltageSource(opamp.Name, outNode, "0", inPos, inNeg, aol);
                         spiceCircuit.Add(vcvs);
 
-                        if (vPos != "0")
+                        if (vPos != "0" && !HasExternalSupplySource(circuit, vPos, GetPinNode))
                         {
                             spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{opamp.Name}_vp", vPos, "0", opamp.SupplyPositive));
                         }
-                        if (vNeg != "0")
+                        if (vNeg != "0" && !HasExternalSupplySource(circuit, vNeg, GetPinNode))
                         {
                             spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{opamp.Name}_vn", vNeg, "0", opamp.SupplyNegative));
                         }

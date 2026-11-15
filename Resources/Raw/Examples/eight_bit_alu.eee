@@ -3,14 +3,14 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Eight-Bit ALU",
-  "Description": "Interactive eight-bit arithmetic datapath with toggleable operands, carry control, hexadecimal outputs and signal probes. The arithmetic core demonstrates the ALU add operation.",
+  "Description": "Interactive 8-bit arithmetic logic datapath with toggleable 8-bit operands (A = 0xAA, B = 0x55), carry-in control, 8-bit parallel binary adder, dual hexadecimal digit result displays (HEX0/HEX1 showing 0xFF), carry flag indicator, and digital output probes.",
   "Components": [
     {
       "Id": "dde476a4-5e3b-5541-b7e9-885a85507ef1",
       "ComponentType": "LogicInput",
       "Reference": "A0",
       "Name": "A0",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 0 input",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
@@ -25,14 +25,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "0281c0ed-38b2-537f-8e31-fb031f3e53b5",
       "ComponentType": "LogicInput",
       "Reference": "A1",
       "Name": "A1",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 1 input",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "1",
@@ -47,14 +48,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "5b89c969-a665-5227-970c-937aab925e7b",
       "ComponentType": "LogicInput",
       "Reference": "A2",
       "Name": "A2",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 2 input",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -69,14 +71,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "4ae6e268-e82d-504f-a18e-f0953b41f4ca",
       "ComponentType": "LogicInput",
       "Reference": "A3",
       "Name": "A3",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 3 input",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "1",
@@ -91,14 +94,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "5b5e3256-ddf6-5f5a-a8c3-0cdb24e5ebb7",
       "ComponentType": "LogicInput",
       "Reference": "A4",
       "Name": "A4",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 4 input",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "1",
@@ -113,14 +117,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "62674977-e2cd-5868-8462-c8c68ff2e020",
       "ComponentType": "LogicInput",
       "Reference": "A5",
       "Name": "A5",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 5 input",
       "StringParameters": {
         "LogicalRow": "6",
         "LogicalColumn": "1",
@@ -135,14 +140,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "c32d6e57-0e76-5997-8483-0de4acde9d65",
       "ComponentType": "LogicInput",
       "Reference": "A6",
       "Name": "A6",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 6 input",
       "StringParameters": {
         "LogicalRow": "7",
         "LogicalColumn": "1",
@@ -157,14 +163,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "f74abe00-c142-50b0-8096-fe7bd2d8d881",
       "ComponentType": "LogicInput",
       "Reference": "A7",
       "Name": "A7",
-      "Description": "LogicInput",
+      "Description": "Operand A bit 7 input",
       "StringParameters": {
         "LogicalRow": "8",
         "LogicalColumn": "1",
@@ -179,14 +186,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "5ae4954b-0455-5802-ab84-a67ba7f31e76",
       "ComponentType": "LogicInput",
       "Reference": "B0",
       "Name": "B0",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 0 input",
       "StringParameters": {
         "LogicalRow": "9",
         "LogicalColumn": "1",
@@ -201,14 +209,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "c96c2495-0c08-504d-8f44-851299e87f75",
       "ComponentType": "LogicInput",
       "Reference": "B1",
       "Name": "B1",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 1 input",
       "StringParameters": {
         "LogicalRow": "10",
         "LogicalColumn": "1",
@@ -223,14 +232,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "8acdb29b-4ab6-50a6-8a4c-ff846296591f",
       "ComponentType": "LogicInput",
       "Reference": "B2",
       "Name": "B2",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 2 input",
       "StringParameters": {
         "LogicalRow": "11",
         "LogicalColumn": "1",
@@ -245,14 +255,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "c3ea3df4-c243-5694-b229-1d513ca548c1",
       "ComponentType": "LogicInput",
       "Reference": "B3",
       "Name": "B3",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 3 input",
       "StringParameters": {
         "LogicalRow": "12",
         "LogicalColumn": "1",
@@ -267,14 +278,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "ac7a75d3-d573-5dd0-9afc-2957350c58f4",
       "ComponentType": "LogicInput",
       "Reference": "B4",
       "Name": "B4",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 4 input",
       "StringParameters": {
         "LogicalRow": "13",
         "LogicalColumn": "1",
@@ -289,14 +301,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "88a8932b-f075-5fb1-a67f-a79959b69a7b",
       "ComponentType": "LogicInput",
       "Reference": "B5",
       "Name": "B5",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 5 input",
       "StringParameters": {
         "LogicalRow": "14",
         "LogicalColumn": "1",
@@ -311,14 +324,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "3f78f27b-ee01-54ce-b458-0892da7da5b4",
       "ComponentType": "LogicInput",
       "Reference": "B6",
       "Name": "B6",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 6 input",
       "StringParameters": {
         "LogicalRow": "15",
         "LogicalColumn": "1",
@@ -333,14 +347,15 @@
         "LowVoltage": 0.0,
         "State": 1.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "36aa558c-4dc8-5a93-8774-c01ae1cf1a1c",
       "ComponentType": "LogicInput",
       "Reference": "B7",
       "Name": "B7",
-      "Description": "LogicInput",
+      "Description": "Operand B bit 7 input",
       "StringParameters": {
         "LogicalRow": "16",
         "LogicalColumn": "1",
@@ -355,14 +370,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "498e08c3-c31e-5114-a5ff-e382d5deea88",
       "ComponentType": "LogicInput",
       "Reference": "CIN",
       "Name": "CIN",
-      "Description": "LogicInput",
+      "Description": "Carry-in logic input (CI)",
       "StringParameters": {
         "LogicalRow": "17",
         "LogicalColumn": "1",
@@ -377,14 +393,15 @@
         "LowVoltage": 0.0,
         "State": 0.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicinput"
     },
     {
       "Id": "57dd88ef-321b-5e3d-a5eb-52e609327932",
       "ComponentType": "Adder",
       "Reference": "ADD8",
       "Name": "ADD8",
-      "Description": "Adder",
+      "Description": "Operand A bit DD8 input",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "3"
@@ -396,14 +413,15 @@
       "ElectricalParameters": {
         "BitWidth": 8
       },
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "arith.adder"
     },
     {
       "Id": "3679154d-e58d-5a9a-a1bb-bcd60e89e75d",
       "ComponentType": "LogicOutput",
       "Reference": "CARRY",
       "Name": "CARRY",
-      "Description": "LogicOutput",
+      "Description": "Carry-out flag status indicator (CO)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "12"
@@ -413,14 +431,15 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {},
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "electronics.logicoutput"
     },
     {
       "Id": "7776cfd3-1b55-5eda-95de-8eb50c2b46ba",
       "ComponentType": "HexDigit",
       "Reference": "HEX0",
       "Name": "HEX0",
-      "Description": "HexDigit",
+      "Description": "Low nibble (Y0-Y3) hexadecimal digit display",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "5"
@@ -430,18 +449,21 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {},
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "io.hexdigit"
     },
     {
       "Id": "d71851f2-e51a-55b1-a0ea-7f341d12ae44",
       "ComponentType": "Probe",
       "Reference": "TP_RESULT0",
       "Name": "TP_RESULT0",
-      "Description": "Digital signal test point",
+      "Description": "Bit 0 sum output probe (LSB, 5V)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "6",
-        "ExpectedVoltage": "5"
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -453,14 +475,15 @@
       "CustomProperties": {
         "MeasurementMode": "Voltage",
         "Unit": "V"
-      }
+      },
+      "StableTypeId": "general.probe"
     },
     {
       "Id": "a8c21f9a-8c9c-5598-8038-37b278316d0c",
       "ComponentType": "HexDigit",
       "Reference": "HEX1",
       "Name": "HEX1",
-      "Description": "HexDigit",
+      "Description": "High nibble (Y4-Y7) hexadecimal digit display",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "6"
@@ -470,18 +493,21 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {},
-      "CustomProperties": {}
+      "CustomProperties": {},
+      "StableTypeId": "io.hexdigit"
     },
     {
       "Id": "376991ec-59f5-5aae-a3e7-0673d5058d41",
       "ComponentType": "Probe",
       "Reference": "TP_RESULT1",
       "Name": "TP_RESULT1",
-      "Description": "Digital signal test point",
+      "Description": "Bit 4 sum output probe (5V)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "7",
-        "ExpectedVoltage": "5"
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -493,7 +519,8 @@
       "CustomProperties": {
         "MeasurementMode": "Voltage",
         "Unit": "V"
-      }
+      },
+      "StableTypeId": "general.probe"
     }
   ],
   "Connections": [

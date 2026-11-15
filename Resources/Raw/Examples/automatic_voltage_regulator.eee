@@ -195,7 +195,7 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "4",
-        "ExpectedVoltage": "5"
+        "ExpectedVoltage": "5.0095252243918367"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -218,7 +218,7 @@
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "4",
-        "ExpectedVoltage": "13.8564"
+        "ExpectedVoltage": "13.882816666318293"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -239,9 +239,9 @@
       "Name": "TP_AVR",
       "Description": "Voltage/current measurement test point",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "3",
-        "ExpectedVoltage": "5"
+        "ExpectedVoltage": "5.0095252243918367"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,

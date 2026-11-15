@@ -3,71 +3,158 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Single-Phase Transformer",
-  "Description": "Single-phase transformer teaching equivalent using a low-voltage AC source, primary/secondary winding impedance, output load and voltage test points. Ideal magnetic coupling is not represented.",
+  "Description": "Step-down single-phase power transformer circuit demonstrating ideal and magnetizing mutual inductance coupling (5:1 turns ratio, 120V to 24V RMS), core loss modeling, and secondary power delivery to a resistive load with status indicator.",
   "Components": [
     {
-      "Id": "31760909-b4de-5a10-8eb0-de60776c42ac",
-      "ComponentType": "Ground",
-      "Reference": "GND",
-      "Name": "GND",
-      "Description": "Circuit return",
-      "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "1"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "c2e6f8d6-bc3d-5ee5-9fcf-181fda26a134",
+      "Id": "5bd0f270-d13d-4f04-9597-0498cef4b3f5",
       "ComponentType": "VoltageSource",
-      "Reference": "VIN",
-      "Name": "VIN",
-      "Description": "Adjustable low-voltage input source",
+      "Reference": "VAC",
+      "Name": "VAC",
+      "Description": "120V AC 50 Hz single-phase mains source",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Voltage": 12.0,
+        "Voltage": 120.0,
         "SineOffset": 0.0,
-        "SineAmplitude": 12.0,
+        "SineAmplitude": 169.7,
         "SineFrequency": 50.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 12.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.005,
-        "PulsePeriod": 0.01
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "4fd93658-91b2-55a2-9315-4072d78ad2c6",
-      "ComponentType": "Probe",
-      "Reference": "TP_IN",
-      "Name": "TP_IN",
-      "Description": "Input voltage test point",
+      "Id": "02ab067c-abb4-4daa-9b05-6d9e9be25eab",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit ground reference",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "12"
+        "LogicalRow": "8",
+        "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3e0c50cf-44a8-4f7b-af96-3fb90bf44491",
+      "ComponentType": "Resistor",
+      "Reference": "R_PRI_LINE",
+      "Name": "R_PRI_LINE",
+      "Description": "Primary line protection resistance",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Resistance": 0.2
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "ComponentType": "ACTransformer",
+      "Reference": "XFMR1",
+      "Name": "XFMR1",
+      "Description": "5:1 step-down single-phase power transformer (120V to 24V)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4",
+        "TransformerType": "TwoWinding",
+        "WindingConnection": "Single-phase"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "RatedPrimaryVoltage": 120.0,
+        "RatedSecondaryVoltage": 24.0,
+        "RatedApparentPower": 500.0,
+        "PrimaryTurns": 1000,
+        "SecondaryTurns": 200,
+        "Frequency": 50.0,
+        "PrimaryResistance": 0.5,
+        "SecondaryResistance": 0.1,
+        "MagnetizingInductance": 2.0,
+        "CoreLossResistance": 10000.0,
+        "NumberOfPhases": 1,
+        "NumberOfWindings": 2,
+        "EfficiencyPercent": 96.0
+      },
+      "CustomProperties": {
+        "DotsAligned": true
+      }
+    },
+    {
+      "Id": "73e37d86-6c56-4cf1-9a8d-a7d848152bb9",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Secondary resistive power load (24 \u03a9)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Resistance": 24.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "962f62b7-b7a7-4478-a5ea-fbb4ab16e60b",
+      "ComponentType": "Bulb",
+      "Reference": "LAMP_SEC",
+      "Name": "LAMP_SEC",
+      "Description": "Secondary voltage visual indicator lamp",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Resistance": 240.0,
+        "RatedVoltage": 24.0,
+        "ThresholdVoltage": 5.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3f3e5ba7-64b5-4d24-b372-b9cefa4695a0",
+      "ComponentType": "Probe",
+      "Reference": "TP_PRIMARY",
+      "Name": "TP_PRIMARY",
+      "Description": "Transformer primary voltage probe (120V RMS)",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "120.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -77,136 +164,20 @@
       }
     },
     {
-      "Id": "71ae45f6-27f0-5ac7-9545-88c279ed6ee5",
-      "ComponentType": "Resistor",
-      "Reference": "R_SOURCE",
-      "Name": "R_SOURCE",
-      "Description": "Source and current limiting resistance",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "2"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "baa42dec-f071-58f0-ba3c-3413d50febf8",
-      "ComponentType": "Inductor",
-      "Reference": "L_PRIMARY",
-      "Name": "L_PRIMARY",
-      "Description": "Primary winding equivalent",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "3"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.05
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "194fe968-5073-5b17-b0b5-5ff7d3e35173",
-      "ComponentType": "Resistor",
-      "Reference": "R_WINDING",
-      "Name": "R_WINDING",
-      "Description": "Winding resistance",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "4"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 10.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "697387e5-d5b7-5c3d-bfe7-6b7bc84240d8",
-      "ComponentType": "Inductor",
-      "Reference": "L_SECONDARY",
-      "Name": "L_SECONDARY",
-      "Description": "Secondary winding equivalent",
-      "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.01
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "391ce0c8-d04e-5647-96aa-5ec0dfee0238",
-      "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Output load",
-      "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 1000.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "f684ad95-2dbb-5c08-9586-5e457d208465",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage output indicator",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "6226e4ea-0822-58a5-8efa-7eedbcf1f92f",
+      "Id": "3ff7b5c8-2c06-469f-9a9b-da32810540d2",
       "ComponentType": "Probe",
-      "Reference": "TP_OUT",
-      "Name": "TP_OUT",
-      "Description": "Output voltage and current test point",
+      "Reference": "TP_SECONDARY",
+      "Name": "TP_SECONDARY",
+      "Description": "Transformer secondary voltage probe (24V RMS)",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "5.42983723"
+        "LogicalRow": "1",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "24.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -218,102 +189,102 @@
   ],
   "Connections": [
     {
-      "Id": "7f336371-aa5f-5ca4-8129-b704281e06e4",
-      "FromComponentId": "c2e6f8d6-bc3d-5ee5-9fcf-181fda26a134",
+      "Id": "993a0559-bb07-4bc5-be31-02ea5d1f6d24",
+      "FromComponentId": "5bd0f270-d13d-4f04-9597-0498cef4b3f5",
       "FromPin": "negative",
-      "ToComponentId": "31760909-b4de-5a10-8eb0-de60776c42ac",
+      "ToComponentId": "02ab067c-abb4-4daa-9b05-6d9e9be25eab",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "0d1a1b1f-435c-5dec-934b-97f5cb3022ad",
-      "FromComponentId": "c2e6f8d6-bc3d-5ee5-9fcf-181fda26a134",
+      "Id": "1c384c8f-2970-48b0-81d1-eea9f17180a0",
+      "FromComponentId": "5bd0f270-d13d-4f04-9597-0498cef4b3f5",
       "FromPin": "positive",
-      "ToComponentId": "4fd93658-91b2-55a2-9315-4072d78ad2c6",
-      "ToPin": "in",
-      "NetName": "VIN_NET",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "1b094e90-e814-5188-9bcf-e315c3c22151",
-      "FromComponentId": "c2e6f8d6-bc3d-5ee5-9fcf-181fda26a134",
-      "FromPin": "positive",
-      "ToComponentId": "71ae45f6-27f0-5ac7-9545-88c279ed6ee5",
+      "ToComponentId": "3e0c50cf-44a8-4f7b-af96-3fb90bf44491",
       "ToPin": "pin1",
-      "NetName": "VIN_NET",
+      "NetName": "LINE_IN",
       "Resistance": 0.0
     },
     {
-      "Id": "9a27c0c5-753a-5ed9-9d0e-89b1e3b77215",
-      "FromComponentId": "71ae45f6-27f0-5ac7-9545-88c279ed6ee5",
+      "Id": "f3314d58-98bc-4371-b89e-cdce912f5a56",
+      "FromComponentId": "3e0c50cf-44a8-4f7b-af96-3fb90bf44491",
       "FromPin": "pin2",
-      "ToComponentId": "baa42dec-f071-58f0-ba3c-3413d50febf8",
-      "ToPin": "pin1",
-      "NetName": "STAGE_0",
+      "ToComponentId": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "ToPin": "primary_dot",
+      "NetName": "PRI_HOT",
       "Resistance": 0.0
     },
     {
-      "Id": "991f245a-3573-537c-9cef-63643b1cb929",
-      "FromComponentId": "baa42dec-f071-58f0-ba3c-3413d50febf8",
-      "FromPin": "pin2",
-      "ToComponentId": "194fe968-5073-5b17-b0b5-5ff7d3e35173",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "ec7cc622-7430-5b17-a40c-b10269659d4f",
-      "FromComponentId": "194fe968-5073-5b17-b0b5-5ff7d3e35173",
-      "FromPin": "pin2",
-      "ToComponentId": "697387e5-d5b7-5c3d-bfe7-6b7bc84240d8",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "23c69379-cfa1-5e82-b748-2f8e68d983c7",
-      "FromComponentId": "697387e5-d5b7-5c3d-bfe7-6b7bc84240d8",
-      "FromPin": "pin2",
-      "ToComponentId": "391ce0c8-d04e-5647-96aa-5ec0dfee0238",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "d4b5073f-a97c-51f9-99c7-bba3efafc511",
-      "FromComponentId": "697387e5-d5b7-5c3d-bfe7-6b7bc84240d8",
-      "FromPin": "pin2",
-      "ToComponentId": "f684ad95-2dbb-5c08-9586-5e457d208465",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "0d96cb2f-1169-5a67-bdd9-09da7c393ec4",
-      "FromComponentId": "697387e5-d5b7-5c3d-bfe7-6b7bc84240d8",
-      "FromPin": "pin2",
-      "ToComponentId": "6226e4ea-0822-58a5-8efa-7eedbcf1f92f",
-      "ToPin": "in",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "ff9a55b1-000a-5024-8c0d-58a157a81c87",
-      "FromComponentId": "391ce0c8-d04e-5647-96aa-5ec0dfee0238",
-      "FromPin": "pin2",
-      "ToComponentId": "31760909-b4de-5a10-8eb0-de60776c42ac",
+      "Id": "c9e79f78-8294-4bf8-82a8-4a4dc1f431d7",
+      "FromComponentId": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "FromPin": "primary",
+      "ToComponentId": "02ab067c-abb4-4daa-9b05-6d9e9be25eab",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "74a6fd6d-7caa-5a0e-95f5-5b2407873f4d",
-      "FromComponentId": "f684ad95-2dbb-5c08-9586-5e457d208465",
-      "FromPin": "pin2",
-      "ToComponentId": "31760909-b4de-5a10-8eb0-de60776c42ac",
+      "Id": "4f7de451-603c-49cc-9428-359d67a85551",
+      "FromComponentId": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "FromPin": "secondary_dot",
+      "ToComponentId": "73e37d86-6c56-4cf1-9a8d-a7d848152bb9",
+      "ToPin": "pin1",
+      "NetName": "SEC_HOT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "da5332b1-f167-4626-bb87-7c50f6f2a6fa",
+      "FromComponentId": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "FromPin": "secondary_dot",
+      "ToComponentId": "962f62b7-b7a7-4478-a5ea-fbb4ab16e60b",
+      "ToPin": "pin1",
+      "NetName": "SEC_HOT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8a293ee6-851d-4dda-9c47-81fa1b3a05ca",
+      "FromComponentId": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "FromPin": "secondary",
+      "ToComponentId": "02ab067c-abb4-4daa-9b05-6d9e9be25eab",
       "ToPin": "gnd",
       "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "09589373-5839-4d3c-9f01-09d0c84fb94f",
+      "FromComponentId": "73e37d86-6c56-4cf1-9a8d-a7d848152bb9",
+      "FromPin": "pin2",
+      "ToComponentId": "02ab067c-abb4-4daa-9b05-6d9e9be25eab",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "938320b8-c43a-450a-a4a9-1ecd5b553e03",
+      "FromComponentId": "962f62b7-b7a7-4478-a5ea-fbb4ab16e60b",
+      "FromPin": "pin2",
+      "ToComponentId": "02ab067c-abb4-4daa-9b05-6d9e9be25eab",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8d617d1f-578f-44fa-b453-e526b92d8a67",
+      "FromComponentId": "3e0c50cf-44a8-4f7b-af96-3fb90bf44491",
+      "FromPin": "pin2",
+      "ToComponentId": "3f3e5ba7-64b5-4d24-b372-b9cefa4695a0",
+      "ToPin": "in",
+      "NetName": "PRI_HOT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2159c85-3c7f-41b5-940e-5f9f4a1047ee",
+      "FromComponentId": "a0b2a5fc-1759-4e7f-b472-0b33af3e0a6e",
+      "FromPin": "secondary_dot",
+      "ToComponentId": "3ff7b5c8-2c06-469f-9a9b-da32810540d2",
+      "ToPin": "in",
+      "NetName": "SEC_HOT",
       "Resistance": 0.0
     }
   ]

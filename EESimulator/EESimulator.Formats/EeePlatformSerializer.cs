@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EESimulator.Core.Components.Registry;
@@ -289,6 +291,8 @@ public static class EeePlatformSerializer
                 {
                     comp.CustomProperties[kvp.Key] = kvp.Value;
                 }
+                RestoreConfigurableProperties(comp, cDto.ElectricalParameters);
+                RestoreConfigurableProperties(comp, cDto.StringParameters);
                 if (comp is EESimulator.Core.Components.General.TextAnnotationComponent annotation &&
                     cDto.StringParameters.TryGetValue(nameof(annotation.Text), out string? text))
                     annotation.Text = text;
@@ -334,6 +338,49 @@ public static class EeePlatformSerializer
         }
 
         return circuit;
+    }
+
+    private static void RestoreConfigurableProperties<TValue>(
+        ComponentNode component,
+        IEnumerable<KeyValuePair<string, TValue>> parameters)
+    {
+        foreach (var (name, value) in parameters)
+        {
+            PropertyInfo? property = component.GetType().GetProperty(
+                name,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+            if (property?.SetMethod?.IsPublic != true ||
+                property.GetIndexParameters().Length != 0 ||
+                !IsSimpleProperty(property.PropertyType))
+                continue;
+
+            Type propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            try
+            {
+                string textValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+                object convertedValue = propertyType == typeof(string)
+                    ? textValue
+                    : propertyType.IsEnum
+                        ? Enum.Parse(propertyType, textValue, ignoreCase: true)
+                        : propertyType == typeof(bool)
+                            ? Convert.ToBoolean(value, CultureInfo.InvariantCulture)
+                            : Convert.ChangeType(value, propertyType, CultureInfo.InvariantCulture);
+                property.SetValue(component, convertedValue);
+            }
+            catch (Exception exception) when (exception is TargetInvocationException or FormatException or
+                                               InvalidCastException or OverflowException or ArgumentException)
+            {
+                throw new InvalidDataException(
+                    $"Could not restore {component.ComponentType} '{component.Name}' property '{property.Name}'.",
+                    exception);
+            }
+        }
+    }
+
+    private static bool IsSimpleProperty(Type type)
+    {
+        type = Nullable.GetUnderlyingType(type) ?? type;
+        return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal);
     }
 
     /// <summary>

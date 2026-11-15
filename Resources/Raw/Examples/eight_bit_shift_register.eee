@@ -3,14 +3,15 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Eight-Bit Shift Register",
-  "Description": "Serial-in/parallel-out eight-bit register with toggleable serial data, enable and clear, clock, LED-bar output, and serial/parallel probes.",
+  "Description": "Serial-in / parallel-out (SIPO) eight-bit shift register with toggleable serial data, enable, clear, 1 Hz clock, 8-segment LED bar output, and serial input/output test probes.",
   "Components": [
     {
       "Id": "1954f18a-a2ac-520b-a0c3-89a0ffeecf48",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "SERIAL_IN",
       "Name": "SERIAL_IN",
-      "Description": "User-toggleable input",
+      "Description": "Serial data input bit (SI)",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
@@ -19,7 +20,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -29,10 +30,11 @@
     },
     {
       "Id": "01d0fada-969e-51a4-8d27-03be10d80a6b",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "ENABLE",
       "Name": "ENABLE",
-      "Description": "User-toggleable input",
+      "Description": "Shift register shift enable input (EN)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "1",
@@ -41,7 +43,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -51,10 +53,11 @@
     },
     {
       "Id": "6a68d354-9241-5c9e-bd20-8bbdf40b571d",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "CLEAR",
       "Name": "CLEAR",
-      "Description": "User-toggleable input",
+      "Description": "Asynchronous active-high clear input (CLR)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -63,7 +66,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -73,10 +76,11 @@
     },
     {
       "Id": "aa446e65-cb98-5193-8694-53aef0cf2aba",
+      "StableTypeId": "digital.clock",
       "ComponentType": "Clock",
       "Reference": "CLK",
       "Name": "CLK",
-      "Description": "Clock",
+      "Description": "Shift clock generator (1 Hz, 50% duty cycle)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "1"
@@ -84,7 +88,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "Frequency": 1.0,
         "DutyCycle": 0.5,
@@ -95,20 +99,21 @@
     },
     {
       "Id": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "StableTypeId": "electronics.shiftregister",
       "ComponentType": "ShiftRegister",
       "Reference": "SHIFT8",
       "Name": "SHIFT8",
-      "Description": "ShiftRegister",
+      "Description": "8-bit serial-in / parallel-out shift register",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "Length": 8
+        "Length": 8.0
       },
       "CustomProperties": {
         "HasParallelLoad": false,
@@ -117,38 +122,42 @@
     },
     {
       "Id": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
+      "StableTypeId": "io.ledbar",
       "ComponentType": "LedBar",
       "Reference": "LED_BAR",
       "Name": "LED_BAR",
-      "Description": "LedBar",
+      "Description": "8-segment parallel output LED bar",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "6"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "LedCount": 8
+        "LedCount": 8.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "aa86e159-c5f1-586e-8876-373f80641adf",
+      "Id": "8c6384c0-2c38-5b43-a082-45615341bfc7",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
-      "Reference": "TP_SERIAL_OUT",
-      "Name": "TP_SERIAL_OUT",
-      "Description": "Voltage/current measurement test point",
+      "Reference": "TP_Q0",
+      "Name": "TP_Q0",
+      "Description": "First stage output probe (Q0)",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "6",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -158,20 +167,23 @@
       }
     },
     {
-      "Id": "8c6384c0-2c38-5b43-a082-45615341bfc7",
+      "Id": "aa86e159-c5f1-586e-8876-373f80641adf",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
-      "Reference": "TP_Q7",
-      "Name": "TP_Q7",
-      "Description": "Voltage/current measurement test point",
+      "Reference": "TP_SERIAL_OUT",
+      "Name": "TP_SERIAL_OUT",
+      "Description": "Serial output probe from final stage (SO / Q7)",
       "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "6",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "3",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -224,6 +236,15 @@
       "FromPin": "Q0",
       "ToComponentId": "d33a1d21-9f1c-53dd-a7cf-214f0df3ef76",
       "ToPin": "D0",
+      "NetName": "Q0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f48b7f66-44d3-53a4-b047-b7fee16f673d",
+      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
+      "FromPin": "Q0",
+      "ToComponentId": "8c6384c0-2c38-5b43-a082-45615341bfc7",
+      "ToPin": "in",
       "NetName": "Q0",
       "Resistance": 0.0
     },
@@ -297,15 +318,6 @@
       "ToComponentId": "aa86e159-c5f1-586e-8876-373f80641adf",
       "ToPin": "in",
       "NetName": "SERIAL_OUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "d7a44db5-1ea3-55e8-8b5c-01f4c8c36fe2",
-      "FromComponentId": "6b465ff1-8281-5af2-a17a-1af6e8342ec6",
-      "FromPin": "Q7",
-      "ToComponentId": "8c6384c0-2c38-5b43-a082-45615341bfc7",
-      "ToPin": "in",
-      "NetName": "Q7",
       "Resistance": 0.0
     }
   ]

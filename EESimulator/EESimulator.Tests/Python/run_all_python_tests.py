@@ -22,7 +22,7 @@ eesim.attach(protocol_output, sys.stdin)
 sys.stdout = sys.stderr
 
 test_files = [
-    ("test_all_116_components.py", "116 Components Full Test Suite"),
+    ("test_all_116_components.py", "120 Components Full Test Suite"),
     ("test_component_circuit_tests.py", "Component Circuit Unit Tests (26 Tests)"),
     ("test_enhanced_component_tests.py", "Enhanced Component Tests (60 Tests)"),
     ("test_complex_linked_circuit_tests.py", "Complex Linked Circuit Tests (48 Checkpoints)"),

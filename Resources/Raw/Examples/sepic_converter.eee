@@ -3,71 +3,258 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "SEPIC Converter",
-  "Description": "Low-voltage SEPIC topology study using an inductor-capacitor energy-transfer equivalent, rectifier and load. It is an educational network, not a closed-loop power converter.",
+  "Description": "Non-inverting Single-Ended Primary-Inductor Converter (SEPIC) stepping a 12V DC input to a regulated 11.4V DC output featuring a 50 kHz NMOS power switch, primary storage inductor (1 mH), flying energy transfer capacitor (10 \u00b5F), secondary shunt inductor (1 mH), output Schottky rectifier, and shunt capacitive filter with status LED.",
   "Components": [
     {
-      "Id": "50a50563-d8f4-56a1-a84a-ead93e74c37a",
-      "ComponentType": "Ground",
-      "Reference": "GND",
-      "Name": "GND",
-      "Description": "Circuit return",
-      "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "1"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "0007af21-79f1-5e34-9638-89911f1e60e5",
+      "Id": "520808e3-1aa8-4fb2-8358-008ec2b7f67b",
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Adjustable low-voltage input source",
+      "Description": "12V DC input power source",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "DC"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Voltage": 12.0,
-        "SineOffset": 0.0,
-        "SineAmplitude": 12.0,
-        "SineFrequency": 60.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 12.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.005,
-        "PulsePeriod": 0.01
+        "Voltage": 12.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "5a6f9a6f-1e3b-5f2b-8369-91affd83b544",
-      "ComponentType": "Probe",
-      "Reference": "TP_IN",
-      "Name": "TP_IN",
-      "Description": "Input voltage test point",
+      "Id": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit ground reference",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "12"
+        "LogicalRow": "8",
+        "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "43f0ff0a-7a16-41c2-ad13-61453690d4e2",
+      "ComponentType": "Inductor",
+      "Reference": "L1",
+      "Name": "L1",
+      "Description": "SEPIC input energy-storage inductor (1 mH)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5dea9adc-161e-4be3-9e0f-65e827be46fc",
+      "ComponentType": "MOSFET",
+      "Reference": "M1_SEPIC",
+      "Name": "M1_SEPIC",
+      "Description": "Main SEPIC power switch (IRF540N NMOS)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Vto": 2.0,
+        "Kp": 0.002,
+        "W": 0.001,
+        "L": 1e-06
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "147db0cb-616b-439d-9cac-0825295a0d1d",
+      "ComponentType": "Clock",
+      "Reference": "CLK_PWM",
+      "Name": "CLK_PWM",
+      "Description": "50 kHz PWM gate drive generator (D = 0.5)",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Frequency": 50000.0,
+        "DutyCycle": 0.5,
+        "HighVoltage": 10.0,
+        "LowVoltage": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "5ec7d6a6-93a5-4238-b5ae-796a6dec334f",
+      "ComponentType": "Capacitor",
+      "Reference": "C_SEPIC",
+      "Name": "C_SEPIC",
+      "Description": "Energy transfer flying coupling capacitor (10 \u00b5F)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-05,
+        "InitialCondition": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "41dd4f08-c2ab-4221-b0d2-91b312f099ac",
+      "ComponentType": "Inductor",
+      "Reference": "L2",
+      "Name": "L2",
+      "Description": "Secondary shunt inductor (1 mH)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e4fb32e0-d101-4cb8-89c4-ac252bdff3df",
+      "ComponentType": "Diode",
+      "Reference": "D1",
+      "Name": "D1",
+      "Description": "Fast recovery output rectifier diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-12
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e637009b-03e1-495e-8a98-1dfb8fc55b33",
+      "ComponentType": "Capacitor",
+      "Reference": "C_OUT",
+      "Name": "C_OUT",
+      "Description": "Shunt output reservoir capacitor (100 \u00b5F)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "7"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.0001,
+        "InitialCondition": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "73e908c6-cda1-4bd4-8e06-be2ed5f8b063",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "DC output power load resistor (24 \u03a9)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "8"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Resistance": 24.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "935afe6c-17bc-44d6-bb67-fe4893a9ff7f",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "LED ballast resistor (1 k\u03a9)",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "8"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "6a776078-ca67-4699-9aa1-7922d4f4a9e6",
+      "ComponentType": "LED",
+      "Reference": "LED_OUT",
+      "Name": "LED_OUT",
+      "Description": "DC output active indicator LED",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "8"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "ForwardVoltage": 2.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "dbd0a0bc-a647-4319-aacd-a291f3545c72",
+      "ComponentType": "Probe",
+      "Reference": "TP_VIN",
+      "Name": "TP_VIN",
+      "Description": "12V DC input rail voltage probe",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "12.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -77,156 +264,66 @@
       }
     },
     {
-      "Id": "b71be774-7782-5056-93fe-f6d034bcbecb",
-      "ComponentType": "Resistor",
-      "Reference": "R_SOURCE",
-      "Name": "R_SOURCE",
-      "Description": "Source and current limiting resistance",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "2"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "7de2872d-dbab-520a-be65-67e68ef880d5",
-      "ComponentType": "Inductor",
-      "Reference": "L1",
-      "Name": "L1",
-      "Description": "Input energy-storage inductor",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "3"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.001
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "887df81d-03d0-5082-9dce-3125b576b620",
-      "ComponentType": "Capacitor",
-      "Reference": "C_SEPIC",
-      "Name": "C_SEPIC",
-      "Description": "Series energy-transfer capacitor",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "4"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Capacitance": 1e-05
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "4e729e12-55dc-5c04-8d75-3be39aee9ffb",
-      "ComponentType": "Inductor",
-      "Reference": "L2",
-      "Name": "L2",
-      "Description": "Output inductor",
-      "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.001
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "abc2ef2d-6b3c-5f69-bbb2-361e68441dc5",
-      "ComponentType": "Diode",
-      "Reference": "D1",
-      "Name": "D1",
-      "Description": "Output rectifier diode",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Is": 1e-14,
-        "N": 1.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "4cfea3c6-f1e3-5ad4-936d-e5d8fb9f4ee3",
-      "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Output load",
-      "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 1000.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "cf9c2617-ecf3-54f9-bbf0-820774049169",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage output indicator",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "e501cf75-2817-58dc-89b2-7066540e404b",
+      "Id": "cb40f8e2-9e70-4b8e-a3fe-547f01eef07c",
       "ComponentType": "Probe",
-      "Reference": "TP_OUT",
-      "Name": "TP_OUT",
-      "Description": "Output voltage and current test point",
+      "Reference": "TP_SWITCH",
+      "Name": "TP_SWITCH",
+      "Description": "MOSFET drain switch node PWM probe",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "12.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "eab6c40c-45a8-4801-a665-7c1f5f92e137",
+      "ComponentType": "Probe",
+      "Reference": "TP_COUPLING",
+      "Name": "TP_COUPLING",
+      "Description": "SEPIC transfer capacitor node probe",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "12.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "3cc167dd-9355-45bf-88dd-f0768869008a",
+      "ComponentType": "Probe",
+      "Reference": "TP_VOUT",
+      "Name": "TP_VOUT",
+      "Description": "Regulated SEPIC output voltage probe (11.4V DC)",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "8",
+        "ExpectedVoltage": "11.4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -238,111 +335,192 @@
   ],
   "Connections": [
     {
-      "Id": "6d55a561-c369-5ff9-b8e9-9baac9851a50",
-      "FromComponentId": "0007af21-79f1-5e34-9638-89911f1e60e5",
+      "Id": "4e82d38d-38a6-4d2b-8e19-dad0e068b4b8",
+      "FromComponentId": "520808e3-1aa8-4fb2-8358-008ec2b7f67b",
       "FromPin": "negative",
-      "ToComponentId": "50a50563-d8f4-56a1-a84a-ead93e74c37a",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "3778e1bc-fb9b-5a79-b76a-f74507ceecbd",
-      "FromComponentId": "0007af21-79f1-5e34-9638-89911f1e60e5",
+      "Id": "ccf0970b-078c-4cf5-a335-c064ba09c835",
+      "FromComponentId": "520808e3-1aa8-4fb2-8358-008ec2b7f67b",
       "FromPin": "positive",
-      "ToComponentId": "5a6f9a6f-1e3b-5f2b-8369-91affd83b544",
-      "ToPin": "in",
-      "NetName": "VIN_NET",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "49f7c744-28dc-5a11-af46-d56b524cefcb",
-      "FromComponentId": "0007af21-79f1-5e34-9638-89911f1e60e5",
-      "FromPin": "positive",
-      "ToComponentId": "b71be774-7782-5056-93fe-f6d034bcbecb",
+      "ToComponentId": "43f0ff0a-7a16-41c2-ad13-61453690d4e2",
       "ToPin": "pin1",
       "NetName": "VIN_NET",
       "Resistance": 0.0
     },
     {
-      "Id": "db3f9e5d-69e8-5a26-8874-9a74edef6074",
-      "FromComponentId": "b71be774-7782-5056-93fe-f6d034bcbecb",
+      "Id": "1b51db2a-0bad-443a-a6ec-ead846fa889c",
+      "FromComponentId": "43f0ff0a-7a16-41c2-ad13-61453690d4e2",
       "FromPin": "pin2",
-      "ToComponentId": "7de2872d-dbab-520a-be65-67e68ef880d5",
-      "ToPin": "pin1",
-      "NetName": "STAGE_0",
+      "ToComponentId": "5dea9adc-161e-4be3-9e0f-65e827be46fc",
+      "ToPin": "drain",
+      "NetName": "SW_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "e8d4bfa9-4fea-5575-9aed-1221a64f5ced",
-      "FromComponentId": "7de2872d-dbab-520a-be65-67e68ef880d5",
+      "Id": "d7d66c97-6a98-42c5-a548-64275c6ecf93",
+      "FromComponentId": "43f0ff0a-7a16-41c2-ad13-61453690d4e2",
       "FromPin": "pin2",
-      "ToComponentId": "887df81d-03d0-5082-9dce-3125b576b620",
+      "ToComponentId": "5ec7d6a6-93a5-4238-b5ae-796a6dec334f",
       "ToPin": "pin1",
-      "NetName": "STAGE_1",
+      "NetName": "SW_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "2a011405-9f1b-52e6-bfd8-14674b283504",
-      "FromComponentId": "887df81d-03d0-5082-9dce-3125b576b620",
-      "FromPin": "pin2",
-      "ToComponentId": "4e729e12-55dc-5c04-8d75-3be39aee9ffb",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "Id": "8326a0a2-d375-4005-a0df-c3dba92308b2",
+      "FromComponentId": "147db0cb-616b-439d-9cac-0825295a0d1d",
+      "FromPin": "out",
+      "ToComponentId": "5dea9adc-161e-4be3-9e0f-65e827be46fc",
+      "ToPin": "gate",
+      "NetName": "GATE_DRIVE",
       "Resistance": 0.0
     },
     {
-      "Id": "6e8e0435-97a0-5003-8a8a-3d8f4ca19503",
-      "FromComponentId": "4e729e12-55dc-5c04-8d75-3be39aee9ffb",
+      "Id": "ebbee61b-2086-481b-9356-2a7ba75b1b3a",
+      "FromComponentId": "5dea9adc-161e-4be3-9e0f-65e827be46fc",
+      "FromPin": "source",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "aa7e3632-f788-46b7-afc3-cc0e31bfd7af",
+      "FromComponentId": "5dea9adc-161e-4be3-9e0f-65e827be46fc",
+      "FromPin": "body",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "065186fa-ae16-4745-ba56-40df5c65c591",
+      "FromComponentId": "5ec7d6a6-93a5-4238-b5ae-796a6dec334f",
       "FromPin": "pin2",
-      "ToComponentId": "abc2ef2d-6b3c-5f69-bbb2-361e68441dc5",
+      "ToComponentId": "41dd4f08-c2ab-4221-b0d2-91b312f099ac",
+      "ToPin": "pin1",
+      "NetName": "NODE_X",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "42d31ddd-0394-43be-a245-16df9d1a6efb",
+      "FromComponentId": "5ec7d6a6-93a5-4238-b5ae-796a6dec334f",
+      "FromPin": "pin2",
+      "ToComponentId": "e4fb32e0-d101-4cb8-89c4-ac252bdff3df",
       "ToPin": "anode",
-      "NetName": "STAGE_3",
+      "NetName": "NODE_X",
       "Resistance": 0.0
     },
     {
-      "Id": "d20657e9-2547-5f80-be16-4716e05eb364",
-      "FromComponentId": "abc2ef2d-6b3c-5f69-bbb2-361e68441dc5",
+      "Id": "91e1f8b7-0dc0-4188-a118-c2377d202e4b",
+      "FromComponentId": "41dd4f08-c2ab-4221-b0d2-91b312f099ac",
+      "FromPin": "pin2",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f9f5bf94-d148-4d8a-9dba-f150aa3781d3",
+      "FromComponentId": "e4fb32e0-d101-4cb8-89c4-ac252bdff3df",
       "FromPin": "cathode",
-      "ToComponentId": "4cfea3c6-f1e3-5ad4-936d-e5d8fb9f4ee3",
+      "ToComponentId": "e637009b-03e1-495e-8a98-1dfb8fc55b33",
       "ToPin": "pin1",
-      "NetName": "VOUT",
+      "NetName": "VOUT_NET",
       "Resistance": 0.0
     },
     {
-      "Id": "deb58e50-091d-5a86-80f6-41384f1b0a77",
-      "FromComponentId": "abc2ef2d-6b3c-5f69-bbb2-361e68441dc5",
+      "Id": "a0ee3f72-3a1c-4a89-870e-24837ed460e5",
+      "FromComponentId": "e4fb32e0-d101-4cb8-89c4-ac252bdff3df",
       "FromPin": "cathode",
-      "ToComponentId": "cf9c2617-ecf3-54f9-bbf0-820774049169",
+      "ToComponentId": "73e908c6-cda1-4bd4-8e06-be2ed5f8b063",
       "ToPin": "pin1",
-      "NetName": "VOUT",
+      "NetName": "VOUT_NET",
       "Resistance": 0.0
     },
     {
-      "Id": "11a27956-9b49-5c6f-9dbe-82f0b303d095",
-      "FromComponentId": "abc2ef2d-6b3c-5f69-bbb2-361e68441dc5",
+      "Id": "aa07cd27-a8ab-431c-bc58-a04589050235",
+      "FromComponentId": "e4fb32e0-d101-4cb8-89c4-ac252bdff3df",
       "FromPin": "cathode",
-      "ToComponentId": "e501cf75-2817-58dc-89b2-7066540e404b",
+      "ToComponentId": "935afe6c-17bc-44d6-bb67-fe4893a9ff7f",
+      "ToPin": "pin1",
+      "NetName": "VOUT_NET",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3808f75c-62d6-4e5d-81ed-4dc49ae027df",
+      "FromComponentId": "e637009b-03e1-495e-8a98-1dfb8fc55b33",
+      "FromPin": "pin2",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "65dd994d-8ac6-4a3d-9ea2-3efc68865a45",
+      "FromComponentId": "73e908c6-cda1-4bd4-8e06-be2ed5f8b063",
+      "FromPin": "pin2",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "62a8882f-39bd-4ec3-a1b2-cbce0b1afa8d",
+      "FromComponentId": "935afe6c-17bc-44d6-bb67-fe4893a9ff7f",
+      "FromPin": "pin2",
+      "ToComponentId": "6a776078-ca67-4699-9aa1-7922d4f4a9e6",
+      "ToPin": "anode",
+      "NetName": "LED_ANODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6ea91f4a-1597-4f18-b5f7-fb7606c15904",
+      "FromComponentId": "6a776078-ca67-4699-9aa1-7922d4f4a9e6",
+      "FromPin": "cathode",
+      "ToComponentId": "6cafe042-cd06-45ca-9f04-1c4a7c157ba3",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3ed2d367-43a2-4b03-8209-616c99eec67e",
+      "FromComponentId": "520808e3-1aa8-4fb2-8358-008ec2b7f67b",
+      "FromPin": "positive",
+      "ToComponentId": "dbd0a0bc-a647-4319-aacd-a291f3545c72",
       "ToPin": "in",
-      "NetName": "VOUT",
+      "NetName": "VIN_NET",
       "Resistance": 0.0
     },
     {
-      "Id": "becf809e-0f06-5727-8e45-92594f46359f",
-      "FromComponentId": "4cfea3c6-f1e3-5ad4-936d-e5d8fb9f4ee3",
+      "Id": "46bafd39-5f26-4efc-9f67-0cc3c86d84f1",
+      "FromComponentId": "43f0ff0a-7a16-41c2-ad13-61453690d4e2",
       "FromPin": "pin2",
-      "ToComponentId": "50a50563-d8f4-56a1-a84a-ead93e74c37a",
-      "ToPin": "gnd",
-      "NetName": "0",
+      "ToComponentId": "cb40f8e2-9e70-4b8e-a3fe-547f01eef07c",
+      "ToPin": "in",
+      "NetName": "SW_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "eb4c8fe2-1f97-5c7d-85b5-9d2897e75d9a",
-      "FromComponentId": "cf9c2617-ecf3-54f9-bbf0-820774049169",
+      "Id": "0533bb76-6c81-476d-bde9-1a22be7ed9d2",
+      "FromComponentId": "5ec7d6a6-93a5-4238-b5ae-796a6dec334f",
       "FromPin": "pin2",
-      "ToComponentId": "50a50563-d8f4-56a1-a84a-ead93e74c37a",
-      "ToPin": "gnd",
-      "NetName": "0",
+      "ToComponentId": "eab6c40c-45a8-4801-a665-7c1f5f92e137",
+      "ToPin": "in",
+      "NetName": "NODE_X",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ef6201eb-56e4-48b9-9d6a-139648aa59d5",
+      "FromComponentId": "e4fb32e0-d101-4cb8-89c4-ac252bdff3df",
+      "FromPin": "cathode",
+      "ToComponentId": "3cc167dd-9355-45bf-88dd-f0768869008a",
+      "ToPin": "in",
+      "NetName": "VOUT_NET",
       "Resistance": 0.0
     }
   ]

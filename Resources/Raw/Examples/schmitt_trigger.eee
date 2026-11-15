@@ -3,16 +3,17 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Schmitt Trigger",
-  "Description": "Schmitt-trigger threshold study with adjustable source, toggleable enable, feedback resistor network, output lamp, and probes. The positive-feedback behavior is represented by the network.",
+  "Description": "Non-inverting op-amp Schmitt trigger with positive feedback hysteresis and an LED indicator. The simplified op-amp model does not clamp output voltage to its supply rails.",
   "Components": [
     {
       "Id": "46a06697-d66a-53c4-8aff-867077b52c61",
+      "StableTypeId": "electrical.ground",
       "ComponentType": "Ground",
       "Reference": "GND",
       "Name": "GND",
-      "Description": "Circuit return",
+      "Description": "Circuit ground reference (0V)",
       "StringParameters": {
-        "LogicalRow": "12",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -24,12 +25,13 @@
     },
     {
       "Id": "2897f0b5-88f5-5827-a03e-367514ac4afa",
+      "StableTypeId": "electrical.voltagesource",
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Sine source",
+      "Description": "1 kHz sinusoidal input source (5V peak)",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -38,31 +40,34 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 1.0,
+        "Voltage": 5.0,
         "SineOffset": 0.0,
-        "SineAmplitude": 1.0,
+        "SineAmplitude": 5.0,
         "SineFrequency": 1000.0,
         "SinePhase": 0.0,
         "PulseInitial": 0.0,
-        "PulsePulsed": 1.0,
-        "PulseDelay": 0.001,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.0,
         "PulseRiseTime": 1e-06,
         "PulseFallTime": 1e-06,
-        "PulseWidth": 0.00045,
+        "PulseWidth": 0.0005,
         "PulsePeriod": 0.001
       },
       "CustomProperties": {}
     },
     {
       "Id": "cd2f7948-160b-548a-912e-723f60f9a80a",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_IN",
       "Name": "TP_IN",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Input test point measuring VIN (5V peak sine)",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "1"
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "-5.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -77,58 +82,15 @@
       }
     },
     {
-      "Id": "b0f973fc-38b9-54db-83cc-f9d872f0abec",
-      "ComponentType": "LogicInput",
-      "Reference": "ENABLE",
-      "Name": "ENABLE",
-      "Description": "User-toggleable input",
-      "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "1",
-        "State": "True"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "HighVoltage": 5.0,
-        "LowVoltage": 0.0,
-        "State": 1.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "2167478e-4c15-526d-920d-00df951d1e3b",
-      "ComponentType": "VoltageSwitch",
-      "Reference": "S_ENABLE",
-      "Name": "S_ENABLE",
-      "Description": "Toggle-controlled signal path",
-      "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "3"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Ron": 1.0,
-        "Roff": 1000000.0,
-        "Threshold": 2.5,
-        "Hysteresis": 0.1
-      },
-      "CustomProperties": {}
-    },
-    {
       "Id": "573a0df9-4faf-5937-a9bf-5b6f2e54e7d8",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
       "Reference": "R_IN",
       "Name": "R_IN",
-      "Description": "Resistor",
+      "Description": "Input summing resistor (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
-        "LogicalColumn": "4"
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -140,14 +102,43 @@
       "CustomProperties": {}
     },
     {
+      "Id": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "U1",
+      "Description": "High-gain comparator op-amp (LM741, ±15V supplies)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "3",
+        "PartNumber": "LM741"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0,
+        "Vos": 0.001,
+        "Ib": 8e-08,
+        "CMRR": 90.0
+      },
+      "CustomProperties": {}
+    },
+    {
       "Id": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
       "Reference": "R_FEEDBACK",
       "Name": "R_FEEDBACK",
-      "Description": "Resistor",
+      "Description": "Positive feedback resistor creating hysteresis (47 kΩ)",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "5"
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -160,13 +151,14 @@
     },
     {
       "Id": "a2e3ff03-480b-5d85-b654-7643a80a0450",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Resistor",
+      "Description": "Output load pull resistor (1 kΩ)",
       "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "6"
+        "LogicalRow": "5",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -178,36 +170,60 @@
       "CustomProperties": {}
     },
     {
-      "Id": "27479e8f-66a9-5743-a971-80f56b220724",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage indicator",
+      "Id": "c4d5e6f7-a8b9-4c0d-1e2f-3a4b5c6d7e8f",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "LED_HIGH",
+      "Name": "LED_HIGH",
+      "Description": "High-state output indicator LED (Red, Vf=2.0V)",
       "StringParameters": {
-        "LogicalRow": "10",
-        "LogicalColumn": "6"
+        "LogicalRow": "6",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
+        "Vf": 2.0,
+        "Wavelength": 630.0
+      },
+      "CustomProperties": {
+        "Color": "Red"
+      }
+    },
+    {
+      "Id": "d5e6f7a8-b9c0-4d1e-2f3a-4b5c6d7e8f9a",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "LED current-limiting resistor (1 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
       },
       "CustomProperties": {}
     },
     {
       "Id": "3047497c-2ef2-512d-8654-9d15dc9d6656",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_OUT",
       "Name": "TP_OUT",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Schmitt trigger digital output voltage probe (±15V rails)",
       "StringParameters": {
-        "LogicalRow": "8",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0.00159231"
+        "LogicalRow": "3",
+        "LogicalColumn": "5",
+        "ExpectedVoltageMinimum": "-25.0",
+        "ExpectedVoltageMaximum": "25.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -245,71 +261,53 @@
       "Id": "3d8cace6-f949-50c2-9f26-79fd93d7c368",
       "FromComponentId": "2897f0b5-88f5-5827-a03e-367514ac4afa",
       "FromPin": "positive",
-      "ToComponentId": "2167478e-4c15-526d-920d-00df951d1e3b",
-      "ToPin": "sw_pos",
+      "ToComponentId": "573a0df9-4faf-5937-a9bf-5b6f2e54e7d8",
+      "ToPin": "pin1",
       "NetName": "VIN",
       "Resistance": 0.0
     },
     {
-      "Id": "0134e26f-52fb-5c6e-8d34-add45346bf97",
-      "FromComponentId": "b0f973fc-38b9-54db-83cc-f9d872f0abec",
-      "FromPin": "out",
-      "ToComponentId": "2167478e-4c15-526d-920d-00df951d1e3b",
-      "ToPin": "ctrl_pos",
-      "NetName": "ENABLE",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "373e80ad-8f8f-5343-b65d-ce03d3469d84",
-      "FromComponentId": "46a06697-d66a-53c4-8aff-867077b52c61",
-      "FromPin": "gnd",
-      "ToComponentId": "2167478e-4c15-526d-920d-00df951d1e3b",
-      "ToPin": "ctrl_neg",
-      "NetName": "0",
-      "Resistance": 0.0
-    },
-    {
       "Id": "bc75cea2-40f8-5295-9727-671d986c98c6",
-      "FromComponentId": "2167478e-4c15-526d-920d-00df951d1e3b",
-      "FromPin": "sw_neg",
-      "ToComponentId": "573a0df9-4faf-5937-a9bf-5b6f2e54e7d8",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
+      "FromComponentId": "573a0df9-4faf-5937-a9bf-5b6f2e54e7d8",
+      "FromPin": "pin2",
+      "ToComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "ToPin": "in_pos",
+      "NetName": "SUM_NODE",
       "Resistance": 0.0
     },
     {
       "Id": "10d3e460-9ac0-595d-b6f1-0f75a20bce5a",
-      "FromComponentId": "573a0df9-4faf-5937-a9bf-5b6f2e54e7d8",
-      "FromPin": "pin2",
-      "ToComponentId": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "FromComponentId": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
+      "FromPin": "pin1",
+      "ToComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "ToPin": "in_pos",
+      "NetName": "SUM_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "373e80ad-8f8f-5343-b65d-ce03d3469d84",
+      "FromComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "FromPin": "in_neg",
+      "ToComponentId": "46a06697-d66a-53c4-8aff-867077b52c61",
+      "ToPin": "gnd",
+      "NetName": "0",
       "Resistance": 0.0
     },
     {
       "Id": "f5667bcc-d508-51e4-8b1e-960405ee2fad",
-      "FromComponentId": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
-      "FromPin": "pin2",
-      "ToComponentId": "a2e3ff03-480b-5d85-b654-7643a80a0450",
-      "ToPin": "pin1",
+      "FromComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "FromPin": "out",
+      "ToComponentId": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
+      "ToPin": "pin2",
       "NetName": "VOUT",
       "Resistance": 0.0
     },
     {
       "Id": "42c8b278-ca0c-54c8-9ada-b4c918ad550e",
-      "FromComponentId": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
-      "FromPin": "pin2",
-      "ToComponentId": "27479e8f-66a9-5743-a971-80f56b220724",
+      "FromComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "FromPin": "out",
+      "ToComponentId": "a2e3ff03-480b-5d85-b654-7643a80a0450",
       "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "0260bb6c-6548-5680-97bd-2cde27510bfd",
-      "FromComponentId": "f3c126e5-a656-50c0-b1c9-13d536c94f94",
-      "FromPin": "pin2",
-      "ToComponentId": "3047497c-2ef2-512d-8654-9d15dc9d6656",
-      "ToPin": "in",
       "NetName": "VOUT",
       "Resistance": 0.0
     },
@@ -323,8 +321,35 @@
       "Resistance": 0.0
     },
     {
+      "Id": "0260bb6c-6548-5680-97bd-2cde27510bfd",
+      "FromComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "FromPin": "out",
+      "ToComponentId": "3047497c-2ef2-512d-8654-9d15dc9d6656",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "FromComponentId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "FromPin": "out",
+      "ToComponentId": "c4d5e6f7-a8b9-4c0d-1e2f-3a4b5c6d7e8f",
+      "ToPin": "anode",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "FromComponentId": "c4d5e6f7-a8b9-4c0d-1e2f-3a4b5c6d7e8f",
+      "ToPin": "pin1",
+      "FromPin": "cathode",
+      "ToComponentId": "d5e6f7a8-b9c0-4d1e-2f3a-4b5c6d7e8f9a",
+      "NetName": "LED_CATHODE",
+      "Resistance": 0.0
+    },
+    {
       "Id": "1a9c296c-c5d7-5d5b-972f-aa118ea66b98",
-      "FromComponentId": "27479e8f-66a9-5743-a971-80f56b220724",
+      "FromComponentId": "d5e6f7a8-b9c0-4d1e-2f3a-4b5c6d7e8f9a",
       "FromPin": "pin2",
       "ToComponentId": "46a06697-d66a-53c4-8aff-867077b52c61",
       "ToPin": "gnd",

@@ -2,15 +2,15 @@
   "FileType": "EEE_PLATFORM_SCHEMATIC",
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
-  "Title": "16 ? 4 RAM",
-  "Description": "Interactive 16-address by four-bit RAM with toggleable address/data inputs, clock and write-enable controls, four output indicators and a test point.",
+  "Title": "16 \u00d7 4 RAM",
+  "Description": "Interactive 16-address by four-bit RAM demonstration with toggleable address/data inputs, synchronous clock and write-enable controls, hexadecimal digit output, and logic state indicators.",
   "Components": [
     {
-      "Id": "d79972c5-273d-5d18-8621-32914b722fa0",
+      "Id": "456f276a-c8cf-4cfc-8b65-1b187547cf97",
       "ComponentType": "LogicInput",
       "Reference": "ADDR0",
       "Name": "ADDR0",
-      "Description": "LogicInput",
+      "Description": "Address input bit 0",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
@@ -28,11 +28,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "3dc609bf-ae40-5501-8d04-8d495986f0f3",
+      "Id": "24fe2755-a033-4093-99f1-a36bfd14911b",
       "ComponentType": "LogicInput",
       "Reference": "ADDR1",
       "Name": "ADDR1",
-      "Description": "LogicInput",
+      "Description": "Address input bit 1",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "1",
@@ -50,11 +50,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "c392c0a4-f521-5330-b2e8-5d11d728f690",
+      "Id": "ad49c628-1435-4ceb-88c2-f51c27bd038e",
       "ComponentType": "LogicInput",
       "Reference": "ADDR2",
       "Name": "ADDR2",
-      "Description": "LogicInput",
+      "Description": "Address input bit 2",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -72,11 +72,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "b1734260-54ef-5394-bcc5-a69284d0a910",
+      "Id": "d79ee09a-9016-47be-9f1f-cb8e3e435e35",
       "ComponentType": "LogicInput",
       "Reference": "ADDR3",
       "Name": "ADDR3",
-      "Description": "LogicInput",
+      "Description": "Address input bit 3",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "1",
@@ -94,35 +94,13 @@
       "CustomProperties": {}
     },
     {
-      "Id": "6888b929-6b63-5e4b-af73-0df75ee83078",
+      "Id": "87a559ff-b544-4349-ad46-fed0c3dcb841",
       "ComponentType": "LogicInput",
       "Reference": "DATA0",
       "Name": "DATA0",
-      "Description": "LogicInput",
+      "Description": "Data input bit 0",
       "StringParameters": {
         "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "State": "False"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "HighVoltage": 5.0,
-        "LowVoltage": 0.0,
-        "State": 0.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "6c971d33-7c2b-5346-bbc6-7831212a28fb",
-      "ComponentType": "LogicInput",
-      "Reference": "DATA1",
-      "Name": "DATA1",
-      "Description": "LogicInput",
-      "StringParameters": {
-        "LogicalRow": "2",
         "LogicalColumn": "2",
         "State": "True"
       },
@@ -138,13 +116,13 @@
       "CustomProperties": {}
     },
     {
-      "Id": "54311d15-b57a-54b4-9ba1-3805075c665b",
+      "Id": "1a05781f-a78b-4fa5-879e-9ed9a781104d",
       "ComponentType": "LogicInput",
-      "Reference": "DATA2",
-      "Name": "DATA2",
-      "Description": "LogicInput",
+      "Reference": "DATA1",
+      "Name": "DATA1",
+      "Description": "Data input bit 1",
       "StringParameters": {
-        "LogicalRow": "3",
+        "LogicalRow": "2",
         "LogicalColumn": "2",
         "State": "False"
       },
@@ -160,11 +138,33 @@
       "CustomProperties": {}
     },
     {
-      "Id": "43a0884c-070a-5594-9a9b-318174b6924e",
+      "Id": "ac8c2c25-82c6-4d7c-bdf6-1f979e5aff77",
+      "ComponentType": "LogicInput",
+      "Reference": "DATA2",
+      "Name": "DATA2",
+      "Description": "Data input bit 2",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2",
+        "State": "True"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "HighVoltage": 5.0,
+        "LowVoltage": 0.0,
+        "State": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "fea0f3d4-9abd-4506-bab0-8071a4ca9d83",
       "ComponentType": "LogicInput",
       "Reference": "DATA3",
       "Name": "DATA3",
-      "Description": "LogicInput",
+      "Description": "Data input bit 3",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "2",
@@ -182,11 +182,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "0609e843-d5e9-532c-aa57-222261ed8f1d",
+      "Id": "3739641d-7050-4a17-a863-3a25f151698f",
       "ComponentType": "Clock",
       "Reference": "CLK",
       "Name": "CLK",
-      "Description": "Clock",
+      "Description": "1 Hz write strobe clock",
       "StringParameters": {
         "LogicalRow": "6",
         "LogicalColumn": "1"
@@ -204,11 +204,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "f19eac48-1de1-511b-93db-86718aa0e27f",
+      "Id": "7b7a395c-6840-444a-a4a0-9229dc007a8b",
       "ComponentType": "LogicInput",
       "Reference": "WE",
       "Name": "WE",
-      "Description": "LogicInput",
+      "Description": "Active-high write enable",
       "StringParameters": {
         "LogicalRow": "6",
         "LogicalColumn": "2",
@@ -226,11 +226,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "f0eed79b-7d95-578a-9cfc-5e45cde78d7a",
+      "Id": "3a01ab1e-1fd3-4707-9a2b-2ce60cef4636",
       "ComponentType": "LogicInput",
       "Reference": "OE",
       "Name": "OE",
-      "Description": "LogicInput",
+      "Description": "Active-high output enable",
       "StringParameters": {
         "LogicalRow": "7",
         "LogicalColumn": "2",
@@ -248,11 +248,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "Id": "00156b5e-f666-4c0b-8033-96583325555e",
       "ComponentType": "RAM",
       "Reference": "RAM16X4",
       "Name": "RAM16X4",
-      "Description": "RAM",
+      "Description": "16-word by 4-bit static RAM",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -267,33 +267,15 @@
       },
       "CustomProperties": {
         "HasOutputEnable": true,
-        "AsynchronousRead": true,
-        "ReadAddress": 0
+        "AsynchronousRead": true
       }
     },
     {
-      "Id": "6509ea24-3987-51d8-9478-b40adcdecc48",
-      "ComponentType": "LogicOutput",
-      "Reference": "Q0",
-      "Name": "Q0",
-      "Description": "LogicOutput",
-      "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "dd3c179d-ead6-5265-9e2a-855dd4cccbff",
-      "ComponentType": "LogicOutput",
-      "Reference": "Q1",
-      "Name": "Q1",
-      "Description": "LogicOutput",
+      "Id": "1a66922b-ec4a-4d08-a4c8-e34ba86a3ebc",
+      "ComponentType": "HexDigit",
+      "Reference": "HEX0",
+      "Name": "HEX0",
+      "Description": "Hexadecimal data output display",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "6"
@@ -306,28 +288,11 @@
       "CustomProperties": {}
     },
     {
-      "Id": "f9280d45-3aab-5109-9a76-ac5776030974",
+      "Id": "6306cf02-6f75-42b7-b8bb-98a594d4cc50",
       "ComponentType": "LogicOutput",
-      "Reference": "Q2",
-      "Name": "Q2",
-      "Description": "LogicOutput",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "90fd20f5-3a45-5b27-a1c0-d4e04c90e4e1",
-      "ComponentType": "LogicOutput",
-      "Reference": "Q3",
-      "Name": "Q3",
-      "Description": "LogicOutput",
+      "Reference": "Q0",
+      "Name": "Q0",
+      "Description": "Output bit 0",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "6"
@@ -340,15 +305,66 @@
       "CustomProperties": {}
     },
     {
-      "Id": "a6cfd15b-c4ea-5456-b2d2-8a26d7ed0460",
+      "Id": "41f0b39b-20aa-4e0d-bc2d-409dc0361259",
+      "ComponentType": "LogicOutput",
+      "Reference": "Q1",
+      "Name": "Q1",
+      "Description": "Output bit 1",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d747c782-707d-47de-882c-9e768a610934",
+      "ComponentType": "LogicOutput",
+      "Reference": "Q2",
+      "Name": "Q2",
+      "Description": "Output bit 2",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "bd41a4a6-b9ab-493b-91eb-425e09ebb5e4",
+      "ComponentType": "LogicOutput",
+      "Reference": "Q3",
+      "Name": "Q3",
+      "Description": "Output bit 3",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "8ae0b914-1520-480a-99e5-e71d5ba0ba5e",
       "ComponentType": "Probe",
       "Reference": "TP_Q0",
       "Name": "TP_Q0",
-      "Description": "Digital signal test point",
+      "Description": "RAM output bit 0 test point",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "4",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -363,15 +379,38 @@
       }
     },
     {
-      "Id": "bd70b6ea-01aa-4958-879f-49373ebc96d5",
+      "Id": "69ba9375-6801-4f56-8cbc-1241f18a4efc",
       "ComponentType": "Probe",
-      "Name": "TP_REFERENCE",
-      "Reference": "TP_REFERENCE",
-      "Description": "Reference test point with expected voltage.",
+      "Reference": "TP_Q1",
+      "Name": "TP_Q1",
+      "Description": "RAM output bit 1 test point",
       "StringParameters": {
-        "LogicalRow": "8",
-        "LogicalColumn": "1",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "5",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "0.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "49bceefb-02cf-4957-a186-65ec7fdd1c1a",
+      "ComponentType": "Probe",
+      "Reference": "TP_WE",
+      "Name": "TP_WE",
+      "Description": "Write-enable signal test point",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -388,156 +427,201 @@
   ],
   "Connections": [
     {
-      "Id": "2ca6dad2-6168-5681-bf73-3d10f9b2502c",
-      "FromComponentId": "d79972c5-273d-5d18-8621-32914b722fa0",
+      "Id": "b2e88115-9dcc-4655-ad83-d6deecfc669c",
+      "FromComponentId": "456f276a-c8cf-4cfc-8b65-1b187547cf97",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "addr0",
       "NetName": "ADDR0",
       "Resistance": 0.0
     },
     {
-      "Id": "a4b553fd-f8f9-5dce-9a1f-614c41f9ea52",
-      "FromComponentId": "6888b929-6b63-5e4b-af73-0df75ee83078",
+      "Id": "8c9da213-d68f-48a1-b523-3ef2d43db936",
+      "FromComponentId": "24fe2755-a033-4093-99f1-a36bfd14911b",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "ToPin": "din0",
-      "NetName": "DATA0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "1170fe14-7968-59c5-a61c-08748acd45ac",
-      "FromComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "FromPin": "dout0",
-      "ToComponentId": "6509ea24-3987-51d8-9478-b40adcdecc48",
-      "ToPin": "in",
-      "NetName": "Q0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "8c1581d3-c2d1-58c3-b78e-1027ce54ab05",
-      "FromComponentId": "3dc609bf-ae40-5501-8d04-8d495986f0f3",
-      "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "addr1",
       "NetName": "ADDR1",
       "Resistance": 0.0
     },
     {
-      "Id": "35c8bec1-13de-530a-862c-6f2fdd551b60",
-      "FromComponentId": "6c971d33-7c2b-5346-bbc6-7831212a28fb",
+      "Id": "d9e36f9d-f8af-4116-8204-312b94b449a3",
+      "FromComponentId": "ad49c628-1435-4ceb-88c2-f51c27bd038e",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "ToPin": "din1",
-      "NetName": "DATA1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "20f529f2-2173-562d-b214-9e3562c81a7f",
-      "FromComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "FromPin": "dout1",
-      "ToComponentId": "dd3c179d-ead6-5265-9e2a-855dd4cccbff",
-      "ToPin": "in",
-      "NetName": "Q1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "ef70c110-52ee-5be2-b9d6-15f1a14a23c9",
-      "FromComponentId": "c392c0a4-f521-5330-b2e8-5d11d728f690",
-      "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "addr2",
       "NetName": "ADDR2",
       "Resistance": 0.0
     },
     {
-      "Id": "919ccb5a-3360-5e41-84a4-ce44321bfea6",
-      "FromComponentId": "54311d15-b57a-54b4-9ba1-3805075c665b",
+      "Id": "5c03763d-e983-4722-9f3a-728462aa4db9",
+      "FromComponentId": "d79ee09a-9016-47be-9f1f-cb8e3e435e35",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "ToPin": "din2",
-      "NetName": "DATA2",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "3b0b3c52-e2e5-5bf3-86d8-d5207a05d3e6",
-      "FromComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "FromPin": "dout2",
-      "ToComponentId": "f9280d45-3aab-5109-9a76-ac5776030974",
-      "ToPin": "in",
-      "NetName": "Q2",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "577d171f-f3d8-5602-b937-d208dcf24439",
-      "FromComponentId": "b1734260-54ef-5394-bcc5-a69284d0a910",
-      "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "addr3",
       "NetName": "ADDR3",
       "Resistance": 0.0
     },
     {
-      "Id": "f704ffdd-89a5-5390-ab1f-22d447802870",
-      "FromComponentId": "43a0884c-070a-5594-9a9b-318174b6924e",
+      "Id": "f95cc221-838e-48b2-89ea-f87dd1d1bd61",
+      "FromComponentId": "87a559ff-b544-4349-ad46-fed0c3dcb841",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "ToPin": "din0",
+      "NetName": "DATA0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b6578fcd-7eb0-4a45-9718-76bd2035d7ef",
+      "FromComponentId": "1a05781f-a78b-4fa5-879e-9ed9a781104d",
+      "FromPin": "out",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "ToPin": "din1",
+      "NetName": "DATA1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b247b57c-2028-4c45-bfdd-0404a2191891",
+      "FromComponentId": "ac8c2c25-82c6-4d7c-bdf6-1f979e5aff77",
+      "FromPin": "out",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "ToPin": "din2",
+      "NetName": "DATA2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f453b7dd-ba99-4af1-ae0e-e31fa3991818",
+      "FromComponentId": "fea0f3d4-9abd-4506-bab0-8071a4ca9d83",
+      "FromPin": "out",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "din3",
       "NetName": "DATA3",
       "Resistance": 0.0
     },
     {
-      "Id": "32d6d7d6-e5da-592c-bc55-2321872ebc59",
-      "FromComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
-      "FromPin": "dout3",
-      "ToComponentId": "90fd20f5-3a45-5b27-a1c0-d4e04c90e4e1",
-      "ToPin": "in",
-      "NetName": "Q3",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "c4185a6c-7a94-5f8d-b7c7-dabe99016963",
-      "FromComponentId": "0609e843-d5e9-532c-aa57-222261ed8f1d",
+      "Id": "df21d2e9-ee5e-4dc9-8559-391a1fa134ca",
+      "FromComponentId": "3739641d-7050-4a17-a863-3a25f151698f",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "clk",
       "NetName": "CLK",
       "Resistance": 0.0
     },
     {
-      "Id": "046868b1-0279-523e-825a-06287add5a8a",
-      "FromComponentId": "f19eac48-1de1-511b-93db-86718aa0e27f",
+      "Id": "c1ad78bc-eb00-4680-a4e5-5c4c082c1100",
+      "FromComponentId": "7b7a395c-6840-444a-a4a0-9229dc007a8b",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "we",
       "NetName": "WE",
       "Resistance": 0.0
     },
     {
-      "Id": "33662ead-69b0-5a8b-a34d-0c5bc8b8272a",
-      "FromComponentId": "f0eed79b-7d95-578a-9cfc-5e45cde78d7a",
+      "Id": "46955da5-a6ca-4890-8578-530be3677310",
+      "FromComponentId": "3a01ab1e-1fd3-4707-9a2b-2ce60cef4636",
       "FromPin": "out",
-      "ToComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "ToComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "ToPin": "oe",
       "NetName": "OE",
       "Resistance": 0.0
     },
     {
-      "Id": "eecc8fa0-02f6-51ee-95ab-a2d610327d42",
-      "FromComponentId": "ef19ee38-0948-5213-a60c-1c43f51fc33d",
+      "Id": "7685ec35-82c5-442c-a16b-176b8506b91e",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
       "FromPin": "dout0",
-      "ToComponentId": "a6cfd15b-c4ea-5456-b2d2-8a26d7ed0460",
+      "ToComponentId": "1a66922b-ec4a-4d08-a4c8-e34ba86a3ebc",
+      "ToPin": "D0",
+      "NetName": "Q0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "db4ef361-6534-4b6c-a843-fc5b67f35821",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout1",
+      "ToComponentId": "1a66922b-ec4a-4d08-a4c8-e34ba86a3ebc",
+      "ToPin": "D1",
+      "NetName": "Q1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a9acb229-02cf-4d3a-8b04-2db06f89cf0f",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout2",
+      "ToComponentId": "1a66922b-ec4a-4d08-a4c8-e34ba86a3ebc",
+      "ToPin": "D2",
+      "NetName": "Q2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b8d5cf2b-1b39-4dea-9afa-ea77b944320a",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout3",
+      "ToComponentId": "1a66922b-ec4a-4d08-a4c8-e34ba86a3ebc",
+      "ToPin": "D3",
+      "NetName": "Q3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e0cbbc92-d050-49c5-89c7-af994b0f2b2e",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout0",
+      "ToComponentId": "6306cf02-6f75-42b7-b8bb-98a594d4cc50",
       "ToPin": "in",
       "NetName": "Q0",
       "Resistance": 0.0
     },
     {
-      "Id": "1cd0fcee-f3f1-45ec-8840-532149d5fe5b",
-      "FromComponentId": "bd70b6ea-01aa-4958-879f-49373ebc96d5",
-      "FromPin": "in",
-      "ToComponentId": "d79972c5-273d-5d18-8621-32914b722fa0",
-      "ToPin": "out",
-      "NetName": "ADDR0",
+      "Id": "00f2e2c7-1444-4745-964a-2d4e6a7366c4",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout1",
+      "ToComponentId": "41f0b39b-20aa-4e0d-bc2d-409dc0361259",
+      "ToPin": "in",
+      "NetName": "Q1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "017dd7f2-e6a6-4605-9020-05051c6ed0b4",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout2",
+      "ToComponentId": "d747c782-707d-47de-882c-9e768a610934",
+      "ToPin": "in",
+      "NetName": "Q2",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "839154ea-2e1e-4421-843c-ec4cbabadba6",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout3",
+      "ToComponentId": "bd41a4a6-b9ab-493b-91eb-425e09ebb5e4",
+      "ToPin": "in",
+      "NetName": "Q3",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "cbb7b429-ddf9-4fe8-a4e4-cd9fff3039a6",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout0",
+      "ToComponentId": "8ae0b914-1520-480a-99e5-e71d5ba0ba5e",
+      "ToPin": "in",
+      "NetName": "Q0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "54d0b713-9f51-4ab8-af68-291731130f0d",
+      "FromComponentId": "00156b5e-f666-4c0b-8033-96583325555e",
+      "FromPin": "dout1",
+      "ToComponentId": "69ba9375-6801-4f56-8cbc-1241f18a4efc",
+      "ToPin": "in",
+      "NetName": "Q1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "57cbf77e-1856-4c8c-88f2-e63f5472a724",
+      "FromComponentId": "7b7a395c-6840-444a-a4a0-9229dc007a8b",
+      "FromPin": "out",
+      "ToComponentId": "49bceefb-02cf-4957-a186-65ec7fdd1c1a",
+      "ToPin": "in",
+      "NetName": "WE",
       "Resistance": 0.0
     }
   ]

@@ -3,14 +3,15 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Digital Stopwatch",
-  "Description": "Two cascaded decade counters provide a visible stopwatch count with toggleable run/reset controls, clock, digit displays, and counter probes.",
+  "Description": "Two-digit 00-59 digital seconds stopwatch using cascaded BCD decade counters, 1 Hz clock generator, interactive RUN and RESET controls, and dual hexadecimal digit displays.",
   "Components": [
     {
       "Id": "aabfdabb-bb08-5ca5-a197-578d0210f89d",
+      "StableTypeId": "digital.clock",
       "ComponentType": "Clock",
       "Reference": "CLK",
       "Name": "CLK",
-      "Description": "Clock",
+      "Description": "1 Hz master timebase clock generator (50% duty cycle)",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1"
@@ -18,7 +19,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "Frequency": 1.0,
         "DutyCycle": 0.5,
@@ -29,10 +30,11 @@
     },
     {
       "Id": "e4285191-1746-549c-a4a8-5e6a1e12e69e",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "RUN",
       "Name": "RUN",
-      "Description": "User-toggleable input",
+      "Description": "Stopwatch run/pause enable control (EN)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "1",
@@ -41,7 +43,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -51,10 +53,11 @@
     },
     {
       "Id": "f06a933e-6176-5b51-b807-05c1bbc012a9",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "RESET",
       "Name": "RESET",
-      "Description": "User-toggleable input",
+      "Description": "Stopwatch reset to 00 control (CLR)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -63,7 +66,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -73,76 +76,86 @@
     },
     {
       "Id": "41b9f60f-469f-5dd7-83b0-2db27dbb1edc",
+      "StableTypeId": "electronics.counter",
       "ComponentType": "Counter",
       "Reference": "DIGIT0",
       "Name": "DIGIT0",
-      "Description": "Counter",
+      "Description": "Ones-place modulo-10 BCD counter (0-9)",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "BitWidth": 4,
-        "MaxValue": 9
+        "BitWidth": 4.0,
+        "MaxValue": 9.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "GoalAction": "Wrap"
+      }
     },
     {
       "Id": "1e4ca8b1-cb81-5abb-9b34-cf1e2eee4037",
+      "StableTypeId": "electronics.counter",
       "ComponentType": "Counter",
       "Reference": "DIGIT1",
       "Name": "DIGIT1",
-      "Description": "Counter",
+      "Description": "Tens-place modulo-6 BCD counter (0-5)",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "BitWidth": 4,
-        "MaxValue": 5
+        "BitWidth": 4.0,
+        "MaxValue": 5.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "GoalAction": "Wrap"
+      }
     },
     {
       "Id": "09c99a62-41d7-5546-8158-73e12249c5e5",
+      "StableTypeId": "io.hexdigit",
       "ComponentType": "HexDigit",
       "Reference": "DISPLAY0",
       "Name": "DISPLAY0",
-      "Description": "Visible hexadecimal/seven-segment digit display",
+      "Description": "Ones-place seconds digit display",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "6"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
       "Id": "d6bd307d-c02e-5303-b76e-0d7509cf84d2",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_DIGIT0",
       "Name": "TP_DIGIT0",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Ones-place counter LSB probe (Q0)",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "6",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -153,36 +166,40 @@
     },
     {
       "Id": "d4a0cd0c-9007-553a-8788-738579c386c8",
+      "StableTypeId": "io.hexdigit",
       "ComponentType": "HexDigit",
       "Reference": "DISPLAY1",
       "Name": "DISPLAY1",
-      "Description": "Visible hexadecimal/seven-segment digit display",
+      "Description": "Tens-place seconds digit display",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "6"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
       "Id": "e1e38cdd-f684-5596-83f0-d8168e86d437",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_DIGIT1",
       "Name": "TP_DIGIT1",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Tens-place counter LSB probe (Q0)",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "6",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "4",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -257,6 +274,15 @@
       "Resistance": 0.0
     },
     {
+      "Id": "54063cf0-8216-582e-a51c-249003507f42",
+      "FromComponentId": "41b9f60f-469f-5dd7-83b0-2db27dbb1edc",
+      "FromPin": "Q0",
+      "ToComponentId": "d6bd307d-c02e-5303-b76e-0d7509cf84d2",
+      "ToPin": "in",
+      "NetName": "DIGIT00",
+      "Resistance": 0.0
+    },
+    {
       "Id": "f2e22bbc-4cf2-5727-b4a1-61bce082d46d",
       "FromComponentId": "41b9f60f-469f-5dd7-83b0-2db27dbb1edc",
       "FromPin": "Q1",
@@ -284,20 +310,20 @@
       "Resistance": 0.0
     },
     {
-      "Id": "54063cf0-8216-582e-a51c-249003507f42",
-      "FromComponentId": "41b9f60f-469f-5dd7-83b0-2db27dbb1edc",
-      "FromPin": "Q0",
-      "ToComponentId": "d6bd307d-c02e-5303-b76e-0d7509cf84d2",
-      "ToPin": "in",
-      "NetName": "DIGIT0",
-      "Resistance": 0.0
-    },
-    {
       "Id": "71aeb9c1-4315-5f70-bdaf-824bccfa5e9f",
       "FromComponentId": "1e4ca8b1-cb81-5abb-9b34-cf1e2eee4037",
       "FromPin": "Q0",
       "ToComponentId": "d4a0cd0c-9007-553a-8788-738579c386c8",
       "ToPin": "D0",
+      "NetName": "DIGIT10",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8238f610-f349-51b4-817c-ad32df7b6dcd",
+      "FromComponentId": "1e4ca8b1-cb81-5abb-9b34-cf1e2eee4037",
+      "FromPin": "Q0",
+      "ToComponentId": "e1e38cdd-f684-5596-83f0-d8168e86d437",
+      "ToPin": "in",
       "NetName": "DIGIT10",
       "Resistance": 0.0
     },
@@ -326,15 +352,6 @@
       "ToComponentId": "d4a0cd0c-9007-553a-8788-738579c386c8",
       "ToPin": "D3",
       "NetName": "DIGIT13",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "8238f610-f349-51b4-817c-ad32df7b6dcd",
-      "FromComponentId": "1e4ca8b1-cb81-5abb-9b34-cf1e2eee4037",
-      "FromPin": "Q0",
-      "ToComponentId": "e1e38cdd-f684-5596-83f0-d8168e86d437",
-      "ToPin": "in",
-      "NetName": "DIGIT1",
       "Resistance": 0.0
     }
   ]

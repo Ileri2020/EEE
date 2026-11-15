@@ -3,124 +3,153 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Cockcroft-Walton Voltage Multiplier",
-  "Description": "Two-stage low-voltage diode-capacitor ladder demonstration with a sinusoidal input and output test points. This teaching model is not a high-voltage generator.",
+  "Description": "Two-stage Cockcroft-Walton cascade voltage multiplier ladder converting 10V peak AC into a 4x multiplied 37.5V DC output via sequential diode-capacitor charge-pumping stages, ground clamping, and high-impedance resistive termination.",
   "Components": [
     {
-      "Id": "c9333956-36b3-53a9-86ec-82fd7d1afe92",
-      "ComponentType": "Ground",
-      "Reference": "GND",
-      "Name": "GND",
-      "Description": "Circuit return",
-      "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "1"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "0f23ea30-da3c-5169-81eb-f4040e00321e",
+      "Id": "d57c2c25-c244-4ceb-82d0-c594d2a3f4cb",
       "ComponentType": "VoltageSource",
-      "Reference": "VIN",
-      "Name": "VIN",
-      "Description": "Adjustable low-voltage input source",
+      "Reference": "VAC",
+      "Name": "VAC",
+      "Description": "10V peak 1 kHz AC input source",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Voltage": 5.0,
+        "Voltage": 7.07,
         "SineOffset": 0.0,
-        "SineAmplitude": 5.0,
+        "SineAmplitude": 10.0,
         "SineFrequency": 1000.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 5.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.005,
-        "PulsePeriod": 0.01
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "c7ab9c14-4bd3-5757-b45a-8293c20ff30b",
-      "ComponentType": "Probe",
-      "Reference": "TP_IN",
-      "Name": "TP_IN",
-      "Description": "Input voltage test point",
+      "Id": "a5eac4d0-89d6-489e-9dcf-a2d0c1f1a1bd",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Circuit ground reference",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "5"
+        "LogicalRow": "8",
+        "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "InputImpedance": 10000000.0
-      },
-      "CustomProperties": {
-        "MeasurementMode": "Voltage",
-        "Unit": "V"
-      }
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
     },
     {
-      "Id": "fac3e6e9-6d3e-5b36-a9eb-c436351f7421",
-      "ComponentType": "Resistor",
-      "Reference": "R_SOURCE",
-      "Name": "R_SOURCE",
-      "Description": "Source and current limiting resistance",
+      "Id": "9add11bb-bcc0-42b6-8278-c8fddec74635",
+      "ComponentType": "Capacitor",
+      "Reference": "C1",
+      "Name": "C1",
+      "Description": "Stage 1 pump capacitor (100 nF)",
       "StringParameters": {
-        "LogicalRow": "3",
+        "LogicalRow": "2",
         "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Resistance": 100.0
+        "Capacitance": 1e-07,
+        "InitialCondition": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "7e68ab3c-e297-527d-8923-c7ad36335ec7",
+      "Id": "a28ce5ad-974c-4ab6-bc13-3e3413bdce3f",
       "ComponentType": "Diode",
       "Reference": "D1",
       "Name": "D1",
-      "Description": "Multiplier rectifier",
+      "Description": "Stage 1 ground clamp diode",
       "StringParameters": {
-        "LogicalRow": "3",
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "041648aa-9b58-411f-8488-4e339cd8bba4",
+      "ComponentType": "Diode",
+      "Reference": "D2",
+      "Name": "D2",
+      "Description": "Stage 1 charging diode",
+      "StringParameters": {
+        "LogicalRow": "2",
         "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Is": 1e-14,
-        "N": 1.0
+        "SaturationCurrent": 1e-14
       },
       "CustomProperties": {}
     },
     {
-      "Id": "62957e0c-3eab-5dda-af9f-dcfb56fe181f",
+      "Id": "4e98d08a-6951-448c-8514-87b94c14cdb2",
       "ComponentType": "Capacitor",
-      "Reference": "C1",
-      "Name": "C1",
-      "Description": "First-stage charge storage",
+      "Reference": "C2",
+      "Name": "C2",
+      "Description": "Stage 1 smoothing capacitor (holds 2*Vpk)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-07,
+        "InitialCondition": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2f54c3ff-78d9-4882-9746-3d5abab27d96",
+      "ComponentType": "Capacitor",
+      "Reference": "C3",
+      "Name": "C3",
+      "Description": "Stage 2 transfer capacitor (100 nF)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Capacitance": 1e-07,
+        "InitialCondition": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d9d94da3-9991-4825-bb4f-e449ea04dbf5",
+      "ComponentType": "Diode",
+      "Reference": "D3",
+      "Name": "D3",
+      "Description": "Stage 2 transfer diode",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "4"
@@ -128,106 +157,85 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Capacitance": 1e-06
+        "SaturationCurrent": 1e-14
       },
       "CustomProperties": {}
     },
     {
-      "Id": "4f884532-4337-5a4e-b666-3a0c0f343f81",
+      "Id": "1931c8de-41aa-4431-9413-b28f29447b52",
       "ComponentType": "Diode",
-      "Reference": "D2",
-      "Name": "D2",
-      "Description": "Second-stage rectifier",
+      "Reference": "D4",
+      "Name": "D4",
+      "Description": "Stage 2 output rectifier diode",
       "StringParameters": {
-        "LogicalRow": "5",
+        "LogicalRow": "2",
         "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Is": 1e-14,
-        "N": 1.0
+        "SaturationCurrent": 1e-14
       },
       "CustomProperties": {}
     },
     {
-      "Id": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
+      "Id": "b97755ed-cf68-4c30-b451-6f3661f991c6",
       "ComponentType": "Capacitor",
-      "Reference": "C2",
-      "Name": "C2",
-      "Description": "Second-stage charge storage",
+      "Reference": "C4",
+      "Name": "C4",
+      "Description": "Stage 2 stacking capacitor (holds 4*Vpk)",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Capacitance": 1e-06
+        "Capacitance": 1e-07,
+        "InitialCondition": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "6d01a74f-a43e-5502-bd0c-a6be568c8387",
+      "Id": "8effce6b-b0cf-404d-906a-1391e6f1dc03",
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Output load",
+      "Description": "High-impedance bleeder / measurement load (1 M\u03a9)",
       "StringParameters": {
-        "LogicalRow": "5",
+        "LogicalRow": "3",
         "LogicalColumn": "6"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Resistance": 1000.0
+        "Resistance": 1000000.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "cf3fb48e-b27d-55e6-bf86-9c181d5b763f",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage output indicator",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "77a56913-568d-5dd2-a641-d4cc38837e0b",
+      "Id": "c29e7203-490a-4a11-a39a-ee77a7df6ab9",
       "ComponentType": "Probe",
-      "Reference": "TP_OUT",
-      "Name": "TP_OUT",
-      "Description": "Output voltage and current test point",
+      "Reference": "TP_VIN",
+      "Name": "TP_VIN",
+      "Description": "AC input peak voltage probe (10V pk)",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "1.877e-05"
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "10.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -237,187 +245,213 @@
       }
     },
     {
-      "Id": "4f197774-6286-55ce-a534-c6f6a729e16e",
-      "ComponentType": "Resistor",
-      "Name": "R_BLEED_1",
-      "Reference": "R_BLEED_1",
-      "Description": "High-value DC path across the series capacitor to prevent floating nodes.",
+      "Id": "f9005b98-e8ce-4aa6-9d99-eea30b62750c",
+      "ComponentType": "Probe",
+      "Reference": "TP_STAGE1",
+      "Name": "TP_STAGE1",
+      "Description": "Stage 1 (2x) multiplied DC voltage probe (19.2V)",
       "StringParameters": {
-        "LogicalRow": "10",
-        "LogicalColumn": "6"
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "19.2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Resistance": 10000000.0
+        "InputImpedance": 10000000.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
     },
     {
-      "Id": "9ad371ca-8498-5b0c-af66-f7743fd5018d",
-      "ComponentType": "Resistor",
-      "Name": "R_BLEED_2",
-      "Reference": "R_BLEED_2",
-      "Description": "High-value DC path across the series capacitor to prevent floating nodes.",
+      "Id": "d734278a-cc00-4d91-9f16-4ba6350e1566",
+      "ComponentType": "Probe",
+      "Reference": "TP_STAGE2",
+      "Name": "TP_STAGE2",
+      "Description": "Stage 2 (4x) multiplied DC output probe (37.5V)",
       "StringParameters": {
-        "LogicalRow": "11",
-        "LogicalColumn": "6"
+        "LogicalRow": "1",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "37.5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Resistance": 10000000.0
+        "InputImpedance": 10000000.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
     }
   ],
   "Connections": [
     {
-      "Id": "dcd1a5fa-1824-56b2-a0ef-c463ac08c281",
-      "FromComponentId": "0f23ea30-da3c-5169-81eb-f4040e00321e",
+      "Id": "cca59466-2435-4ab2-b898-db4eba7fb1ac",
+      "FromComponentId": "d57c2c25-c244-4ceb-82d0-c594d2a3f4cb",
       "FromPin": "negative",
-      "ToComponentId": "c9333956-36b3-53a9-86ec-82fd7d1afe92",
+      "ToComponentId": "a5eac4d0-89d6-489e-9dcf-a2d0c1f1a1bd",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "c1ccfda5-ca9f-519e-908e-6711f589536e",
-      "FromComponentId": "0f23ea30-da3c-5169-81eb-f4040e00321e",
+      "Id": "d7c2e7d9-4a09-4d8c-b07a-be7dd325117e",
+      "FromComponentId": "d57c2c25-c244-4ceb-82d0-c594d2a3f4cb",
       "FromPin": "positive",
-      "ToComponentId": "c7ab9c14-4bd3-5757-b45a-8293c20ff30b",
-      "ToPin": "in",
-      "NetName": "VIN_NET",
+      "ToComponentId": "9add11bb-bcc0-42b6-8278-c8fddec74635",
+      "ToPin": "pin1",
+      "NetName": "AC_HOT",
       "Resistance": 0.0
     },
     {
-      "Id": "5652022a-0dc3-534c-a888-aa716a25d0e0",
-      "FromComponentId": "0f23ea30-da3c-5169-81eb-f4040e00321e",
+      "Id": "3c45224a-17ce-4a84-986a-4acf017c8fdd",
+      "FromComponentId": "9add11bb-bcc0-42b6-8278-c8fddec74635",
+      "FromPin": "pin2",
+      "ToComponentId": "a28ce5ad-974c-4ab6-bc13-3e3413bdce3f",
+      "ToPin": "cathode",
+      "NetName": "NODE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1492520a-526a-4450-b067-c0a8fda1a625",
+      "FromComponentId": "9add11bb-bcc0-42b6-8278-c8fddec74635",
+      "FromPin": "pin2",
+      "ToComponentId": "041648aa-9b58-411f-8488-4e339cd8bba4",
+      "ToPin": "anode",
+      "NetName": "NODE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "72879148-707e-4c39-ba1b-dba449fa71d4",
+      "FromComponentId": "9add11bb-bcc0-42b6-8278-c8fddec74635",
+      "FromPin": "pin2",
+      "ToComponentId": "2f54c3ff-78d9-4882-9746-3d5abab27d96",
+      "ToPin": "pin1",
+      "NetName": "NODE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "770ccfa2-f56a-4a9f-a744-6589c6857cce",
+      "FromComponentId": "a28ce5ad-974c-4ab6-bc13-3e3413bdce3f",
+      "FromPin": "anode",
+      "ToComponentId": "a5eac4d0-89d6-489e-9dcf-a2d0c1f1a1bd",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "08eccd06-f518-42ef-9ee8-69f0dd7b790d",
+      "FromComponentId": "041648aa-9b58-411f-8488-4e339cd8bba4",
+      "FromPin": "cathode",
+      "ToComponentId": "4e98d08a-6951-448c-8514-87b94c14cdb2",
+      "ToPin": "pin1",
+      "NetName": "NODE_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1996199c-7c9d-470d-a95b-51d5924fdfe9",
+      "FromComponentId": "041648aa-9b58-411f-8488-4e339cd8bba4",
+      "FromPin": "cathode",
+      "ToComponentId": "d9d94da3-9991-4825-bb4f-e449ea04dbf5",
+      "ToPin": "anode",
+      "NetName": "NODE_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3efa8fee-7e26-4418-8b7d-4c2d8d18b98b",
+      "FromComponentId": "041648aa-9b58-411f-8488-4e339cd8bba4",
+      "FromPin": "cathode",
+      "ToComponentId": "b97755ed-cf68-4c30-b451-6f3661f991c6",
+      "ToPin": "pin2",
+      "NetName": "NODE_B",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "397ddaed-e862-4818-a140-ab4ea33d2fb2",
+      "FromComponentId": "4e98d08a-6951-448c-8514-87b94c14cdb2",
+      "FromPin": "pin2",
+      "ToComponentId": "a5eac4d0-89d6-489e-9dcf-a2d0c1f1a1bd",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7022f909-5b3a-4be2-9a95-bf0fd6ed94a8",
+      "FromComponentId": "2f54c3ff-78d9-4882-9746-3d5abab27d96",
+      "FromPin": "pin2",
+      "ToComponentId": "d9d94da3-9991-4825-bb4f-e449ea04dbf5",
+      "ToPin": "cathode",
+      "NetName": "NODE_C",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "276c55b4-9cfd-4323-bdbf-ca041e38939d",
+      "FromComponentId": "2f54c3ff-78d9-4882-9746-3d5abab27d96",
+      "FromPin": "pin2",
+      "ToComponentId": "1931c8de-41aa-4431-9413-b28f29447b52",
+      "ToPin": "anode",
+      "NetName": "NODE_C",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "8cdc5c1b-4673-4fb6-a62a-5cb6273da764",
+      "FromComponentId": "1931c8de-41aa-4431-9413-b28f29447b52",
+      "FromPin": "cathode",
+      "ToComponentId": "b97755ed-cf68-4c30-b451-6f3661f991c6",
+      "ToPin": "pin1",
+      "NetName": "VOUT_4X",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "e4ed5701-a0a0-4ab5-8749-a62c4285fbfa",
+      "FromComponentId": "1931c8de-41aa-4431-9413-b28f29447b52",
+      "FromPin": "cathode",
+      "ToComponentId": "8effce6b-b0cf-404d-906a-1391e6f1dc03",
+      "ToPin": "pin1",
+      "NetName": "VOUT_4X",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d0cce023-da8e-491a-b6df-59507f67b8b8",
+      "FromComponentId": "8effce6b-b0cf-404d-906a-1391e6f1dc03",
+      "FromPin": "pin2",
+      "ToComponentId": "a5eac4d0-89d6-489e-9dcf-a2d0c1f1a1bd",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "905f3585-92f2-441b-8c4a-a797d4fb5868",
+      "FromComponentId": "d57c2c25-c244-4ceb-82d0-c594d2a3f4cb",
       "FromPin": "positive",
-      "ToComponentId": "fac3e6e9-6d3e-5b36-a9eb-c436351f7421",
-      "ToPin": "pin1",
-      "NetName": "VIN_NET",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "e0ac85b6-6643-50a0-899e-b7424934015e",
-      "FromComponentId": "fac3e6e9-6d3e-5b36-a9eb-c436351f7421",
-      "FromPin": "pin2",
-      "ToComponentId": "7e68ab3c-e297-527d-8923-c7ad36335ec7",
-      "ToPin": "anode",
-      "NetName": "STAGE_0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "2e6051d5-afbf-5487-9d36-9a1e511b3903",
-      "FromComponentId": "7e68ab3c-e297-527d-8923-c7ad36335ec7",
-      "FromPin": "cathode",
-      "ToComponentId": "62957e0c-3eab-5dda-af9f-dcfb56fe181f",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "6044a36b-af78-5398-8cda-3de57edcac42",
-      "FromComponentId": "62957e0c-3eab-5dda-af9f-dcfb56fe181f",
-      "FromPin": "pin2",
-      "ToComponentId": "4f884532-4337-5a4e-b666-3a0c0f343f81",
-      "ToPin": "anode",
-      "NetName": "STAGE_2",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "1402de52-94b4-5926-baa5-c8ff7fa7bfb6",
-      "FromComponentId": "4f884532-4337-5a4e-b666-3a0c0f343f81",
-      "FromPin": "cathode",
-      "ToComponentId": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
-      "ToPin": "pin1",
-      "NetName": "STAGE_3",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "32c76eb9-d253-5567-ae5f-d2bd42535050",
-      "FromComponentId": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
-      "FromPin": "pin2",
-      "ToComponentId": "6d01a74f-a43e-5502-bd0c-a6be568c8387",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "eacec5bd-880c-5664-8e5a-7c0acf5a6122",
-      "FromComponentId": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
-      "FromPin": "pin2",
-      "ToComponentId": "cf3fb48e-b27d-55e6-bf86-9c181d5b763f",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "a9469f6a-2363-5e0c-9ea4-16410a707b2e",
-      "FromComponentId": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
-      "FromPin": "pin2",
-      "ToComponentId": "77a56913-568d-5dd2-a641-d4cc38837e0b",
+      "ToComponentId": "c29e7203-490a-4a11-a39a-ee77a7df6ab9",
       "ToPin": "in",
-      "NetName": "VOUT",
+      "NetName": "AC_HOT",
       "Resistance": 0.0
     },
     {
-      "Id": "f8d65431-4c9c-51f7-85a0-b3bc09d94530",
-      "FromComponentId": "6d01a74f-a43e-5502-bd0c-a6be568c8387",
-      "FromPin": "pin2",
-      "ToComponentId": "c9333956-36b3-53a9-86ec-82fd7d1afe92",
-      "ToPin": "gnd",
-      "NetName": "0",
+      "Id": "ae3b64c1-3bb4-42c4-9a46-247fa8974684",
+      "FromComponentId": "041648aa-9b58-411f-8488-4e339cd8bba4",
+      "FromPin": "cathode",
+      "ToComponentId": "f9005b98-e8ce-4aa6-9d99-eea30b62750c",
+      "ToPin": "in",
+      "NetName": "NODE_B",
       "Resistance": 0.0
     },
     {
-      "Id": "e681fbfc-8163-5eea-a0cd-4a77a66b974d",
-      "FromComponentId": "cf3fb48e-b27d-55e6-bf86-9c181d5b763f",
-      "FromPin": "pin2",
-      "ToComponentId": "c9333956-36b3-53a9-86ec-82fd7d1afe92",
-      "ToPin": "gnd",
-      "NetName": "0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "b519ca98-66d4-57d4-901b-0a5d40813741",
-      "FromComponentId": "4f197774-6286-55ce-a534-c6f6a729e16e",
-      "FromPin": "pin1",
-      "ToComponentId": "62957e0c-3eab-5dda-af9f-dcfb56fe181f",
-      "ToPin": "pin1",
-      "NetName": "R_BLEED_1_PIN1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "1de7f542-c481-5d83-8a72-cb2329e85201",
-      "FromComponentId": "4f197774-6286-55ce-a534-c6f6a729e16e",
-      "FromPin": "pin2",
-      "ToComponentId": "62957e0c-3eab-5dda-af9f-dcfb56fe181f",
-      "ToPin": "pin2",
-      "NetName": "R_BLEED_1_PIN2",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "2a616d0e-7d06-5f18-a5de-7865eec78e28",
-      "FromComponentId": "9ad371ca-8498-5b0c-af66-f7743fd5018d",
-      "FromPin": "pin1",
-      "ToComponentId": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
-      "ToPin": "pin1",
-      "NetName": "R_BLEED_2_PIN1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "ebec614d-4892-55fe-9051-9dcac3285ee5",
-      "FromComponentId": "9ad371ca-8498-5b0c-af66-f7743fd5018d",
-      "FromPin": "pin2",
-      "ToComponentId": "b69c625d-cd3b-52d4-b323-b94a584a83fc",
-      "ToPin": "pin2",
-      "NetName": "R_BLEED_2_PIN2",
+      "Id": "6733568b-222b-4f6b-89c3-8e778249c1ae",
+      "FromComponentId": "1931c8de-41aa-4431-9413-b28f29447b52",
+      "FromPin": "cathode",
+      "ToComponentId": "d734278a-cc00-4d91-9f16-4ba6350e1566",
+      "ToPin": "in",
+      "NetName": "VOUT_4X",
       "Resistance": 0.0
     }
   ]

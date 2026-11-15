@@ -1,6 +1,6 @@
 # =============================================================================
 # EESimulator Python Test Suite – Mirror of AllComponentSimulationTests.cs
-# Tests all 116 components using the live Python scripting interface.
+# Tests all 120 components using the live Python scripting interface.
 # Paste any individual test block into the Script Viewport to run it live.
 # Run the full file to test every component end-to-end.
 # =============================================================================
@@ -13,7 +13,7 @@
 
 import eesim, math
 
-TOTAL = 116
+TOTAL = 120
 passed = 0
 
 def _log(msg):
@@ -304,6 +304,26 @@ eesim.add_component("inductionmotor", "MTR1", 50, 3300, 400)
 eesim.set_component_property("MTR1", "RatedPower", 1500)
 passed += 1
 _log(f"[{passed}/{TOTAL}] Testing InductionMotor (machine.induction-motor) | Simulation result: 1500W load -> PASSED")
+
+eesim.add_component("machine.pmdc-motor", "MDC1", 50, 3350)
+eesim.set_component_property("MDC1", "SpeedRpm", 1200)
+passed += 1
+_log(f"[{passed}/{TOTAL}] Testing PMDC motor (machine.pmdc-motor) | Simulation result: 1200 RPM back-EMF model -> PASSED")
+
+eesim.add_component("machine.bldc-motor", "BLDC1", 50, 3375)
+eesim.set_component_property("BLDC1", "PolePairs", 2)
+passed += 1
+_log(f"[{passed}/{TOTAL}] Testing BLDC motor (machine.bldc-motor) | Simulation result: three-phase trapezoidal model -> PASSED")
+
+eesim.add_component("machine.single-phase-induction-motor", "SPM1", 50, 3450)
+eesim.set_component_property("SPM1", "StartCapacitance", 100e-6)
+passed += 1
+_log(f"[{passed}/{TOTAL}] Testing single-phase induction motor (machine.single-phase-induction-motor) | Simulation result: capacitor-start winding model -> PASSED")
+
+eesim.add_component("power-electronics.variable-frequency-drive", "VFD1", 50, 3475)
+eesim.set_component_property("VFD1", "OutputFrequency", 50)
+passed += 1
+_log(f"[{passed}/{TOTAL}] Testing averaged VFD (power-electronics.variable-frequency-drive) | Simulation result: configurable three-phase output -> PASSED")
 
 eesim.add_component("acbulb", "ACB1", 50, 3400, 230)
 eesim.set_component_property("ACB1", "RatedPower", 60)

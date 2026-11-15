@@ -3,14 +3,15 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Eight-Bit Binary Counter",
-  "Description": "Eight-bit clocked counter with toggleable enable, direction and reset; two hexadecimal displays and carry/output probes.",
+  "Description": "Synchronous 8-bit binary up/down counter with interactive clock, enable, direction, reset controls, dual hexadecimal digit displays (HEX0/HEX1), carry output, and bit probes.",
   "Components": [
     {
       "Id": "1949fa9d-6fde-5d97-93d8-e8bcb1fd9f29",
+      "StableTypeId": "digital.clock",
       "ComponentType": "Clock",
       "Reference": "CLK",
       "Name": "CLK",
-      "Description": "Clock",
+      "Description": "1 Hz counter clock generator (50% duty cycle)",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1"
@@ -18,7 +19,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "Frequency": 1.0,
         "DutyCycle": 0.5,
@@ -29,10 +30,11 @@
     },
     {
       "Id": "07a7327a-a499-5082-9d17-99c1be4f8e47",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "ENABLE",
       "Name": "ENABLE",
-      "Description": "User-toggleable input",
+      "Description": "Counter count-enable control (EN)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "1",
@@ -41,7 +43,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -51,10 +53,11 @@
     },
     {
       "Id": "bd4fcc0a-815a-5dc4-8964-1015c462958a",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "DIRECTION",
       "Name": "DIRECTION",
-      "Description": "User-toggleable input",
+      "Description": "Count direction control (HIGH = Count Up, LOW = Count Down)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -63,7 +66,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -73,10 +76,11 @@
     },
     {
       "Id": "e2db40e4-8150-5dcb-87e2-3b6046637906",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "RESET",
       "Name": "RESET",
-      "Description": "User-toggleable input",
+      "Description": "Synchronous counter clear control (CLR)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "1",
@@ -85,7 +89,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -95,30 +99,52 @@
     },
     {
       "Id": "9ea7170b-b2dc-5c62-b307-2d63709d022d",
+      "StableTypeId": "electronics.counter",
       "ComponentType": "Counter",
       "Reference": "COUNT8",
       "Name": "COUNT8",
-      "Description": "Counter",
+      "Description": "8-bit binary up/down counter (0-255 wrap)",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "BitWidth": 8,
-        "MaxValue": 255
+        "BitWidth": 8.0,
+        "MaxValue": 255.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "GoalAction": "Wrap"
+      }
     },
     {
       "Id": "d8a2793d-d654-5644-bb15-c3e3cd88a0ba",
+      "StableTypeId": "io.hexdigit",
       "ComponentType": "HexDigit",
       "Reference": "HEX0",
       "Name": "HEX0",
-      "Description": "Visible hexadecimal/seven-segment digit display",
+      "Description": "Low-nibble hexadecimal display (Q0..Q3)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "bd864cb4-77f1-525d-859e-9bf345585015",
+      "StableTypeId": "io.hexdigit",
+      "ComponentType": "HexDigit",
+      "Reference": "HEX1",
+      "Name": "HEX1",
+      "Description": "High-nibble hexadecimal display (Q4..Q7)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "6"
@@ -126,59 +152,46 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "bd864cb4-77f1-525d-859e-9bf345585015",
-      "ComponentType": "HexDigit",
-      "Reference": "HEX1",
-      "Name": "HEX1",
-      "Description": "Visible hexadecimal/seven-segment digit display",
-      "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "7"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
       "Id": "97c1eb0b-c348-5ade-ab60-539504c66e87",
+      "StableTypeId": "digital.logicoutput",
       "ComponentType": "LogicOutput",
       "Reference": "CARRY",
       "Name": "CARRY",
-      "Description": "LogicOutput",
+      "Description": "Counter terminal overflow/underflow carry flag",
       "StringParameters": {
         "LogicalRow": "4",
-        "LogicalColumn": "8"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
       "Id": "a36a51be-473c-5fef-a2e4-cf873ece8ce2",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_Q0",
       "Name": "TP_Q0",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Counter LSB test point (toggles at f_clk/2)",
       "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -189,19 +202,22 @@
     },
     {
       "Id": "ac6e9240-6238-5300-8972-08bd9fc0fd44",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_Q7",
       "Name": "TP_Q7",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Counter MSB test point (toggles at f_clk/256)",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "3",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -254,6 +270,15 @@
       "FromPin": "Q0",
       "ToComponentId": "d8a2793d-d654-5644-bb15-c3e3cd88a0ba",
       "ToPin": "D0",
+      "NetName": "HEX00",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "889b2797-94ac-55fd-b45d-1f68db98b4f2",
+      "FromComponentId": "9ea7170b-b2dc-5c62-b307-2d63709d022d",
+      "FromPin": "Q0",
+      "ToComponentId": "a36a51be-473c-5fef-a2e4-cf873ece8ce2",
+      "ToPin": "in",
       "NetName": "HEX00",
       "Resistance": 0.0
     },
@@ -321,30 +346,21 @@
       "Resistance": 0.0
     },
     {
+      "Id": "0ce98d86-6ec7-5e9e-af1f-61e15a751f61",
+      "FromComponentId": "9ea7170b-b2dc-5c62-b307-2d63709d022d",
+      "FromPin": "Q7",
+      "ToComponentId": "ac6e9240-6238-5300-8972-08bd9fc0fd44",
+      "ToPin": "in",
+      "NetName": "HEX13",
+      "Resistance": 0.0
+    },
+    {
       "Id": "783a5f55-254f-56b7-b77b-623058f3a44d",
       "FromComponentId": "9ea7170b-b2dc-5c62-b307-2d63709d022d",
       "FromPin": "carry",
       "ToComponentId": "97c1eb0b-c348-5ade-ab60-539504c66e87",
       "ToPin": "in",
       "NetName": "CARRY",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "889b2797-94ac-55fd-b45d-1f68db98b4f2",
-      "FromComponentId": "9ea7170b-b2dc-5c62-b307-2d63709d022d",
-      "FromPin": "Q0",
-      "ToComponentId": "a36a51be-473c-5fef-a2e4-cf873ece8ce2",
-      "ToPin": "in",
-      "NetName": "Q0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "0ce98d86-6ec7-5e9e-af1f-61e15a751f61",
-      "FromComponentId": "9ea7170b-b2dc-5c62-b307-2d63709d022d",
-      "FromPin": "Q7",
-      "ToComponentId": "ac6e9240-6238-5300-8972-08bd9fc0fd44",
-      "ToPin": "in",
-      "NetName": "Q7",
       "Resistance": 0.0
     }
   ]

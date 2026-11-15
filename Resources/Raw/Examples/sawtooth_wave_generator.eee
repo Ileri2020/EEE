@@ -3,16 +3,17 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Sawtooth Wave Generator",
-  "Description": "Periodic sawtooth waveform and toggle-controlled output path with load lamp and probes. The ramp generator is represented by an editable piecewise-linear source.",
+  "Description": "Active 500 Hz linear asymmetric sawtooth ramp generator with op-amp high-impedance buffer follower, 1 kΩ load, and LED indicator.",
   "Components": [
     {
       "Id": "d41f3f69-452d-582c-a261-b45c4661be8b",
+      "StableTypeId": "electrical.ground",
       "ComponentType": "Ground",
       "Reference": "GND",
       "Name": "GND",
-      "Description": "Circuit return",
+      "Description": "Circuit ground reference (0V)",
       "StringParameters": {
-        "LogicalRow": "12",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -24,47 +25,51 @@
     },
     {
       "Id": "463f99c4-7566-56b7-9733-03b9f4d07e57",
+      "StableTypeId": "electrical.voltagesource",
       "ComponentType": "VoltageSource",
-      "Reference": "VIN",
-      "Name": "VIN",
-      "Description": "Editable low-voltage Pwl source",
+      "Reference": "V_RAMP",
+      "Name": "V_RAMP",
+      "Description": "500 Hz linear asymmetric sawtooth generator (5V peak, 1.98ms rise, 20µs flyback)",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "2",
         "LogicalColumn": "1",
-        "WaveformType": "Pwl"
+        "WaveformType": "Pulse"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 3.0,
+        "Voltage": 5.0,
         "SineOffset": 0.0,
-        "SineAmplitude": 3.0,
+        "SineAmplitude": 5.0,
         "SineFrequency": 500.0,
         "SinePhase": 0.0,
         "PulseInitial": 0.0,
-        "PulsePulsed": 3.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.001,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 0.00196,
+        "PulseFallTime": 2e-05,
+        "PulseWidth": 1e-05,
         "PulsePeriod": 0.002
       },
       "CustomProperties": {
-        "PwlPoints": "0,0; 1e-3,3; 1.001e-3,0; 2e-3,3"
+        "PwlPoints": "0,0; 1.98e-3,5; 2e-3,0; 3.98e-3,5; 4e-3,0"
       }
     },
     {
       "Id": "3b91bc08-8fc8-5ee1-ba89-1e1cee518fbe",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_IN",
       "Name": "TP_IN",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Sawtooth timing ramp generator voltage probe (0-5V)",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
-        "ExpectedVoltage": "3"
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -79,55 +84,40 @@
       }
     },
     {
-      "Id": "b0bbac87-dcfb-5db1-a067-97aa531b7e18",
-      "ComponentType": "LogicInput",
-      "Reference": "ENABLE",
-      "Name": "ENABLE",
-      "Description": "User-toggleable input",
+      "Id": "3a010003-0001-4a7b-8c9d-000000000001",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "U1",
+      "Description": "High-impedance active buffer follower (LM741, ±15V supplies)",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "1",
-        "State": "True"
+        "LogicalColumn": "3",
+        "PartNumber": "LM741"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "HighVoltage": 5.0,
-        "LowVoltage": 0.0,
-        "State": 1.0
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0,
+        "Vos": 0.001,
+        "Ib": 8e-08,
+        "CMRR": 90.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "9d333dbd-0cd3-5410-b3c3-e960174c3e26",
-      "ComponentType": "VoltageSwitch",
-      "Reference": "S_ENABLE",
-      "Name": "S_ENABLE",
-      "Description": "Toggle-controlled signal path",
-      "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "3"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Ron": 1.0,
-        "Roff": 1000000.0,
-        "Threshold": 2.5,
-        "Hysteresis": 0.1
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "0d145fef-4661-52e9-a60f-dab145ee6e6b",
+      "Id": "3a010003-0001-4a7b-8c9d-000000000002",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
-      "Reference": "R_LIMIT",
-      "Name": "R_LIMIT",
-      "Description": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Buffer output load resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -142,14 +132,38 @@
       "CustomProperties": {}
     },
     {
-      "Id": "bdece329-f915-58ad-af9a-28d93688e6cc",
-      "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Resistor",
+      "Id": "3a010003-0001-4a7b-8c9d-000000000003",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "LED_RAMP",
+      "Name": "LED_RAMP",
+      "Description": "Sawtooth amplitude peak indicator LED (Green, Vf=2.1V)",
       "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "6"
+        "LogicalRow": "4",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Vf": 2.1,
+        "Wavelength": 525.0
+      },
+      "CustomProperties": {
+        "Color": "Green"
+      }
+    },
+    {
+      "Id": "3a010003-0001-4a7b-8c9d-000000000004",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "LED current-limiting resistor (1 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -161,36 +175,18 @@
       "CustomProperties": {}
     },
     {
-      "Id": "5aa051eb-cfcc-56e2-bc05-554b45da0e01",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage indicator",
-      "StringParameters": {
-        "LogicalRow": "10",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "d3ee54cd-f32a-56b0-80b2-d99473a5e6c9",
+      "Id": "3a010003-0001-4a7b-8c9d-000000000005",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_OUT",
       "Name": "TP_OUT",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Buffered sawtooth output voltage probe (0-5V)",
       "StringParameters": {
-        "LogicalRow": "8",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0.24976896"
+        "LogicalRow": "2",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -207,7 +203,7 @@
   ],
   "Connections": [
     {
-      "Id": "a6b362db-782f-5f12-a461-e5315a424215",
+      "Id": "3b010001-0000-0000-0000-000000000001",
       "FromComponentId": "463f99c4-7566-56b7-9733-03b9f4d07e57",
       "FromPin": "negative",
       "ToComponentId": "d41f3f69-452d-582c-a261-b45c4661be8b",
@@ -216,93 +212,84 @@
       "Resistance": 0.0
     },
     {
-      "Id": "ed6c8123-ebc1-5330-a4a9-de8835f4e661",
+      "Id": "3b010001-0000-0000-0000-000000000002",
       "FromComponentId": "463f99c4-7566-56b7-9733-03b9f4d07e57",
       "FromPin": "positive",
       "ToComponentId": "3b91bc08-8fc8-5ee1-ba89-1e1cee518fbe",
       "ToPin": "in",
-      "NetName": "VIN",
+      "NetName": "SAWTOOTH_RAMP",
       "Resistance": 0.0
     },
     {
-      "Id": "dfc5a9fe-7a86-5ea8-8119-77ce95a8f2a0",
+      "Id": "3b010001-0000-0000-0000-000000000003",
       "FromComponentId": "463f99c4-7566-56b7-9733-03b9f4d07e57",
       "FromPin": "positive",
-      "ToComponentId": "9d333dbd-0cd3-5410-b3c3-e960174c3e26",
-      "ToPin": "sw_pos",
-      "NetName": "VIN",
+      "ToComponentId": "3a010003-0001-4a7b-8c9d-000000000001",
+      "ToPin": "in_pos",
+      "NetName": "SAWTOOTH_RAMP",
       "Resistance": 0.0
     },
     {
-      "Id": "41796dd7-f925-5584-81ae-b18d83ec3dce",
-      "FromComponentId": "b0bbac87-dcfb-5db1-a067-97aa531b7e18",
+      "Id": "3b010001-0000-0000-0000-000000000004",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000001",
       "FromPin": "out",
-      "ToComponentId": "9d333dbd-0cd3-5410-b3c3-e960174c3e26",
-      "ToPin": "ctrl_pos",
-      "NetName": "ENABLE",
+      "ToComponentId": "3a010003-0001-4a7b-8c9d-000000000001",
+      "ToPin": "in_neg",
+      "NetName": "VOUT",
       "Resistance": 0.0
     },
     {
-      "Id": "adf1d898-74ce-5ef7-901b-748228ddc80a",
-      "FromComponentId": "d41f3f69-452d-582c-a261-b45c4661be8b",
-      "FromPin": "gnd",
-      "ToComponentId": "9d333dbd-0cd3-5410-b3c3-e960174c3e26",
-      "ToPin": "ctrl_neg",
+      "Id": "3b010001-0000-0000-0000-000000000005",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000001",
+      "FromPin": "out",
+      "ToComponentId": "3a010003-0001-4a7b-8c9d-000000000002",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b010001-0000-0000-0000-000000000006",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000002",
+      "FromPin": "pin2",
+      "ToComponentId": "d41f3f69-452d-582c-a261-b45c4661be8b",
+      "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "8138e302-da4d-5c60-80ce-20ff246f6e7c",
-      "FromComponentId": "9d333dbd-0cd3-5410-b3c3-e960174c3e26",
-      "FromPin": "sw_neg",
-      "ToComponentId": "0d145fef-4661-52e9-a60f-dab145ee6e6b",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "5722f748-1bd5-5bbc-86d0-e264b05391bb",
-      "FromComponentId": "0d145fef-4661-52e9-a60f-dab145ee6e6b",
-      "FromPin": "pin2",
-      "ToComponentId": "bdece329-f915-58ad-af9a-28d93688e6cc",
-      "ToPin": "pin1",
+      "Id": "3b010001-0000-0000-0000-000000000007",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000001",
+      "FromPin": "out",
+      "ToComponentId": "3a010003-0001-4a7b-8c9d-000000000003",
+      "ToPin": "anode",
       "NetName": "VOUT",
       "Resistance": 0.0
     },
     {
-      "Id": "dcf6620e-7a6f-51a6-8168-ebe6560e2e01",
-      "FromComponentId": "0d145fef-4661-52e9-a60f-dab145ee6e6b",
-      "FromPin": "pin2",
-      "ToComponentId": "5aa051eb-cfcc-56e2-bc05-554b45da0e01",
+      "Id": "3b010001-0000-0000-0000-000000000008",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000003",
+      "FromPin": "cathode",
+      "ToComponentId": "3a010003-0001-4a7b-8c9d-000000000004",
       "ToPin": "pin1",
-      "NetName": "VOUT",
+      "NetName": "LED_CATHODE",
       "Resistance": 0.0
     },
     {
-      "Id": "9b78685d-43f4-59e8-b721-992fd12aef11",
-      "FromComponentId": "0d145fef-4661-52e9-a60f-dab145ee6e6b",
+      "Id": "3b010001-0000-0000-0000-000000000009",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000004",
       "FromPin": "pin2",
-      "ToComponentId": "d3ee54cd-f32a-56b0-80b2-d99473a5e6c9",
+      "ToComponentId": "d41f3f69-452d-582c-a261-b45c4661be8b",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b010001-0000-0000-0000-000000000010",
+      "FromComponentId": "3a010003-0001-4a7b-8c9d-000000000001",
+      "FromPin": "out",
+      "ToComponentId": "3a010003-0001-4a7b-8c9d-000000000005",
       "ToPin": "in",
       "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "537ca5d8-552e-58c3-b76a-0e05e6ea8961",
-      "FromComponentId": "bdece329-f915-58ad-af9a-28d93688e6cc",
-      "FromPin": "pin2",
-      "ToComponentId": "d41f3f69-452d-582c-a261-b45c4661be8b",
-      "ToPin": "gnd",
-      "NetName": "0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "0714284a-0ce8-53a4-bac8-1a5ffcf691d5",
-      "FromComponentId": "5aa051eb-cfcc-56e2-bc05-554b45da0e01",
-      "FromPin": "pin2",
-      "ToComponentId": "d41f3f69-452d-582c-a261-b45c4661be8b",
-      "ToPin": "gnd",
-      "NetName": "0",
       "Resistance": 0.0
     }
   ]

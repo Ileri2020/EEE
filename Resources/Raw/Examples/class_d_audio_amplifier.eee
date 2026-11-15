@@ -3,66 +3,85 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Class D Audio Amplifier",
-  "Description": "Low-voltage switching-audio study using a pulse drive, LC reconstruction network, load and measurement points. Modulator and output transistor losses are omitted.",
+  "Description": "Class D audio power amplifier with 1 kHz sine audio input, 100 kHz triangle PWM comparator modulator, complementary MOSFET half-bridge power stage (12V DC rail), LC carrier demodulation filter, and 8 Ω speaker output with audio indicator.",
   "Components": [
     {
-      "Id": "44d802f0-4564-5443-921a-d42a689f34d7",
+      "Id": "3b050001-0001-4a7b-8c9d-000000000001",
+      "StableTypeId": "electrical.ground",
       "ComponentType": "Ground",
       "Reference": "GND",
       "Name": "GND",
-      "Description": "Circuit return",
+      "Description": "Circuit ground reference (0V)",
       "StringParameters": {
-        "LogicalRow": "9",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 10.0,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
-      "Id": "019684ca-403c-5810-8af2-a2892a8337ac",
+      "Id": "3b050001-0002-4a7b-8c9d-000000000002",
+      "StableTypeId": "electrical.voltagesource",
       "ComponentType": "VoltageSource",
-      "Reference": "VIN",
-      "Name": "VIN",
-      "Description": "Adjustable low-voltage input source",
+      "Reference": "VCC",
+      "Name": "VCC",
+      "Description": "+12V DC power amplifier supply rail",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "1",
         "LogicalColumn": "1",
-        "WaveformType": "Pulse"
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Voltage": 12.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-0003-4a7b-8c9d-000000000003",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "AUDIO_IN",
+      "Name": "AUDIO_IN",
+      "Description": "1 kHz audio test tone input (1.5V pk, 2.5V DC offset)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 5.0,
-        "SineOffset": 0.0,
-        "SineAmplitude": 5.0,
-        "SineFrequency": 20000.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 5.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 2.5e-05,
-        "PulsePeriod": 5e-05
+        "Voltage": 2.5,
+        "SineOffset": 2.5,
+        "SineAmplitude": 1.5,
+        "SineFrequency": 1000.0,
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "bfd4576c-fd9d-5a29-9372-a536d9f28ece",
+      "Id": "3b050001-0004-4a7b-8c9d-000000000004",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
-      "Reference": "TP_IN",
-      "Name": "TP_IN",
-      "Description": "Input voltage test point",
+      "Reference": "TP_AUDIO",
+      "Name": "TP_AUDIO",
+      "Description": "1 kHz audio input signal probe",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "5"
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "2.5",
+        "ExpectedVoltageMinimum": "1.0",
+        "ExpectedVoltageMaximum": "4.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -77,49 +96,184 @@
       }
     },
     {
-      "Id": "d07298a3-f206-5747-a5b9-153dfcb4d8d8",
-      "ComponentType": "Resistor",
-      "Reference": "R_SOURCE",
-      "Name": "R_SOURCE",
-      "Description": "Source and current limiting resistance",
+      "Id": "3b050001-0005-4a7b-8c9d-000000000005",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_CARRIER",
+      "Name": "V_CARRIER",
+      "Description": "100 kHz triangular PWM carrier wave generator (0-5V)",
       "StringParameters": {
-        "LogicalRow": "3",
+        "LogicalRow": "5",
+        "LogicalColumn": "1",
+        "WaveformType": "Pulse"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 5.0,
+        "SineOffset": 2.5,
+        "SineAmplitude": 2.5,
+        "SineFrequency": 100000.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 4.9e-06,
+        "PulseFallTime": 4.9e-06,
+        "PulseWidth": 1e-07,
+        "PulsePeriod": 1e-05
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-0006-4a7b-8c9d-000000000006",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U_PWM",
+      "Name": "U_PWM",
+      "Description": "High-speed PWM comparator modulating audio with carrier",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2",
+        "PartNumber": "LM311"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {
+        "Aol": 100000.0,
+        "GBW": 10000000.0,
+        "SR": 50.0,
+        "VccPlus": 5.0,
+        "VccMinus": 0.0,
+        "Vos": 0.001,
+        "Ib": 1e-07,
+        "CMRR": 90.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-0007-4a7b-8c9d-000000000007",
+      "StableTypeId": "electronics.not",
+      "ComponentType": "NotGate",
+      "Reference": "U_INV",
+      "Name": "U_INV",
+      "Description": "Gate inverter providing complementary drive for low-side switch",
+      "StringParameters": {
+        "LogicalRow": "6",
         "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-0008-4a7b-8c9d-000000000008",
+      "StableTypeId": "electrical.voltageswitch",
+      "ComponentType": "VoltageSwitch",
+      "Reference": "Q_HS",
+      "Name": "Q_HS",
+      "Description": "High-side half-bridge power MOSFET switch",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
       "ElectricalParameters": {
-        "Resistance": 100.0
+        "Ron": 0.05,
+        "Roff": 1000000.0,
+        "Threshold": 2.5,
+        "Hysteresis": 0.1
       },
       "CustomProperties": {}
     },
     {
-      "Id": "b9a500ac-3f79-5918-badf-6ccddb0390b4",
-      "ComponentType": "Inductor",
-      "Reference": "L_FILTER",
-      "Name": "L_FILTER",
-      "Description": "Output reconstruction inductor",
+      "Id": "3b050001-0009-4a7b-8c9d-000000000009",
+      "StableTypeId": "electrical.voltageswitch",
+      "ComponentType": "VoltageSwitch",
+      "Reference": "Q_LS",
+      "Name": "Q_LS",
+      "Description": "Low-side half-bridge power MOSFET switch",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Ron": 0.05,
+        "Roff": 1000000.0,
+        "Threshold": 2.5,
+        "Hysteresis": 0.1
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-000a-4a7b-8c9d-00000000000a",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_PWM",
+      "Name": "TP_PWM",
+      "Description": "Amplified 12V PWM switching stage output probe",
       "StringParameters": {
         "LogicalRow": "3",
-        "LogicalColumn": "3"
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "12.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "12.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Inductance": 0.001
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "3b050001-000b-4a7b-8c9d-00000000000b",
+      "StableTypeId": "electrical.inductor",
+      "ComponentType": "Inductor",
+      "Reference": "L_FILTER",
+      "Name": "L_FILTER",
+      "Description": "LC demodulation reconstruction filter inductor (100 µH)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Inductance": 0.0001,
+        "InitialCondition": 0.0,
+        "DcResistance": 0.02
       },
       "CustomProperties": {}
     },
     {
-      "Id": "56f3c03f-9938-542b-aa59-dea4f9407b2b",
+      "Id": "3b050001-000c-4a7b-8c9d-00000000000c",
+      "StableTypeId": "electrical.capacitor",
       "ComponentType": "Capacitor",
       "Reference": "C_FILTER",
       "Name": "C_FILTER",
-      "Description": "Output reconstruction capacitor",
+      "Description": "LC demodulation reconstruction filter shunt capacitor (1 µF to ground)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "4"
@@ -127,18 +281,65 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 2.0,
       "ElectricalParameters": {
-        "Capacitance": 1e-06
+        "Capacitance": 1e-06,
+        "InitialCondition": 6.0,
+        "EquivalentSeriesResistance": 0.01
       },
       "CustomProperties": {}
     },
     {
-      "Id": "39275afa-43b4-565e-beb2-5ea198eaa958",
+      "Id": "3b050001-000d-4a7b-8c9d-00000000000d",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C_BLOCK",
+      "Name": "C_BLOCK",
+      "Description": "DC-blocking speaker coupling capacitor (470 µF)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.00047,
+        "InitialCondition": 6.0,
+        "EquivalentSeriesResistance": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-000e-4a7b-8c9d-00000000000e",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Output load",
+      "Reference": "R_SPK",
+      "Name": "R_SPK",
+      "Description": "8 Ω speaker load resistor (10W rated)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 3.0,
+      "ElectricalParameters": {
+        "Resistance": 8.0,
+        "PowerRating": 10.0,
+        "Tolerance": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b050001-000f-4a7b-8c9d-00000000000f",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "Audio power indicator LED current-limiting resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "6"
@@ -146,43 +347,50 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Resistance": 1000.0
+        "Resistance": 1000.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "9430ece2-eb43-5e8c-a090-5de54e12734d",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage output indicator",
+      "Id": "3b050001-0010-4a7b-8c9d-000000000010",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "D_LED",
+      "Name": "D_LED",
+      "Description": "Green audio output signal presence indicator LED",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
+        "LogicalRow": "5",
+        "LogicalColumn": "7"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
+        "Vf": 2.1,
+        "Wavelength": 525.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "Color": "Green"
+      }
     },
     {
-      "Id": "e730918c-12d3-5188-9aef-b53d7765cc3c",
+      "Id": "3b050001-0011-4a7b-8c9d-000000000011",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_OUT",
       "Name": "TP_OUT",
-      "Description": "Output voltage and current test point",
+      "Description": "Reconstructed 1 kHz audio output voltage probe across speaker",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "2",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "3.5",
+        "ExpectedVoltageMinimum": "-4.0",
+        "ExpectedVoltageMaximum": "4.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -199,91 +407,244 @@
   ],
   "Connections": [
     {
-      "Id": "15374731-8c8a-546f-b1e8-3a89988bf534",
-      "FromComponentId": "019684ca-403c-5810-8af2-a2892a8337ac",
+      "Id": "3b050002-0001-4a7b-8c9d-000000000001",
+      "FromComponentId": "3b050001-0002-4a7b-8c9d-000000000002",
       "FromPin": "negative",
-      "ToComponentId": "44d802f0-4564-5443-921a-d42a689f34d7",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "d387e45a-95a7-5372-9f06-bbe273eccd8a",
-      "FromComponentId": "019684ca-403c-5810-8af2-a2892a8337ac",
+      "Id": "3b050002-0002-4a7b-8c9d-000000000002",
+      "FromComponentId": "3b050001-0002-4a7b-8c9d-000000000002",
       "FromPin": "positive",
-      "ToComponentId": "bfd4576c-fd9d-5a29-9372-a536d9f28ece",
-      "ToPin": "in",
-      "NetName": "VIN_NET",
+      "ToComponentId": "3b050001-0008-4a7b-8c9d-000000000008",
+      "ToPin": "sw_pos",
+      "NetName": "VCC_12V",
       "Resistance": 0.0
     },
     {
-      "Id": "021e1421-6e71-5005-92c2-ad4392af3d26",
-      "FromComponentId": "019684ca-403c-5810-8af2-a2892a8337ac",
-      "FromPin": "positive",
-      "ToComponentId": "d07298a3-f206-5747-a5b9-153dfcb4d8d8",
-      "ToPin": "pin1",
-      "NetName": "VIN_NET",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "b46ffc83-d404-5c22-9602-acb69205d5dd",
-      "FromComponentId": "d07298a3-f206-5747-a5b9-153dfcb4d8d8",
-      "FromPin": "pin2",
-      "ToComponentId": "b9a500ac-3f79-5918-badf-6ccddb0390b4",
-      "ToPin": "pin1",
-      "NetName": "STAGE_0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "5f3106b5-60ce-59d2-bdb3-5f0012eee2d4",
-      "FromComponentId": "b9a500ac-3f79-5918-badf-6ccddb0390b4",
-      "FromPin": "pin2",
-      "ToComponentId": "56f3c03f-9938-542b-aa59-dea4f9407b2b",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "c102abf3-6c25-53d0-8970-98eb6adc3138",
-      "FromComponentId": "56f3c03f-9938-542b-aa59-dea4f9407b2b",
-      "FromPin": "pin2",
-      "ToComponentId": "39275afa-43b4-565e-beb2-5ea198eaa958",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "36b4e81a-76ed-5f64-b198-f67f881c3620",
-      "FromComponentId": "56f3c03f-9938-542b-aa59-dea4f9407b2b",
-      "FromPin": "pin2",
-      "ToComponentId": "9430ece2-eb43-5e8c-a090-5de54e12734d",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "2ed3b291-ed4a-51fa-a240-23218d9f6186",
-      "FromComponentId": "56f3c03f-9938-542b-aa59-dea4f9407b2b",
-      "FromPin": "pin2",
-      "ToComponentId": "e730918c-12d3-5188-9aef-b53d7765cc3c",
-      "ToPin": "in",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "833524b6-7ea4-5b9b-aa96-a130771967fb",
-      "FromComponentId": "39275afa-43b4-565e-beb2-5ea198eaa958",
-      "FromPin": "pin2",
-      "ToComponentId": "44d802f0-4564-5443-921a-d42a689f34d7",
+      "Id": "3b050002-0003-4a7b-8c9d-000000000003",
+      "FromComponentId": "3b050001-0003-4a7b-8c9d-000000000003",
+      "FromPin": "negative",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "aafaeeb0-352d-55a8-8df1-de393a53b494",
-      "FromComponentId": "9430ece2-eb43-5e8c-a090-5de54e12734d",
+      "Id": "3b050002-0004-4a7b-8c9d-000000000004",
+      "FromComponentId": "3b050001-0003-4a7b-8c9d-000000000003",
+      "FromPin": "positive",
+      "ToComponentId": "3b050001-0004-4a7b-8c9d-000000000004",
+      "ToPin": "in",
+      "NetName": "AUDIO_SIG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0005-4a7b-8c9d-000000000005",
+      "FromComponentId": "3b050001-0003-4a7b-8c9d-000000000003",
+      "FromPin": "positive",
+      "ToComponentId": "3b050001-0006-4a7b-8c9d-000000000006",
+      "ToPin": "in_pos",
+      "NetName": "AUDIO_SIG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0006-4a7b-8c9d-000000000006",
+      "FromComponentId": "3b050001-0005-4a7b-8c9d-000000000005",
+      "FromPin": "negative",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0007-4a7b-8c9d-000000000007",
+      "FromComponentId": "3b050001-0005-4a7b-8c9d-000000000005",
+      "FromPin": "positive",
+      "ToComponentId": "3b050001-0006-4a7b-8c9d-000000000006",
+      "ToPin": "in_neg",
+      "NetName": "CARRIER_SIG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0008-4a7b-8c9d-000000000008",
+      "FromComponentId": "3b050001-0006-4a7b-8c9d-000000000006",
+      "FromPin": "v_pos",
+      "ToComponentId": "3b050001-0002-4a7b-8c9d-000000000002",
+      "ToPin": "positive",
+      "NetName": "VCC_12V",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0009-4a7b-8c9d-000000000009",
+      "FromComponentId": "3b050001-0006-4a7b-8c9d-000000000006",
+      "FromPin": "v_neg",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-000a-4a7b-8c9d-00000000000a",
+      "FromComponentId": "3b050001-0006-4a7b-8c9d-000000000006",
+      "FromPin": "out",
+      "ToComponentId": "3b050001-0008-4a7b-8c9d-000000000008",
+      "ToPin": "ctrl_pos",
+      "NetName": "PWM_GATE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-000b-4a7b-8c9d-00000000000b",
+      "FromComponentId": "3b050001-0006-4a7b-8c9d-000000000006",
+      "FromPin": "out",
+      "ToComponentId": "3b050001-0007-4a7b-8c9d-000000000007",
+      "ToPin": "in1",
+      "NetName": "PWM_GATE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-000c-4a7b-8c9d-00000000000c",
+      "FromComponentId": "3b050001-0007-4a7b-8c9d-000000000007",
+      "FromPin": "out",
+      "ToComponentId": "3b050001-0009-4a7b-8c9d-000000000009",
+      "ToPin": "ctrl_pos",
+      "NetName": "PWM_INV",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-000d-4a7b-8c9d-00000000000d",
+      "FromComponentId": "3b050001-0008-4a7b-8c9d-000000000008",
+      "FromPin": "ctrl_neg",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-000e-4a7b-8c9d-00000000000e",
+      "FromComponentId": "3b050001-0009-4a7b-8c9d-000000000009",
+      "FromPin": "ctrl_neg",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-000f-4a7b-8c9d-00000000000f",
+      "FromComponentId": "3b050001-0008-4a7b-8c9d-000000000008",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b050001-0009-4a7b-8c9d-000000000009",
+      "ToPin": "sw_pos",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0010-4a7b-8c9d-000000000010",
+      "FromComponentId": "3b050001-0008-4a7b-8c9d-000000000008",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b050001-000a-4a7b-8c9d-00000000000a",
+      "ToPin": "in",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0011-4a7b-8c9d-000000000011",
+      "FromComponentId": "3b050001-0008-4a7b-8c9d-000000000008",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b050001-000b-4a7b-8c9d-00000000000b",
+      "ToPin": "pin1",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0012-4a7b-8c9d-000000000012",
+      "FromComponentId": "3b050001-0009-4a7b-8c9d-000000000009",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0013-4a7b-8c9d-000000000013",
+      "FromComponentId": "3b050001-000b-4a7b-8c9d-00000000000b",
       "FromPin": "pin2",
-      "ToComponentId": "44d802f0-4564-5443-921a-d42a689f34d7",
+      "ToComponentId": "3b050001-000c-4a7b-8c9d-00000000000c",
+      "ToPin": "pin1",
+      "NetName": "DEMOD_AUDIO",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0014-4a7b-8c9d-000000000014",
+      "FromComponentId": "3b050001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-000d-4a7b-8c9d-00000000000d",
+      "ToPin": "pin1",
+      "NetName": "DEMOD_AUDIO",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0015-4a7b-8c9d-000000000015",
+      "FromComponentId": "3b050001-000c-4a7b-8c9d-00000000000c",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0016-4a7b-8c9d-000000000016",
+      "FromComponentId": "3b050001-000d-4a7b-8c9d-00000000000d",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-000e-4a7b-8c9d-00000000000e",
+      "ToPin": "pin1",
+      "NetName": "SPK_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0017-4a7b-8c9d-000000000017",
+      "FromComponentId": "3b050001-000d-4a7b-8c9d-00000000000d",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-000f-4a7b-8c9d-00000000000f",
+      "ToPin": "pin1",
+      "NetName": "SPK_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0018-4a7b-8c9d-000000000018",
+      "FromComponentId": "3b050001-000d-4a7b-8c9d-00000000000d",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-0011-4a7b-8c9d-000000000011",
+      "ToPin": "in",
+      "NetName": "SPK_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-0019-4a7b-8c9d-000000000019",
+      "FromComponentId": "3b050001-000e-4a7b-8c9d-00000000000e",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-001a-4a7b-8c9d-00000000001a",
+      "FromComponentId": "3b050001-000f-4a7b-8c9d-00000000000f",
+      "FromPin": "pin2",
+      "ToComponentId": "3b050001-0010-4a7b-8c9d-000000000010",
+      "ToPin": "anode",
+      "NetName": "LED_ANODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b050002-001b-4a7b-8c9d-00000000001b",
+      "FromComponentId": "3b050001-0010-4a7b-8c9d-000000000010",
+      "FromPin": "cathode",
+      "ToComponentId": "3b050001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0

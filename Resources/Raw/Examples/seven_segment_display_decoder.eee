@@ -3,14 +3,15 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Seven-Segment Display Decoder",
-  "Description": "Four toggleable binary inputs feed the built-in hexadecimal digit/seven-segment decoder; probes monitor the input nibble. A-F values are shown in hexadecimal.",
+  "Description": "Four-bit interactive BCD/hexadecimal input driving a built-in seven-segment decoder display, with individual bit monitoring probes for BCD0 through BCD3.",
   "Components": [
     {
       "Id": "786a7914-4be5-5758-898d-dda1daf9bf36",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "BCD0",
       "Name": "BCD0",
-      "Description": "User-toggleable input",
+      "Description": "Binary/BCD input bit 0 (LSB, weight 1)",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
@@ -19,7 +20,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -29,10 +30,11 @@
     },
     {
       "Id": "4a4fb029-0192-58e8-b971-9943e777cc55",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "BCD1",
       "Name": "BCD1",
-      "Description": "User-toggleable input",
+      "Description": "Binary/BCD input bit 1 (weight 2)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "1",
@@ -41,7 +43,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -51,10 +53,11 @@
     },
     {
       "Id": "eac5028a-334d-5940-aef8-e8a6a56a21b7",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "BCD2",
       "Name": "BCD2",
-      "Description": "User-toggleable input",
+      "Description": "Binary/BCD input bit 2 (weight 4)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -63,7 +66,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -73,10 +76,11 @@
     },
     {
       "Id": "768ad12e-7e25-5b4c-b9e4-c6d8f2f83f29",
+      "StableTypeId": "digital.logicinput",
       "ComponentType": "LogicInput",
       "Reference": "BCD3",
       "Name": "BCD3",
-      "Description": "User-toggleable input",
+      "Description": "Binary/BCD input bit 3 (MSB, weight 8)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "1",
@@ -85,7 +89,7 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "HighVoltage": 5.0,
         "LowVoltage": 0.0,
@@ -95,36 +99,92 @@
     },
     {
       "Id": "c56a069c-25e0-5315-abd0-9652f4e58a01",
+      "StableTypeId": "io.hexdigit",
       "ComponentType": "HexDigit",
       "Reference": "7SEG_HEX",
       "Name": "7SEG_HEX",
-      "Description": "Nibble-to-seven-segment display/decoder",
+      "Description": "4-bit nibble hexadecimal / seven-segment decoder display",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
       "Id": "70fc1233-09c5-5b9a-88fc-8528b4751391",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_BCD0",
       "Name": "TP_BCD0",
-      "Description": "Voltage/current measurement test point",
+      "Description": "BCD input bit 0 voltage probe",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
-        "ExpectedVoltage": "5"
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "70fc1233-09c5-5b9a-88fc-8528b4751392",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_BCD1",
+      "Name": "TP_BCD1",
+      "Description": "BCD input bit 1 voltage probe",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "70fc1233-09c5-5b9a-88fc-8528b4751393",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_BCD2",
+      "Name": "TP_BCD2",
+      "Description": "BCD input bit 2 voltage probe",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -135,19 +195,22 @@
     },
     {
       "Id": "fb2e89d1-eea1-5f42-aa96-1092bca7d7ea",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_BCD3",
       "Name": "TP_BCD3",
-      "Description": "Voltage/current measurement test point",
+      "Description": "BCD input bit 3 voltage probe",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "2",
-        "ExpectedVoltage": "5"
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -168,11 +231,29 @@
       "Resistance": 0.0
     },
     {
+      "Id": "d71d6e6b-ab22-51a4-a0c9-c21232412ad1",
+      "FromComponentId": "786a7914-4be5-5758-898d-dda1daf9bf36",
+      "FromPin": "out",
+      "ToComponentId": "70fc1233-09c5-5b9a-88fc-8528b4751391",
+      "ToPin": "in",
+      "NetName": "BCD0",
+      "Resistance": 0.0
+    },
+    {
       "Id": "dee921ae-88ef-574e-96ec-e3df2c6adf07",
       "FromComponentId": "4a4fb029-0192-58e8-b971-9943e777cc55",
       "FromPin": "out",
       "ToComponentId": "c56a069c-25e0-5315-abd0-9652f4e58a01",
       "ToPin": "D1",
+      "NetName": "BCD1",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "dee921ae-88ef-574e-96ec-e3df2c6adf08",
+      "FromComponentId": "4a4fb029-0192-58e8-b971-9943e777cc55",
+      "FromPin": "out",
+      "ToComponentId": "70fc1233-09c5-5b9a-88fc-8528b4751392",
+      "ToPin": "in",
       "NetName": "BCD1",
       "Resistance": 0.0
     },
@@ -186,21 +267,21 @@
       "Resistance": 0.0
     },
     {
+      "Id": "4efd08ea-295f-573b-9050-ee918f1b2f05",
+      "FromComponentId": "eac5028a-334d-5940-aef8-e8a6a56a21b7",
+      "FromPin": "out",
+      "ToComponentId": "70fc1233-09c5-5b9a-88fc-8528b4751393",
+      "ToPin": "in",
+      "NetName": "BCD2",
+      "Resistance": 0.0
+    },
+    {
       "Id": "766711ae-60a6-5be2-b8f0-6210310a6908",
       "FromComponentId": "768ad12e-7e25-5b4c-b9e4-c6d8f2f83f29",
       "FromPin": "out",
       "ToComponentId": "c56a069c-25e0-5315-abd0-9652f4e58a01",
       "ToPin": "D3",
       "NetName": "BCD3",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "d71d6e6b-ab22-51a4-a0c9-c21232412ad1",
-      "FromComponentId": "786a7914-4be5-5758-898d-dda1daf9bf36",
-      "FromPin": "out",
-      "ToComponentId": "70fc1233-09c5-5b9a-88fc-8528b4751391",
-      "ToPin": "in",
-      "NetName": "BCD0",
       "Resistance": 0.0
     },
     {

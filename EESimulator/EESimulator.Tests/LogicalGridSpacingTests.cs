@@ -1,6 +1,7 @@
 using EESimulator.Commands;
 using EESimulator.Commands.Commands;
 using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Models;
 using EESimulator.Formats;
@@ -70,6 +71,24 @@ public sealed class LogicalGridSpacingTests
         CircuitNode restored = EeePlatformSerializer.LoadFromEeeJson(EeePlatformSerializer.ExportToEee(circuit));
         Assert.Equal(circuit.LogicalGridRowSpacing, restored.LogicalGridRowSpacing);
         Assert.Equal(circuit.LogicalGridColumnSpacing, restored.LogicalGridColumnSpacing);
+    }
+
+    [Fact]
+    public void Eee_round_trip_rebuilds_parameterized_component_pins()
+    {
+        var circuit = new CircuitNode();
+        circuit.AddChild(new MultiplexerComponent("MUX")
+        {
+            SelectBits = 1,
+            BitWidth = 4
+        });
+
+        CircuitNode restored = EeePlatformSerializer.LoadFromEeeJson(EeePlatformSerializer.ExportToEee(circuit));
+        var multiplexer = Assert.IsType<MultiplexerComponent>(restored.FindChild<ComponentNode>("MUX"));
+
+        Assert.Contains(multiplexer.Pins, pin => pin.Id == "in0_b0");
+        Assert.Contains(multiplexer.Pins, pin => pin.Id == "in1_b3");
+        Assert.Contains(multiplexer.Pins, pin => pin.Id == "out_b3");
     }
 
     [Fact]

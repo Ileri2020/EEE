@@ -3,33 +3,77 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Active Band-Pass Filter",
-  "Description": "Band-pass response study with an adjustable signal source, cascaded high- and low-frequency R-C shaping, output load and input/output test points.",
+  "Description": "Active 1 kHz multiple-feedback (MFB) band-pass filter using an operational amplifier (LM741, ±15V supplies), providing narrow resonant band-pass filtering (Q = 2, Av = 2) with high-frequency and low-frequency roll-off, 1 kΩ load, and status indicator.",
   "Components": [
     {
-      "Id": "39175e56-77c1-5d43-be11-ed2d80b81845",
+      "Id": "3b060001-0001-4a7b-8c9d-000000000001",
+      "StableTypeId": "electrical.ground",
       "ComponentType": "Ground",
       "Reference": "GND",
       "Name": "GND",
-      "Description": "Circuit return",
+      "Description": "Circuit ground reference (0V)",
       "StringParameters": {
-        "LogicalRow": "9",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 10.0,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
-      "Id": "4576dc99-9a40-5958-be5d-ab523714d161",
+      "Id": "3b060001-0002-4a7b-8c9d-000000000002",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "VCC",
+      "Name": "VCC",
+      "Description": "+15V DC positive supply rail for op-amp",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b060001-0003-4a7b-8c9d-000000000003",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "VEE",
+      "Name": "VEE",
+      "Description": "-15V DC negative supply rail for op-amp",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "3",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Voltage": 15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b060001-0004-4a7b-8c9d-000000000004",
+      "StableTypeId": "electrical.voltagesource",
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Adjustable low-voltage input source",
+      "Description": "1 kHz sinusoidal test excitation source (1.0V pk)",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -42,27 +86,23 @@
         "SineOffset": 0.0,
         "SineAmplitude": 1.0,
         "SineFrequency": 1000.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 1.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.005,
-        "PulsePeriod": 0.01
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "14e0d60b-5812-586d-bdfd-6fda521669f6",
+      "Id": "3b060001-0005-4a7b-8c9d-000000000005",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_IN",
       "Name": "TP_IN",
-      "Description": "Input voltage test point",
+      "Description": "1 kHz input test signal probe (1.0V pk)",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "1"
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "-1.0",
+        "ExpectedVoltageMaximum": "1.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -77,11 +117,12 @@
       }
     },
     {
-      "Id": "4e6e5bd4-7a56-58ff-85d2-a84d0fb0e938",
+      "Id": "3b060001-0006-4a7b-8c9d-000000000006",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
-      "Reference": "R_SOURCE",
-      "Name": "R_SOURCE",
-      "Description": "Source and current limiting resistance",
+      "Reference": "R1",
+      "Name": "R1",
+      "Description": "MFB input resistor (15.9 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "2"
@@ -89,18 +130,43 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Resistance": 100.0
+        "Resistance": 15900.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "59095cd9-07dc-5e01-beaa-306183f027f0",
+      "Id": "3b060001-0007-4a7b-8c9d-000000000007",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R2",
+      "Name": "R2",
+      "Description": "MFB Q-setting shunt resistor (5.1 kΩ to ground)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {
+        "Resistance": 5100.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b060001-0008-4a7b-8c9d-000000000008",
+      "StableTypeId": "electrical.capacitor",
       "ComponentType": "Capacitor",
-      "Reference": "C_HIGH",
-      "Name": "C_HIGH",
-      "Description": "High-pass shaping capacitor",
+      "Reference": "C1",
+      "Name": "C1",
+      "Description": "MFB series coupling capacitor (10 nF)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "3"
@@ -108,37 +174,115 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Capacitance": 1e-07
+        "Capacitance": 1e-08,
+        "InitialCondition": 0.0,
+        "EquivalentSeriesResistance": 0.01
       },
       "CustomProperties": {}
     },
     {
-      "Id": "8e49bd86-206a-5bbe-a260-d83966f9f556",
-      "ComponentType": "Resistor",
-      "Reference": "R_HIGH",
-      "Name": "R_HIGH",
-      "Description": "High-pass shaping resistor",
+      "Id": "3b060001-0009-4a7b-8c9d-000000000009",
+      "StableTypeId": "electrical.capacitor",
+      "ComponentType": "Capacitor",
+      "Reference": "C2",
+      "Name": "C2",
+      "Description": "MFB feedback integration capacitor (10 nF)",
       "StringParameters": {
-        "LogicalRow": "4",
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {
+        "Capacitance": 1e-08,
+        "InitialCondition": 0.0,
+        "EquivalentSeriesResistance": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b060001-000a-4a7b-8c9d-00000000000a",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R3",
+      "Name": "R3",
+      "Description": "MFB feedback gain resistor (62 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "1",
         "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Resistance": 10000.0
+        "Resistance": 62000.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "3f76bb1a-952c-5bc0-a646-8659ea433ccc",
+      "Id": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "U1",
+      "Description": "Operational amplifier band-pass active filter (LM741, ±15V supplies)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "4",
+        "PartNumber": "LM741"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0,
+        "Vos": 0.001,
+        "Ib": 8e-08,
+        "CMRR": 90.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b060001-000c-4a7b-8c9d-00000000000c",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
-      "Reference": "R_LOW",
-      "Name": "R_LOW",
-      "Description": "Low-pass shaping resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "Filter output load resistor (1 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {
+        "Resistance": 1000.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b060001-000d-4a7b-8c9d-00000000000d",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "Indicator LED current-limiting resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "5"
@@ -146,37 +290,21 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Resistance": 10000.0
+        "Resistance": 1000.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "2fc39340-48f2-5b5f-ad63-339bf5e0e071",
-      "ComponentType": "Capacitor",
-      "Reference": "C_LOW",
-      "Name": "C_LOW",
-      "Description": "Low-pass shaping capacitor",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Capacitance": 1e-07
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "74d6b4f0-557b-5ba6-9703-3fe66eb1f905",
-      "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Output load",
+      "Id": "3b060001-000e-4a7b-8c9d-00000000000e",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "D_LED",
+      "Name": "D_LED",
+      "Description": "Green resonant signal output indicator LED",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "6"
@@ -184,43 +312,28 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "Resistance": 1000.0
+        "Vf": 2.1,
+        "Wavelength": 525.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "Color": "Green"
+      }
     },
     {
-      "Id": "1d2abe28-fbf7-5032-bb14-cb3e9a8cbf75",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage output indicator",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "44f05a70-8537-572d-81e2-ca8f2b8347ae",
+      "Id": "3b060001-000f-4a7b-8c9d-00000000000f",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_OUT",
       "Name": "TP_OUT",
-      "Description": "Output voltage and current test point",
+      "Description": "Resonant 1 kHz band-pass output voltage probe (2.0V pk)",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "3",
+        "LogicalColumn": "6",
+        "ExpectedVoltage": "2.0",
+        "ExpectedVoltageMinimum": "-2.5",
+        "ExpectedVoltageMaximum": "2.5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -233,150 +346,203 @@
         "MeasurementMode": "Voltage",
         "Unit": "V"
       }
-    },
-    {
-      "Id": "74a16c6d-27b4-4f20-8dbf-abc3cbd2e610",
-      "ComponentType": "Resistor",
-      "Reference": "R_BIAS",
-      "Name": "R_BIAS",
-      "Description": "High-value DC bias path for the AC-coupled filter stages",
-      "StringParameters": {
-        "LogicalRow": "8",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 10000000.0
-      },
-      "CustomProperties": {}
     }
   ],
   "Connections": [
     {
-      "Id": "727340ca-9764-56fc-ad3f-58ee7c2bb846",
-      "FromComponentId": "4576dc99-9a40-5958-be5d-ab523714d161",
+      "Id": "3b060002-0001-4a7b-8c9d-000000000001",
+      "FromComponentId": "3b060001-0004-4a7b-8c9d-000000000004",
       "FromPin": "negative",
-      "ToComponentId": "39175e56-77c1-5d43-be11-ed2d80b81845",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "c5f2d280-c7bf-52be-9945-3c720a196461",
-      "FromComponentId": "4576dc99-9a40-5958-be5d-ab523714d161",
+      "Id": "3b060002-0002-4a7b-8c9d-000000000002",
+      "FromComponentId": "3b060001-0004-4a7b-8c9d-000000000004",
       "FromPin": "positive",
-      "ToComponentId": "14e0d60b-5812-586d-bdfd-6fda521669f6",
+      "ToComponentId": "3b060001-0005-4a7b-8c9d-000000000005",
       "ToPin": "in",
-      "NetName": "VIN_NET",
+      "NetName": "VIN_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "53ec7b7e-3f82-5950-a95d-fff1e4527220",
-      "FromComponentId": "4576dc99-9a40-5958-be5d-ab523714d161",
+      "Id": "3b060002-0003-4a7b-8c9d-000000000003",
+      "FromComponentId": "3b060001-0004-4a7b-8c9d-000000000004",
       "FromPin": "positive",
-      "ToComponentId": "4e6e5bd4-7a56-58ff-85d2-a84d0fb0e938",
+      "ToComponentId": "3b060001-0006-4a7b-8c9d-000000000006",
       "ToPin": "pin1",
-      "NetName": "VIN_NET",
+      "NetName": "VIN_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "3c0337bd-6ba5-5cfb-8a31-d0124c72fda8",
-      "FromComponentId": "4e6e5bd4-7a56-58ff-85d2-a84d0fb0e938",
+      "Id": "3b060002-0004-4a7b-8c9d-000000000004",
+      "FromComponentId": "3b060001-0006-4a7b-8c9d-000000000006",
       "FromPin": "pin2",
-      "ToComponentId": "59095cd9-07dc-5e01-beaa-306183f027f0",
+      "ToComponentId": "3b060001-0007-4a7b-8c9d-000000000007",
       "ToPin": "pin1",
-      "NetName": "STAGE_0",
+      "NetName": "SUM_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "6d36b382-ee52-5438-bfc4-f1de8d668622",
-      "FromComponentId": "59095cd9-07dc-5e01-beaa-306183f027f0",
+      "Id": "3b060002-0005-4a7b-8c9d-000000000005",
+      "FromComponentId": "3b060001-0006-4a7b-8c9d-000000000006",
       "FromPin": "pin2",
-      "ToComponentId": "8e49bd86-206a-5bbe-a260-d83966f9f556",
+      "ToComponentId": "3b060001-0008-4a7b-8c9d-000000000008",
       "ToPin": "pin1",
-      "NetName": "STAGE_1",
+      "NetName": "SUM_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "d57423b6-b667-5d53-a0b9-6cf4c72a48ff",
-      "FromComponentId": "8e49bd86-206a-5bbe-a260-d83966f9f556",
+      "Id": "3b060002-0006-4a7b-8c9d-000000000006",
+      "FromComponentId": "3b060001-0006-4a7b-8c9d-000000000006",
       "FromPin": "pin2",
-      "ToComponentId": "3f76bb1a-952c-5bc0-a646-8659ea433ccc",
+      "ToComponentId": "3b060001-0009-4a7b-8c9d-000000000009",
       "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "NetName": "SUM_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "805350d8-7d79-5766-a71f-661c7b8ba9a9",
-      "FromComponentId": "3f76bb1a-952c-5bc0-a646-8659ea433ccc",
+      "Id": "3b060002-0007-4a7b-8c9d-000000000007",
+      "FromComponentId": "3b060001-0007-4a7b-8c9d-000000000007",
       "FromPin": "pin2",
-      "ToComponentId": "2fc39340-48f2-5b5f-ad63-339bf5e0e071",
-      "ToPin": "pin1",
-      "NetName": "STAGE_3",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "76c77260-6455-52d0-9edc-663819184d32",
-      "FromComponentId": "2fc39340-48f2-5b5f-ad63-339bf5e0e071",
-      "FromPin": "pin2",
-      "ToComponentId": "74d6b4f0-557b-5ba6-9703-3fe66eb1f905",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "cc2bd5b2-79d5-5d96-abd2-5b33964c37cf",
-      "FromComponentId": "2fc39340-48f2-5b5f-ad63-339bf5e0e071",
-      "FromPin": "pin2",
-      "ToComponentId": "1d2abe28-fbf7-5032-bb14-cb3e9a8cbf75",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "370e94f9-8bfc-54dd-9d2d-4b65c7bd3cd6",
-      "FromComponentId": "2fc39340-48f2-5b5f-ad63-339bf5e0e071",
-      "FromPin": "pin2",
-      "ToComponentId": "44f05a70-8537-572d-81e2-ca8f2b8347ae",
-      "ToPin": "in",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "31702d5e-1811-5d2f-8883-903afab3f5ec",
-      "FromComponentId": "74d6b4f0-557b-5ba6-9703-3fe66eb1f905",
-      "FromPin": "pin2",
-      "ToComponentId": "39175e56-77c1-5d43-be11-ed2d80b81845",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "aa1a40e6-837d-5504-9211-8148c5dbdaee",
-      "FromComponentId": "1d2abe28-fbf7-5032-bb14-cb3e9a8cbf75",
+      "Id": "3b060002-0008-4a7b-8c9d-000000000008",
+      "FromComponentId": "3b060001-0008-4a7b-8c9d-000000000008",
       "FromPin": "pin2",
-      "ToComponentId": "39175e56-77c1-5d43-be11-ed2d80b81845",
-      "ToPin": "gnd",
-      "NetName": "0",
+      "ToComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "ToPin": "in_neg",
+      "NetName": "INV_IN",
       "Resistance": 0.0
     },
     {
-      "Id": "ef6e69bd-e26d-48e4-8abd-4fdc56c3b380",
-      "FromComponentId": "74a16c6d-27b4-4f20-8dbf-abc3cbd2e610",
+      "Id": "3b060002-0009-4a7b-8c9d-000000000009",
+      "FromComponentId": "3b060001-000a-4a7b-8c9d-00000000000a",
       "FromPin": "pin1",
-      "ToComponentId": "3f76bb1a-952c-5bc0-a646-8659ea433ccc",
-      "ToPin": "pin2",
-      "NetName": "STAGE_2",
+      "ToComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "ToPin": "in_neg",
+      "NetName": "INV_IN",
       "Resistance": 0.0
     },
     {
-      "Id": "ffab105d-b74f-45a6-a7ec-9f870b0f480d",
-      "FromComponentId": "74a16c6d-27b4-4f20-8dbf-abc3cbd2e610",
+      "Id": "3b060002-000a-4a7b-8c9d-00000000000a",
+      "FromComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "in_pos",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-000b-4a7b-8c9d-00000000000b",
+      "FromComponentId": "3b060001-0002-4a7b-8c9d-000000000002",
+      "FromPin": "negative",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-000c-4a7b-8c9d-00000000000c",
+      "FromComponentId": "3b060001-0002-4a7b-8c9d-000000000002",
+      "FromPin": "positive",
+      "ToComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "ToPin": "v_pos",
+      "NetName": "VCC_P",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-000d-4a7b-8c9d-00000000000d",
+      "FromComponentId": "3b060001-0003-4a7b-8c9d-000000000003",
+      "FromPin": "positive",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-000e-4a7b-8c9d-00000000000e",
+      "FromComponentId": "3b060001-0003-4a7b-8c9d-000000000003",
+      "FromPin": "negative",
+      "ToComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "ToPin": "v_neg",
+      "NetName": "VEE_N",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-000f-4a7b-8c9d-00000000000f",
+      "FromComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "out",
+      "ToComponentId": "3b060001-0009-4a7b-8c9d-000000000009",
+      "ToPin": "pin2",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0010-4a7b-8c9d-000000000010",
+      "FromComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "out",
+      "ToComponentId": "3b060001-000a-4a7b-8c9d-00000000000a",
+      "ToPin": "pin2",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0011-4a7b-8c9d-000000000011",
+      "FromComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "out",
+      "ToComponentId": "3b060001-000c-4a7b-8c9d-00000000000c",
+      "ToPin": "pin1",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0012-4a7b-8c9d-000000000012",
+      "FromComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "out",
+      "ToComponentId": "3b060001-000d-4a7b-8c9d-00000000000d",
+      "ToPin": "pin1",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0013-4a7b-8c9d-000000000013",
+      "FromComponentId": "3b060001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "out",
+      "ToComponentId": "3b060001-000f-4a7b-8c9d-00000000000f",
+      "ToPin": "in",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0014-4a7b-8c9d-000000000014",
+      "FromComponentId": "3b060001-000c-4a7b-8c9d-00000000000c",
       "FromPin": "pin2",
-      "ToComponentId": "39175e56-77c1-5d43-be11-ed2d80b81845",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0015-4a7b-8c9d-000000000015",
+      "FromComponentId": "3b060001-000d-4a7b-8c9d-00000000000d",
+      "FromPin": "pin2",
+      "ToComponentId": "3b060001-000e-4a7b-8c9d-00000000000e",
+      "ToPin": "anode",
+      "NetName": "LED_ANODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b060002-0016-4a7b-8c9d-000000000016",
+      "FromComponentId": "3b060001-000e-4a7b-8c9d-00000000000e",
+      "FromPin": "cathode",
+      "ToComponentId": "3b060001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0

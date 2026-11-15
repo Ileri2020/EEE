@@ -3,71 +3,299 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Power Factor Correction (PFC)",
-  "Description": "Low-voltage boost-PFC concept with a sinusoidal input, input inductance, DC-link capacitance, load and measurement points. The control loop is represented by the adjustable source.",
+  "Description": "Active boost power factor correction (PFC) pre-regulator converting 24V AC mains to a boosted 38V DC bus using full-wave diode rectification, a 1 mH continuous-conduction boost inductor, 50 kHz NMOS power switch, fast recovery boost diode, and shunt capacitive reservoir filter with output indicator.",
   "Components": [
     {
-      "Id": "1faaacbf-c9e5-5f82-ac0e-2ec14e3454a8",
-      "ComponentType": "Ground",
-      "Reference": "GND",
-      "Name": "GND",
-      "Description": "Circuit return",
-      "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "1"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
-      "CustomProperties": {}
-    },
-    {
-      "Id": "a8766af7-4323-5b15-9eb3-f922f2c618c0",
+      "Id": "0587c7a0-c9be-4e7d-9670-fdf9dfd425a9",
       "ComponentType": "VoltageSource",
-      "Reference": "VIN",
-      "Name": "VIN",
-      "Description": "Adjustable low-voltage input source",
+      "Reference": "VAC",
+      "Name": "VAC",
+      "Description": "24V AC 50 Hz line input",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
-        "Voltage": 12.0,
+        "Voltage": 24.0,
         "SineOffset": 0.0,
-        "SineAmplitude": 12.0,
+        "SineAmplitude": 33.94,
         "SineFrequency": 50.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 12.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.005,
-        "PulsePeriod": 0.01
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "24778cb9-e66a-5f1b-926e-37fa730ca048",
-      "ComponentType": "Probe",
-      "Reference": "TP_IN",
-      "Name": "TP_IN",
-      "Description": "Input voltage test point",
+      "Id": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "GND",
+      "Description": "Common ground reference",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "12"
+        "LogicalRow": "8",
+        "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "722f6589-80e1-41b5-97c6-07edee5d8d6b",
+      "ComponentType": "Diode",
+      "Reference": "D1",
+      "Name": "D1",
+      "Description": "Bridge rectifier diode 1",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "60981f36-0069-444b-809c-9eb9652ba9bf",
+      "ComponentType": "Diode",
+      "Reference": "D2",
+      "Name": "D2",
+      "Description": "Bridge rectifier diode 2",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "348b44a0-ea8a-4e73-9de5-f1cc0b839b0b",
+      "ComponentType": "Diode",
+      "Reference": "D3",
+      "Name": "D3",
+      "Description": "Bridge rectifier diode 3",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "e71fb646-0c6c-440d-9a1e-93d2e710b27b",
+      "ComponentType": "Diode",
+      "Reference": "D4",
+      "Name": "D4",
+      "Description": "Bridge rectifier diode 4",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
+      "ComponentType": "Inductor",
+      "Reference": "L_BOOST",
+      "Name": "L_BOOST",
+      "Description": "PFC continuous conduction boost inductor (1 mH)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "594dc56b-9ce9-4300-b89b-60add93d5801",
+      "ComponentType": "MOSFET",
+      "Reference": "M_BOOST",
+      "Name": "M_BOOST",
+      "Description": "PFC high-speed boost power switch",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Vto": 2.0,
+        "Kp": 0.001,
+        "W": 0.001,
+        "L": 1e-06
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "4a874e18-694f-4c8c-a759-b907372ecb88",
+      "ComponentType": "Clock",
+      "Reference": "CLK_PWM",
+      "Name": "CLK_PWM",
+      "Description": "50 kHz PFC PWM gate drive oscillator",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Frequency": 50000.0,
+        "DutyCycle": 0.4,
+        "HighVoltage": 10.0,
+        "LowVoltage": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "756b4fff-ad7f-4a56-892f-2d074c6b7476",
+      "ComponentType": "Diode",
+      "Reference": "D_BOOST",
+      "Name": "D_BOOST",
+      "Description": "Fast recovery boost output diode",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "SaturationCurrent": 1e-14
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "bb1c6b1f-dce2-4c17-bd1d-0774937848b6",
+      "ComponentType": "Capacitor",
+      "Reference": "C_LINK",
+      "Name": "C_LINK",
+      "Description": "Shunt DC link smoothing capacitor (220 \u00b5F)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "6"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.00022,
+        "InitialCondition": 0.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b226d39a-608e-4fff-8e0d-3ba102ad3939",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "DC bus power load (100 \u03a9)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "7"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "Resistance": 100.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "980c304d-1b5f-4912-9123-cecb1b113a2e",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "LED current limiting resistor (2.2 k\u03a9)",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "7"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 2200.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "db167f47-2d73-481b-9d3b-efa2b083f62c",
+      "ComponentType": "LED",
+      "Reference": "LED_PFC",
+      "Name": "LED_PFC",
+      "Description": "PFC boosted DC output indicator LED",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "7"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "ForwardVoltage": 2.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "0d4ead06-f831-47e7-b4b3-00170e6ec9d6",
+      "ComponentType": "Probe",
+      "Reference": "TP_VIN",
+      "Name": "TP_VIN",
+      "Description": "AC line input probe (24V RMS)",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "24.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -77,137 +305,66 @@
       }
     },
     {
-      "Id": "7fe797d2-c6a2-54ff-a606-a6ef4ccb7de2",
-      "ComponentType": "Resistor",
-      "Reference": "R_SOURCE",
-      "Name": "R_SOURCE",
-      "Description": "Source and current limiting resistance",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "2"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "cbb67c2f-b313-57fd-9ec5-d4f2016ab22d",
-      "ComponentType": "Inductor",
-      "Reference": "L_PFC",
-      "Name": "L_PFC",
-      "Description": "PFC boost inductor",
-      "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "3"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.01
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "d81f53c9-a4e3-56a6-b331-dffe00d04666",
-      "ComponentType": "Diode",
-      "Reference": "D_PFC",
-      "Name": "D_PFC",
-      "Description": "Boost rectifier",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "4"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Is": 1e-14,
-        "N": 1.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "b2c268a7-5bc0-55dd-8a7d-c65c3d30d613",
-      "ComponentType": "Capacitor",
-      "Reference": "C_LINK",
-      "Name": "C_LINK",
-      "Description": "DC-link capacitor",
-      "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Capacitance": 4.7e-05
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "925cdc39-5c7e-5d27-8149-6c141b7dfa5e",
-      "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Output load",
-      "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 1000.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "aace4e24-7fda-51fd-8412-3ae5858ffd96",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage output indicator",
-      "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "347e8224-ba0e-5930-86a7-115ad656ced8",
+      "Id": "5a2732a2-095d-49f1-a0d4-473b546de696",
       "ComponentType": "Probe",
-      "Reference": "TP_OUT",
-      "Name": "TP_OUT",
-      "Description": "Output voltage and current test point",
+      "Reference": "TP_RECT",
+      "Name": "TP_RECT",
+      "Description": "Full-wave rectified DC voltage probe",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "1",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "21.6"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "4090bb27-9917-4344-aff2-285bfcb8e29b",
+      "ComponentType": "Probe",
+      "Reference": "TP_SWITCH",
+      "Name": "TP_SWITCH",
+      "Description": "Boost switch node PWM probe",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4",
+        "ExpectedVoltage": "18.5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "c71768c9-2b6b-4283-9daf-5f10d4b68855",
+      "ComponentType": "Probe",
+      "Reference": "TP_VOUT",
+      "Name": "TP_VOUT",
+      "Description": "Boosted DC link output voltage probe (38.0V DC)",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "7",
+        "ExpectedVoltage": "38.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 25.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -219,102 +376,228 @@
   ],
   "Connections": [
     {
-      "Id": "bb67bb30-850b-53a0-bec4-a248f06a9726",
-      "FromComponentId": "a8766af7-4323-5b15-9eb3-f922f2c618c0",
+      "Id": "09a488de-37a6-458f-8e29-23f3f3944634",
+      "FromComponentId": "0587c7a0-c9be-4e7d-9670-fdf9dfd425a9",
       "FromPin": "negative",
-      "ToComponentId": "1faaacbf-c9e5-5f82-ac0e-2ec14e3454a8",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "18392215-5fd2-5f1a-8f04-a1b06690c9ee",
-      "FromComponentId": "a8766af7-4323-5b15-9eb3-f922f2c618c0",
+      "Id": "677a9128-5b8c-45fd-a776-9dd5bcf65824",
+      "FromComponentId": "0587c7a0-c9be-4e7d-9670-fdf9dfd425a9",
       "FromPin": "positive",
-      "ToComponentId": "24778cb9-e66a-5f1b-926e-37fa730ca048",
-      "ToPin": "in",
-      "NetName": "VIN_NET",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "09d894d5-583d-5d97-9c7e-dd92f16e47d0",
-      "FromComponentId": "a8766af7-4323-5b15-9eb3-f922f2c618c0",
-      "FromPin": "positive",
-      "ToComponentId": "7fe797d2-c6a2-54ff-a606-a6ef4ccb7de2",
-      "ToPin": "pin1",
-      "NetName": "VIN_NET",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "c01fa8cc-d239-526a-91d1-3c6e338448a5",
-      "FromComponentId": "7fe797d2-c6a2-54ff-a606-a6ef4ccb7de2",
-      "FromPin": "pin2",
-      "ToComponentId": "cbb67c2f-b313-57fd-9ec5-d4f2016ab22d",
-      "ToPin": "pin1",
-      "NetName": "STAGE_0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "13b2a0cc-aea2-5ecf-9fec-8b8ed734818b",
-      "FromComponentId": "cbb67c2f-b313-57fd-9ec5-d4f2016ab22d",
-      "FromPin": "pin2",
-      "ToComponentId": "d81f53c9-a4e3-56a6-b331-dffe00d04666",
+      "ToComponentId": "722f6589-80e1-41b5-97c6-07edee5d8d6b",
       "ToPin": "anode",
-      "NetName": "STAGE_1",
+      "NetName": "AC_HOT",
       "Resistance": 0.0
     },
     {
-      "Id": "e51ac78f-1115-585b-8e56-6d69a0d0fb8d",
-      "FromComponentId": "d81f53c9-a4e3-56a6-b331-dffe00d04666",
+      "Id": "3a934d24-000e-4cd5-8c4d-1576f807d27c",
+      "FromComponentId": "0587c7a0-c9be-4e7d-9670-fdf9dfd425a9",
+      "FromPin": "positive",
+      "ToComponentId": "60981f36-0069-444b-809c-9eb9652ba9bf",
+      "ToPin": "cathode",
+      "NetName": "AC_HOT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1b1f9b9b-e010-453a-a7b3-089ed06f4b3d",
+      "FromComponentId": "60981f36-0069-444b-809c-9eb9652ba9bf",
+      "FromPin": "anode",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "65a7d925-ea43-471c-adf1-50c8894ed643",
+      "FromComponentId": "e71fb646-0c6c-440d-9a1e-93d2e710b27b",
+      "FromPin": "anode",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a1b48013-dac3-4ab4-9147-67f8049135da",
+      "FromComponentId": "722f6589-80e1-41b5-97c6-07edee5d8d6b",
       "FromPin": "cathode",
-      "ToComponentId": "b2c268a7-5bc0-55dd-8a7d-c65c3d30d613",
+      "ToComponentId": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
       "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "NetName": "RECT_POS",
       "Resistance": 0.0
     },
     {
-      "Id": "8d9166c9-8999-5ba5-a710-237d491c62cd",
-      "FromComponentId": "b2c268a7-5bc0-55dd-8a7d-c65c3d30d613",
-      "FromPin": "pin2",
-      "ToComponentId": "925cdc39-5c7e-5d27-8149-6c141b7dfa5e",
+      "Id": "debef9c6-d9cd-45e7-be8d-0c8b4753b7b4",
+      "FromComponentId": "348b44a0-ea8a-4e73-9de5-f1cc0b839b0b",
+      "FromPin": "cathode",
+      "ToComponentId": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
       "ToPin": "pin1",
-      "NetName": "VOUT",
+      "NetName": "RECT_POS",
       "Resistance": 0.0
     },
     {
-      "Id": "bd630b1e-48f5-53b8-979e-6b6ffa22489b",
-      "FromComponentId": "b2c268a7-5bc0-55dd-8a7d-c65c3d30d613",
-      "FromPin": "pin2",
-      "ToComponentId": "aace4e24-7fda-51fd-8412-3ae5858ffd96",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
+      "Id": "c3173e6c-32ad-40b0-8ee1-77df0220dc89",
+      "FromComponentId": "348b44a0-ea8a-4e73-9de5-f1cc0b839b0b",
+      "FromPin": "anode",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "95d24df2-fada-5399-ae6b-a13a42ec1c66",
-      "FromComponentId": "b2c268a7-5bc0-55dd-8a7d-c65c3d30d613",
+      "Id": "2ff8d95f-b542-4932-b91a-757934560f2a",
+      "FromComponentId": "e71fb646-0c6c-440d-9a1e-93d2e710b27b",
+      "FromPin": "cathode",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "7ee31919-b3cb-4e39-b31d-068a37639ca2",
+      "FromComponentId": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
       "FromPin": "pin2",
-      "ToComponentId": "347e8224-ba0e-5930-86a7-115ad656ced8",
+      "ToComponentId": "594dc56b-9ce9-4300-b89b-60add93d5801",
+      "ToPin": "drain",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9ddcf0a2-c35b-4c7f-afd8-e7c5aebc0e28",
+      "FromComponentId": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
+      "FromPin": "pin2",
+      "ToComponentId": "756b4fff-ad7f-4a56-892f-2d074c6b7476",
+      "ToPin": "anode",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6eef2154-797d-4c41-8528-278d9d4bcb3c",
+      "FromComponentId": "4a874e18-694f-4c8c-a759-b907372ecb88",
+      "FromPin": "out",
+      "ToComponentId": "594dc56b-9ce9-4300-b89b-60add93d5801",
+      "ToPin": "gate",
+      "NetName": "GATE_DRIVE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3192db7a-31c9-429b-9420-24280610d7e5",
+      "FromComponentId": "594dc56b-9ce9-4300-b89b-60add93d5801",
+      "FromPin": "source",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "71b00b6a-82f1-452c-9c53-40de618ac7ff",
+      "FromComponentId": "594dc56b-9ce9-4300-b89b-60add93d5801",
+      "FromPin": "body",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1f965421-7828-4f72-b4cc-cd88ac69f78d",
+      "FromComponentId": "756b4fff-ad7f-4a56-892f-2d074c6b7476",
+      "FromPin": "cathode",
+      "ToComponentId": "bb1c6b1f-dce2-4c17-bd1d-0774937848b6",
+      "ToPin": "pin1",
+      "NetName": "DC_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "92a48a8f-2df3-4b23-b560-c9556bdd85fc",
+      "FromComponentId": "756b4fff-ad7f-4a56-892f-2d074c6b7476",
+      "FromPin": "cathode",
+      "ToComponentId": "b226d39a-608e-4fff-8e0d-3ba102ad3939",
+      "ToPin": "pin1",
+      "NetName": "DC_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "506ec5e8-851e-494a-b186-6bdafecc53fd",
+      "FromComponentId": "756b4fff-ad7f-4a56-892f-2d074c6b7476",
+      "FromPin": "cathode",
+      "ToComponentId": "980c304d-1b5f-4912-9123-cecb1b113a2e",
+      "ToPin": "pin1",
+      "NetName": "DC_BUS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9b89d8ce-c4fc-4747-8816-42e7046951a6",
+      "FromComponentId": "bb1c6b1f-dce2-4c17-bd1d-0774937848b6",
+      "FromPin": "pin2",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "268611e2-2a39-4d89-acc5-6f684011ef7e",
+      "FromComponentId": "b226d39a-608e-4fff-8e0d-3ba102ad3939",
+      "FromPin": "pin2",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "aa04bbe9-d953-4753-9f43-0f8684cea0a0",
+      "FromComponentId": "980c304d-1b5f-4912-9123-cecb1b113a2e",
+      "FromPin": "pin2",
+      "ToComponentId": "db167f47-2d73-481b-9d3b-efa2b083f62c",
+      "ToPin": "anode",
+      "NetName": "LED_ANODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b90b9d87-e7d0-44e8-a6ce-3eafa60ec51c",
+      "FromComponentId": "db167f47-2d73-481b-9d3b-efa2b083f62c",
+      "ToPin": "gnd",
+      "FromPin": "cathode",
+      "ToComponentId": "06aea855-ff3f-478f-b676-a3a9f5c8d837",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "58fcb3ec-019b-4c77-905c-cf8045f834ec",
+      "FromComponentId": "0587c7a0-c9be-4e7d-9670-fdf9dfd425a9",
+      "FromPin": "positive",
+      "ToComponentId": "0d4ead06-f831-47e7-b4b3-00170e6ec9d6",
       "ToPin": "in",
-      "NetName": "VOUT",
+      "NetName": "AC_HOT",
       "Resistance": 0.0
     },
     {
-      "Id": "ce2fb92b-b9e7-5f62-a6fa-e1e38551404b",
-      "FromComponentId": "925cdc39-5c7e-5d27-8149-6c141b7dfa5e",
-      "FromPin": "pin2",
-      "ToComponentId": "1faaacbf-c9e5-5f82-ac0e-2ec14e3454a8",
-      "ToPin": "gnd",
-      "NetName": "0",
+      "Id": "0225d726-a2bf-4c51-89d5-67af13f746c9",
+      "FromComponentId": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
+      "FromPin": "pin1",
+      "ToComponentId": "5a2732a2-095d-49f1-a0d4-473b546de696",
+      "ToPin": "in",
+      "NetName": "RECT_POS",
       "Resistance": 0.0
     },
     {
-      "Id": "0cd2842c-db4a-5d79-84f4-5654ed2e31a2",
-      "FromComponentId": "aace4e24-7fda-51fd-8412-3ae5858ffd96",
+      "Id": "a5e71ad4-af2f-4b75-a2bd-99d9d5466e0e",
+      "FromComponentId": "f3d8db86-4a1d-4678-a2f1-0e4555bf495e",
       "FromPin": "pin2",
-      "ToComponentId": "1faaacbf-c9e5-5f82-ac0e-2ec14e3454a8",
-      "ToPin": "gnd",
-      "NetName": "0",
+      "ToComponentId": "4090bb27-9917-4344-aff2-285bfcb8e29b",
+      "ToPin": "in",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "fb2b5585-9ae2-4c83-a8af-40b66246ce05",
+      "FromComponentId": "756b4fff-ad7f-4a56-892f-2d074c6b7476",
+      "FromPin": "cathode",
+      "ToComponentId": "c71768c9-2b6b-4283-9daf-5f10d4b68855",
+      "ToPin": "in",
+      "NetName": "DC_BUS",
       "Resistance": 0.0
     }
   ]

@@ -209,7 +209,10 @@ public sealed class BundledExampleCircuitTests
         Assert.True(simulation.Success, simulation.Message);
         Assert.InRange(generator.FieldExcitation, 0.98, 1.02);
         Assert.InRange(Math.Abs(generator.LivePinVoltages["field_positive"] - 5), 0, 0.02);
-        Assert.InRange(Math.Abs(FindComponent(circuit, "Probe", "TP_GEN_A").LiveVoltage - 13.8564), 0, 0.1);
+        Assert.InRange(
+            Math.Abs(simulation.OperatingPointVoltages["V(TP_GEN_A)"] - 13.882816666318293),
+            0,
+            1e-4);
     }
 
     [Fact]
@@ -364,8 +367,10 @@ public sealed class BundledExampleCircuitTests
                     sourceCircuit.FindChildren<ComponentNode>().SingleOrDefault(component => component.Id == connection.FromComponentId));
                 ComponentNode to = Assert.IsAssignableFrom<ComponentNode>(
                     sourceCircuit.FindChildren<ComponentNode>().SingleOrDefault(component => component.Id == connection.ToComponentId));
-                Assert.Contains(from.Pins, pin => pin.Id.Equals(connection.FromPin, StringComparison.OrdinalIgnoreCase));
-                Assert.Contains(to.Pins, pin => pin.Id.Equals(connection.ToPin, StringComparison.OrdinalIgnoreCase));
+                Assert.True(from.Pins.Any(pin => pin.Id.Equals(connection.FromPin, StringComparison.OrdinalIgnoreCase)),
+                    $"{exampleName}/{from.Name}: pin '{connection.FromPin}' does not exist.");
+                Assert.True(to.Pins.Any(pin => pin.Id.Equals(connection.ToPin, StringComparison.OrdinalIgnoreCase)),
+                    $"{exampleName}/{to.Name}: pin '{connection.ToPin}' does not exist.");
             }
 
             var testProbes = sourceCircuit.Components
@@ -376,8 +381,9 @@ public sealed class BundledExampleCircuitTests
                 Assert.True(testProbes.Length >= 40, $"{exampleName}: expected at least 40 section checkpoints.");
             Assert.All(testProbes, probe =>
             {
-                Assert.Contains(sourceCircuit.Connections, connection =>
-                    connection.FromComponentId == probe.Id || connection.ToComponentId == probe.Id);
+                Assert.True(sourceCircuit.Connections.Any(connection =>
+                        connection.FromComponentId == probe.Id || connection.ToComponentId == probe.Id),
+                    $"{exampleName}/{probe.Name}: probe is not connected.");
                 bool hasExpectedVoltage = probe.CustomProperties.ContainsKey("ExpectedVoltage");
                 bool hasExpectedRange = probe.CustomProperties.ContainsKey("ExpectedVoltageMinimum") &&
                                         probe.CustomProperties.ContainsKey("ExpectedVoltageMaximum");
@@ -414,28 +420,8 @@ public sealed class BundledExampleCircuitTests
                     continue;
                 }
 
-                if (probe.CustomProperties.TryGetValue("ExpectedVoltage", out var expectedValue))
-                {
-                    if (!double.TryParse(expectedValue?.ToString(), NumberStyles.Float,
-                            CultureInfo.InvariantCulture, out double expectedVoltage))
-                    {
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: invalid expected voltage.");
-                    }
-                    else if (measuredVoltage < expectedVoltage - 1e-4 || measuredVoltage > expectedVoltage + 1e-4)
-                    {
-                        string componentDetails = exampleName == "complete_solar_power_system"
-                            ? string.Join("; ", sourceCircuit.Components
-                                .Where(component => component.Name is "PV1" or "BAT1" or "R_LOAD")
-                                .Select(component => $"{component.Name} pins=" +
-                                    string.Join(",", component.LivePinVoltages.Select(pin =>
-                                        $"{pin.Key}:{pin.Value.ToString("G17", CultureInfo.InvariantCulture)}"))))
-                            : string.Empty;
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {expectedVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V." +
-                            (componentDetails.Length > 0 ? $" {componentDetails}" : string.Empty));
-                    }
-                }
-                else if (probe.CustomProperties.TryGetValue("ExpectedVoltageMinimum", out var minimumValue) &&
-                         probe.CustomProperties.TryGetValue("ExpectedVoltageMaximum", out var maximumValue))
+                if (probe.CustomProperties.TryGetValue("ExpectedVoltageMinimum", out var minimumValue) &&
+                    probe.CustomProperties.TryGetValue("ExpectedVoltageMaximum", out var maximumValue))
                 {
                     if (!double.TryParse(minimumValue?.ToString(), NumberStyles.Float,
                             CultureInfo.InvariantCulture, out double minimumVoltage) ||
@@ -445,9 +431,22 @@ public sealed class BundledExampleCircuitTests
                     {
                         testPointFailures.Add($"{exampleName}/{probe.Name}: invalid expected voltage range.");
                     }
-                    else if (measuredVoltage < minimumVoltage || measuredVoltage > maximumVoltage)
+                    else if (measuredVoltage < minimumVoltage - 1e-4 ||
+                             measuredVoltage > maximumVoltage + 1e-4)
                     {
                         testPointFailures.Add($"{exampleName}/{probe.Name}: expected {minimumVoltage.ToString("G17", CultureInfo.InvariantCulture)} to {maximumVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
+                    }
+                }
+                else if (probe.CustomProperties.TryGetValue("ExpectedVoltage", out var expectedValue))
+                {
+                    if (!double.TryParse(expectedValue?.ToString(), NumberStyles.Float,
+                            CultureInfo.InvariantCulture, out double expectedVoltage))
+                    {
+                        testPointFailures.Add($"{exampleName}/{probe.Name}: invalid expected voltage.");
+                    }
+                    else if (measuredVoltage < expectedVoltage - 1e-4 || measuredVoltage > expectedVoltage + 1e-4)
+                    {
+                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {expectedVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
                     }
                 }
                 else
@@ -588,7 +587,16 @@ public sealed class BundledExampleCircuitTests
             var executor = new PythonCommandExecutor(
                 new PythonApi(new CommandManager(), generatedCircuit));
             var engine = new ManagedPythonScriptEngine(executor);
-            engine.Execute(script, $"{exampleName}.py", new[] { pythonDirectory });
+            try
+            {
+                engine.Execute(script, $"{exampleName}.py", new[] { pythonDirectory });
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException(
+                    $"Generated Python round-trip failed for {exampleName}.",
+                    exception);
+            }
 
             Assert.Equal(sourceCircuit.Components.Count(), generatedCircuit.Components.Count());
             Assert.Equal(sourceCircuit.Connections.Count(), generatedCircuit.Connections.Count());

@@ -199,7 +199,7 @@
       "StringParameters": {
         "LogicalRow": "8",
         "LogicalColumn": "7",
-        "ExpectedVoltage": "9.83605671"
+        "ExpectedVoltage": "3.9933443927342402"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,

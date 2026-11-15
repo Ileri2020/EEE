@@ -31,7 +31,7 @@ public sealed class AllComponentSimulationTests
     }
 
     [Fact]
-    public void Test_All_116_Components_In_Simulated_Circuits()
+    public void Test_All_120_Components_In_Simulated_Circuits()
     {
         int passed = 0;
         int total = 120;

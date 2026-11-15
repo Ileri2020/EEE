@@ -3,16 +3,17 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Precision Rectifier",
-  "Description": "Low-voltage precision-rectifier study with sinusoidal input, diode feedback equivalent, toggleable output path, load lamp, and probes. Op-amp feedback behavior is simplified.",
+  "Description": "Active op-amp precision half-wave rectifier (super-diode) eliminating the standard 0.7V diode forward drop, with load resistor and LED peak indicator.",
   "Components": [
     {
       "Id": "8c022d6b-8b3e-500e-b163-b5d41c456853",
+      "StableTypeId": "electrical.ground",
       "ComponentType": "Ground",
       "Reference": "GND",
       "Name": "GND",
-      "Description": "Circuit return",
+      "Description": "Circuit ground reference (0V)",
       "StringParameters": {
-        "LogicalRow": "12",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -24,12 +25,13 @@
     },
     {
       "Id": "b4514698-eaa7-515d-a8fb-2cce0dd423a3",
+      "StableTypeId": "electrical.voltagesource",
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Sine source",
+      "Description": "1 kHz sinusoidal input source (3V peak)",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -38,31 +40,34 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 0.1,
+        "Voltage": 3.0,
         "SineOffset": 0.0,
-        "SineAmplitude": 0.1,
+        "SineAmplitude": 3.0,
         "SineFrequency": 1000.0,
         "SinePhase": 0.0,
         "PulseInitial": 0.0,
-        "PulsePulsed": 0.1,
-        "PulseDelay": 0.001,
+        "PulsePulsed": 3.0,
+        "PulseDelay": 0.0,
         "PulseRiseTime": 1e-06,
         "PulseFallTime": 1e-06,
-        "PulseWidth": 0.00045,
+        "PulseWidth": 0.0005,
         "PulsePeriod": 0.001
       },
       "CustomProperties": {}
     },
     {
       "Id": "a9f52002-6429-507c-8ed1-22e7715fb8bd",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_IN",
       "Name": "TP_IN",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Input test point measuring VIN (3V peak sine)",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "ExpectedVoltage": "0.1"
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "3.0",
+        "ExpectedVoltageMinimum": "-3.0",
+        "ExpectedVoltageMaximum": "3.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -77,58 +82,44 @@
       }
     },
     {
-      "Id": "1aaa50bc-df95-5b49-b36c-28562bb848e4",
-      "ComponentType": "LogicInput",
-      "Reference": "ENABLE",
-      "Name": "ENABLE",
-      "Description": "User-toggleable input",
+      "Id": "a1d2e3f4-5b6c-7d8e-9f0a-1b2c3d4e5f60",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "U1",
+      "Description": "Operational amplifier (LM741, ±15V supplies)",
       "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "1",
-        "State": "True"
+        "LogicalRow": "3",
+        "LogicalColumn": "2",
+        "PartNumber": "LM741"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "HighVoltage": 5.0,
-        "LowVoltage": 0.0,
-        "State": 1.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "2f4ae0d2-7693-50e5-a8c4-89827a56e96c",
-      "ComponentType": "VoltageSwitch",
-      "Reference": "S_ENABLE",
-      "Name": "S_ENABLE",
-      "Description": "Toggle-controlled signal path",
-      "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "3"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Ron": 1.0,
-        "Roff": 1000000.0,
-        "Threshold": 2.5,
-        "Hysteresis": 0.1
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0,
+        "Vos": 0.001,
+        "Ib": 8e-08,
+        "CMRR": 90.0
       },
       "CustomProperties": {}
     },
     {
       "Id": "68d68755-d4d1-5e1b-ac52-b1d39258ae5e",
+      "StableTypeId": "electronics.diode",
       "ComponentType": "Diode",
       "Reference": "D_RECT",
       "Name": "D_RECT",
-      "Description": "Diode",
+      "Description": "Feedback rectifier diode (1N4148 fast switching)",
       "StringParameters": {
         "LogicalRow": "3",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3",
+        "PartNumber": "1N4148"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -141,33 +132,15 @@
       "CustomProperties": {}
     },
     {
-      "Id": "5ef7ff09-f174-5b52-9758-6dbd5b20a9db",
-      "ComponentType": "Resistor",
-      "Reference": "R_FEEDBACK",
-      "Name": "R_FEEDBACK",
-      "Description": "Resistor",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 10000.0
-      },
-      "CustomProperties": {}
-    },
-    {
       "Id": "cd1df3ee-549d-573f-9b7f-c44244872968",
+      "StableTypeId": "electrical.resistor",
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Resistor",
+      "Description": "Rectifier pull-down load resistor (1 kΩ)",
       "StringParameters": {
-        "LogicalRow": "9",
-        "LogicalColumn": "6"
+        "LogicalRow": "5",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -179,36 +152,60 @@
       "CustomProperties": {}
     },
     {
-      "Id": "4d7ef760-84b1-54ee-b806-7c38304dcf1c",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage indicator",
+      "Id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "LED_RECT",
+      "Name": "LED_RECT",
+      "Description": "Positive peak indicator LED (Green, Vf=2.1V)",
       "StringParameters": {
-        "LogicalRow": "10",
-        "LogicalColumn": "6"
+        "LogicalRow": "6",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
+        "Vf": 2.1,
+        "Wavelength": 525.0
+      },
+      "CustomProperties": {
+        "Color": "Green"
+      }
+    },
+    {
+      "Id": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "LED current-limiting resistor (330 Ω)",
+      "StringParameters": {
+        "LogicalRow": "7",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 330.0
       },
       "CustomProperties": {}
     },
     {
       "Id": "30ed9ca9-97da-5751-a51e-38feee7b9a4e",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_OUT",
       "Name": "TP_OUT",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Rectified half-wave output probe (0V to +3V)",
       "StringParameters": {
-        "LogicalRow": "8",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "3",
+        "LogicalColumn": "5",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "3.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -246,71 +243,35 @@
       "Id": "ab27a9c7-b423-5a7c-8001-1a83c6b6ef34",
       "FromComponentId": "b4514698-eaa7-515d-a8fb-2cce0dd423a3",
       "FromPin": "positive",
-      "ToComponentId": "2f4ae0d2-7693-50e5-a8c4-89827a56e96c",
-      "ToPin": "sw_pos",
+      "ToComponentId": "a1d2e3f4-5b6c-7d8e-9f0a-1b2c3d4e5f60",
+      "ToPin": "in_pos",
       "NetName": "VIN",
       "Resistance": 0.0
     },
     {
-      "Id": "881311f4-07c8-5ef6-bad9-7fd8cf1b1b72",
-      "FromComponentId": "1aaa50bc-df95-5b49-b36c-28562bb848e4",
-      "FromPin": "out",
-      "ToComponentId": "2f4ae0d2-7693-50e5-a8c4-89827a56e96c",
-      "ToPin": "ctrl_pos",
-      "NetName": "ENABLE",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "cbfa477e-c1aa-5730-a20b-1cd8fa7ff191",
-      "FromComponentId": "8c022d6b-8b3e-500e-b163-b5d41c456853",
-      "FromPin": "gnd",
-      "ToComponentId": "2f4ae0d2-7693-50e5-a8c4-89827a56e96c",
-      "ToPin": "ctrl_neg",
-      "NetName": "0",
-      "Resistance": 0.0
-    },
-    {
       "Id": "5ffb7a3d-0f43-55b7-b20a-2b1da1e79a8a",
-      "FromComponentId": "2f4ae0d2-7693-50e5-a8c4-89827a56e96c",
-      "FromPin": "sw_neg",
+      "FromComponentId": "a1d2e3f4-5b6c-7d8e-9f0a-1b2c3d4e5f60",
+      "FromPin": "out",
       "ToComponentId": "68d68755-d4d1-5e1b-ac52-b1d39258ae5e",
       "ToPin": "anode",
-      "NetName": "STAGE_1",
+      "NetName": "OPAMP_DRIVE",
       "Resistance": 0.0
     },
     {
       "Id": "b47c0cd0-20e4-5544-81ad-ae793280d029",
       "FromComponentId": "68d68755-d4d1-5e1b-ac52-b1d39258ae5e",
       "FromPin": "cathode",
-      "ToComponentId": "5ef7ff09-f174-5b52-9758-6dbd5b20a9db",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "ToComponentId": "a1d2e3f4-5b6c-7d8e-9f0a-1b2c3d4e5f60",
+      "ToPin": "in_neg",
+      "NetName": "VOUT",
       "Resistance": 0.0
     },
     {
       "Id": "ebaa5eda-d1d5-55ce-8caf-9887b567ccd1",
-      "FromComponentId": "5ef7ff09-f174-5b52-9758-6dbd5b20a9db",
-      "FromPin": "pin2",
+      "FromComponentId": "68d68755-d4d1-5e1b-ac52-b1d39258ae5e",
+      "FromPin": "cathode",
       "ToComponentId": "cd1df3ee-549d-573f-9b7f-c44244872968",
       "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "a266b387-0ea1-58d8-a842-7e83961aa02f",
-      "FromComponentId": "5ef7ff09-f174-5b52-9758-6dbd5b20a9db",
-      "FromPin": "pin2",
-      "ToComponentId": "4d7ef760-84b1-54ee-b806-7c38304dcf1c",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "c99e11f0-66cf-599f-a6ed-edbdef977757",
-      "FromComponentId": "5ef7ff09-f174-5b52-9758-6dbd5b20a9db",
-      "FromPin": "pin2",
-      "ToComponentId": "30ed9ca9-97da-5751-a51e-38feee7b9a4e",
-      "ToPin": "in",
       "NetName": "VOUT",
       "Resistance": 0.0
     },
@@ -324,8 +285,35 @@
       "Resistance": 0.0
     },
     {
+      "Id": "c99e11f0-66cf-599f-a6ed-edbdef977757",
+      "FromComponentId": "68d68755-d4d1-5e1b-ac52-b1d39258ae5e",
+      "FromPin": "cathode",
+      "ToComponentId": "30ed9ca9-97da-5751-a51e-38feee7b9a4e",
+      "ToPin": "in",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a266b387-0ea1-58d8-a842-7e83961aa02f",
+      "FromComponentId": "68d68755-d4d1-5e1b-ac52-b1d39258ae5e",
+      "FromPin": "cathode",
+      "ToComponentId": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "ToPin": "anode",
+      "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "FromComponentId": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "FromPin": "cathode",
+      "ToComponentId": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "ToPin": "pin1",
+      "NetName": "LED_CATHODE",
+      "Resistance": 0.0
+    },
+    {
       "Id": "f69a5aef-5b34-5d06-9078-2d2d4a00a9d3",
-      "FromComponentId": "4d7ef760-84b1-54ee-b806-7c38304dcf1c",
+      "FromComponentId": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
       "FromPin": "pin2",
       "ToComponentId": "8c022d6b-8b3e-500e-b163-b5d41c456853",
       "ToPin": "gnd",

@@ -230,8 +230,8 @@
         "PulseInitial": 0.0,
         "PulsePulsed": 5.0,
         "PulseDelay": 0.0,
-        "PulseRiseTime": 1e-07,
-        "PulseFallTime": 1e-07,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
         "PulseWidth": 9e-06,
         "PulsePeriod": 2e-05
       },
@@ -257,8 +257,8 @@
         "PulseInitial": 0.0,
         "PulsePulsed": 5.0,
         "PulseDelay": 1.05e-05,
-        "PulseRiseTime": 1e-07,
-        "PulseFallTime": 1e-07,
+        "PulseRiseTime": 1e-06,
+        "PulseFallTime": 1e-06,
         "PulseWidth": 8.5e-06,
         "PulsePeriod": 2e-05
       },
@@ -291,7 +291,9 @@
       "Description": "Transformer primary-secondary magnetic coupling (k = 0.99)",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "5"
+        "LogicalColumn": "5",
+        "Inductor1": "L_PRIMARY",
+        "Inductor2": "L_SECONDARY"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -300,10 +302,7 @@
       "ElectricalParameters": {
         "Coupling": 0.99
       },
-      "CustomProperties": {
-        "Inductor1": "L_PRIMARY",
-        "Inductor2": "L_SECONDARY"
-      }
+      "CustomProperties": {}
     },
     {
       "Id": "01580629-f606-5cff-9200-f4ceb721f225",

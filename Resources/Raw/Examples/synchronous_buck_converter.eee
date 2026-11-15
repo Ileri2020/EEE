@@ -3,66 +3,60 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Synchronous Buck Converter",
-  "Description": "Low-voltage synchronous buck teaching network with pulse-equivalent drive, switch, inductive/capacitive filtering, a toggleable enable, output lamp and switch/output probes. Dead-time control is omitted.",
+  "Description": "Synchronous step-down buck converter with a 12V DC input, 20 kHz PWM controller (40% duty cycle), complementary high-side and low-side MOSFET switches, LC output filter (1 mH inductor, 100 µF shunt capacitor), stepping down to a regulated 4.8V DC output across load and status indicator.",
   "Components": [
     {
-      "Id": "b7232a95-d1c4-5993-8448-70dd749a1711",
+      "Id": "3b030001-0001-4a7b-8c9d-000000000001",
+      "StableTypeId": "electrical.ground",
       "ComponentType": "Ground",
       "Reference": "GND",
       "Name": "GND",
-      "Description": "Circuit return",
+      "Description": "Circuit ground reference (0V)",
       "StringParameters": {
-        "LogicalRow": "12",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 10.0,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
     {
-      "Id": "9b792d28-70ad-5c48-bb97-906960296ba9",
+      "Id": "3b030001-0002-4a7b-8c9d-000000000002",
+      "StableTypeId": "electrical.voltagesource",
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Pulse source",
+      "Description": "12V DC input power supply rail",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "WaveformType": "Pulse"
+        "WaveformType": "DC"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 5.0,
       "ElectricalParameters": {
-        "Voltage": 12.0,
-        "SineOffset": 0.0,
-        "SineAmplitude": 12.0,
-        "SineFrequency": 20000.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 12.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 2e-05,
-        "PulsePeriod": 5e-05
+        "Voltage": 12.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "eed8ccd9-92aa-5cac-b720-c6b543d00225",
+      "Id": "3b030001-0003-4a7b-8c9d-000000000003",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_IN",
       "Name": "TP_IN",
-      "Description": "Voltage/current measurement test point",
+      "Description": "12V DC input voltage probe",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
-        "ExpectedVoltage": "12"
+        "ExpectedVoltage": "12.0",
+        "ExpectedVoltageMinimum": "11.5",
+        "ExpectedVoltageMaximum": "12.5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -77,43 +71,98 @@
       }
     },
     {
-      "Id": "e5cdbd1c-88a4-5112-b43c-f29aa7dac69e",
-      "ComponentType": "LogicInput",
-      "Reference": "ENABLE",
-      "Name": "ENABLE",
-      "Description": "User-toggleable input",
+      "Id": "3b030001-0004-4a7b-8c9d-000000000004",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_PWM",
+      "Name": "V_PWM",
+      "Description": "20 kHz PWM gate control generator (40% duty cycle, 0-5V pulse)",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
         "LogicalColumn": "1",
-        "State": "True"
+        "WaveformType": "Pulse"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "HighVoltage": 5.0,
-        "LowVoltage": 0.0,
-        "State": 1.0
+        "Voltage": 5.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 5.0,
+        "SineFrequency": 20000.0,
+        "SinePhase": 0.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
+        "PulseDelay": 0.0,
+        "PulseRiseTime": 1e-07,
+        "PulseFallTime": 1e-07,
+        "PulseWidth": 2e-05,
+        "PulsePeriod": 5e-05
       },
       "CustomProperties": {}
     },
     {
-      "Id": "a2de62ab-8811-5ebc-b46b-e8d41d2f1fb6",
-      "ComponentType": "VoltageSwitch",
-      "Reference": "S_ENABLE",
-      "Name": "S_ENABLE",
-      "Description": "Toggle-controlled signal path",
+      "Id": "3b030001-0005-4a7b-8c9d-000000000005",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_PWM",
+      "Name": "TP_PWM",
+      "Description": "20 kHz PWM gate drive probe (5V)",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
+        "LogicalColumn": "2",
+        "ExpectedVoltage": "5.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "5.0"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "3b030001-0006-4a7b-8c9d-000000000006",
+      "StableTypeId": "electronics.not",
+      "ComponentType": "NotGate",
+      "Reference": "U_INV",
+      "Name": "U_INV",
+      "Description": "Inverter providing complementary gate drive for low-side switch",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 0.1,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b030001-0007-4a7b-8c9d-000000000007",
+      "StableTypeId": "electrical.voltageswitch",
+      "ComponentType": "VoltageSwitch",
+      "Reference": "Q_HS",
+      "Name": "Q_HS",
+      "Description": "High-side buck switching transistor",
+      "StringParameters": {
+        "LogicalRow": "1",
         "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 5.0,
       "ElectricalParameters": {
-        "Ron": 1.0,
+        "Ron": 0.02,
         "Roff": 1000000.0,
         "Threshold": 2.5,
         "Hysteresis": 0.1
@@ -121,30 +170,127 @@
       "CustomProperties": {}
     },
     {
-      "Id": "78056a7e-eadd-561c-9cd3-06093a48484a",
-      "ComponentType": "Inductor",
-      "Reference": "L_OUT",
-      "Name": "L_OUT",
-      "Description": "Inductor",
+      "Id": "3b030001-0008-4a7b-8c9d-000000000008",
+      "StableTypeId": "electrical.voltageswitch",
+      "ComponentType": "VoltageSwitch",
+      "Reference": "Q_LS",
+      "Name": "Q_LS",
+      "Description": "Low-side synchronous rectifier switching transistor",
       "StringParameters": {
         "LogicalRow": "3",
-        "LogicalColumn": "4"
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Ron": 0.02,
+        "Roff": 1000000.0,
+        "Threshold": 2.5,
+        "Hysteresis": 0.1
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b030001-0009-4a7b-8c9d-000000000009",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_SW",
+      "Name": "TP_SW",
+      "Description": "Buck switching node probe (0-12V chopped square wave)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "12.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "12.0"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Inductance": 0.001
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "3b030001-000a-4a7b-8c9d-00000000000a",
+      "StableTypeId": "electrical.inductor",
+      "ComponentType": "Inductor",
+      "Reference": "L_OUT",
+      "Name": "L_OUT",
+      "Description": "Buck power filter inductor (1 mH)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "4"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Inductance": 0.001,
+        "InitialCondition": 0.24,
+        "DcResistance": 0.05
       },
       "CustomProperties": {}
     },
     {
-      "Id": "f538feef-e0c3-5928-b129-7cc6d3ff6863",
+      "Id": "3b030001-000b-4a7b-8c9d-00000000000b",
+      "StableTypeId": "electrical.capacitor",
       "ComponentType": "Capacitor",
       "Reference": "C_OUT",
       "Name": "C_OUT",
-      "Description": "Capacitor",
+      "Description": "Buck output smoothing capacitor (100 µF shunt to ground)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 5.0,
+      "ElectricalParameters": {
+        "Capacitance": 0.0001,
+        "InitialCondition": 4.8,
+        "EquivalentSeriesResistance": 0.01
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b030001-000c-4a7b-8c9d-00000000000c",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "R_LOAD",
+      "Description": "DC output load resistor (20 Ω, 5W)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 2.0,
+      "ElectricalParameters": {
+        "Resistance": 20.0,
+        "PowerRating": 5.0,
+        "Tolerance": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3b030001-000d-4a7b-8c9d-00000000000d",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "Power indicator LED current-limiting resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "5"
@@ -152,62 +298,50 @@
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Capacitance": 0.0001
+        "Resistance": 1000.0,
+        "PowerRating": 0.25,
+        "Tolerance": 1.0
       },
       "CustomProperties": {}
     },
     {
-      "Id": "8c8390c8-6226-5dad-8cb8-84bc0eabaa4f",
-      "ComponentType": "Resistor",
-      "Reference": "R_LOAD",
-      "Name": "R_LOAD",
-      "Description": "Resistor",
+      "Id": "3b030001-000e-4a7b-8c9d-00000000000e",
+      "StableTypeId": "electronics.led",
+      "ComponentType": "LED",
+      "Reference": "D_LED",
+      "Name": "D_LED",
+      "Description": "Green 4.8V DC regulated output indicator LED",
       "StringParameters": {
-        "LogicalRow": "9",
+        "LogicalRow": "4",
         "LogicalColumn": "6"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
+      "BreakingCurrent": 0.05,
       "ElectricalParameters": {
-        "Resistance": 1000.0
+        "Vf": 2.1,
+        "Wavelength": 525.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "Color": "Green"
+      }
     },
     {
-      "Id": "5e819fcc-d700-5c94-b072-8c61784af6d5",
-      "ComponentType": "Bulb",
-      "Reference": "LAMP",
-      "Name": "LAMP",
-      "Description": "Visible low-voltage indicator",
-      "StringParameters": {
-        "LogicalRow": "10",
-        "LogicalColumn": "6"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Resistance": 100.0,
-        "RatedVoltage": 6.0,
-        "ThresholdVoltage": 0.5
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "c9c85a1b-d1e0-518b-9b3f-2cb766b84979",
+      "Id": "3b030001-000f-4a7b-8c9d-00000000000f",
+      "StableTypeId": "general.probe",
       "ComponentType": "Probe",
       "Reference": "TP_OUT",
       "Name": "TP_OUT",
-      "Description": "Voltage/current measurement test point",
+      "Description": "Regulated buck output voltage probe (4.8V DC nominal)",
       "StringParameters": {
-        "LogicalRow": "8",
-        "LogicalColumn": "7",
-        "ExpectedVoltage": "0"
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "4.8",
+        "ExpectedVoltageMinimum": "4.5",
+        "ExpectedVoltageMaximum": "5.1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -224,109 +358,199 @@
   ],
   "Connections": [
     {
-      "Id": "bbdce15d-fa53-54c4-b215-5800682e0565",
-      "FromComponentId": "9b792d28-70ad-5c48-bb97-906960296ba9",
+      "Id": "3b030002-0001-4a7b-8c9d-000000000001",
+      "FromComponentId": "3b030001-0002-4a7b-8c9d-000000000002",
       "FromPin": "negative",
-      "ToComponentId": "b7232a95-d1c4-5993-8448-70dd749a1711",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "be988932-923d-5d8c-818f-645fe55743c9",
-      "FromComponentId": "9b792d28-70ad-5c48-bb97-906960296ba9",
+      "Id": "3b030002-0002-4a7b-8c9d-000000000002",
+      "FromComponentId": "3b030001-0002-4a7b-8c9d-000000000002",
       "FromPin": "positive",
-      "ToComponentId": "eed8ccd9-92aa-5cac-b720-c6b543d00225",
+      "ToComponentId": "3b030001-0003-4a7b-8c9d-000000000003",
       "ToPin": "in",
-      "NetName": "VIN",
+      "NetName": "VIN_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "b4764377-6831-5474-b3d6-29f510438e5c",
-      "FromComponentId": "9b792d28-70ad-5c48-bb97-906960296ba9",
+      "Id": "3b030002-0003-4a7b-8c9d-000000000003",
+      "FromComponentId": "3b030001-0002-4a7b-8c9d-000000000002",
       "FromPin": "positive",
-      "ToComponentId": "a2de62ab-8811-5ebc-b46b-e8d41d2f1fb6",
+      "ToComponentId": "3b030001-0007-4a7b-8c9d-000000000007",
       "ToPin": "sw_pos",
-      "NetName": "VIN",
+      "NetName": "VIN_NODE",
       "Resistance": 0.0
     },
     {
-      "Id": "7f99fe9c-5663-531f-ba64-a2f23ffee954",
-      "FromComponentId": "e5cdbd1c-88a4-5112-b43c-f29aa7dac69e",
-      "FromPin": "out",
-      "ToComponentId": "a2de62ab-8811-5ebc-b46b-e8d41d2f1fb6",
-      "ToPin": "ctrl_pos",
-      "NetName": "ENABLE",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "80a6e06a-f075-5881-aaa1-53ae8d050206",
-      "FromComponentId": "b7232a95-d1c4-5993-8448-70dd749a1711",
-      "FromPin": "gnd",
-      "ToComponentId": "a2de62ab-8811-5ebc-b46b-e8d41d2f1fb6",
-      "ToPin": "ctrl_neg",
-      "NetName": "0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "e99b7ab1-fd6c-574e-9a8c-c4579a680898",
-      "FromComponentId": "a2de62ab-8811-5ebc-b46b-e8d41d2f1fb6",
-      "FromPin": "sw_neg",
-      "ToComponentId": "78056a7e-eadd-561c-9cd3-06093a48484a",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "5b85400c-999a-5e17-8e56-7e9bc90f663b",
-      "FromComponentId": "78056a7e-eadd-561c-9cd3-06093a48484a",
-      "FromPin": "pin2",
-      "ToComponentId": "f538feef-e0c3-5928-b129-7cc6d3ff6863",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "5d5a759e-1147-5a26-b15a-1e062527f721",
-      "FromComponentId": "f538feef-e0c3-5928-b129-7cc6d3ff6863",
-      "FromPin": "pin2",
-      "ToComponentId": "8c8390c8-6226-5dad-8cb8-84bc0eabaa4f",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "22c5496d-379e-5945-af3e-be6d1afdde28",
-      "FromComponentId": "f538feef-e0c3-5928-b129-7cc6d3ff6863",
-      "FromPin": "pin2",
-      "ToComponentId": "5e819fcc-d700-5c94-b072-8c61784af6d5",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "c40c8d0c-6b49-58f8-9edb-781d8c8dd288",
-      "FromComponentId": "f538feef-e0c3-5928-b129-7cc6d3ff6863",
-      "FromPin": "pin2",
-      "ToComponentId": "c9c85a1b-d1e0-518b-9b3f-2cb766b84979",
-      "ToPin": "in",
-      "NetName": "VOUT",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "fc151f2b-4481-5051-ae93-9d46c374f417",
-      "FromComponentId": "8c8390c8-6226-5dad-8cb8-84bc0eabaa4f",
-      "FromPin": "pin2",
-      "ToComponentId": "b7232a95-d1c4-5993-8448-70dd749a1711",
+      "Id": "3b030002-0004-4a7b-8c9d-000000000004",
+      "FromComponentId": "3b030001-0004-4a7b-8c9d-000000000004",
+      "FromPin": "negative",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
-      "Id": "7f66b080-1a6e-5c21-af32-124b4aaf769f",
-      "FromComponentId": "5e819fcc-d700-5c94-b072-8c61784af6d5",
+      "Id": "3b030002-0005-4a7b-8c9d-000000000005",
+      "FromComponentId": "3b030001-0004-4a7b-8c9d-000000000004",
+      "FromPin": "positive",
+      "ToComponentId": "3b030001-0005-4a7b-8c9d-000000000005",
+      "ToPin": "in",
+      "NetName": "PWM_GATE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0006-4a7b-8c9d-000000000006",
+      "FromComponentId": "3b030001-0004-4a7b-8c9d-000000000004",
+      "FromPin": "positive",
+      "ToComponentId": "3b030001-0007-4a7b-8c9d-000000000007",
+      "ToPin": "ctrl_pos",
+      "NetName": "PWM_GATE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0007-4a7b-8c9d-000000000007",
+      "FromComponentId": "3b030001-0004-4a7b-8c9d-000000000004",
+      "FromPin": "positive",
+      "ToComponentId": "3b030001-0006-4a7b-8c9d-000000000006",
+      "ToPin": "in1",
+      "NetName": "PWM_GATE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0008-4a7b-8c9d-000000000008",
+      "FromComponentId": "3b030001-0006-4a7b-8c9d-000000000006",
+      "FromPin": "out",
+      "ToComponentId": "3b030001-0008-4a7b-8c9d-000000000008",
+      "ToPin": "ctrl_pos",
+      "NetName": "PWM_INV",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0009-4a7b-8c9d-000000000009",
+      "FromComponentId": "3b030001-0007-4a7b-8c9d-000000000007",
+      "FromPin": "ctrl_neg",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-000a-4a7b-8c9d-00000000000a",
+      "FromComponentId": "3b030001-0008-4a7b-8c9d-000000000008",
+      "FromPin": "ctrl_neg",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-000b-4a7b-8c9d-00000000000b",
+      "FromComponentId": "3b030001-0007-4a7b-8c9d-000000000007",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b030001-0008-4a7b-8c9d-000000000008",
+      "ToPin": "sw_pos",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-000c-4a7b-8c9d-00000000000c",
+      "FromComponentId": "3b030001-0007-4a7b-8c9d-000000000007",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b030001-0009-4a7b-8c9d-000000000009",
+      "ToPin": "in",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-000d-4a7b-8c9d-00000000000d",
+      "FromComponentId": "3b030001-0007-4a7b-8c9d-000000000007",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b030001-000a-4a7b-8c9d-00000000000a",
+      "ToPin": "pin1",
+      "NetName": "SW_NODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-000e-4a7b-8c9d-00000000000e",
+      "FromComponentId": "3b030001-0008-4a7b-8c9d-000000000008",
+      "FromPin": "sw_neg",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-000f-4a7b-8c9d-00000000000f",
+      "FromComponentId": "3b030001-000a-4a7b-8c9d-00000000000a",
       "FromPin": "pin2",
-      "ToComponentId": "b7232a95-d1c4-5993-8448-70dd749a1711",
+      "ToComponentId": "3b030001-000b-4a7b-8c9d-00000000000b",
+      "ToPin": "pin1",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0010-4a7b-8c9d-000000000010",
+      "FromComponentId": "3b030001-000a-4a7b-8c9d-00000000000a",
+      "FromPin": "pin2",
+      "ToComponentId": "3b030001-000c-4a7b-8c9d-00000000000c",
+      "ToPin": "pin1",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0011-4a7b-8c9d-000000000011",
+      "FromComponentId": "3b030001-000a-4a7b-8c9d-00000000000a",
+      "FromPin": "pin2",
+      "ToComponentId": "3b030001-000d-4a7b-8c9d-00000000000d",
+      "ToPin": "pin1",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0012-4a7b-8c9d-000000000012",
+      "FromComponentId": "3b030001-000a-4a7b-8c9d-00000000000a",
+      "FromPin": "pin2",
+      "ToComponentId": "3b030001-000f-4a7b-8c9d-00000000000f",
+      "ToPin": "in",
+      "NetName": "V_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0013-4a7b-8c9d-000000000013",
+      "FromComponentId": "3b030001-000b-4a7b-8c9d-00000000000b",
+      "FromPin": "pin2",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0014-4a7b-8c9d-000000000014",
+      "FromComponentId": "3b030001-000c-4a7b-8c9d-00000000000c",
+      "FromPin": "pin2",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0015-4a7b-8c9d-000000000015",
+      "FromComponentId": "3b030001-000d-4a7b-8c9d-00000000000d",
+      "FromPin": "pin2",
+      "ToComponentId": "3b030001-000e-4a7b-8c9d-00000000000e",
+      "ToPin": "anode",
+      "NetName": "LED_ANODE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3b030002-0016-4a7b-8c9d-000000000016",
+      "FromComponentId": "3b030001-000e-4a7b-8c9d-00000000000e",
+      "FromPin": "cathode",
+      "ToComponentId": "3b030001-0001-4a7b-8c9d-000000000001",
       "ToPin": "gnd",
       "NetName": "0",
       "Resistance": 0.0
