@@ -59,20 +59,54 @@
                                 IsVisible="{Binding IsDescriptionPropertiesTab}">
                         <VerticalStackLayout Spacing="10">
                             <!-- Placeholder when no component is selected -->
-                            <VerticalStackLayout IsVisible="{Binding HasSelectedComponent, Converter={StaticResource InvertedBoolConverter}}"
+                            <VerticalStackLayout IsVisible="{Binding HasSelection, Converter={StaticResource InvertedBoolConverter}}"
                                                 Spacing="8"
                                                 Padding="8,24"
                                                 HorizontalOptions="Center">
                                 <Label Text="🔍" FontSize="32" HorizontalOptions="Center" TextColor="#484F58"/>
-                                <Label Text="No Component Selected"
+                                <Label Text="Nothing Selected"
                                        TextColor="#C9D1D9"
                                        FontSize="13"
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center"/>
-                                <Label Text="Select any component on the schematic canvas to inspect and edit its live description, rating, and parameters."
+                                <Label Text="Select a component or wire on the schematic to inspect its description and properties."
                                        TextColor="#8B949E"
                                        FontSize="11"
                                        HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout IsVisible="{Binding HasSelectedConnection}" Spacing="10">
+                                <Border BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1" Padding="10,8">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="6"/></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Text="SELECTED WIRE" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold"/>
+                                        <Label Text="{Binding SelectedConnectionDetails}"
+                                               TextColor="#E6EDF3" FontSize="12" LineBreakMode="WordWrap"/>
+                                        <Label Text="Edit the net label and optional series resistance. The endpoints stay electrically connected through this wire."
+                                               TextColor="#8B949E" FontSize="10" LineBreakMode="WordWrap"/>
+                                    </VerticalStackLayout>
+                                </Border>
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="NET NAME" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Entry Text="{Binding EditConnectionNetName}"
+                                           BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="SERIES RESISTANCE (Ω)" TextColor="#8B949E" FontSize="10" FontAttributes="Bold"/>
+                                    <Entry Text="{Binding EditConnectionResistance}"
+                                           Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="5">
+                                    <Button Grid.Column="0" Text="📈 Live Wave" Style="{StaticResource ToolBtn}"
+                                            TextColor="#79C0FF" FontSize="9" Padding="3"
+                                            Command="{Binding ToggleSelectedWaveformCommand}"/>
+                                    <Button Grid.Column="1" Text="⟳ Route" Style="{StaticResource ToolBtn}"
+                                            FontSize="9" Padding="3"
+                                            Command="{Binding RotateSelectedComponentCommand}"/>
+                                    <Button Grid.Column="2" Text="🗑 Delete" Style="{StaticResource ToolBtn}"
+                                            TextColor="#F85149" FontSize="9" Padding="3"
+                                            Command="{Binding DeleteSelectedComponentCommand}"/>
+                                </Grid>
                             </VerticalStackLayout>
 
                             <!-- Inspector when component is selected -->
@@ -165,8 +199,41 @@
                                            FontSize="10"/>
                                 </VerticalStackLayout>
 
+                                <VerticalStackLayout IsVisible="{Binding IsAcSourceSelected}" Spacing="6">
+                                    <Label Text="SINGLE-PHASE AC SOURCE" TextColor="#56D364" FontSize="10" FontAttributes="Bold"/>
+                                    <Picker Title="Waveform"
+                                            ItemsSource="{Binding AcSourceWaveformTypes}"
+                                            SelectedItem="{Binding EditAcSourceWaveformType}"
+                                            BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Spacing="3">
+                                            <Label Text="{Binding AcSourceVoltageLabel}" TextColor="#8B949E" FontSize="9" FontAttributes="Bold"/>
+                                            <Entry Text="{Binding EditAcSourceVoltage}" Keyboard="Numeric"
+                                                   BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                            <Label Text="FREQUENCY (Hz)" TextColor="#8B949E" FontSize="9" FontAttributes="Bold"/>
+                                            <Entry Text="{Binding EditAcSourceFrequency}" Keyboard="Numeric"
+                                                   BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                        <VerticalStackLayout Spacing="3">
+                                            <Label Text="PHASE (°)" TextColor="#8B949E" FontSize="9" FontAttributes="Bold"/>
+                                            <Entry Text="{Binding EditAcSourcePhaseDegrees}" Keyboard="Numeric"
+                                                   BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                            <Label Text="OFFSET (V)" TextColor="#8B949E" FontSize="9" FontAttributes="Bold"/>
+                                            <Entry Text="{Binding EditAcSourceOffset}" Keyboard="Numeric"
+                                                   BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="12"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+
                                 <!-- Primary Parameter -->
-                                <VerticalStackLayout Spacing="3">
+                                <VerticalStackLayout Spacing="3"
+                                                     IsVisible="{Binding IsAcSourceSelected, Converter={StaticResource InvertedBoolConverter}}">
                                     <Label Text="{Binding EditParamName}" TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
                                     <Entry Text="{Binding EditParamValue}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
                                 </VerticalStackLayout>
@@ -333,7 +400,7 @@
                     <!-- Footer: Save / Apply Button -->
                     <Border Grid.Row="3" BackgroundColor="#0D1117" Padding="8,8" StrokeThickness="0"
                             IsVisible="{Binding IsDescriptionPropertiesTab}">
-                        <Button Text="✓ Save Description Changes"
+                        <Button Text="✓ Save Changes"
                                 Style="{StaticResource AccentBtn}"
                                 FontSize="11"
                                 HorizontalOptions="Fill"

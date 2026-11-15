@@ -1,6 +1,7 @@
 using EESimulator.Commands;
 using EESimulator.Commands.Commands;
 using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.General;
 using EESimulator.Core.Models;
 using EESimulator.Formats;
 using EESimulator.Scripting;
@@ -35,8 +36,8 @@ public sealed class LogicalGridSpacingTests
 
         double expandedRowDistance = bottomLeft.Y - topLeft.Y;
         double expandedColumnDistance = topRight.X - topLeft.X;
-        Assert.Equal(minimumRowDistance + 40, expandedRowDistance);
-        Assert.Equal(minimumColumnDistance + 60, expandedColumnDistance);
+        Assert.Equal(minimumRowDistance + 58, expandedRowDistance);
+        Assert.Equal(minimumColumnDistance + 78, expandedColumnDistance);
         Assert.True(commandManager.Undo());
         Assert.Equal(CircuitNode.MinimumLogicalGridSpacing, circuit.LogicalGridRowSpacing);
         Assert.Equal(CircuitNode.MinimumLogicalGridSpacing, circuit.LogicalGridColumnSpacing);
@@ -83,6 +84,23 @@ public sealed class LogicalGridSpacingTests
 
         Assert.False(commandManager.ExecuteCommand(new SetLogicalGridSpacingCommand(
             circuit, CircuitNode.MinimumLogicalGridSpacing, CircuitNode.MinimumLogicalGridSpacing)));
+    }
+
+    [Fact]
+    public void Logical_layout_supports_circuits_that_only_contain_wires()
+    {
+        var circuit = new CircuitNode();
+        circuit.AddChild(new WireComponent
+        {
+            Name = "W1",
+            LogicalRow = 1,
+            LogicalColumn = 1
+        });
+
+        LogicalGridLayoutResult layout = LogicalGridSchematicLayout.Calculate(circuit);
+
+        Assert.Single(layout.Placements);
+        Assert.Empty(layout.UnresolvedCollisions);
     }
 
     private static CircuitNode CreateGridCircuit()

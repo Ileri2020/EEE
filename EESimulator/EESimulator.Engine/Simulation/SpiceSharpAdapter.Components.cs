@@ -417,7 +417,8 @@ public partial class SpiceSharpAdapter
 
                     case VoltageSourceComponent v:
                     {
-                        var vsrc = new SpiceSharp.Components.VoltageSource(v.Name, nodeA, nodeB, v.Voltage);
+                        double dcVoltage = v is ACSourceComponent acSource ? acSource.Offset : v.Voltage;
+                        var vsrc = new SpiceSharp.Components.VoltageSource(v.Name, nodeA, nodeB, dcVoltage);
                         if (v.AcMagnitude > 0 || v.AcPhase != 0)
                         {
                             vsrc.Parameters.AcMagnitude = v.AcMagnitude;

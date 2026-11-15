@@ -29,7 +29,7 @@ public static class LogicalGridSchematicLayout
 {
     private const double OriginX = 96;
     private const double OriginY = 80;
-    private const double SameCellGap = 20;
+    private const double SameCellGap = 2;
     private const double ReferenceLabelHeight = 18;
 
     private readonly record struct Footprint(double HalfWidth, double HalfHeight)
@@ -62,6 +62,16 @@ public static class LogicalGridSchematicLayout
             return new LogicalGridLayoutResult(Array.Empty<LogicalGridPlacement>(), Array.Empty<SchematicLayoutCollision>());
 
         var footprints = circuit.Components.ToDictionary(component => component, GetFootprint);
+        var schematicFootprints = circuit.Components
+            .Where(component => component is not WireComponent &&
+                !component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase))
+            .Select(component => footprints[component])
+            .ToArray();
+        var spacingFootprints = schematicFootprints.Length == 0
+            ? footprints.Values.ToArray()
+            : schematicFootprints;
+        double emptyColumnWidth = spacingFootprints.Min(footprint => footprint.HalfWidth * 2);
+        double emptyRowHeight = spacingFootprints.Min(footprint => footprint.HalfHeight * 2);
         var cells = logicalComponents
             .GroupBy(component => (Row: component.LogicalRow!.Value, Column: component.LogicalColumn!.Value))
             .ToDictionary(group => group.Key, group => group.ToList());
@@ -77,7 +87,7 @@ public static class LogicalGridSchematicLayout
         foreach (int column in componentsByColumn.Keys.OrderBy(value => value))
         {
             int emptyColumns = previousColumn == 0 ? column - 1 : column - previousColumn - 1;
-            columnCursor += (double)emptyColumns * columnSpacing;
+            columnCursor += (double)emptyColumns * (emptyColumnWidth + columnSpacing);
             double componentWidth = componentsByColumn[column]
                 .Max(component => footprints[component].Rotate(component.Rotation).HalfWidth * 2);
             double columnWidth = componentWidth;
@@ -101,7 +111,7 @@ public static class LogicalGridSchematicLayout
         foreach (int row in rowHeights.Keys.OrderBy(value => value))
         {
             int emptyRows = previousRow == 0 ? row - 1 : row - previousRow - 1;
-            rowCursor += (double)emptyRows * rowSpacing;
+            rowCursor += (double)emptyRows * (emptyRowHeight + rowSpacing);
             rowCenters[row] = rowCursor + rowHeights[row] / 2;
             rowCursor += rowHeights[row] + rowSpacing;
             previousRow = row;

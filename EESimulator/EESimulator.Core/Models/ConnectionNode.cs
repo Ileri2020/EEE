@@ -23,7 +23,22 @@ public struct Point2D
 /// </summary>
 public class ConnectionNode : RootNode
 {
-    public string NetName { get; set; } = "Net0";
+    private string _netName = "Net0";
+    private double _resistance;
+
+    public string NetName
+    {
+        get => _netName;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("A wire net name cannot be empty.", nameof(value));
+            if (_netName.Equals(value, StringComparison.Ordinal))
+                return;
+            _netName = value;
+            NotifyModified(nameof(NetName));
+        }
+    }
 
     public Guid FromComponentId { get; set; }
     public string FromPin { get; set; } = string.Empty;
@@ -33,7 +48,19 @@ public class ConnectionNode : RootNode
 
     public List<Point2D> RoutingPoints { get; } = new();
 
-    public double Resistance { get; set; } = 0.0;
+    public double Resistance
+    {
+        get => _resistance;
+        set
+        {
+            if (!double.IsFinite(value) || value < 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "Wire resistance must be finite and non-negative.");
+            if (_resistance.Equals(value))
+                return;
+            _resistance = value;
+            NotifyModified(nameof(Resistance));
+        }
+    }
 
     public ConnectionNode()
     {

@@ -87,8 +87,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsAiSchemaRequestInProgress { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSchematicAiPromptVisible))]
+    [NotifyPropertyChangedFor(nameof(IsScriptAiPromptRestoreVisible))]
     public partial bool IsAiPromptExpanded { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsSchematicAiSidebarVisible { get; set; }
 
     [ObservableProperty]
     public partial bool IsSimulating { get; set; }
@@ -96,17 +99,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
     [NotifyPropertyChangedFor(nameof(IsMobileSchematicViewActive))]
-    [NotifyPropertyChangedFor(nameof(IsSchematicAiPromptVisible))]
+    [NotifyPropertyChangedFor(nameof(IsScriptAiPromptRestoreVisible))]
     public partial bool IsScriptViewActive { get; set; } = false;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSchematicViewActive))]
     [NotifyPropertyChangedFor(nameof(IsMobileSchematicViewActive))]
-    [NotifyPropertyChangedFor(nameof(IsSchematicAiPromptVisible))]
     public partial bool IsAnalyticsViewActive { get; set; }
 
     public bool IsSchematicViewActive => !IsScriptViewActive && !IsAnalyticsViewActive;
-    public bool IsSchematicAiPromptVisible => IsSchematicViewActive && IsAiPromptExpanded;
+    public bool IsScriptAiPromptRestoreVisible => IsScriptViewActive && !IsAiPromptExpanded;
     public bool IsMobileSchematicViewActive => DeviceInfo.Idiom == DeviceIdiom.Phone && IsSchematicViewActive;
 
     public ObservableCollection<string> AnalyticsModes { get; } = new()
@@ -251,20 +253,57 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedComponent))]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(IsAcSourceSelected))]
     public partial ComponentNode? SelectedComponent { get; set; }
 
     public bool HasSelectedComponent => SelectedComponent != null;
+    public bool IsAcSourceSelected => SelectedComponent is ACSourceComponent;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(HasSelectedConnection))]
+    [NotifyPropertyChangedFor(nameof(SelectedConnectionDetails))]
     public partial ConnectionNode? SelectedConnection { get; set; }
 
     public bool HasSelection => SelectedComponent != null || SelectedConnection != null;
+    public bool HasSelectedConnection => SelectedConnection != null;
+    public string SelectedConnectionDetails => SelectedConnection == null
+        ? string.Empty
+        : $"{GetConnectionEndpoint(SelectedConnection.FromComponentId, SelectedConnection.FromPin)} → " +
+          GetConnectionEndpoint(SelectedConnection.ToComponentId, SelectedConnection.ToPin);
+
+    private string GetConnectionEndpoint(Guid componentId, string pinId)
+    {
+        ComponentNode? component = Circuit.FindChildById<ComponentNode>(componentId);
+        string pinName = component?.GetPin(pinId)?.Name ?? pinId;
+        return component == null ? pinName : $"{component.Reference}.{pinName}";
+    }
 
     [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
     [ObservableProperty] public partial string EditGroundGroup { get; set; } = GroundComponent.DefaultGroundGroup;
     [ObservableProperty] public partial double EditBreakingCurrent { get; set; } = 1.0;
     [ObservableProperty] public partial bool IsDescriptionSidebarVisible { get; set; } = false;
+    [ObservableProperty] public partial string EditConnectionNetName { get; set; } = string.Empty;
+    [ObservableProperty] public partial double EditConnectionResistance { get; set; }
+
+    public ObservableCollection<string> AcSourceWaveformTypes { get; } = new()
+    {
+        "Sine", "Pulse", "DC"
+    };
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AcSourceVoltageLabel))]
+    public partial string EditAcSourceWaveformType { get; set; } = "Sine";
+    [ObservableProperty] public partial double EditAcSourceVoltage { get; set; } = 230;
+    [ObservableProperty] public partial double EditAcSourceFrequency { get; set; } = 50;
+    [ObservableProperty] public partial double EditAcSourcePhaseDegrees { get; set; }
+    [ObservableProperty] public partial double EditAcSourceOffset { get; set; }
+    public string AcSourceVoltageLabel => EditAcSourceWaveformType.ToUpperInvariant() switch
+    {
+        "PULSE" => "PULSE AMPLITUDE (V)",
+        "DC" => "DC VOLTAGE (V)",
+        _ => "VOLTAGE (V RMS)"
+    };
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SimPlayBtnColor))]
@@ -541,6 +580,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("Capacitor",     "C",   "F",  "#79C0FF", "Electrical",  "Capacitor",             "capacitor.svg"),
         new ComponentPaletteItem("Inductor",      "L",   "H",  "#D2A8FF", "Electrical",  "Inductor",              "inductor.svg"),
         new ComponentPaletteItem("VoltageSource", "V",   "V",  "#56D364", "Electrical",  "Voltage source",        "voltagesource.svg"),
+        new ComponentPaletteItem("ACSource",      "VAC", "V", "#56D364", "Electrical",  "Single-phase AC source", "acsource.svg"),
         new ComponentPaletteItem("CurrentSource", "I",   "A",  "#56D364", "Electrical",  "Current source",        "currentsource.svg"),
         new ComponentPaletteItem("Power",         "VCC", "+V", "#56D364", "Electrical",  "Positive Supply Rail (+VCC)", "power.svg"),
         new ComponentPaletteItem("PullResistor",  "RP",  "PULL","#E3B341", "Electrical",  "Pull-Up / Pull-Down Resistor", "pullresistor.svg"),
@@ -660,6 +700,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteGroup("🔋 Sources & Power", new[]
         {
             new ComponentPaletteItem("VoltageSource", "V",   "V",   "#56D364", "Sources",   "Voltage source",           "voltagesource.svg"),
+            new ComponentPaletteItem("ACSource",      "VAC", "V",  "#56D364", "Sources",   "Single-phase AC source",   "acsource.svg"),
             new ComponentPaletteItem("CurrentSource", "I",   "A",   "#56D364", "Sources",   "Current source",           "currentsource.svg"),
             new ComponentPaletteItem("Power",         "VCC", "+V",  "#56D364", "Sources",   "Positive Supply Rail (+VCC)", "power.svg"),
             new ComponentPaletteItem("Constant",      "1",   "CST", "#56D364", "Sources",   "Logic Constant (1/0)",     "constant.svg"),

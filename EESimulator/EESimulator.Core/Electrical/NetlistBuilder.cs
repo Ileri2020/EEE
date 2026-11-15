@@ -11,6 +11,7 @@ public class CircuitTopology
 {
     public List<NetNode> Nets { get; } = new();
     public Dictionary<PinReference, NetNode> PinToNetMap { get; } = new();
+    public List<ConnectionNode> ResistiveConnections { get; } = new();
 }
 
 /// <summary>
@@ -77,9 +78,17 @@ public class NetlistBuilder
             }
         }
 
-        // Union connected pins
+        var resistiveConnections = new List<ConnectionNode>();
+
+        // Union ideal wires; finite-resistance wires stay as simulation branches.
         foreach (var conn in connections)
         {
+            if (conn.Resistance > 0)
+            {
+                resistiveConnections.Add(conn);
+                continue;
+            }
+
             var p1 = new PinReference(conn.FromComponentId, conn.FromPin);
             var p2 = new PinReference(conn.ToComponentId, conn.ToPin);
             dsu.Union(p1, p2);
@@ -134,6 +143,7 @@ public class NetlistBuilder
         }
 
         var topology = new CircuitTopology();
+        topology.ResistiveConnections.AddRange(resistiveConnections);
         var groundsByComponentId = components
             .OfType<GroundNode>()
             .ToDictionary(ground => ground.Id);

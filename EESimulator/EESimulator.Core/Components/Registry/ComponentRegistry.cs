@@ -141,6 +141,14 @@ public static class ComponentRegistry
             d.DefaultParameters["Voltage"] = 5.0;
         });
 
+        Register<ACSourceComponent>(ACSourceComponent.StableType, "ACSource", "Electrical", "VAC", d =>
+        {
+            d.Description = "Single-phase AC voltage source with configurable waveform";
+            d.DefaultParameters["Voltage"] = 0.0;
+            d.DefaultParameters[nameof(ACSourceComponent.SineAmplitude)] = 230 * Math.Sqrt(2);
+            d.DefaultParameters[nameof(ACSourceComponent.SineFrequency)] = 50.0;
+        });
+
         Register<CurrentSourceNode>("electrical.currentsource", "CurrentSource", "Electrical", "I", d =>
         {
             d.Description = "Independent DC/AC current source";

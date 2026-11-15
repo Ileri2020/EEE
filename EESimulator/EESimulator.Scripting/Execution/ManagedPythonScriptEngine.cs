@@ -72,7 +72,9 @@ public sealed class ManagedPythonScriptEngine
         if (string.IsNullOrWhiteSpace(scriptName))
             throw new ArgumentException("Script name is required.", nameof(scriptName));
 
-        Console.OutputEncoding = new UTF8Encoding(false);
+        if (!OperatingSystem.IsAndroid())
+            Console.OutputEncoding = new UTF8Encoding(false);
+
         ScriptEngine engine = Python.CreateEngine();
         ScriptScope scope = engine.CreateScope();
 

@@ -607,6 +607,7 @@ public partial class SchematicViewport
             case "Capacitor":     DrawCapacitor(canvas); break;
             case "Inductor":      DrawInductor(canvas); break;
             case "VoltageSource": DrawVoltageSource(canvas); break;
+            case "ACSource": ComponentSymbolDrawer.DrawACSource(canvas); break;
             case "CurrentSource": DrawCurrentSource(canvas); break;
             case "Ground":        DrawGround(canvas); break;
             case "Diode":         DrawDiode(canvas); break;

@@ -7,15 +7,15 @@
                   WidthRequest="{OnIdiom Phone=240, Default=260}"
                   IsVisible="{Binding IsSidebarVisible}"
                   BackgroundColor="#161B22"
-                  RowDefinitions="Auto,*,Auto,Auto">
+                  RowDefinitions="Auto,Auto,*,Auto,Auto">
 
                 <!-- Left border -->
-                <BoxView Grid.Row="0" Grid.RowSpan="4"
+                <BoxView Grid.Row="0" Grid.RowSpan="5"
                          WidthRequest="1" BackgroundColor="#30363D"
                          HorizontalOptions="Start"/>
 
                 <!-- Panel header with close toggle and Description toggle -->
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Padding="12,8,8,6">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="4" Padding="12,8,8,6">
                     <Label Grid.Column="0"
                            Text="COMPONENTS"
                            TextColor="#8B949E"
@@ -31,6 +31,14 @@
                             Command="{Binding ToggleDescriptionSidebarCommand}"
                             ToolTipProperties.Text="Open Description &amp; Properties Sidebar"/>
                     <Button Grid.Column="2"
+                            Text="✨ AI"
+                            Style="{StaticResource ToolBtn}"
+                            TextColor="#D2A8FF"
+                            FontSize="10"
+                            Padding="5,3"
+                            Command="{Binding ToggleSchematicAiSidebarCommand}"
+                            ToolTipProperties.Text="Open AI assistant in this sidebar"/>
+                    <Button Grid.Column="3"
                             Text="✕"
                             Style="{StaticResource IconBtn}"
                             Padding="4"
@@ -39,8 +47,49 @@
                             ToolTipProperties.Text="Close sidebar"/>
                 </Grid>
 
+                <Border Grid.Row="1"
+                        IsVisible="{Binding IsSchematicAiSidebarVisible}"
+                        Margin="8,0,8,6"
+                        Padding="8"
+                        BackgroundColor="#0D1117"
+                        Stroke="#30363D"
+                        StrokeThickness="1">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                    <VerticalStackLayout Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                            <Entry Text="{Binding AiSchemaPrompt}"
+                                   Placeholder="{Binding AiSchemaInputPlaceholder}"
+                                   BackgroundColor="#161B22"
+                                   TextColor="#C9D1D9"
+                                   PlaceholderColor="#6E7681"
+                                   FontSize="11"
+                                   ReturnType="Send"
+                                   IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                            <Button Grid.Column="1"
+                                    Text="Draft"
+                                    Style="{StaticResource ToolBtn}"
+                                    TextColor="#D2A8FF"
+                                    FontSize="10"
+                                    Padding="6,3"
+                                    Command="{Binding GenerateSchemaScriptCommand}"
+                                    IsEnabled="{Binding IsAiSchemaRequestInProgress, Converter={StaticResource InvertedBoolConverter}}"/>
+                        </Grid>
+                        <Label Text="{Binding AiSchemaStatus}"
+                               TextColor="#8B949E"
+                               FontSize="9"
+                               LineBreakMode="WordWrap"/>
+                        <HorizontalStackLayout Spacing="4">
+                            <Switch IsToggled="{Binding IsAiEditMode}" Scale="0.7"/>
+                            <Label Text="Edit workspace script"
+                                   TextColor="#8B949E"
+                                   FontSize="9"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- ── Grouped palette — each category has a header + 2-per-row grid ── -->
-                <ScrollView Grid.Row="1" Padding="6,4">
+                <ScrollView Grid.Row="2" Padding="6,4">
                     <VerticalStackLayout Spacing="0"
                                         BindableLayout.ItemsSource="{Binding GroupedPalette}">
                         <BindableLayout.ItemTemplate>
@@ -132,10 +181,10 @@
                 </ScrollView>
 
                 <!-- Splitter -->
-                <BoxView Grid.Row="2" HeightRequest="1" BackgroundColor="#30363D"/>
+                <BoxView Grid.Row="3" HeightRequest="1" BackgroundColor="#30363D"/>
 
                 <!-- Properties panel -->
-                <Grid Grid.Row="3" RowDefinitions="Auto,*" Padding="0" MaximumHeightRequest="130">
+                <Grid Grid.Row="4" RowDefinitions="Auto,*" Padding="0" MaximumHeightRequest="130">
                     <Label Grid.Row="0"
                            Text="PROPERTIES"
                            TextColor="#8B949E"

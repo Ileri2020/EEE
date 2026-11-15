@@ -136,6 +136,28 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 
                     BuildSpiceCircuitComponents(circuit, builtTopology, builtSpiceCircuit, settings, builtComponentsWithPins,
                         builtMutualInductances, ResolveBuiltNetForPin, ResolveBuiltPinNode, results);
+                    foreach (ConnectionNode connection in builtTopology.ResistiveConnections)
+                    {
+                        var fromPin = new PinReference(connection.FromComponentId, connection.FromPin);
+                        var toPin = new PinReference(connection.ToComponentId, connection.ToPin);
+                        if (!builtTopology.PinToNetMap.ContainsKey(fromPin) ||
+                            !builtTopology.PinToNetMap.ContainsKey(toPin))
+                        {
+                            throw new InvalidOperationException(
+                                $"Resistive wire '{connection.NetName}' references a missing endpoint pin.");
+                        }
+
+                        string fromNode = ResolveBuiltNetForPin(connection.FromComponentId, connection.FromPin);
+                        string toNode = ResolveBuiltNetForPin(connection.ToComponentId, connection.ToPin);
+                        if (!fromNode.Equals(toNode, StringComparison.OrdinalIgnoreCase))
+                        {
+                            builtSpiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"wire_{connection.Id:N}",
+                                fromNode,
+                                toNode,
+                                connection.Resistance));
+                        }
+                    }
                     AddGroundGroupReferences(circuit, builtTopology, builtSpiceCircuit);
 
                     context = new CompiledSpiceContext
@@ -402,7 +424,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         switch (waveformType?.ToUpperInvariant())
         {
             case "SINE":
-                p.Waveform = new SpiceSharp.Components.Sine(sOff, sAmp > 0 ? sAmp : 5.0, sFreq > 0 ? sFreq : 1000.0, sDelay, sTheta, sPhase);
+                p.Waveform = new SpiceSharp.Components.Sine(sOff, sAmp, sFreq > 0 ? sFreq : 1000.0, sDelay, sTheta, sPhase);
                 break;
             case "PULSE":
                 p.Waveform = new SpiceSharp.Components.Pulse(pInit, pPulse, pDelay, pRise > 0 ? pRise : 1e-6, pFall > 0 ? pFall : 1e-6, pWidth > 0 ? pWidth : 0.5e-3, pPeriod > 0 ? pPeriod : 1e-3);

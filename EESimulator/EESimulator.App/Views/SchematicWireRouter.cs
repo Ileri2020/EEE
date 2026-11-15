@@ -11,7 +11,7 @@ namespace EESimulator.App.Views;
 internal static class SchematicWireRouter
 {
     private const float GridStep = 10f;
-    private const float ObstaclePadding = 9f;
+    private const float ObstaclePadding = 2f;
     private const float PinLeadLength = 14f;
 
     private readonly record struct GridPoint(int X, int Y);
@@ -148,6 +148,18 @@ internal static class SchematicWireRouter
 
     private static List<PointF> FindOrthogonalPath(PointF start, PointF end, List<Obstacle> obstacles)
     {
+        var horizontalFirst = new List<PointF> { start, new(end.X, start.Y), end };
+        var verticalFirst = new List<PointF> { start, new(start.X, end.Y), end };
+        bool horizontalFirstClear = !SegmentBlocked(horizontalFirst[0], horizontalFirst[1], obstacles) &&
+            !SegmentBlocked(horizontalFirst[1], horizontalFirst[2], obstacles);
+        bool verticalFirstClear = !SegmentBlocked(verticalFirst[0], verticalFirst[1], obstacles) &&
+            !SegmentBlocked(verticalFirst[1], verticalFirst[2], obstacles);
+
+        if (verticalFirstClear)
+            return Simplify(verticalFirst);
+        if (horizontalFirstClear)
+            return Simplify(horizontalFirst);
+
         var startGrid = ToGrid(start);
         var endGrid = ToGrid(end);
         if (startGrid == endGrid)

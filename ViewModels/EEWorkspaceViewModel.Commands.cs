@@ -102,6 +102,13 @@ public partial class EEWorkspaceViewModel
     private void ToggleAiPrompt() => IsAiPromptExpanded = !IsAiPromptExpanded;
 
     [RelayCommand]
+    private void ToggleSchematicAiSidebar()
+    {
+        IsSchematicAiSidebarVisible = !IsSchematicAiSidebarVisible;
+        StatusText = IsSchematicAiSidebarVisible ? "AI assistant opened in the sidebar" : "AI assistant closed";
+    }
+
+    [RelayCommand]
     private async Task OpenSettings()
     {
         try
@@ -868,7 +875,47 @@ public partial class EEWorkspaceViewModel
     [RelayCommand]
     public void ApplyDescriptionSidebarChanges()
     {
+        if (SelectedConnection is { } connection)
+        {
+            string netName = EditConnectionNetName.Trim();
+            if (string.IsNullOrWhiteSpace(netName))
+            {
+                StatusText = "Wire net name cannot be empty.";
+                return;
+            }
+            if (!double.IsFinite(EditConnectionResistance) || EditConnectionResistance < 0)
+            {
+                StatusText = "Wire resistance must be a finite, non-negative value.";
+                return;
+            }
+
+            connection.NetName = netName;
+            connection.Resistance = EditConnectionResistance;
+            OnPropertyChanged(nameof(SelectedConnectionDetails));
+            ActiveComponentInfo = $"Wire {connection.NetName}: {SelectedConnectionDetails}";
+            CircuitChanged?.Invoke();
+            RequestSimulationRefresh();
+            StatusText = $"Updated wire properties for {connection.NetName}";
+            return;
+        }
+
         if (SelectedComponent == null) return;
+        if (SelectedComponent is ACSourceComponent acSource)
+        {
+            if (!AcSourceWaveformTypes.Contains(EditAcSourceWaveformType, StringComparer.OrdinalIgnoreCase))
+            {
+                StatusText = "Choose a supported AC source waveform.";
+                return;
+            }
+            if (!double.IsFinite(EditAcSourceVoltage) || EditAcSourceVoltage < 0 ||
+                !double.IsFinite(EditAcSourceFrequency) || EditAcSourceFrequency <= 0 ||
+                !double.IsFinite(EditAcSourcePhaseDegrees) || !double.IsFinite(EditAcSourceOffset))
+            {
+                StatusText = "AC source voltage and phase must be finite, and frequency must be greater than zero.";
+                return;
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(EditName))
         {
             SelectedComponent.Name = EditName.Trim();
@@ -876,9 +923,17 @@ public partial class EEWorkspaceViewModel
         }
         SelectedComponent.CustomProperties["Description"] = EditDescription;
         SelectedComponent.BreakingCurrent = Math.Max(EditBreakingCurrent, 0.0);
-        if (!string.IsNullOrEmpty(EditParamName))
+        if (SelectedComponent is not ACSourceComponent && !string.IsNullOrEmpty(EditParamName))
         {
             SelectedComponent.ElectricalParameters[EditParamName] = EditParamValue;
+        }
+        if (SelectedComponent is ACSourceComponent editableAcSource)
+        {
+            editableAcSource.WaveformType = EditAcSourceWaveformType;
+            editableAcSource.Frequency = EditAcSourceFrequency;
+            editableAcSource.PhaseDegrees = EditAcSourcePhaseDegrees;
+            editableAcSource.Offset = EditAcSourceOffset;
+            editableAcSource.Voltage = EditAcSourceVoltage;
         }
         SelectedComponent.ShowLiveProbe = EditShowLiveProbe;
         SelectedComponent.ShowWaveform = EditShowWaveform;

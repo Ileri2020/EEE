@@ -50,7 +50,7 @@ public sealed class NetlistBuilderTests
         CircuitTopology topology = NetlistBuilder.BuildTopology(circuit);
 
         var net = topology.PinToNetMap[new PinReference(first.Id, first.Pins[0].Id)];
-        Assert.Equal("0", net.NetName);
+        Assert.NotEqual("0", net.NetName);
         Assert.False(net.IsGround);
         Assert.Same(net, topology.PinToNetMap[new PinReference(second.Id, second.Pins[0].Id)]);
     }

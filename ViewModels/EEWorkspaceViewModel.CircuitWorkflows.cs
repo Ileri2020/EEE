@@ -566,7 +566,7 @@ public partial class EEWorkspaceViewModel
 
         return new Dictionary<string, object?>
         {
-            ["success"] = true,
+            ["success"] = !failed,
             ["message"] = result ?? "Script API call produced no result.",
             ["result"] = value
         };
@@ -888,6 +888,14 @@ public partial class EEWorkspaceViewModel
         EditParamValue = param.Value;
         EditShowLiveProbe = comp.ShowLiveProbe;
         EditShowWaveform = comp.ShowWaveform;
+        if (comp is ACSourceComponent acSource)
+        {
+            EditAcSourceWaveformType = acSource.WaveformType;
+            EditAcSourceVoltage = acSource.Voltage;
+            EditAcSourceFrequency = acSource.Frequency;
+            EditAcSourcePhaseDegrees = acSource.PhaseDegrees;
+            EditAcSourceOffset = acSource.Offset;
+        }
 
         string paramStr = param.Key != null ? $"{param.Key}={param.Value:G4}" : "";
         ActiveComponentInfo = $"{comp.Reference}  [{comp.ComponentType}]  ({comp.X:F0}, {comp.Y:F0})  {paramStr}";
@@ -905,6 +913,9 @@ public partial class EEWorkspaceViewModel
     {
         SelectedComponent = null;
         SelectedConnection = connection;
+        SelectedDescriptionTab = "Properties";
+        EditConnectionNetName = connection.NetName;
+        EditConnectionResistance = connection.Resistance;
         ActiveComponentInfo = $"Wire {connection.NetName}: {connection.FromPin} → {connection.ToPin}";
         StatusText = $"Selected wire {connection.NetName}";
     }

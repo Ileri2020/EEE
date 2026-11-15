@@ -8,7 +8,7 @@ namespace EESimulator.Core.Models;
 /// </summary>
 public class CircuitNode : RootNode
 {
-    public const double MinimumLogicalGridSpacing = 20;
+    public const double MinimumLogicalGridSpacing = 2;
     public const double LogicalGridSpacingStep = 20;
 
     private double _logicalGridRowSpacing = MinimumLogicalGridSpacing;

@@ -1,4 +1,5 @@
 using Microsoft.Maui.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EESimulator.Core.Models;
@@ -19,6 +20,7 @@ public static partial class ComponentSymbolDrawer
             case "Capacitor":      DrawCapacitor(canvas); break;
             case "Inductor":       DrawInductor(canvas); break;
             case "VoltageSource":  DrawVoltageSource(canvas); break;
+            case "ACSource":       DrawACSource(canvas); break;
             case "CurrentSource":  DrawCurrentSource(canvas); break;
             case "Ground":         DrawGround(canvas); break;
             case "Diode":          DrawDiode(canvas); break;
@@ -362,6 +364,27 @@ public static partial class ComponentSymbolDrawer
         canvas.FontSize = 11;
         canvas.DrawString("+", -4, -12, 8, 12, HorizontalAlignment.Center, VerticalAlignment.Center);
         canvas.DrawString("−", -4, 0, 8, 12, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+
+    public static void DrawACSource(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 2f;
+        canvas.DrawCircle(0, 0, 14);
+        canvas.DrawLine(0, -20, 0, -14);
+        canvas.DrawLine(0, 14, 0, 20);
+
+        var waveform = new PathF();
+        for (int step = 0; step <= 16; step++)
+        {
+            float x = -8 + step;
+            float y = (float)(-4 * Math.Sin(step * Math.PI / 8));
+            if (step == 0)
+                waveform.MoveTo(x, y);
+            else
+                waveform.LineTo(x, y);
+        }
+        canvas.DrawPath(waveform);
     }
 
     public static void DrawGround(ICanvas canvas)
