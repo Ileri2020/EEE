@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using EESimulator.Core.Components.Base;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.Electronics;
@@ -22,9 +24,12 @@ public static partial class DigitalLogicSimulator
         private readonly object _lock = new();
         private long _structureVersion = -1;
 
-        public List<ComponentNode> Components { get; private set; } = new();
+        public IReadOnlyList<ComponentNode> Components { get; private set; } = Array.Empty<ComponentNode>();
         public Dictionary<Guid, ComponentNode> ComponentsById { get; private set; } = new();
         public CircuitTopology Topology { get; private set; } = new();
+        public ComponentNode[][] CombinationalLayers { get; private set; } = Array.Empty<ComponentNode[]>();
+        public Dictionary<(Guid ComponentId, Guid ClockId, ClockTriggerType Trigger), string> ClockEdgeKeys { get; private set; } = new();
+        public Dictionary<(Guid ComponentId, string PinId), string> PreviousClockKeys { get; private set; } = new();
 
         public void EnsureCurrent(CircuitNode circuit)
         {
@@ -38,14 +43,115 @@ public static partial class DigitalLogicSimulator
                 if (_structureVersion == structureVersion)
                     return;
 
-                var components = circuit.Components.ToList();
+                var components = circuit.Components;
                 var componentsById = components.ToDictionary(component => component.Id);
                 var topology = NetlistBuilder.BuildTopology(circuit);
+                var combinationalLayers = BuildCombinationalLayers(components, componentsById, topology);
+                var clockEdgeKeys = new Dictionary<(Guid ComponentId, Guid ClockId, ClockTriggerType Trigger), string>();
+                var previousClockKeys = new Dictionary<(Guid ComponentId, string PinId), string>();
+                foreach (var component in components)
+                {
+                    string clockPin = GetClockPin(component);
+                    if (clockPin.Length == 0)
+                        continue;
+
+                    previousClockKeys[(component.Id, clockPin)] = $"_previousClock:{clockPin}";
+                    if (!topology.PinToNetMap.TryGetValue(new PinReference(component.Id, clockPin), out var net))
+                        continue;
+
+                    foreach (var pin in net.ConnectedPins)
+                    {
+                        if (!componentsById.TryGetValue(pin.ComponentId, out var source) || source is not ClockComponent clock)
+                            continue;
+
+                        foreach (ClockTriggerType trigger in Enum.GetValues<ClockTriggerType>())
+                            clockEdgeKeys[(component.Id, clock.Id, trigger)] = $"_seenClockEdges:{clock.Id}:{trigger}";
+                    }
+                }
+
                 Components = components;
                 ComponentsById = componentsById;
                 Topology = topology;
+                CombinationalLayers = combinationalLayers;
+                ClockEdgeKeys = clockEdgeKeys;
+                PreviousClockKeys = previousClockKeys;
                 _structureVersion = structureVersion;
             }
+        }
+
+        private static string GetClockPin(ComponentNode component) => component switch
+        {
+            DFlipFlopComponent or JKFlipFlopComponent or SRFlipFlopComponent or TFlipFlopComponent or
+                RegisterComponent or CounterComponent or ShiftRegisterComponent or RandomComponent => "CLK",
+            RAMComponent => "clk",
+            _ => string.Empty
+        };
+
+        private static ComponentNode[][] BuildCombinationalLayers(
+            IReadOnlyList<ComponentNode> components,
+            Dictionary<Guid, ComponentNode> componentsById,
+            CircuitTopology topology)
+        {
+            var componentIndexes = components
+                .Select((component, index) => (component.Id, index))
+                .ToDictionary(item => item.Id, item => item.index);
+            var outgoing = Enumerable.Range(0, components.Count)
+                .Select(_ => new HashSet<int>())
+                .ToArray();
+            var indegree = new int[components.Count];
+
+            foreach (var net in topology.Nets)
+            {
+                var sources = net.ConnectedPins
+                    .Where(pin => componentsById.TryGetValue(pin.ComponentId, out var component) &&
+                        IsOutputPin(component, pin.PinId))
+                    .Select(pin => componentIndexes[pin.ComponentId])
+                    .Distinct()
+                    .ToArray();
+                var consumers = net.ConnectedPins
+                    .Where(pin => componentsById.TryGetValue(pin.ComponentId, out var component) &&
+                        !IsOutputPin(component, pin.PinId))
+                    .Select(pin => componentIndexes[pin.ComponentId])
+                    .Distinct()
+                    .ToArray();
+
+                foreach (int source in sources)
+                foreach (int consumer in consumers)
+                {
+                    if (source != consumer && outgoing[source].Add(consumer))
+                        indegree[consumer]++;
+                }
+            }
+
+            var layers = new List<ComponentNode[]>();
+            var ready = Enumerable.Range(0, components.Count)
+                .Where(index => indegree[index] == 0)
+                .ToList();
+            int processed = 0;
+            while (ready.Count > 0)
+            {
+                int[] layer = ready.ToArray();
+                layers.Add(layer.Select(index => components[index]).ToArray());
+                processed += layer.Length;
+                ready = new List<int>();
+                foreach (int source in layer)
+                foreach (int consumer in outgoing[source])
+                {
+                    if (--indegree[consumer] == 0)
+                        ready.Add(consumer);
+                }
+            }
+
+            if (processed < components.Count)
+            {
+                var cyclic = Enumerable.Range(0, components.Count)
+                    .Where(index => indegree[index] > 0)
+                    .Select(index => components[index])
+                    .ToArray();
+                layers.Add(cyclic);
+            }
+
+            return layers.ToArray();
         }
     }
 
@@ -186,6 +292,7 @@ public static partial class DigitalLogicSimulator
         RealTimeClockComponent => pinId.StartsWith("seconds", StringComparison.Ordinal) || pinId.StartsWith("minutes", StringComparison.Ordinal) || pinId.StartsWith("hours", StringComparison.Ordinal),
         ArithmeticComponentBase arithmetic => IsArithmeticOutput(arithmetic, pinId),
         TtlPackageComponent ttl => TtlPinCatalog.GetOutputs(ttl.PartNumber).Contains(ParseTtlPin(pinId)),
+        LogicGateComponent => pinId == "out",
         BufferComponent or ControlledBufferComponent or EvenParityGateComponent or OddParityGateComponent or MultiplexerComponent or BitSelectorComponent => pinId == "out" || pinId.StartsWith("out", StringComparison.Ordinal),
         PLAComponent or DemultiplexerComponent or DecoderComponent => pinId.StartsWith("out", StringComparison.Ordinal),
         PriorityEncoderComponent => pinId.StartsWith("out", StringComparison.Ordinal) || pinId is "any_active" or "en_out",
@@ -210,18 +317,26 @@ public static partial class DigitalLogicSimulator
 
     private sealed partial class Context
     {
-        public List<ComponentNode> Components { get; }
+        public IReadOnlyList<ComponentNode> Components { get; }
+        private readonly CircuitNode _circuit;
         private readonly CircuitTopology _topology;
         private readonly Dictionary<Guid, ComponentNode> _byId;
-        private bool _outputsChanged;
+        private readonly ComponentNode[][] _combinationalLayers;
+        private readonly Dictionary<(Guid ComponentId, Guid ClockId, ClockTriggerType Trigger), string> _clockEdgeKeys;
+        private readonly Dictionary<(Guid ComponentId, string PinId), string> _previousClockKeys;
+        private int _outputsChanged;
 
         public Context(CircuitNode circuit)
         {
             CircuitSimulationData data = CircuitDataCache.GetValue(circuit, _ => new CircuitSimulationData());
             data.EnsureCurrent(circuit);
+            _circuit = circuit;
             Components = data.Components;
             _topology = data.Topology;
             _byId = data.ComponentsById;
+            _combinationalLayers = data.CombinationalLayers;
+            _clockEdgeKeys = data.ClockEdgeKeys;
+            _previousClockKeys = data.PreviousClockKeys;
         }
 
         public void AdvanceSequential()
@@ -381,11 +496,14 @@ public static partial class DigitalLogicSimulator
         public void EvaluateCombinational()
         {
             PublishStoredOutputs();
+            if (Interlocked.Exchange(ref _outputsChanged, 0) != 0)
+                _circuit.NotifySimulationStateChanged();
+
             // Fixed-point iteration settles short cascades of combinational gates.
             for (int pass = 0; pass < Math.Clamp(Components.Count, 1, 24); pass++)
             {
-                _outputsChanged = false;
-                foreach (var component in Components)
+                Interlocked.Exchange(ref _outputsChanged, 0);
+                void EvaluateComponent(ComponentNode component)
                 {
                     switch (component)
                     {
@@ -557,14 +675,25 @@ public static partial class DigitalLogicSimulator
                     }
                 }
 
-                if (!_outputsChanged)
+                foreach (var layer in _combinationalLayers)
+                {
+                    if (layer.Length >= 4)
+                        Parallel.ForEach(layer, EvaluateComponent);
+                    else
+                        foreach (var component in layer)
+                            EvaluateComponent(component);
+                }
+
+                if (Interlocked.Exchange(ref _outputsChanged, 0) == 0)
                     break;
+
+                _circuit.NotifySimulationStateChanged();
             }
         }
 
         private void PublishStoredOutputs()
         {
-            foreach (var component in Components)
+            void PublishComponent(ComponentNode component)
             {
                 switch (component)
                 {
@@ -608,6 +737,12 @@ public static partial class DigitalLogicSimulator
                         break;
                 }
             }
+
+            if (Components.Count >= 8)
+                Parallel.ForEach(Components, PublishComponent);
+            else
+                foreach (var component in Components)
+                    PublishComponent(component);
         }
 
         private int ClockEdges(ComponentNode component, string clockPin, ClockTriggerType trigger)
@@ -619,7 +754,9 @@ public static partial class DigitalLogicSimulator
                     if (!_byId.TryGetValue(pin.ComponentId, out var source) || source is not ClockComponent clock) continue;
                     if (trigger == ClockTriggerType.HighLevel) return clock.State ? 1 : 0;
                     if (trigger == ClockTriggerType.LowLevel) return clock.State ? 0 : 1;
-                    string key = $"_seenClockEdges:{clock.Id}:{trigger}";
+                    string key = _clockEdgeKeys.TryGetValue((component.Id, clock.Id, trigger), out var cachedKey)
+                        ? cachedKey
+                        : $"_seenClockEdges:{clock.Id}:{trigger}";
                     long previous = (long)Number(component, key, 0);
                     string edgeKey = trigger == ClockTriggerType.FallingEdge ? "_simFallingEdges" : "_simRisingEdges";
                     long current = (long)Number(clock, edgeKey, 0);
@@ -628,7 +765,9 @@ public static partial class DigitalLogicSimulator
                 }
             }
             bool currentLevel = Read(component, clockPin);
-            string previousKey = $"_previousClock:{clockPin}";
+            string previousKey = _previousClockKeys.TryGetValue((component.Id, clockPin), out var cachedPreviousKey)
+                ? cachedPreviousKey
+                : $"_previousClock:{clockPin}";
             bool previousLevel = Bool(component, previousKey, false);
             SetBool(component, previousKey, currentLevel);
             return trigger switch
@@ -849,13 +988,19 @@ public static partial class DigitalLogicSimulator
 
         private void Set(ComponentNode component, string pinId, bool value, double highVoltage, double lowVoltage)
         {
-            _outputsChanged |= SetCustomProperty(component, $"HighZ:{pinId}", false);
-            _outputsChanged |= SetCustomProperty(component, $"Output:{pinId}", value);
-            _outputsChanged |= SetCustomProperty(component, $"OutputVoltage:{pinId}", value ? highVoltage : lowVoltage);
+            MarkOutputsChanged(SetCustomProperty(component, $"HighZ:{pinId}", false));
+            MarkOutputsChanged(SetCustomProperty(component, $"Output:{pinId}", value));
+            MarkOutputsChanged(SetCustomProperty(component, $"OutputVoltage:{pinId}", value ? highVoltage : lowVoltage));
         }
 
         private void SetHighZ(ComponentNode component, string pinId)
-            => _outputsChanged |= SetCustomProperty(component, $"HighZ:{pinId}", true);
+            => MarkOutputsChanged(SetCustomProperty(component, $"HighZ:{pinId}", true));
+
+        private void MarkOutputsChanged(bool changed)
+        {
+            if (changed)
+                Interlocked.Exchange(ref _outputsChanged, 1);
+        }
 
         private static bool SetCustomProperty(ComponentNode component, string key, object value)
         {

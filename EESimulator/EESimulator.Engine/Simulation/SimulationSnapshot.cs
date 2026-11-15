@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using EESimulator.Core.Models;
 
 namespace EESimulator.Engine.Simulation;
@@ -34,10 +35,13 @@ public static class SimulationSnapshotFactory
     public static SimulationSnapshot CreateSnapshot(CircuitNode circuit, SimulationSettings settings, SimulationResultsData results)
     {
         var states = new Dictionary<Guid, ComponentLiveState>();
-        if (circuit?.Components != null)
+        if (circuit != null)
         {
-            foreach (var comp in circuit.Components)
+            var components = circuit.Components;
+            var componentStates = new KeyValuePair<Guid, ComponentLiveState>[components.Count];
+            void ExtractComponentState(int index)
             {
+                var comp = components[index];
                 bool isOn = false;
                 double brightness = 0.0;
                 if (comp is EESimulator.Core.Components.Electronics.LEDComponent led)
@@ -50,14 +54,19 @@ public static class SimulationSnapshotFactory
                 else if (comp is EESimulator.Core.Components.Electronics.LogicOutputComponent lout)
                     isOn = lout.IsOn;
 
-                states[comp.Id] = new ComponentLiveState(
-                    comp.LiveVoltage,
-                    comp.LiveCurrent,
-                    isOn,
-                    brightness,
-                    comp.IsBrokenDown
-                );
+                componentStates[index] = new KeyValuePair<Guid, ComponentLiveState>(
+                    comp.Id,
+                    new ComponentLiveState(comp.LiveVoltage, comp.LiveCurrent, isOn, brightness, comp.IsBrokenDown));
             }
+
+            if (components.Count >= 8)
+                Parallel.For(0, components.Count, ExtractComponentState);
+            else
+                for (int index = 0; index < components.Count; index++)
+                    ExtractComponentState(index);
+
+            foreach (var componentState in componentStates)
+                states.Add(componentState.Key, componentState.Value);
         }
 
         return new SimulationSnapshot
@@ -73,4 +82,3 @@ public static class SimulationSnapshotFactory
         };
     }
 }
-

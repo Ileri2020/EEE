@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using EESimulator.Core.Components.Base;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.Electronics;
@@ -58,6 +59,8 @@ public partial class SpiceSharpAdapter : ISimulationEngine
     {
         public CircuitNode OriginalCircuit = null!;
         public long StructureVersion;
+        public long ConfigurationVersion;
+        public long StateVersion;
         public CircuitMacroExpansion? MacroExpansion;
         public CircuitNode ExpandedCircuit = null!;
         public CircuitTopology Topology = null!;
@@ -99,7 +102,9 @@ public partial class SpiceSharpAdapter : ISimulationEngine
             {
                 if (_cachedContext != null &&
                     _cachedContext.OriginalCircuit == originalCircuit &&
-                    _cachedContext.StructureVersion == originalCircuit.StructureVersion)
+                    _cachedContext.StructureVersion == originalCircuit.StructureVersion &&
+                    _cachedContext.ConfigurationVersion == originalCircuit.ConfigurationVersion &&
+                    _cachedContext.StateVersion == originalCircuit.StateVersion)
                 {
                     context = _cachedContext;
                     macroExpansion = context.MacroExpansion;
@@ -164,6 +169,8 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     {
                         OriginalCircuit = originalCircuit,
                         StructureVersion = originalCircuit.StructureVersion,
+                        ConfigurationVersion = originalCircuit.ConfigurationVersion,
+                        StateVersion = originalCircuit.StateVersion,
                         MacroExpansion = macroExpansion,
                         ExpandedCircuit = circuit,
                         Topology = builtTopology,
@@ -230,9 +237,13 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     }
                 }
 
-                foreach (var component in circuit.Components)
+                var components = circuit.Components;
+                var pinVoltagesByComponent = new List<(Guid ComponentId, string PinId, double Voltage)>[components.Count];
+                void UpdateComponentPins(int index)
                 {
+                    var component = components[index];
                     component.LivePinVoltages.Clear();
+                    var pinVoltages = new List<(Guid ComponentId, string PinId, double Voltage)>(component.Pins.Count);
                     foreach (var pin in component.Pins)
                     {
                         var pinReference = new PinReference(component.Id, pin.Id);
@@ -245,9 +256,20 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                                 ? pinVoltageExport.Value
                                 : 0.0;
                         component.LivePinVoltages[pin.Id] = pinVoltage;
-                        results.OperatingPointPinVoltages[(component.Id, pin.Id)] = pinVoltage;
+                        pinVoltages.Add((component.Id, pin.Id, pinVoltage));
                     }
+
+                    pinVoltagesByComponent[index] = pinVoltages;
                 }
+                if (components.Count >= 8)
+                    System.Threading.Tasks.Parallel.For(0, components.Count, UpdateComponentPins);
+                else
+                    for (int index = 0; index < components.Count; index++)
+                        UpdateComponentPins(index);
+
+                foreach (var pinVoltages in pinVoltagesByComponent)
+                foreach (var (componentId, pinId, voltage) in pinVoltages)
+                    results.OperatingPointPinVoltages[(componentId, pinId)] = voltage;
 
                 // Update live probe values on each component
                 foreach (var (comp, expA, expB) in compExports.Select(kv => (kv.Key, kv.Value.ExpA, kv.Value.ExpB)))
