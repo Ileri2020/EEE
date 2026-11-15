@@ -50,11 +50,15 @@ public partial class EEWorkspaceViewModel
                 adjacency[ids[i]].Add(ids[0]);
             }
         }
-        var groundIds = components.Where(component => component is GroundNode).Select(component => component.Id).ToArray();
-        for (int i = 1; i < groundIds.Length; i++)
+        foreach (var groundGroup in components.OfType<GroundNode>().GroupBy(
+                     ground => ground.GroundGroup, StringComparer.OrdinalIgnoreCase))
         {
-            adjacency[groundIds[0]].Add(groundIds[i]);
-            adjacency[groundIds[i]].Add(groundIds[0]);
+            var groundIds = groundGroup.Select(ground => ground.Id).ToArray();
+            for (int i = 1; i < groundIds.Length; i++)
+            {
+                adjacency[groundIds[0]].Add(groundIds[i]);
+                adjacency[groundIds[i]].Add(groundIds[0]);
+            }
         }
 
         var visited = new HashSet<Guid> { selected.Id };

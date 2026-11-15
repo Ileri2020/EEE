@@ -2,6 +2,10 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using EEE.Services;
 using EESimulator.Commands;
+using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.Electronics;
+using EESimulator.Core.Components.General;
+using EESimulator.Core.Electrical;
 using EESimulator.Core.Models;
 using EESimulator.Engine.Simulation;
 using EESimulator.Formats;
@@ -14,6 +18,129 @@ namespace EESimulator.Tests;
 
 public sealed class BundledExampleCircuitTests
 {
+    [Fact]
+    public void Complex_showcase_ground_groups_follow_the_power_zones()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string exampleFile = Path.Combine(
+            repositoryRoot,
+            "Resources",
+            "Raw",
+            "Examples",
+            "complex_linked_component_showcase.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var grounds = circuit.Components.OfType<GroundNode>().ToArray();
+        var expectedGroups = new[]
+        {
+            "Grid", "Power Storage", "Transmission", "Household", "Industrial",
+            "Charger", "DC Analog", "Semiconductors", "Digital Logic"
+        };
+
+        Assert.Contains(grounds, ground => ground.GroundGroup == GroundComponent.DefaultGroundGroup);
+        Assert.All(expectedGroups, group =>
+            Assert.Contains(grounds, ground => ground.GroundGroup == group));
+
+        CircuitTopology topology = EESimulator.Core.Electrical.NetlistBuilder.BuildTopology(circuit);
+        var groupNets = expectedGroups.Select(group =>
+        {
+            GroundNode ground = grounds.First(candidate => candidate.GroundGroup == group);
+            return topology.PinToNetMap[new EESimulator.Core.Electrical.PinReference(ground.Id, "gnd")];
+        }).ToArray();
+        Assert.All(groupNets, net => Assert.False(net.IsGround));
+        Assert.Equal(groupNets.Length, groupNets.Distinct().Count());
+        Assert.All(groupNets.Select((net, index) => (net, index)), item =>
+            Assert.Equal(expectedGroups[item.index], item.net.GroundGroup));
+    }
+
+    [Fact]
+    public void Complete_solar_system_bus_matches_its_expected_operating_point()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "complete_solar_power_system.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            FindComponent(circuit, "Probe", "TP_DC_BUS"));
+        var panel = Assert.IsType<SolarPanelComponent>(
+            FindComponent(circuit, "SolarPanel", "PV1"));
+        var battery = Assert.IsType<BatteryComponent>(
+            FindComponent(circuit, "Battery", "BAT1"));
+        var led = Assert.IsType<LEDComponent>(
+            FindComponent(circuit, "LED", "D_STATUS"));
+        var ledResistor = FindComponent(circuit, "Resistor", "R_LED");
+        double measuredVoltage = simulation.OperatingPointVoltages[$"V({probe.Name})"];
+        double expectedVoltage = double.Parse(
+            probe.CustomProperties["ExpectedVoltage"].ToString()!,
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture);
+        Assert.True(Math.Abs(measuredVoltage - expectedVoltage) < 1e-4,
+            $"Expected {expectedVoltage:G17} V; measured {measuredVoltage:G17} V; " +
+            $"PV Voc={panel.TemperatureAdjustedVoc:G17} V, I={panel.LiveCurrent:G17} A; " +
+            $"battery Voc={battery.OpenCircuitVoltage:G17} V, terminal={battery.LiveVoltage:G17} V, " +
+            $"pins={string.Join(",", battery.LivePinVoltages.Select(pin => $"{pin.Key}:{pin.Value:G17}"))}; " +
+            simulation.Message);
+        Assert.True(AreConnected(circuit, battery, "positive", ledResistor, "pin1"));
+        Assert.True(AreConnected(circuit, ledResistor, "pin2", led, "anode"));
+        Assert.True(Math.Abs(battery.LiveVoltage - measuredVoltage) < 1e-4,
+            $"Battery terminal model {battery.LiveVoltage:G17} V does not match bus {measuredVoltage:G17} V.");
+        Assert.InRange(Math.Abs(led.LiveCurrent), 0, 0.02);
+    }
+
+    [Fact]
+    public void Complex_showcase_ttl_outputs_match_their_connected_logic_probes()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string exampleFile = Path.Combine(
+            repositoryRoot,
+            "Resources",
+            "Raw",
+            "Examples",
+            "complex_linked_component_showcase.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        ComponentNode ttl = FindComponent(circuit, "7400", "TTL_7400");
+        var topology = EESimulator.Core.Electrical.NetlistBuilder.BuildTopology(circuit);
+        var componentsById = circuit.Components.ToDictionary(component => component.Id);
+        string floatingNetDetails = string.Join("; ", topology.Nets
+            .Where(net => net.NetName is "Net_441" or "Net_442")
+            .Select(net => $"{net.NetName}=[{string.Join(",", net.ConnectedPins.Select(pin =>
+                $"{componentsById[pin.ComponentId].Name}.{pin.PinId}"))}]"));
+        foreach (string pinId in new[] { "pin3", "pin6", "pin8", "pin11" })
+        {
+            ComponentNode logicOutput = circuit.Components.Single(component =>
+                component.ComponentType == "LogicOutput" &&
+                circuit.Connections.Any(connection =>
+                    (connection.FromComponentId == ttl.Id && connection.FromPin == pinId &&
+                     connection.ToComponentId == component.Id) ||
+                    (connection.ToComponentId == ttl.Id && connection.ToPin == pinId &&
+                     connection.FromComponentId == component.Id)));
+            bool expected = bool.Parse(logicOutput.CustomProperties["ExpectedLogicState"].ToString()!);
+            var logicOutputProbe = Assert.IsType<LogicOutputComponent>(logicOutput);
+            string ttlVoltage = ttl.LivePinVoltages.TryGetValue(pinId, out double voltage)
+                ? voltage.ToString("G17", CultureInfo.InvariantCulture)
+                : "unavailable";
+            var net = topology.PinToNetMap[new EESimulator.Core.Electrical.PinReference(ttl.Id, pinId)];
+            bool hasSimulatedPinVoltage = simulation.OperatingPointPinVoltages.TryGetValue(
+                (ttl.Id, pinId), out double simulatedPinVoltage);
+            Assert.True(expected == logicOutputProbe.IsOn,
+                $"{pinId}: expected={expected}, digital output={DigitalLogicSimulator.ReadOutputState(ttl, pinId)}, " +
+                $"stored voltage={ttl.CustomProperties.GetValueOrDefault($"OutputVoltage:{pinId}")}, " +
+                $"measured pin voltage={ttlVoltage}, topology net={net.NetName} (ground={net.IsGround}), " +
+                $"simulation pin voltage={(hasSimulatedPinVoltage ? simulatedPinVoltage.ToString("G17", CultureInfo.InvariantCulture) : "unavailable")}, " +
+                $"logic probe voltage={logicOutputProbe.LiveVoltage.ToString("G17", CultureInfo.InvariantCulture)}, " +
+                $"floating nets={floatingNetDetails}, simulation message={simulation.Message}");
+        }
+    }
+
     [Fact]
     public void Bundled_examples_use_grid_calls_and_round_trip_through_the_python_api()
     {
@@ -94,12 +221,17 @@ public sealed class BundledExampleCircuitTests
                 .Where(component => component.ComponentType.Equals("Probe", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
             Assert.True(testProbes.Length >= 2, $"{exampleName}: expected at least two test points.");
+            if (exampleName == "complex_linked_component_showcase")
+                Assert.True(testProbes.Length >= 40, $"{exampleName}: expected at least 40 section checkpoints.");
             Assert.All(testProbes, probe =>
             {
                 Assert.Contains(sourceCircuit.Connections, connection =>
                     connection.FromComponentId == probe.Id || connection.ToComponentId == probe.Id);
-                Assert.True(probe.CustomProperties.ContainsKey("ExpectedVoltage"),
-                    $"{exampleName}/{probe.Name}: expected voltage metadata is required.");
+                bool hasExpectedVoltage = probe.CustomProperties.ContainsKey("ExpectedVoltage");
+                bool hasExpectedRange = probe.CustomProperties.ContainsKey("ExpectedVoltageMinimum") &&
+                                        probe.CustomProperties.ContainsKey("ExpectedVoltageMaximum");
+                Assert.True(hasExpectedVoltage || hasExpectedRange,
+                    $"{exampleName}/{probe.Name}: expected voltage or voltage range metadata is required.");
             });
 
             if (testPointExampleIds.Contains(exampleName, StringComparer.Ordinal))
@@ -117,10 +249,11 @@ public sealed class BundledExampleCircuitTests
                 ConnectionNode probeConnection = sourceCircuit.Connections.Single(connection =>
                     connection.FromComponentId == probe.Id || connection.ToComponentId == probe.Id);
                 string probePinId = probeConnection.FromComponentId == probe.Id ? probeConnection.FromPin : probeConnection.ToPin;
-                if (!simulation.OperatingPointPinVoltages.TryGetValue((probe.Id, probePinId), out double measuredVoltage))
+                if (!simulation.OperatingPointPinVoltages.ContainsKey((probe.Id, probePinId)) ||
+                    !simulation.OperatingPointVoltages.TryGetValue($"V({probe.Name})", out double measuredVoltage))
                 {
                     if (!simulation.Message.StartsWith("Fallback approximation used", StringComparison.Ordinal))
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: connected node was not solved.");
+                        testPointFailures.Add($"{exampleName}/{probe.Name}: probe reference voltage was not solved.");
                     continue;
                 }
 
@@ -139,12 +272,154 @@ public sealed class BundledExampleCircuitTests
                     }
                     else if (measuredVoltage < expectedVoltage - 1e-4 || measuredVoltage > expectedVoltage + 1e-4)
                     {
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {expectedVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
+                        string componentDetails = exampleName == "complete_solar_power_system"
+                            ? string.Join("; ", sourceCircuit.Components
+                                .Where(component => component.Name is "PV1" or "BAT1" or "R_LOAD")
+                                .Select(component => $"{component.Name} pins=" +
+                                    string.Join(",", component.LivePinVoltages.Select(pin =>
+                                        $"{pin.Key}:{pin.Value.ToString("G17", CultureInfo.InvariantCulture)}"))))
+                            : string.Empty;
+                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {expectedVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V." +
+                            (componentDetails.Length > 0 ? $" {componentDetails}" : string.Empty));
+                    }
+                }
+                else if (probe.CustomProperties.TryGetValue("ExpectedVoltageMinimum", out var minimumValue) &&
+                         probe.CustomProperties.TryGetValue("ExpectedVoltageMaximum", out var maximumValue))
+                {
+                    if (!double.TryParse(minimumValue?.ToString(), NumberStyles.Float,
+                            CultureInfo.InvariantCulture, out double minimumVoltage) ||
+                        !double.TryParse(maximumValue?.ToString(), NumberStyles.Float,
+                            CultureInfo.InvariantCulture, out double maximumVoltage) ||
+                        minimumVoltage > maximumVoltage)
+                    {
+                        testPointFailures.Add($"{exampleName}/{probe.Name}: invalid expected voltage range.");
+                    }
+                    else if (measuredVoltage < minimumVoltage || measuredVoltage > maximumVoltage)
+                    {
+                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {minimumVoltage.ToString("G17", CultureInfo.InvariantCulture)} to {maximumVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
                     }
                 }
                 else
                 {
                     testPointFailures.Add($"{exampleName}/{probe.Name} missing expected voltage; measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
+                }
+            }
+
+            if (exampleName == "complex_linked_component_showcase")
+            {
+                var zoneHeadings = sourceCircuit.Components.OfType<TextAnnotationComponent>().ToArray();
+                Assert.Equal(16, zoneHeadings.Length);
+                Assert.All(zoneHeadings, heading =>
+                    Assert.True(heading.Text.StartsWith("ZONE ", StringComparison.Ordinal), $"{heading.Name} has no zone title."));
+
+                ComponentNode generator = FindComponent(sourceCircuit, "SynchronousGenerator");
+                ComponentNode threePhaseLine = FindComponent(sourceCircuit, "ThreePhaseTransmissionLine");
+                ComponentNode inductionMotor = FindComponent(sourceCircuit, "InductionMotor");
+                foreach (string phase in new[] { "A", "B", "C" })
+                {
+                    Assert.True(AreConnected(sourceCircuit, generator, phase, threePhaseLine, $"{phase}_send"));
+                    Assert.True(AreConnected(sourceCircuit, threePhaseLine, $"{phase}_receive", inductionMotor, phase));
+                }
+                Assert.True(AreConnected(sourceCircuit, threePhaseLine, "N_receive", inductionMotor, "N"));
+                Assert.True(AreConnected(sourceCircuit,
+                    FindComponent(sourceCircuit, "TwoPhaseTransmissionLine"), "a_to",
+                    FindComponent(sourceCircuit, "Resistor", "R_2PH_A"), "pin1"));
+                Assert.True(AreConnected(sourceCircuit,
+                    FindComponent(sourceCircuit, "SinglePhaseTransmissionLine"), "to",
+                    FindComponent(sourceCircuit, "ACBulb", "BULB_HOUSEHOLD"), "L"));
+                Assert.True(AreConnected(sourceCircuit,
+                    FindComponent(sourceCircuit, "SolarPanel"), "positive",
+                    FindComponent(sourceCircuit, "Resistor", "R_PV_LOAD"), "pin1"));
+                Assert.True(AreConnected(sourceCircuit,
+                    FindComponent(sourceCircuit, "Battery"), "positive",
+                    FindComponent(sourceCircuit, "Resistor", "R_BAT_LOAD"), "pin1"));
+
+                ComponentNode ttl7400 = FindComponent(sourceCircuit, "7400");
+                foreach (string pin in new[] { "pin3", "pin6", "pin8", "pin11" })
+                {
+                    Assert.Contains(sourceCircuit.Connections, connection =>
+                        (connection.FromComponentId == ttl7400.Id &&
+                         connection.FromPin.Equals(pin, StringComparison.OrdinalIgnoreCase)) ||
+                        (connection.ToComponentId == ttl7400.Id &&
+                         connection.ToPin.Equals(pin, StringComparison.OrdinalIgnoreCase)));
+                }
+
+                var arithmeticDisplays = new Dictionary<string, string>
+                {
+                    ["MULTIPLIER"] = "LED_BAR_MUL",
+                    ["DIVIDER"] = "LED_BAR_DIV",
+                    ["SHIFTER"] = "LED_BAR_SHIFT",
+                    ["BIT_ADDER"] = "LED_BAR_BITADD",
+                    ["BIT_FINDER"] = "LED_BAR_BITFIND",
+                    ["SQUARE_ROOT"] = "LED_BAR_SQRT",
+                    ["MIN_MAX"] = "LED_BAR_MINMAX"
+                };
+                foreach ((string componentName, string displayName) in arithmeticDisplays)
+                {
+                    ComponentNode arithmetic = sourceCircuit.Components.Single(component => component.Name == componentName);
+                    ComponentNode display = FindComponent(sourceCircuit, "LedBar", displayName);
+                    for (int bit = 0; bit < 8; bit++)
+                        Assert.True(AreConnected(sourceCircuit, arithmetic, $"Y{bit}", display, $"D{bit}"),
+                            $"{componentName}.Y{bit} is not connected to {displayName}.");
+                }
+
+                DigitalLogicSimulator.EvaluateCombinational(sourceCircuit);
+
+                foreach (ComponentNode component in sourceCircuit.Components)
+                {
+                    foreach (var expectedOutput in component.CustomProperties
+                                 .Where(property => property.Key.StartsWith("ExpectedOutput:", StringComparison.Ordinal)))
+                    {
+                        string pin = expectedOutput.Key["ExpectedOutput:".Length..];
+                        Assert.True(bool.TryParse(expectedOutput.Value?.ToString(), out bool expected),
+                            $"{exampleName}/{component.Name}: invalid expected output state for {pin}.");
+                        Assert.True(expected == DigitalLogicSimulator.ReadOutputState(component, pin),
+                            $"{exampleName}/{component.Name}: expected output {pin}={expected}, " +
+                            $"but the live digital output was {DigitalLogicSimulator.ReadOutputState(component, pin)}.");
+                    }
+
+                    if (component.CustomProperties.TryGetValue("ExpectedRenderedValue", out var expectedRenderedValue))
+                    {
+                        Assert.True(long.TryParse(expectedRenderedValue?.ToString(), NumberStyles.Integer,
+                                CultureInfo.InvariantCulture, out long expected),
+                            $"{exampleName}/{component.Name}: invalid expected rendered value.");
+                        long actual = 0;
+                        bool hasRenderedValue = component.CustomProperties.TryGetValue("RenderedValue", out var renderedValue) &&
+                                                long.TryParse(renderedValue?.ToString(), NumberStyles.Integer,
+                                                    CultureInfo.InvariantCulture, out actual);
+                        Assert.True(hasRenderedValue, $"{exampleName}/{component.Name}: display value was not rendered.");
+                        Assert.Equal(expected, actual);
+                    }
+
+                    if (component.CustomProperties.TryGetValue("ExpectedRenderedSegments", out var expectedSegments))
+                    {
+                        Assert.True(int.TryParse(expectedSegments?.ToString(), NumberStyles.Integer,
+                                CultureInfo.InvariantCulture, out int expected),
+                            $"{exampleName}/{component.Name}: invalid expected segment mask.");
+                        int actual = 0;
+                        bool hasRenderedSegments = component.CustomProperties.TryGetValue("RenderedSegments", out var renderedSegments) &&
+                                                   int.TryParse(renderedSegments?.ToString(), NumberStyles.Integer,
+                                                       CultureInfo.InvariantCulture, out actual);
+                        Assert.True(hasRenderedSegments, $"{exampleName}/{component.Name}: seven-segment output was not rendered.");
+                        Assert.Equal(expected, actual);
+                    }
+
+                    if (component.CustomProperties.TryGetValue("ExpectedLogicState", out var expectedLogicState))
+                    {
+                        Assert.IsType<LogicOutputComponent>(component);
+                        Assert.True(bool.TryParse(expectedLogicState?.ToString(), out bool expected),
+                            $"{exampleName}/{component.Name}: invalid expected logic state.");
+                        Assert.True(expected == Assert.IsType<LogicOutputComponent>(component).IsOn,
+                            $"{exampleName}/{component.Name}: rendered logic output does not match its expected state.");
+                    }
+
+                    if (component.CustomProperties.TryGetValue("ExpectedIsOn", out var expectedLedState))
+                    {
+                        Assert.IsType<LEDComponent>(component);
+                        Assert.True(bool.TryParse(expectedLedState?.ToString(), out bool expected),
+                            $"{exampleName}/{component.Name}: invalid expected LED state.");
+                        Assert.Equal(expected, Assert.IsType<LEDComponent>(component).IsOn);
+                    }
                 }
             }
 
@@ -168,12 +443,18 @@ public sealed class BundledExampleCircuitTests
             Assert.Equal(sourceCircuit.Connections.Count(), generatedCircuit.Connections.Count());
             Assert.All(generatedCircuit.Components, component => Assert.True(component.HasLogicalPlacement,
                 $"{exampleName}: generated {component.Name} ({component.ComponentType}) has no logical placement."));
+            foreach (GroundNode ground in sourceCircuit.Components.OfType<GroundNode>())
+            {
+                var generatedGround = Assert.IsType<GroundNode>(
+                    generatedCircuit.FindChild<ComponentNode>(ground.Name));
+                Assert.Equal(ground.GroundGroup, generatedGround.GroundGroup);
+            }
             Assert.All(sourceCircuit.Components.OfType<EESimulator.Core.Components.Electronics.LogicInputComponent>(), input =>
                 Assert.Equal(input.State, Assert.IsType<EESimulator.Core.Components.Electronics.LogicInputComponent>(
                     generatedCircuit.FindChild<ComponentNode>(input.Name)).State));
         }
 
-        Assert.Empty(testPointFailures);
+        Assert.True(testPointFailures.Count == 0, string.Join(Environment.NewLine, testPointFailures));
     }
 
     private static string FindRepositoryRoot()
@@ -191,4 +472,25 @@ public sealed class BundledExampleCircuitTests
 
         throw new DirectoryNotFoundException("Could not locate the EEE repository root.");
     }
+
+    private static ComponentNode FindComponent(CircuitNode circuit, string componentType, string? name = null) =>
+        circuit.Components.Single(component =>
+            component.ComponentType.Equals(componentType, StringComparison.OrdinalIgnoreCase) &&
+            (name is null || component.Name.Equals(name, StringComparison.Ordinal)));
+
+    private static bool AreConnected(
+        CircuitNode circuit,
+        ComponentNode first,
+        string firstPin,
+        ComponentNode second,
+        string secondPin) =>
+        circuit.Connections.Any(connection =>
+            (connection.FromComponentId == first.Id &&
+             connection.FromPin.Equals(firstPin, StringComparison.OrdinalIgnoreCase) &&
+             connection.ToComponentId == second.Id &&
+             connection.ToPin.Equals(secondPin, StringComparison.OrdinalIgnoreCase)) ||
+            (connection.FromComponentId == second.Id &&
+             connection.FromPin.Equals(secondPin, StringComparison.OrdinalIgnoreCase) &&
+             connection.ToComponentId == first.Id &&
+             connection.ToPin.Equals(firstPin, StringComparison.OrdinalIgnoreCase)));
 }

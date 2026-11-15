@@ -22,6 +22,38 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 {
     public string EngineName => "SpiceSharp Engine";
 
+    private sealed class InvalidProbeReferenceGroupException(string message) : InvalidOperationException(message)
+    {
+    }
+
+    private static void AddGroundGroupReferences(
+        CircuitNode circuit,
+        CircuitTopology topology,
+        SpiceSharp.Circuit spiceCircuit)
+    {
+        int referenceIndex = 0;
+        var usedNames = new HashSet<string>(
+            circuit.Components.Select(component => component.Name),
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var net in topology.Nets.Where(net =>
+                     net.GroundGroup != null &&
+                     !net.GroundGroup.Equals(GroundComponent.DefaultGroundGroup, StringComparison.OrdinalIgnoreCase) &&
+                     !net.IsGround))
+        {
+            string referenceName;
+            do
+            {
+                referenceName = $"ground_group_reference_{referenceIndex++}";
+            } while (!usedNames.Add(referenceName));
+
+            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                referenceName,
+                net.NetName,
+                "0",
+                1e12));
+        }
+    }
+
     private sealed class CompiledSpiceContext
     {
         public CircuitNode OriginalCircuit = null!;
@@ -104,6 +136,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 
                     BuildSpiceCircuitComponents(circuit, builtTopology, builtSpiceCircuit, settings, builtComponentsWithPins,
                         builtMutualInductances, ResolveBuiltNetForPin, ResolveBuiltPinNode, results);
+                    AddGroundGroupReferences(circuit, builtTopology, builtSpiceCircuit);
 
                     context = new CompiledSpiceContext
                     {
@@ -272,8 +305,8 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     }
                     else if (comp is ProbeComponent prb)
                     {
-                        comp.LiveVoltage = va;
-                        results.OperatingPointVoltages[$"V({comp.Name})"] = va;
+                        comp.LiveVoltage = signedVoltage;
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = signedVoltage;
                     }
                     else if (comp is PullResistorComponent)
                     {
@@ -317,7 +350,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
             {
                 try
                 {
-                    CaptureTransientWaveforms(waveComps, spiceCircuit, GetNetForPin, settings);
+                    CaptureTransientWaveforms(waveComps, spiceCircuit, GetNetForPin, topology, settings);
                 }
                 catch (Exception waveformException)
                 {
@@ -341,6 +374,13 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         }
         catch (Exception ex)
         {
+            if (ex is InvalidProbeReferenceGroupException)
+            {
+                results.Success = false;
+                results.Message = ex.Message;
+                return results;
+            }
+
             // Fallback gracefully so UI and probes still update
             RunFallbackSolver(circuit, results, ex);
         }
@@ -494,6 +534,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         List<ComponentNode> components,
         SpiceSharp.Circuit spiceCircuit,
         Func<Guid, string, string> getNetForPin,
+        CircuitTopology topology,
         SimulationSettings settings)
     {
         double start = Math.Max(0.0, settings.StartTime);
@@ -510,6 +551,10 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 
         string NodeFor(ComponentNode component, int pinIndex) =>
             component.Pins.Count > pinIndex ? getNetForPin(component.Id, component.Pins[pinIndex].Id) : "0";
+        string ReferenceNodeFor(ComponentNode component) =>
+            component is ProbeComponent probe
+                ? ResolveProbeReferenceNode(topology, probe.ReferenceGroundGroup)
+                : NodeFor(component, 1);
         RealVoltageExport? VoltageAt(string node) => node == "0" ? null : new RealVoltageExport(transient, node);
 
         var captures = components.Select(component =>
@@ -544,7 +589,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                 Component: component,
                 Pins: pins,
                 VoltageA: VoltageAt(NodeFor(component, 0)),
-                VoltageB: VoltageAt(NodeFor(component, 1)),
+                VoltageB: VoltageAt(ReferenceNodeFor(component)),
                 Current: component is ElectricalComponent or WireComponent or LogicInputComponent
                     ? new RealCurrentExport(transient, GetComponentCurrentExportName(component))
                     : null);

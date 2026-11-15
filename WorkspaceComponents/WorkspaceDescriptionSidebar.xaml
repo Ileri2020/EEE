@@ -147,6 +147,24 @@
                                             Placeholder="Enter component description or engineering notes…"/>
                                 </VerticalStackLayout>
 
+                                <VerticalStackLayout IsVisible="{Binding IsGroundGroupEditorVisible}" Spacing="4">
+                                    <Label Text="{Binding GroundGroupEditorTitle}" TextColor="#79C0FF" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Picker Title="Choose an existing group"
+                                            ItemsSource="{Binding GroundGroupOptions}"
+                                            SelectedItem="{Binding EditGroundGroup}"
+                                            BackgroundColor="#0D1117"
+                                            TextColor="#C9D1D9"
+                                            FontSize="11"/>
+                                    <Entry Text="{Binding EditGroundGroup}"
+                                           Placeholder="Or enter a new group name"
+                                           BackgroundColor="#0D1117"
+                                           TextColor="#C9D1D9"
+                                           FontSize="12"/>
+                                    <Label Text="{Binding GroundGroupEditorDescription}"
+                                           TextColor="#8B949E"
+                                           FontSize="10"/>
+                                </VerticalStackLayout>
+
                                 <!-- Primary Parameter -->
                                 <VerticalStackLayout Spacing="3">
                                     <Label Text="{Binding EditParamName}" TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>

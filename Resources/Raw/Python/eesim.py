@@ -75,7 +75,7 @@ class CircuitRef:
                 raise TypeError("position must contain x and y coordinates.")
             _call(
                 f"circuit.add_component({_quoted(comp_type)}, name={_quoted(name)}, "
-                f"position_x={_number(position[0])}, position_y={_number(position[1])})"
+                f"position_x={_number(position[0])}, position_y={_number(position[1])}"
             )
         else:
             raise TypeError("add_component requires either position or row and col.")

@@ -31,6 +31,7 @@ public class NetNode : RootNode
 {
     public string NetName { get; set; } = string.Empty;
     public bool IsGround { get; set; } = false;
+    public string? GroundGroup { get; set; }
 
     public HashSet<PinReference> ConnectedPins { get; } = new();
 
@@ -39,10 +40,11 @@ public class NetNode : RootNode
         Name = "Net";
     }
 
-    public NetNode(string name, bool isGround = false)
+    public NetNode(string name, bool isGround = false, string? groundGroup = null)
     {
         Name = name;
         NetName = name;
         IsGround = isGround;
+        GroundGroup = groundGroup;
     }
 }

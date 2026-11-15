@@ -164,6 +164,7 @@ public partial class EEWorkspaceViewModel
 
         Circuit.Title = newCircuit.Title;
         Circuit.Description = newCircuit.Description;
+        RefreshGroundGroupOptions();
         ProjectName = projectName;
         CurrentFilePath = filePath;
 
@@ -192,6 +193,7 @@ public partial class EEWorkspaceViewModel
     private void Undo()
     {
         CommandManager.Undo();
+        RefreshGroundGroupOptions();
         StatusText = "Undo";
     }
 
@@ -199,6 +201,7 @@ public partial class EEWorkspaceViewModel
     private void Redo()
     {
         CommandManager.Redo();
+        RefreshGroundGroupOptions();
         StatusText = "Redo";
     }
 
@@ -294,6 +297,7 @@ public partial class EEWorkspaceViewModel
                 Circuit.AddChild(child);
             Circuit.Title = loaded.Title;
             Circuit.Description = loaded.Description;
+            RefreshGroundGroupOptions();
             CommandManager.Clear();
             _sync.OnCircuitReplaced(Circuit);
             ScriptText = _sync.CurrentScript;
@@ -878,6 +882,33 @@ public partial class EEWorkspaceViewModel
         }
         SelectedComponent.ShowLiveProbe = EditShowLiveProbe;
         SelectedComponent.ShowWaveform = EditShowWaveform;
+        if (SelectedComponent is GroundComponent ground &&
+            !ground.GroundGroup.Equals(EditGroundGroup, StringComparison.Ordinal))
+        {
+            string group = string.IsNullOrWhiteSpace(EditGroundGroup)
+                ? GroundComponent.DefaultGroundGroup
+                : EditGroundGroup.Trim();
+            CommandManager.ExecuteCommand(new SetComponentPropertyCommand(
+                Circuit, SelectedComponent.Name, nameof(GroundComponent.GroundGroup), group)
+            {
+                Origin = CommandOrigin.Schematic
+            });
+            EditGroundGroup = ground.GroundGroup;
+            RefreshGroundGroupOptions();
+        }
+        else if (SelectedComponent is ProbeComponent probe &&
+                 !probe.ReferenceGroundGroup.Equals(EditGroundGroup, StringComparison.OrdinalIgnoreCase))
+        {
+            string group = string.IsNullOrWhiteSpace(EditGroundGroup)
+                ? GroundComponent.DefaultGroundGroup
+                : EditGroundGroup.Trim();
+            CommandManager.ExecuteCommand(new SetComponentPropertyCommand(
+                Circuit, SelectedComponent.Name, nameof(ProbeComponent.ReferenceGroundGroup), group)
+            {
+                Origin = CommandOrigin.Schematic
+            });
+            EditGroundGroup = probe.ReferenceGroundGroup;
+        }
         SelectedComponent.NotifyModified(SelectedComponent.Reference);
         CircuitChanged?.Invoke();
         RequestSimulationRefresh();

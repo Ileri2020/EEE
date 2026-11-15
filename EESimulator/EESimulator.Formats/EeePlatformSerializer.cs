@@ -170,6 +170,8 @@ public static class EeePlatformSerializer
             {
                 cDto.StringParameters[kvp.Key] = kvp.Value?.ToString() ?? string.Empty;
             }
+            if (comp is EESimulator.Core.Components.General.TextAnnotationComponent annotation)
+                cDto.StringParameters[nameof(annotation.Text)] = annotation.Text;
 
             dto.Components.Add(cDto);
         }
@@ -287,6 +289,9 @@ public static class EeePlatformSerializer
                 {
                     comp.CustomProperties[kvp.Key] = kvp.Value;
                 }
+                if (comp is EESimulator.Core.Components.General.TextAnnotationComponent annotation &&
+                    cDto.StringParameters.TryGetValue(nameof(annotation.Text), out string? text))
+                    annotation.Text = text;
 
                 if (comp is EESimulator.Core.Components.Electrical.PowerSystemComponent powerSystemComponent)
                     powerSystemComponent.ValidateConfiguration();

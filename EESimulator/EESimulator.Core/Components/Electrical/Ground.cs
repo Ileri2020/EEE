@@ -10,11 +10,30 @@ namespace EESimulator.Core.Components.Electrical;
 public class GroundComponent : ElectricalComponent
 {
     public const string StableType = "electrical.ground";
+    public const string DefaultGroundGroup = "Default";
+    public const string GroundGroupProperty = "GroundGroup";
 
     public override string StableTypeId => StableType;
     public override string ComponentType => "Ground";
     public override string SpicePrefix => "GND";
     public override string Description => "Circuit ground reference (Node 0)";
+
+    public string GroundGroup
+    {
+        get => CustomProperties.TryGetValue(GroundGroupProperty, out var value) &&
+               !string.IsNullOrWhiteSpace(value?.ToString())
+            ? value.ToString()!.Trim()
+            : DefaultGroundGroup;
+        set
+        {
+            string group = string.IsNullOrWhiteSpace(value) ? DefaultGroundGroup : value.Trim();
+            if (group.Equals(DefaultGroundGroup, StringComparison.OrdinalIgnoreCase))
+                CustomProperties.Remove(GroundGroupProperty);
+            else
+                CustomProperties[GroundGroupProperty] = group;
+            NotifyModified(nameof(GroundGroup));
+        }
+    }
 
     public GroundComponent()
     {

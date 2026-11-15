@@ -14,6 +14,20 @@ using SpiceSharp.Simulations;
 namespace EESimulator.Engine.Simulation;
 public partial class SpiceSharpAdapter
 {
+    private static string ResolveProbeReferenceNode(CircuitTopology topology, string groundGroup)
+    {
+        if (groundGroup.Equals(GroundComponent.DefaultGroundGroup, StringComparison.OrdinalIgnoreCase))
+            return "0";
+
+        NetNode? referenceNet = topology.Nets.FirstOrDefault(net =>
+            net.GroundGroup?.Equals(groundGroup, StringComparison.OrdinalIgnoreCase) == true);
+        if (referenceNet == null)
+            throw new InvalidProbeReferenceGroupException(
+                $"Probe reference ground group '{groundGroup}' does not exist in the circuit.");
+
+        return referenceNet.IsGround ? "0" : referenceNet.NetName;
+    }
+
     private static void BuildSpiceCircuitComponents(
         CircuitNode circuit,
         CircuitTopology topology,
@@ -37,6 +51,8 @@ public partial class SpiceSharpAdapter
 
                 string nodeA = comp.Pins.Count > 0 ? GetNetForPin(comp.Id, comp.Pins[0].Id) : "0";
                 string nodeB = comp.Pins.Count > 1 ? GetNetForPin(comp.Id, comp.Pins[1].Id) : "0";
+                if (comp is ProbeComponent probeComponent)
+                    nodeB = ResolveProbeReferenceNode(topology, probeComponent.ReferenceGroundGroup);
 
                 componentsWithPins.Add((comp, nodeA, nodeB));
 
@@ -185,19 +201,32 @@ public partial class SpiceSharpAdapter
                     case SolarPanelComponent panel:
                     {
                         string internalNode = $"{panel.Name}_pv_{panel.Id.ToString("N")[..8]}";
-                        double temperatureFactor = Math.Max(0.0, 1 + panel.VocTemperatureCoefficient * (panel.CellTemperature - 25));
-                        double irradianceCurrent = Math.Max(0.0, panel.ShortCircuitCurrent * panel.SolarIrradiance / 1000.0 * panel.ParallelStrings);
+                        double irradianceCurrent = panel.PhotocurrentAtDeviceTime(settings.DeviceTimeSeconds);
+                        double effectiveEmissionCoefficient = 1.2 * Math.Max(panel.SeriesCells, 1);
+                        double thermalVoltage = 8.617333262145e-5 * Math.Max(panel.CellTemperature + 273.15, 1);
+                        double openCircuitVoltage = panel.TemperatureAdjustedVoc;
+                        double diodeCurrentAtOpenCircuit = Math.Max(
+                            irradianceCurrent - openCircuitVoltage / Math.Max(panel.ShuntResistance, 1e-5),
+                            1e-30);
+                        double exponent = openCircuitVoltage /
+                                          (effectiveEmissionCoefficient * thermalVoltage);
+                        double saturationCurrent = diodeCurrentAtOpenCircuit /
+                            Math.Max(Math.Exp(Math.Min(exponent, 700)) - 1, 1e-30);
                         var model = new SpiceSharp.Components.DiodeModel($"{panel.Name}_pvmodel");
-                        model.Parameters.SaturationCurrent = 1e-10;
-                        model.Parameters.EmissionCoefficient = 1.2;
+                        model.Parameters.NominalTemperatureCelsius = panel.CellTemperature;
+                        model.Parameters.SaturationCurrent = Math.Max(saturationCurrent, 1e-30);
+                        model.Parameters.EmissionCoefficient = effectiveEmissionCoefficient;
                         spiceCircuit.Add(model);
-                        spiceCircuit.Add(new SpiceSharp.Components.Diode($"{panel.Name}_diode", internalNode, nodeB, $"{panel.Name}_pvmodel"));
+                        var diode = new SpiceSharp.Components.Diode(
+                            $"{panel.Name}_diode", internalNode, nodeB, $"{panel.Name}_pvmodel");
+                        diode.Parameters.TemperatureCelsius = panel.CellTemperature;
+                        spiceCircuit.Add(diode);
                         spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{panel.Name}_series", nodeA, internalNode,
                             Math.Max(panel.SeriesResistance, 1e-5)));
                         spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{panel.Name}_shunt", internalNode, nodeB,
                             Math.Max(panel.ShuntResistance, 1e-5)));
                         var photoSource = new SpiceSharp.Components.CurrentSource($"{panel.Name}_photocurrent", nodeB, internalNode,
-                            irradianceCurrent * temperatureFactor);
+                            irradianceCurrent);
                         var profileTimes = panel.IrradianceProfilePoints.Select(point => point.Time)
                             .Concat(panel.TemperatureProfilePoints.Select(point => point.Time))
                             .Where(deviceTime => deviceTime > settings.DeviceTimeSeconds &&
@@ -296,6 +325,11 @@ public partial class SpiceSharpAdapter
                             Math.Max(transformer.SecondaryResistance, 1e-6)));
                         spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{transformer.Name}_secondaryReturnR", secondaryReturnInternal, secondaryNegative,
                             Math.Max(transformer.SecondaryResistance, 1e-6)));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{transformer.Name}_secondary_reference",
+                            secondaryReturnInternal,
+                            "0",
+                            1e12));
                         break;
                     }
 

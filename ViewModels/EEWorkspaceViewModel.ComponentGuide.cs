@@ -2,9 +2,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Maui.Storage;
 using EEE.Services;
+using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.General;
 using EESimulator.Core.Models;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
 using Microsoft.Maui.Storage;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -22,11 +25,54 @@ public partial class EEWorkspaceViewModel
     [ObservableProperty]
     public partial ComponentGuide? SelectedComponentGuide { get; set; }
 
+    public ObservableCollection<string> GroundGroupOptions { get; } = new()
+    {
+        GroundComponent.DefaultGroundGroup
+    };
+
+    public bool IsGroundGroupEditorVisible => SelectedComponent is GroundComponent or ProbeComponent;
+    public string GroundGroupEditorTitle => SelectedComponent is ProbeComponent
+        ? "MEASUREMENT REFERENCE GROUP"
+        : "GROUND REFERENCE GROUP";
+    public string GroundGroupEditorDescription => SelectedComponent is ProbeComponent
+        ? "Probe voltage is measured relative to the selected ground group."
+        : "Ground symbols in one group share a reference. Other groups remain separate.";
+
     public bool IsDescriptionPropertiesTab => SelectedDescriptionTab == "Properties";
     public bool IsDescriptionGuideTab => SelectedDescriptionTab == "Guide";
 
     partial void OnSelectedComponentChanged(ComponentNode? value)
-        => SelectedComponentGuide = ComponentGuideService.Create(value);
+    {
+        SelectedComponentGuide = ComponentGuideService.Create(value);
+        OnPropertyChanged(nameof(IsGroundGroupEditorVisible));
+        OnPropertyChanged(nameof(GroundGroupEditorTitle));
+        OnPropertyChanged(nameof(GroundGroupEditorDescription));
+        RefreshGroundGroupOptions();
+    }
+
+    private void RefreshGroundGroupOptions()
+    {
+        GroundGroupOptions.Clear();
+        GroundGroupOptions.Add(GroundComponent.DefaultGroundGroup);
+        foreach (string group in Circuit.Components
+                     .OfType<GroundComponent>()
+                     .Select(ground => ground.GroundGroup)
+                     .Where(group => !group.Equals(
+                         GroundComponent.DefaultGroundGroup,
+                         System.StringComparison.OrdinalIgnoreCase))
+                     .Distinct(System.StringComparer.OrdinalIgnoreCase)
+                     .OrderBy(group => group, System.StringComparer.OrdinalIgnoreCase))
+        {
+            GroundGroupOptions.Add(group);
+        }
+
+        EditGroundGroup = SelectedComponent switch
+        {
+            GroundComponent ground => ground.GroundGroup,
+            ProbeComponent probe => probe.ReferenceGroundGroup,
+            _ => GroundComponent.DefaultGroundGroup
+        };
+    }
 
     [RelayCommand]
     private void SelectDescriptionTab(string tab)

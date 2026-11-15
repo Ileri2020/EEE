@@ -154,12 +154,12 @@ public static class ExampleCircuitService
         _examples.Add(new CircuitExampleItem
         {
             Id = "complex_linked_component_showcase",
-            Title = "Complex Linked Circuit - Full Component Showcase",
+            Title = "Complex Linked Circuit - Zonal Component & Validation Showcase",
             Category = "Digital Logic",
             Icon = "🧩",
             Badge = "FULL SHOWCASE",
-            Description = "A large interactive circuit based on ComplexLinkedCircuitTests, combining analog sources and loads, controlled sources, logic gates, arithmetic, sequential logic, RAM, ROM, displays, and a 7400 TTL package. Independent supply sources are arranged across the upper row, with the connected circuit blocks below.",
-            ComponentSummary = "248 components · analog, digital logic, arithmetic, memory, displays, and TTL · 2 validation probes",
+            Description = "An interactive 16-zone circuit based on ComplexLinkedCircuitTests. It includes a synchronous three-phase generator, native two-/three-/single-phase transmission lines, an induction motor, household AC loads and transformer, solar and battery sources, a diode bridge, working relay and semiconductor paths, connected arithmetic displays, TTL output indicators, and measured validation points.",
+            ComponentSummary = "380 components · 77 component types · 16 functional zones · 43 voltage checkpoints",
             ResourcePath = "Examples/complex_linked_component_showcase.eee"
         });
 

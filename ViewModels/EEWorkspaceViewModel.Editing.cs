@@ -133,6 +133,33 @@ public partial class EEWorkspaceViewModel
             return;
         }
 
+        if (EditingComponent is GroundComponent ground &&
+            !ground.GroundGroup.Equals(EditGroundGroup, StringComparison.Ordinal))
+        {
+            string group = string.IsNullOrWhiteSpace(EditGroundGroup)
+                ? GroundComponent.DefaultGroundGroup
+                : EditGroundGroup.Trim();
+            CommandManager.ExecuteCommand(new SetComponentPropertyCommand(
+                Circuit, EditingComponent.Name, nameof(GroundComponent.GroundGroup), group)
+            {
+                Origin = CommandOrigin.Schematic
+            });
+            RefreshGroundGroupOptions();
+        }
+        else if (EditingComponent is EESimulator.Core.Components.General.ProbeComponent probe &&
+                 !probe.ReferenceGroundGroup.Equals(EditGroundGroup, StringComparison.OrdinalIgnoreCase))
+        {
+            string group = string.IsNullOrWhiteSpace(EditGroundGroup)
+                ? GroundComponent.DefaultGroundGroup
+                : EditGroundGroup.Trim();
+            CommandManager.ExecuteCommand(new SetComponentPropertyCommand(
+                Circuit, EditingComponent.Name, nameof(EESimulator.Core.Components.General.ProbeComponent.ReferenceGroundGroup), group)
+            {
+                Origin = CommandOrigin.Schematic
+            });
+            EditGroundGroup = probe.ReferenceGroundGroup;
+        }
+
         if (!string.IsNullOrWhiteSpace(EditName))
         {
             EditingComponent.Name = EditName.Trim();

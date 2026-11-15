@@ -406,6 +406,39 @@ public sealed class ComponentCircuitTests
         Assert.InRange(Math.Abs(upper.LiveCurrent), 0.001665, 0.001668);
     }
 
+    [Theory]
+    [InlineData(40.0, 60, 20.0, 40.0)]
+    [InlineData(40.0, 30, 10.0, 20.0)]
+    [InlineData(30.0, 60, 15.0, 30.0)]
+    public void Solar_panel_spice_model_uses_configured_open_circuit_voltage_and_series_cells(
+        double openCircuitVoltage, int seriesCells, double minimumVoltage, double maximumVoltage)
+    {
+        var circuit = new CircuitNode();
+        var panel = new SolarPanelComponent
+        {
+            OpenCircuitVoltage = openCircuitVoltage,
+            NumberOfCells = 60,
+            SeriesCells = seriesCells
+        };
+        var load = (ResistorComponent)ComponentRegistry.CreateInstance("Resistor", "R_LOAD");
+        load.Resistance = 100;
+        var ground = (GroundNode)ComponentRegistry.CreateInstance("Ground", "GND");
+
+        circuit.AddChild(panel);
+        circuit.AddChild(load);
+        circuit.AddChild(ground);
+        Connect(circuit, panel, "positive", load, "pin1");
+        Connect(circuit, load, "pin2", ground, "gnd");
+        Connect(circuit, panel, "negative", ground, "gnd");
+
+        var result = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+
+        Assert.True(result.Success, result.Message);
+        double panelVoltage = panel.LivePinVoltages["positive"];
+        Assert.True(panelVoltage >= minimumVoltage && panelVoltage <= maximumVoltage,
+            $"PV={panelVoltage:G17} V, I={panel.LiveCurrent:G17} A; {result.Message}");
+    }
+
     [Fact]
     public void Analog_Diode_Forward_Bias_Conducts_With_Junction_Drop()
     {

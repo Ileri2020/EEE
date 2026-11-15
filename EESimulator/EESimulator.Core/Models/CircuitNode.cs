@@ -42,9 +42,49 @@ public class CircuitNode : RootNode
     public CircuitNode()
     {
         Name = "CircuitRoot";
-        OnChildAdded += (_, _) => StructureVersion++;
-        OnChildRemoved += (_, _) => StructureVersion++;
+        OnChildAdded += (_, e) =>
+        {
+            StructureVersion++;
+            ObserveSubtree(e.Child);
+        };
+        OnChildRemoved += (_, e) =>
+        {
+            StructureVersion++;
+            UnobserveSubtree(e.Child);
+        };
         OnModified += (_, _) => StructureVersion++;
+    }
+
+    private void ObserveSubtree(RootNode node)
+    {
+        node.OnModified += OnDescendantModified;
+        node.OnChildAdded += OnDescendantAdded;
+        node.OnChildRemoved += OnDescendantRemoved;
+        foreach (var child in node.Children)
+            ObserveSubtree(child);
+    }
+
+    private void UnobserveSubtree(RootNode node)
+    {
+        node.OnModified -= OnDescendantModified;
+        node.OnChildAdded -= OnDescendantAdded;
+        node.OnChildRemoved -= OnDescendantRemoved;
+        foreach (var child in node.Children)
+            UnobserveSubtree(child);
+    }
+
+    private void OnDescendantModified(object? sender, NodeModifiedEventArgs e) => StructureVersion++;
+
+    private void OnDescendantAdded(object? sender, NodeHierarchyChangedEventArgs e)
+    {
+        StructureVersion++;
+        ObserveSubtree(e.Child);
+    }
+
+    private void OnDescendantRemoved(object? sender, NodeHierarchyChangedEventArgs e)
+    {
+        StructureVersion++;
+        UnobserveSubtree(e.Child);
     }
 
     public IEnumerable<ComponentNode> Components => FindChildren<ComponentNode>();

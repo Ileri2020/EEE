@@ -142,15 +142,19 @@ public static partial class ComponentSymbolDrawer
     }
 
     public static void DrawTextAnnotation(ICanvas canvas)
+        => DrawTextAnnotation(canvas, "Note");
+
+    public static void DrawTextAnnotation(ICanvas canvas, string text)
     {
-        canvas.StrokeColor = Color.FromArgb("#8B949E");
+        canvas.StrokeColor = Color.FromArgb("#E3B341");
         canvas.StrokeSize = 1.5f;
-        canvas.FillColor = Color.FromArgb("#161B22");
-        canvas.FillRoundedRectangle(-16, -12, 32, 24, 3);
-        canvas.DrawRoundedRectangle(-16, -12, 32, 24, 3);
-        canvas.DrawLine(-10, -5, 10, -5);
-        canvas.DrawLine(-10, 0, 6, 0);
-        canvas.DrawLine(-10, 5, 2, 5);
+        canvas.FillColor = Color.FromArgb("#2D2412");
+        canvas.FillRoundedRectangle(-100, -12, 200, 24, 3);
+        canvas.DrawRoundedRectangle(-100, -12, 200, 24, 3);
+        canvas.FontColor = Color.FromArgb("#F2CC60");
+        canvas.FontSize = 10f;
+        canvas.DrawString(text, -94, -10, 188, 20,
+            HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
     public static void DrawConnector(ICanvas canvas)

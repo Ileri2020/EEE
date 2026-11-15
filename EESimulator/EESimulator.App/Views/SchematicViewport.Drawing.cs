@@ -723,6 +723,12 @@ public partial class SchematicViewport
             case "Constant":         ComponentSymbolDrawer.DrawConstant(canvas, isOn); break;
             case "DoNotConnect":
             case "DNC":              ComponentSymbolDrawer.DrawDoNotConnect(canvas); break;
+            case "TextAnnotation":
+                ComponentSymbolDrawer.DrawTextAnnotation(canvas,
+                    comp is EESimulator.Core.Components.General.TextAnnotationComponent annotation
+                        ? annotation.Text
+                        : comp.Name);
+                break;
             case "LossyTransmissionLine": ComponentSymbolDrawer.DrawLossyTransmissionLine(canvas); break;
             case "CoaxialCable":     ComponentSymbolDrawer.DrawCoaxialCable(canvas); break;
             case "MicrostripLine":   ComponentSymbolDrawer.DrawMicrostripLine(canvas); break;

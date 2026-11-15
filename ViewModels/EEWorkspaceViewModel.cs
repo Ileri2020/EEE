@@ -262,6 +262,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public bool HasSelection => SelectedComponent != null || SelectedConnection != null;
 
     [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
+    [ObservableProperty] public partial string EditGroundGroup { get; set; } = GroundComponent.DefaultGroundGroup;
     [ObservableProperty] public partial double EditBreakingCurrent { get; set; } = 1.0;
     [ObservableProperty] public partial bool IsDescriptionSidebarVisible { get; set; } = false;
 

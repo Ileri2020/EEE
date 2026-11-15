@@ -258,8 +258,10 @@ public partial class EEWorkspaceViewModel
     public void OpenEditDialog(ComponentNode comp)
     {
         EditingComponent = comp;
+        RefreshGroundGroupOptions();
         RefreshPowerSystemProperties(comp);
         EditName = comp.Reference;
+        EditGroundGroup = comp is GroundComponent ground ? ground.GroundGroup : GroundComponent.DefaultGroundGroup;
         EditType = comp.ComponentType;
         EditShowLiveProbe = comp.ShowLiveProbe;
         EditShowWaveform = comp.ShowWaveform;

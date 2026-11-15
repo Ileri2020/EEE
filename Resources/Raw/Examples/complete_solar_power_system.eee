@@ -99,7 +99,7 @@
       "Name": "D_STATUS",
       "Description": "LED",
       "StringParameters": {
-        "LogicalRow": "5",
+        "LogicalRow": "6",
         "LogicalColumn": "1",
         "Color": "Red"
       },
@@ -113,6 +113,26 @@
       "CustomProperties": {}
     },
     {
+      "Id": "bb2cfa5f-62d3-4f3c-a70f-338193fc7c88",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED",
+      "Name": "R_LED",
+      "Description": "LED current-limiting resistor",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
       "Id": "790f4378-b3c7-44fd-8e04-c16de9acde8e",
       "StableTypeId": "general.probe",
       "ComponentType": "Probe",
@@ -120,11 +140,11 @@
       "Name": "TP_DC_BUS",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "6",
+        "LogicalRow": "7",
         "LogicalColumn": "1",
         "MeasurementMode": "Voltage",
         "Unit": "V",
-        "ExpectedVoltage": "2.47670237"
+        "ExpectedVoltage": "12.593735964384416"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -142,7 +162,7 @@
       "Reference": "TP_REFERENCE",
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
-        "LogicalRow": "7",
+        "LogicalRow": "8",
         "LogicalColumn": "1",
         "ExpectedVoltage": "0"
       },
@@ -209,9 +229,18 @@
       "Id": "bc869182-de77-4bc7-b9cc-0691202ce54c",
       "FromComponentId": "341db818-6f1d-4481-bb3b-f2044fbe6382",
       "FromPin": "positive",
+      "ToComponentId": "bb2cfa5f-62d3-4f3c-a70f-338193fc7c88",
+      "ToPin": "pin1",
+      "NetName": "N6",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d48787dc-85ab-4bd7-a2d9-889f8118f07a",
+      "FromComponentId": "bb2cfa5f-62d3-4f3c-a70f-338193fc7c88",
+      "FromPin": "pin2",
       "ToComponentId": "ecccc07d-0e5e-4688-a8c7-f177f1cf6e0a",
       "ToPin": "anode",
-      "NetName": "N6",
+      "NetName": "N9",
       "Resistance": 0.0
     },
     {

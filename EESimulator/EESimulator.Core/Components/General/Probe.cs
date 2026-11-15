@@ -1,5 +1,6 @@
 using System;
 using EESimulator.Core.Components.Base;
+using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Models;
 
 namespace EESimulator.Core.Components.General;
@@ -49,6 +50,26 @@ public class ProbeComponent : GeneralComponent
         {
             CustomProperties["Unit"] = value;
             NotifyModified(nameof(Unit));
+        }
+    }
+
+    /// <summary>Ground group used as the voltage measurement reference.</summary>
+    public string ReferenceGroundGroup
+    {
+        get => CustomProperties.TryGetValue(nameof(ReferenceGroundGroup), out var value) &&
+               !string.IsNullOrWhiteSpace(value?.ToString())
+            ? value!.ToString()!.Trim()
+            : GroundComponent.DefaultGroundGroup;
+        set
+        {
+            string group = string.IsNullOrWhiteSpace(value)
+                ? GroundComponent.DefaultGroundGroup
+                : value.Trim();
+            if (group.Equals(GroundComponent.DefaultGroundGroup, StringComparison.OrdinalIgnoreCase))
+                CustomProperties.Remove(nameof(ReferenceGroundGroup));
+            else
+                CustomProperties[nameof(ReferenceGroundGroup)] = group;
+            NotifyModified(nameof(ReferenceGroundGroup));
         }
     }
 

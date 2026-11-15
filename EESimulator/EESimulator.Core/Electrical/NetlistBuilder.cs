@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Models;
 
 namespace EESimulator.Core.Electrical;
@@ -84,6 +85,18 @@ public class NetlistBuilder
             dsu.Union(p1, p2);
         }
 
+        var groundsByGroup = components
+            .OfType<GroundNode>()
+            .Where(ground => ground.Pins.Count > 0)
+            .GroupBy(ground => ground.GroundGroup, StringComparer.OrdinalIgnoreCase);
+        foreach (var groundGroup in groundsByGroup)
+        {
+            var groupGrounds = groundGroup.ToList();
+            var firstGroundPin = new PinReference(groupGrounds[0].Id, groupGrounds[0].Pins[0].Id);
+            for (int i = 1; i < groupGrounds.Count; i++)
+                dsu.Union(firstGroundPin, new PinReference(groupGrounds[i].Id, groupGrounds[i].Pins[0].Id));
+        }
+
         // Union same-labeled Tunnel components across the schematic
         var tunnelsByLabel = components
             .OfType<EESimulator.Core.Components.General.TunnelComponent>()
@@ -121,18 +134,35 @@ public class NetlistBuilder
         }
 
         var topology = new CircuitTopology();
-        var groundCompIds = new HashSet<Guid>(components.Where(component => component is GroundNode).Select(component => component.Id));
+        var groundsByComponentId = components
+            .OfType<GroundNode>()
+            .ToDictionary(ground => ground.Id);
         var groupEntries = groups.Values.ToList();
         var netNames = new string[groupEntries.Count];
         var groundNets = new bool[groupEntries.Count];
+        var netGroundGroups = new string?[groupEntries.Count];
+        var usedNetNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "0" };
         int netCounter = 1;
+        int groundCounter = 1;
         for (int i = 0; i < groupEntries.Count; i++)
         {
             var pinList = groupEntries[i];
-            bool isGround = pinList.Any(p => groundCompIds.Contains(p.ComponentId));
-            groundNets[i] = isGround;
+            string[] groundGroups = pinList
+                .Where(pin => groundsByComponentId.ContainsKey(pin.ComponentId))
+                .Select(pin => groundsByComponentId[pin.ComponentId].GroundGroup)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(group => group, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            string? groundGroup = groundGroups.Contains(
+                GroundComponent.DefaultGroundGroup, StringComparer.OrdinalIgnoreCase)
+                ? GroundComponent.DefaultGroundGroup
+                : groundGroups.FirstOrDefault();
+            bool isDefaultGround = groundGroup?.Equals(
+                GroundComponent.DefaultGroundGroup, StringComparison.OrdinalIgnoreCase) == true;
+            groundNets[i] = isDefaultGround;
+            netGroundGroups[i] = groundGroup;
             string? descriptiveName = null;
-            if (!isGround)
+            if (groundGroup == null)
             {
                 foreach (var pin in pinList)
                 {
@@ -158,14 +188,33 @@ public class NetlistBuilder
                 }
             }
 
-            netNames[i] = isGround ? "0" : descriptiveName ?? $"Net_{netCounter++}";
+            if (isDefaultGround)
+            {
+                netNames[i] = "0";
+            }
+            else if (groundGroup != null)
+            {
+                string candidate;
+                do
+                {
+                    candidate = $"GroundGroup_{groundCounter++}";
+                } while (!usedNetNames.Add(candidate));
+                netNames[i] = candidate;
+            }
+            else
+            {
+                string candidate = descriptiveName ?? $"Net_{netCounter++}";
+                while (!usedNetNames.Add(candidate))
+                    candidate = $"Net_{netCounter++}";
+                netNames[i] = candidate;
+            }
         }
 
         var resolvedNets = new NetNode[groupEntries.Count];
         void CreateNet(int index)
         {
             var pinList = groupEntries[index];
-            var netNode = new NetNode(netNames[index], groundNets[index]);
+            var netNode = new NetNode(netNames[index], groundNets[index], netGroundGroups[index]);
             foreach (var p in pinList)
                 netNode.ConnectedPins.Add(p);
             resolvedNets[index] = netNode;
