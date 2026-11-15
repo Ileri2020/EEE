@@ -84,6 +84,85 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 
     public SimulationResultsData RunSimulation(CircuitNode circuit, SimulationSettings settings)
     {
+        if (circuit == null)
+            return RunSimulationOnce(circuit, settings);
+
+        var fieldRegulatedGenerators = circuit.Components
+            .OfType<SynchronousGeneratorComponent>()
+            .Where(generator =>
+                IsPinConnected(circuit, generator.Id, "field_positive") &&
+                IsPinConnected(circuit, generator.Id, "field_negative"))
+            .ToArray();
+        if (fieldRegulatedGenerators.Length == 0)
+            return RunSimulationOnce(circuit, settings);
+
+        const int maximumFieldIterations = 12;
+        const double excitationTolerance = 1e-5;
+        bool runRequestedAnalysisAfterFieldConvergence = settings.Analysis != AnalysisType.OperatingPoint;
+        SimulationSettings fieldSettings = CreateFieldOperatingPointSettings(settings);
+        SimulationResultsData results = null!;
+        for (int iteration = 0; iteration < maximumFieldIterations; iteration++)
+        {
+            results = RunSimulationOnce(circuit, fieldSettings);
+            if (!results.Success)
+                return results;
+
+            bool excitationChanged = false;
+            foreach (var generator in fieldRegulatedGenerators)
+            {
+                if (!generator.LivePinVoltages.TryGetValue("field_positive", out double positiveVoltage) ||
+                    !generator.LivePinVoltages.TryGetValue("field_negative", out double negativeVoltage))
+                {
+                    results.Success = false;
+                    results.Message += $"\nGenerator '{generator.Name}' did not report both field-terminal voltages.";
+                    return results;
+                }
+
+                double requestedExcitation = Math.Clamp(
+                    (positiveVoltage - negativeVoltage) / generator.RatedFieldVoltage,
+                    0,
+                    5);
+                if (Math.Abs(requestedExcitation - generator.FieldExcitation) <= excitationTolerance)
+                    continue;
+
+                generator.FieldExcitation = requestedExcitation;
+                excitationChanged = true;
+            }
+
+            if (!excitationChanged)
+                return runRequestedAnalysisAfterFieldConvergence
+                    ? RunSimulationOnce(circuit, settings)
+                    : results;
+        }
+
+        results.Success = false;
+        results.Message += $"\nGenerator field-excitation feedback did not converge within {maximumFieldIterations} iterations.";
+        return results;
+    }
+
+    private static SimulationSettings CreateFieldOperatingPointSettings(SimulationSettings settings) => new()
+    {
+        Analysis = AnalysisType.OperatingPoint,
+        StartTime = settings.StartTime,
+        StopTime = settings.StopTime,
+        StepTime = settings.StepTime,
+        TimeScalingEnabled = settings.TimeScalingEnabled,
+        DeviceTimeScale = settings.DeviceTimeScale,
+        SolverElapsedTimeSeconds = settings.SolverElapsedTimeSeconds,
+        DeviceTimeSeconds = settings.DeviceTimeSeconds,
+        CaptureAllWaveforms = false,
+        AcSweepType = settings.AcSweepType,
+        AcPoints = settings.AcPoints,
+        AcStartFrequency = settings.AcStartFrequency,
+        AcStopFrequency = settings.AcStopFrequency,
+        DcSweepSource = settings.DcSweepSource,
+        DcStart = settings.DcStart,
+        DcStop = settings.DcStop,
+        DcStep = settings.DcStep
+    };
+
+    private SimulationResultsData RunSimulationOnce(CircuitNode circuit, SimulationSettings settings)
+    {
         var results = new SimulationResultsData();
 
         if (circuit == null)
@@ -223,6 +302,14 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                 }
             }
 
+            var brushlessPhaseCurrentExports = new Dictionary<BrushlessDcMotorComponent, (RealCurrentExport PhaseB, RealCurrentExport PhaseC)>();
+            foreach (var motor in circuit.Components.OfType<BrushlessDcMotorComponent>())
+            {
+                brushlessPhaseCurrentExports[motor] = (
+                    new RealCurrentExport(op, $"{motor.Name}_phaseB"),
+                    new RealCurrentExport(op, $"{motor.Name}_phaseC"));
+            }
+
             foreach (int _ in op.Run(spiceCircuit))
             {
                 foreach (var net in topology.Nets)
@@ -300,6 +387,12 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     {
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
+                    else if (comp is PermanentMagnetDcMotorComponent or BrushlessDcMotorComponent or
+                             SinglePhaseInductionMotorComponent or VariableFrequencyDriveComponent)
+                    {
+                        results.OperatingPointVoltages[$"V({comp.Name})"] = signedVoltage;
+                        results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
+                    }
                     else if (comp is LEDComponent)
                     {
                         comp.LiveCurrent = branchCurrentExports.TryGetValue(comp, out var ledCurrent) ? ledCurrent.Value : 0.0;
@@ -356,6 +449,23 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     {
                         results.OperatingPointCurrents[$"I({comp.Name})"] = comp.LiveCurrent;
                     }
+                }
+
+                foreach (var (motor, phaseExports) in brushlessPhaseCurrentExports)
+                {
+                    double phaseA = branchCurrentExports.TryGetValue(motor, out var phaseAExport)
+                        ? phaseAExport.Value
+                        : 0;
+                    double phaseB = phaseExports.PhaseB.Value;
+                    double phaseC = phaseExports.PhaseC.Value;
+                    motor.UpdatePhaseCurrents(
+                        phaseA,
+                        phaseB,
+                        phaseC,
+                        motor.InitialElectricalAngle);
+                    results.OperatingPointCurrents[$"I({motor.Name}_phaseA)"] = phaseA;
+                    results.OperatingPointCurrents[$"I({motor.Name}_phaseB)"] = phaseB;
+                    results.OperatingPointCurrents[$"I({motor.Name}_phaseC)"] = phaseC;
                 }
             }
 
@@ -788,6 +898,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
             SinglePhaseTransmissionLineComponent => $"{component.Name}_R",
             TwoPhaseTransmissionLineComponent => $"{component.Name}_R",
             ThreePhaseTransmissionLineComponent => $"{component.Name}_phase1_R",
+            InductionMotorComponent => $"{component.Name}_A_R",
             _ => component.Name
         };
 

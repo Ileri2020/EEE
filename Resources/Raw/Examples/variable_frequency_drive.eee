@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Variable Frequency Drive (VFD)",
-  "Description": "Low-voltage VFD concept with adjustable-frequency source, toggleable run control, induction-motor R-L equivalent and output probes. Three-phase inverter control is conceptual.",
+  "Description": "Averaged three-phase inverter with adjustable output frequency and modulation supplying a fixed-speed induction-motor equivalent. PWM switching and mechanical speed dynamics are not modeled.",
   "Components": [
     {
       "Id": "ef7edad3-1cde-5a72-9240-e43b96fca774",
@@ -27,11 +27,11 @@
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Pulse source",
+      "Description": "Editable low-voltage DC source",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "WaveformType": "Pulse"
+        "WaveformType": "DC"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -100,10 +100,10 @@
     },
     {
       "Id": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
-      "ComponentType": "VoltageSwitch",
-      "Reference": "S_ENABLE",
-      "Name": "S_ENABLE",
-      "Description": "Toggle-controlled signal path",
+      "ComponentType": "VariableFrequencyDrive",
+      "Reference": "VFD",
+      "Name": "VFD",
+      "Description": "Averaged three-phase inverter",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "3"
@@ -113,19 +113,23 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Ron": 1.0,
-        "Roff": 1000000.0,
-        "Threshold": 2.5,
-        "Hysteresis": 0.1
+        "DcBusVoltage": 12.0,
+        "RatedInputPower": 60.0,
+        "OutputFrequency": 10.0,
+        "ModulationIndex": 0.8,
+        "OutputResistance": 0.1,
+        "OutputInductance": 0.001
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "PhaseSequence": "ABC"
+      }
     },
     {
       "Id": "f8f3fbd7-fa4a-5363-826c-15637732ab76",
-      "ComponentType": "Resistor",
-      "Reference": "R_ARMATURE",
-      "Name": "R_ARMATURE",
-      "Description": "Resistor",
+      "ComponentType": "InductionMotor",
+      "Reference": "MOTOR",
+      "Name": "MOTOR",
+      "Description": "Three-phase induction motor equivalent",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -135,26 +139,23 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 10.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "75a799a3-31cb-57aa-b4ea-b68344ef3afc",
-      "ComponentType": "Inductor",
-      "Reference": "L_ARMATURE",
-      "Name": "L_ARMATURE",
-      "Description": "Inductor",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.01
+        "RatedVoltage": 12.0,
+        "RatedPower": 100.0,
+        "Frequency": 10.0,
+        "NumberOfPoles": 4,
+        "RatedSpeedRpm": 270.0,
+        "StatorResistance": 1.0,
+        "RotorResistance": 0.5,
+        "StatorLeakageReactance": 0.2,
+        "RotorLeakageReactance": 0.2,
+        "MagnetizingReactance": 5.0,
+        "Slip": 0.1,
+        "PowerFactor": 0.82,
+        "EfficiencyPercent": 85.0,
+        "StartingCurrentMultiple": 6.0,
+        "RatedTorque": 3.5,
+        "LoadTorque": 3.5,
+        "Inertia": 0.02
       },
       "CustomProperties": {}
     },
@@ -246,7 +247,7 @@
       "FromComponentId": "013d0963-37e7-5982-a401-a60af847c0b4",
       "FromPin": "positive",
       "ToComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
-      "ToPin": "sw_pos",
+      "ToPin": "dc_positive",
       "NetName": "VIN",
       "Resistance": 0.0
     },
@@ -255,7 +256,7 @@
       "FromComponentId": "17e4d62b-a3f2-53f9-b3e6-ddf8167cccef",
       "FromPin": "out",
       "ToComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
-      "ToPin": "ctrl_pos",
+      "ToPin": "enable",
       "NetName": "ENABLE",
       "Resistance": 0.0
     },
@@ -264,53 +265,80 @@
       "FromComponentId": "ef7edad3-1cde-5a72-9240-e43b96fca774",
       "FromPin": "gnd",
       "ToComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
-      "ToPin": "ctrl_neg",
+      "ToPin": "dc_negative",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
       "Id": "9c3f0802-dc50-531b-845e-c8d768c59174",
       "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
-      "FromPin": "sw_neg",
+      "FromPin": "A",
       "ToComponentId": "f8f3fbd7-fa4a-5363-826c-15637732ab76",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
+      "ToPin": "A",
+      "NetName": "PHASE_A",
       "Resistance": 0.0
     },
     {
       "Id": "cfec60bf-b418-5120-95ae-49a0826e120f",
-      "FromComponentId": "f8f3fbd7-fa4a-5363-826c-15637732ab76",
-      "FromPin": "pin2",
-      "ToComponentId": "75a799a3-31cb-57aa-b4ea-b68344ef3afc",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "B",
+      "ToComponentId": "f8f3fbd7-fa4a-5363-826c-15637732ab76",
+      "ToPin": "B",
+      "NetName": "PHASE_B",
       "Resistance": 0.0
     },
     {
       "Id": "3f311e24-d40f-539d-98e4-b1643c28ab13",
-      "FromComponentId": "75a799a3-31cb-57aa-b4ea-b68344ef3afc",
-      "FromPin": "pin2",
-      "ToComponentId": "4c219be9-93fa-5c74-afee-09597e510102",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "C",
+      "ToComponentId": "f8f3fbd7-fa4a-5363-826c-15637732ab76",
+      "ToPin": "C",
+      "NetName": "PHASE_C",
       "Resistance": 0.0
     },
     {
       "Id": "f890e551-c588-5642-b67b-657108113fb4",
-      "FromComponentId": "75a799a3-31cb-57aa-b4ea-b68344ef3afc",
-      "FromPin": "pin2",
-      "ToComponentId": "e7d07d32-0020-5763-b23d-e364a6288ec6",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "N",
+      "ToComponentId": "f8f3fbd7-fa4a-5363-826c-15637732ab76",
+      "ToPin": "N",
+      "NetName": "NEUTRAL",
       "Resistance": 0.0
     },
     {
       "Id": "11149761-bd0d-5cf6-bb59-c0d36b351586",
-      "FromComponentId": "75a799a3-31cb-57aa-b4ea-b68344ef3afc",
-      "FromPin": "pin2",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "A",
       "ToComponentId": "a74054a2-4bed-5999-9970-9cb7cf10ea37",
       "ToPin": "in",
       "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "90005a92-626a-4bf1-9dd4-2ca9578fe7a3",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "N",
+      "ToComponentId": "ef7edad3-1cde-5a72-9240-e43b96fca774",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "eaa820f7-44b2-45a6-b1e2-9fb5a4a8b45b",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "A",
+      "ToComponentId": "4c219be9-93fa-5c74-afee-09597e510102",
+      "ToPin": "pin1",
+      "NetName": "PHASE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9f6b6d84-2c2d-4ed1-8c3d-dcfca91fc807",
+      "FromComponentId": "b17c8777-00fd-5075-bff0-cc1738e2bc5c",
+      "FromPin": "A",
+      "ToComponentId": "e7d07d32-0020-5763-b23d-e364a6288ec6",
+      "ToPin": "pin1",
+      "NetName": "PHASE_A",
       "Resistance": 0.0
     },
     {

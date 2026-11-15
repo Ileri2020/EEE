@@ -93,6 +93,157 @@ public sealed class BundledExampleCircuitTests
     }
 
     [Fact]
+    public void PMDC_example_uses_a_back_emf_motor_model()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "permanent_magnet_dc_motor_controller.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var motor = Assert.IsType<PermanentMagnetDcMotorComponent>(
+            FindComponent(circuit, "PermanentMagnetDcMotor", "MOTOR"));
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+
+        Assert.True(simulation.Success, simulation.Message);
+        Assert.True(motor.BackEmfVoltage > 0);
+        Assert.True(motor.LiveCurrent > 0);
+        Assert.True(motor.ElectromagneticTorque > 0);
+    }
+
+    [Fact]
+    public void BLDC_example_uses_a_trapezoidal_three_phase_machine_and_averaged_drive()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "brushless_dc_motor_drive.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var motor = Assert.IsType<BrushlessDcMotorComponent>(
+            FindComponent(circuit, "BrushlessDcMotor", "MOTOR"));
+        var drive = Assert.IsType<VariableFrequencyDriveComponent>(
+            FindComponent(circuit, "VariableFrequencyDrive", "VFD"));
+        Assert.Equal(50, drive.OutputFrequency);
+        Assert.All(new[] { "A", "B", "C" }, phase =>
+            Assert.True(AreConnected(circuit, drive, phase, motor, phase), $"VFD.{phase} is not connected to MOTOR.{phase}."));
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+
+        Assert.True(simulation.Success, simulation.Message);
+        Assert.True(double.IsFinite(motor.ElectromagneticTorque));
+        Assert.Contains("I(MOTOR_phaseB)", simulation.OperatingPointCurrents.Keys);
+        Assert.Contains("I(MOTOR_phaseC)", simulation.OperatingPointCurrents.Keys);
+    }
+
+    [Fact]
+    public void VFD_example_uses_frequency_control_and_honors_its_enable_input()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "variable_frequency_drive.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var drive = Assert.IsType<VariableFrequencyDriveComponent>(
+            FindComponent(circuit, "VariableFrequencyDrive", "VFD"));
+        var enable = Assert.IsType<EESimulator.Core.Components.Electronics.LogicInputComponent>(
+            FindComponent(circuit, "LogicInput", "ENABLE"));
+        Assert.Equal(10, drive.OutputFrequency);
+
+        var adapter = new SpiceSharpAdapter();
+        var enabledSimulation = adapter.RunSimulation(circuit, new SimulationSettings());
+        Assert.True(enabledSimulation.Success, enabledSimulation.Message);
+        Assert.True(drive.LivePinVoltages["A"] > 0);
+
+        enable.State = false;
+        var disabledSimulation = adapter.RunSimulation(circuit, new SimulationSettings());
+        Assert.True(disabledSimulation.Success, disabledSimulation.Message);
+        Assert.InRange(Math.Abs(drive.LivePinVoltages["A"]), 0, 1e-8);
+    }
+
+    [Fact]
+    public void Single_phase_starter_includes_main_and_capacitor_start_windings()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "single_phase_ac_motor_capacitor_starter.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var motor = Assert.IsType<SinglePhaseInductionMotorComponent>(
+            FindComponent(circuit, "SinglePhaseInductionMotor", "MOTOR"));
+        Assert.True(AreConnected(circuit, motor, "line", FindComponent(circuit, "Probe", "TP_OUT"), "in"));
+        Assert.True(motor.StartCapacitance > 0);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+
+        Assert.True(simulation.Success, simulation.Message);
+        Assert.True(motor.LiveCurrent > 0);
+    }
+
+    [Fact]
+    public void AVR_example_regulates_generator_field_voltage_through_feedback()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "automatic_voltage_regulator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var generator = Assert.IsType<SynchronousGeneratorComponent>(
+            FindComponent(circuit, "SynchronousGenerator", "GEN"));
+        var controller = Assert.IsType<EESimulator.Core.Components.Electronics.OpAmpComponent>(
+            FindComponent(circuit, "OpAmp", "AVR"));
+        Assert.True(AreConnected(circuit, controller, "out", generator, "field_positive"));
+        Assert.True(AreConnected(circuit, generator, "field_negative", FindComponent(circuit, "Ground", "GND"), "gnd"));
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+
+        Assert.True(simulation.Success, simulation.Message);
+        Assert.InRange(generator.FieldExcitation, 0.98, 1.02);
+        Assert.InRange(Math.Abs(generator.LivePinVoltages["field_positive"] - 5), 0, 0.02);
+        Assert.InRange(Math.Abs(FindComponent(circuit, "Probe", "TP_GEN_A").LiveVoltage - 13.8564), 0, 0.1);
+    }
+
+    [Fact]
+    public void Microcontroller_example_wires_all_eight_sum_bits_and_uses_python_booleans()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "simple_microcontroller_system.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        ComponentNode adder = FindComponent(circuit, "Adder", "ALU_ADD");
+        ComponentNode accumulator = FindComponent(circuit, "Register", "ACC");
+        ComponentNode lowDigit = FindComponent(circuit, "HexDigit", "RESULT");
+        ComponentNode highDigit = FindComponent(circuit, "HexDigit", "RESULT_HI");
+
+        for (int bit = 0; bit < 8; bit++)
+            Assert.True(AreConnected(circuit, adder, $"Y{bit}", accumulator, $"D{bit}"),
+                $"ALU_ADD.Y{bit} is not connected to ACC.D{bit}.");
+        for (int bit = 0; bit < 4; bit++)
+        {
+            Assert.True(AreConnected(circuit, adder, $"Y{bit}", lowDigit, $"D{bit}"));
+            Assert.True(AreConnected(circuit, adder, $"Y{bit + 4}", highDigit, $"D{bit}"));
+        }
+        Assert.DoesNotContain(circuit.Connections, connection =>
+            connection.ToComponentId == accumulator.Id && connection.ToPin == "clr");
+
+        string script = PythonCodeGenerator.GenerateFullScript(circuit);
+        Assert.Contains("eesim.set_logic(\"IN0\", True)", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("eesim.set_logic(\"IN0\", true)", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Complex_showcase_ttl_outputs_match_their_connected_logic_probes()
     {
         string repositoryRoot = FindRepositoryRoot();

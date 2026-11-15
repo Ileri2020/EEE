@@ -27,11 +27,11 @@
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Pulse source",
+      "Description": "Editable low-voltage AC source",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "WaveformType": "Pulse"
+        "WaveformType": "Sine"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -122,10 +122,10 @@
     },
     {
       "Id": "80a79d50-5026-5234-bf28-e4dc77eb9add",
-      "ComponentType": "Resistor",
-      "Reference": "R_ARMATURE",
-      "Name": "R_ARMATURE",
-      "Description": "Resistor",
+      "ComponentType": "SinglePhaseInductionMotor",
+      "Reference": "MOTOR",
+      "Name": "MOTOR",
+      "Description": "Single-phase motor with main and capacitor-start auxiliary windings",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -135,26 +135,13 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 10.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "e1295c94-ac39-5bca-a02e-fe89d58b7c03",
-      "ComponentType": "Inductor",
-      "Reference": "L_ARMATURE",
-      "Name": "L_ARMATURE",
-      "Description": "Inductor",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.01
+        "Frequency": 50.0,
+        "MainWindingResistance": 20.0,
+        "MainWindingInductance": 0.15,
+        "AuxiliaryWindingResistance": 30.0,
+        "AuxiliaryWindingInductance": 0.1,
+        "StartCapacitance": 0.0001,
+        "SpeedRpm": 1400.0
       },
       "CustomProperties": {}
     },
@@ -273,23 +260,23 @@
       "FromComponentId": "32879593-f178-5004-b8cc-2188921c467d",
       "FromPin": "sw_neg",
       "ToComponentId": "80a79d50-5026-5234-bf28-e4dc77eb9add",
-      "ToPin": "pin1",
+      "ToPin": "line",
       "NetName": "STAGE_1",
       "Resistance": 0.0
     },
     {
       "Id": "e071f2de-9d19-52ee-923e-e1cc8949f4d1",
       "FromComponentId": "80a79d50-5026-5234-bf28-e4dc77eb9add",
-      "FromPin": "pin2",
-      "ToComponentId": "e1295c94-ac39-5bca-a02e-fe89d58b7c03",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "FromPin": "neutral",
+      "ToComponentId": "5eb3a2f3-38f6-5f0c-afbf-d8096fdb5f7e",
+      "ToPin": "gnd",
+      "NetName": "0",
       "Resistance": 0.0
     },
     {
       "Id": "a342a489-64b1-51c2-846b-99d759b3e820",
-      "FromComponentId": "e1295c94-ac39-5bca-a02e-fe89d58b7c03",
-      "FromPin": "pin2",
+      "FromComponentId": "80a79d50-5026-5234-bf28-e4dc77eb9add",
+      "FromPin": "line",
       "ToComponentId": "8fb64065-d63f-56e5-8b3d-5bbca867cdd6",
       "ToPin": "pin1",
       "NetName": "VOUT",
@@ -297,8 +284,8 @@
     },
     {
       "Id": "1f12168f-cf63-58f9-ab8d-08758c742e72",
-      "FromComponentId": "e1295c94-ac39-5bca-a02e-fe89d58b7c03",
-      "FromPin": "pin2",
+      "FromComponentId": "80a79d50-5026-5234-bf28-e4dc77eb9add",
+      "FromPin": "line",
       "ToComponentId": "45fe1a42-a916-5ef9-a74e-7b3fbbcbbbb7",
       "ToPin": "pin1",
       "NetName": "VOUT",
@@ -306,8 +293,8 @@
     },
     {
       "Id": "ed621a43-83c6-5a76-9fb9-3f755297bc10",
-      "FromComponentId": "e1295c94-ac39-5bca-a02e-fe89d58b7c03",
-      "FromPin": "pin2",
+      "FromComponentId": "80a79d50-5026-5234-bf28-e4dc77eb9add",
+      "FromPin": "line",
       "ToComponentId": "3ec15a39-9145-589f-af2f-c0855096fe87",
       "ToPin": "in",
       "NetName": "VOUT",

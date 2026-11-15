@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Brushless DC Motor Drive",
-  "Description": "Low-voltage BLDC drive concept with pulse excitation, toggleable enable, motor R-L equivalent, visible load and probes. Electronic commutation sequencing is conceptual.",
+  "Description": "Averaged three-phase inverter drives a fixed-speed BLDC model with trapezoidal phase back EMF and an enable input. Inverter switching and mechanical speed dynamics are not modeled.",
   "Components": [
     {
       "Id": "a7a3113b-169e-5cbb-bca4-776d4a8b2183",
@@ -27,11 +27,11 @@
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Pulse source",
+      "Description": "Editable low-voltage DC source",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "WaveformType": "Pulse"
+        "WaveformType": "DC"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -100,10 +100,10 @@
     },
     {
       "Id": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
-      "ComponentType": "VoltageSwitch",
-      "Reference": "S_ENABLE",
-      "Name": "S_ENABLE",
-      "Description": "Toggle-controlled signal path",
+      "ComponentType": "VariableFrequencyDrive",
+      "Reference": "VFD",
+      "Name": "VFD",
+      "Description": "Averaged three-phase inverter",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "3"
@@ -113,19 +113,23 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Ron": 1.0,
-        "Roff": 1000000.0,
-        "Threshold": 2.5,
-        "Hysteresis": 0.1
+        "DcBusVoltage": 12.0,
+        "RatedInputPower": 60.0,
+        "OutputFrequency": 50.0,
+        "ModulationIndex": 0.8,
+        "OutputResistance": 0.1,
+        "OutputInductance": 0.001
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "PhaseSequence": "ABC"
+      }
     },
     {
       "Id": "9831207b-3c70-58a3-8ea2-78ad82b1baa7",
-      "ComponentType": "Resistor",
-      "Reference": "R_ARMATURE",
-      "Name": "R_ARMATURE",
-      "Description": "Resistor",
+      "ComponentType": "BrushlessDcMotor",
+      "Reference": "MOTOR",
+      "Name": "MOTOR",
+      "Description": "Fixed-speed BLDC motor with trapezoidal phase back EMF",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -135,26 +139,14 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 10.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "32ba599a-3b81-5e96-bbce-30da32edef59",
-      "ComponentType": "Inductor",
-      "Reference": "L_ARMATURE",
-      "Name": "L_ARMATURE",
-      "Description": "Inductor",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.01
+        "PhaseResistance": 0.5,
+        "PhaseInductance": 0.002,
+        "BackEmfConstant": 0.02,
+        "TorqueConstant": 0.02,
+        "SpeedRpm": 1500.0,
+        "PolePairs": 2,
+        "InitialElectricalAngle": 0.0,
+        "LoadTorque": 0.0
       },
       "CustomProperties": {}
     },
@@ -246,7 +238,7 @@
       "FromComponentId": "fc68b335-8370-5001-af7f-99bc70ca4581",
       "FromPin": "positive",
       "ToComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
-      "ToPin": "sw_pos",
+      "ToPin": "dc_positive",
       "NetName": "VIN",
       "Resistance": 0.0
     },
@@ -255,7 +247,7 @@
       "FromComponentId": "36945e26-7032-56dd-bd2c-e1393df1b3a7",
       "FromPin": "out",
       "ToComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
-      "ToPin": "ctrl_pos",
+      "ToPin": "enable",
       "NetName": "ENABLE",
       "Resistance": 0.0
     },
@@ -264,53 +256,80 @@
       "FromComponentId": "a7a3113b-169e-5cbb-bca4-776d4a8b2183",
       "FromPin": "gnd",
       "ToComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
-      "ToPin": "ctrl_neg",
+      "ToPin": "dc_negative",
       "NetName": "0",
       "Resistance": 0.0
     },
     {
       "Id": "9bcbe1e1-0074-5832-997c-51cb782d9bf4",
       "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
-      "FromPin": "sw_neg",
+      "FromPin": "A",
       "ToComponentId": "9831207b-3c70-58a3-8ea2-78ad82b1baa7",
-      "ToPin": "pin1",
-      "NetName": "STAGE_1",
+      "ToPin": "A",
+      "NetName": "PHASE_A",
       "Resistance": 0.0
     },
     {
       "Id": "b21a66ba-7b46-53f6-ae7a-bfbfb8dca832",
-      "FromComponentId": "9831207b-3c70-58a3-8ea2-78ad82b1baa7",
-      "FromPin": "pin2",
-      "ToComponentId": "32ba599a-3b81-5e96-bbce-30da32edef59",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "B",
+      "ToComponentId": "9831207b-3c70-58a3-8ea2-78ad82b1baa7",
+      "ToPin": "B",
+      "NetName": "PHASE_B",
       "Resistance": 0.0
     },
     {
       "Id": "49bdca8f-ab17-52b5-88e2-873936a95045",
-      "FromComponentId": "32ba599a-3b81-5e96-bbce-30da32edef59",
-      "FromPin": "pin2",
-      "ToComponentId": "cc465548-6595-52ac-a65e-581c6cfdac75",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "C",
+      "ToComponentId": "9831207b-3c70-58a3-8ea2-78ad82b1baa7",
+      "ToPin": "C",
+      "NetName": "PHASE_C",
       "Resistance": 0.0
     },
     {
       "Id": "ae775105-7996-5903-9fea-9b7ce2712b49",
-      "FromComponentId": "32ba599a-3b81-5e96-bbce-30da32edef59",
-      "FromPin": "pin2",
-      "ToComponentId": "903f5910-3ca4-5167-b20c-1ef53b792d71",
-      "ToPin": "pin1",
-      "NetName": "VOUT",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "N",
+      "ToComponentId": "9831207b-3c70-58a3-8ea2-78ad82b1baa7",
+      "ToPin": "N",
+      "NetName": "NEUTRAL",
       "Resistance": 0.0
     },
     {
       "Id": "dd7d8a92-18ca-525d-99cb-ce1dd2bf32d4",
-      "FromComponentId": "32ba599a-3b81-5e96-bbce-30da32edef59",
-      "FromPin": "pin2",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "A",
       "ToComponentId": "90bf08e7-f793-5128-ad2c-c1b88925c4b3",
       "ToPin": "in",
       "NetName": "VOUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c0f6cd61-0a93-41c4-8e61-71039935bec5",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "N",
+      "ToComponentId": "a7a3113b-169e-5cbb-bca4-776d4a8b2183",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2ebf94b0-d972-45ab-ae32-ea8ec9e13e9c",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "A",
+      "ToComponentId": "cc465548-6595-52ac-a65e-581c6cfdac75",
+      "ToPin": "pin1",
+      "NetName": "PHASE_A",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "042b3dd3-54a2-4ee7-81a2-1c13eedb48d5",
+      "FromComponentId": "6d8b0bd4-5f8a-5078-befc-6b24411690e4",
+      "FromPin": "A",
+      "ToComponentId": "903f5910-3ca4-5167-b20c-1ef53b792d71",
+      "ToPin": "pin1",
+      "NetName": "PHASE_A",
       "Resistance": 0.0
     },
     {

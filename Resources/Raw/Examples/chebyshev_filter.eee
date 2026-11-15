@@ -1,21 +1,31 @@
 {
   "FileType": "EEE_PLATFORM_SCHEMATIC",
-  "FormatVersion": "1.0.0",
+  "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Chebyshev Low-Pass Filter",
-  "Description": "Second-order passive RLC network illustrating the steeper Chebyshev cutoff and passband-ripple trade-off. Both test points should read approximately 1 V at DC.",
+  "Description": "Second-order doubly-terminated Chebyshev LC low-pass filter (RS=1 kΩ, L=1.095 H, C=1 µF, RL=1 kΩ, f0≈152 Hz, Q=0.956) with matched source termination and steep passband response.",
   "Components": [
     {
       "Id": "b1000000-0000-0000-0000-000000000001",
       "ComponentType": "VoltageSource",
       "Name": "VIN",
       "Reference": "VIN",
+      "Description": "AC signal source with matched 1 kΩ internal impedance",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "1"
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 1.0
+        "Voltage": 1.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 1.0,
+        "SineFrequency": 152.0,
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
@@ -24,11 +34,35 @@
       "ComponentType": "Ground",
       "Name": "GND",
       "Reference": "GND",
+      "Description": "Circuit ground reference",
       "StringParameters": {
         "LogicalRow": "7",
         "LogicalColumn": "1"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000008",
+      "ComponentType": "Resistor",
+      "Name": "R_SOURCE",
+      "Reference": "R_SOURCE",
+      "Description": "Matched source termination resistor (1 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
       "CustomProperties": {}
     },
     {
@@ -36,10 +70,15 @@
       "ComponentType": "Inductor",
       "Name": "L1",
       "Reference": "L1",
+      "Description": "Filter inductor (Chebyshev Q = 0.956, f0 ≈ 152 Hz)",
       "StringParameters": {
         "LogicalRow": "3",
-        "LogicalColumn": "2"
+        "LogicalColumn": "3"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "Inductance": 1.095
       },
@@ -50,10 +89,15 @@
       "ComponentType": "Capacitor",
       "Name": "C1",
       "Reference": "C1",
+      "Description": "Filter capacitor",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "3"
+        "LogicalColumn": "4"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "Capacitance": 1e-06
       },
@@ -64,10 +108,15 @@
       "ComponentType": "Resistor",
       "Name": "RLOAD",
       "Reference": "RLOAD",
+      "Description": "Matched load termination resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "7",
-        "LogicalColumn": "3"
+        "LogicalColumn": "4"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "Resistance": 1000.0
       },
@@ -78,11 +127,16 @@
       "ComponentType": "Probe",
       "Name": "TP_IN",
       "Reference": "TP_IN",
+      "Description": "Source input test point",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
         "ExpectedVoltage": "1"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -96,11 +150,16 @@
       "ComponentType": "Probe",
       "Name": "TP_OUT",
       "Reference": "TP_OUT",
+      "Description": "Terminated Chebyshev filtered output test point",
       "StringParameters": {
         "LogicalRow": "4",
-        "LogicalColumn": "4",
-        "ExpectedVoltage": "1"
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "0.5"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -124,7 +183,7 @@
       "Id": "b2000000-0000-0000-0000-000000000002",
       "FromComponentId": "b1000000-0000-0000-0000-000000000001",
       "FromPin": "positive",
-      "ToComponentId": "b1000000-0000-0000-0000-000000000003",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000008",
       "ToPin": "pin1",
       "NetName": "VIN",
       "Resistance": 0.0
@@ -140,6 +199,15 @@
     },
     {
       "Id": "b2000000-0000-0000-0000-000000000004",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000008",
+      "FromPin": "pin2",
+      "ToComponentId": "b1000000-0000-0000-0000-000000000003",
+      "ToPin": "pin1",
+      "NetName": "V_IN_TERMINATED",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000005",
       "FromComponentId": "b1000000-0000-0000-0000-000000000003",
       "FromPin": "pin2",
       "ToComponentId": "b1000000-0000-0000-0000-000000000004",
@@ -148,7 +216,7 @@
       "Resistance": 0.0
     },
     {
-      "Id": "b2000000-0000-0000-0000-000000000005",
+      "Id": "b2000000-0000-0000-0000-000000000006",
       "FromComponentId": "b1000000-0000-0000-0000-000000000004",
       "FromPin": "pin1",
       "ToComponentId": "b1000000-0000-0000-0000-000000000005",
@@ -157,7 +225,7 @@
       "Resistance": 0.0
     },
     {
-      "Id": "b2000000-0000-0000-0000-000000000006",
+      "Id": "b2000000-0000-0000-0000-000000000007",
       "FromComponentId": "b1000000-0000-0000-0000-000000000004",
       "FromPin": "pin1",
       "ToComponentId": "b1000000-0000-0000-0000-000000000007",
@@ -166,7 +234,7 @@
       "Resistance": 0.0
     },
     {
-      "Id": "b2000000-0000-0000-0000-000000000007",
+      "Id": "b2000000-0000-0000-0000-000000000008",
       "FromComponentId": "b1000000-0000-0000-0000-000000000004",
       "FromPin": "pin2",
       "ToComponentId": "b1000000-0000-0000-0000-000000000002",
@@ -175,7 +243,7 @@
       "Resistance": 0.0
     },
     {
-      "Id": "b2000000-0000-0000-0000-000000000008",
+      "Id": "b2000000-0000-0000-0000-000000000009",
       "FromComponentId": "b1000000-0000-0000-0000-000000000005",
       "FromPin": "pin2",
       "ToComponentId": "b1000000-0000-0000-0000-000000000002",

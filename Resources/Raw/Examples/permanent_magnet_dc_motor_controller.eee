@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "PMDC Motor Controller",
-  "Description": "Low-voltage PMDC speed-control study with PWM-equivalent drive, toggleable enable, armature R-L equivalent, load lamp and probes. Mechanical speed dynamics are not modeled.",
+  "Description": "Toggle-controlled PMDC armature model with configurable resistance, inductance, fixed-speed back EMF, load torque, and terminal probes. Mechanical speed dynamics are not modeled.",
   "Components": [
     {
       "Id": "359a2669-7e29-573c-9ad7-c98634c25816",
@@ -27,11 +27,11 @@
       "ComponentType": "VoltageSource",
       "Reference": "VIN",
       "Name": "VIN",
-      "Description": "Editable low-voltage Pulse source",
+      "Description": "Editable low-voltage DC source",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "WaveformType": "Pulse"
+        "WaveformType": "DC"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -122,10 +122,10 @@
     },
     {
       "Id": "8afadd35-c239-5743-8636-d201d1af3b72",
-      "ComponentType": "Resistor",
-      "Reference": "R_ARMATURE",
-      "Name": "R_ARMATURE",
-      "Description": "Resistor",
+      "ComponentType": "PermanentMagnetDcMotor",
+      "Reference": "MOTOR",
+      "Name": "MOTOR",
+      "Description": "Fixed-speed PMDC motor with armature back EMF",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -135,26 +135,12 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 10.0
-      },
-      "CustomProperties": {}
-    },
-    {
-      "Id": "e7aecc1e-045d-58c1-b12a-aa1f91e9cd32",
-      "ComponentType": "Inductor",
-      "Reference": "L_ARMATURE",
-      "Name": "L_ARMATURE",
-      "Description": "Inductor",
-      "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "5"
-      },
-      "Rotation": 0.0,
-      "ScaleX": 1.0,
-      "ScaleY": 1.0,
-      "BreakingCurrent": 1.0,
-      "ElectricalParameters": {
-        "Inductance": 0.01
+        "ArmatureResistance": 1.0,
+        "ArmatureInductance": 0.01,
+        "BackEmfConstant": 0.05,
+        "TorqueConstant": 0.05,
+        "SpeedRpm": 1200.0,
+        "LoadTorque": 0.0
       },
       "CustomProperties": {}
     },
@@ -273,23 +259,23 @@
       "FromComponentId": "e4491bd6-102b-5ef0-af81-616a9435f342",
       "FromPin": "sw_neg",
       "ToComponentId": "8afadd35-c239-5743-8636-d201d1af3b72",
-      "ToPin": "pin1",
+      "ToPin": "positive",
       "NetName": "STAGE_1",
       "Resistance": 0.0
     },
     {
       "Id": "95893fbf-b96b-5fca-b6c5-d6f4f1c78bdc",
       "FromComponentId": "8afadd35-c239-5743-8636-d201d1af3b72",
-      "FromPin": "pin2",
-      "ToComponentId": "e7aecc1e-045d-58c1-b12a-aa1f91e9cd32",
-      "ToPin": "pin1",
-      "NetName": "STAGE_2",
+      "FromPin": "negative",
+      "ToComponentId": "359a2669-7e29-573c-9ad7-c98634c25816",
+      "ToPin": "gnd",
+      "NetName": "0",
       "Resistance": 0.0
     },
     {
       "Id": "47a500f6-bbbf-5984-8af4-5575c262cc4a",
-      "FromComponentId": "e7aecc1e-045d-58c1-b12a-aa1f91e9cd32",
-      "FromPin": "pin2",
+      "FromComponentId": "8afadd35-c239-5743-8636-d201d1af3b72",
+      "FromPin": "positive",
       "ToComponentId": "01c1695a-1008-550f-908e-127a2e654121",
       "ToPin": "pin1",
       "NetName": "VOUT",
@@ -297,8 +283,8 @@
     },
     {
       "Id": "81f31106-ef4b-5266-96d3-ce975f841aa5",
-      "FromComponentId": "e7aecc1e-045d-58c1-b12a-aa1f91e9cd32",
-      "FromPin": "pin2",
+      "FromComponentId": "8afadd35-c239-5743-8636-d201d1af3b72",
+      "FromPin": "positive",
       "ToComponentId": "bc1d9161-2597-5563-bc4c-f11f08e6393a",
       "ToPin": "pin1",
       "NetName": "VOUT",
@@ -306,8 +292,8 @@
     },
     {
       "Id": "1461e9d8-a39c-549a-bd42-dbdd7a479229",
-      "FromComponentId": "e7aecc1e-045d-58c1-b12a-aa1f91e9cd32",
-      "FromPin": "pin2",
+      "FromComponentId": "8afadd35-c239-5743-8636-d201d1af3b72",
+      "FromPin": "positive",
       "ToComponentId": "b680a992-4c00-593e-a446-9530fdea5ec0",
       "ToPin": "in",
       "NetName": "VOUT",

@@ -1,21 +1,31 @@
 {
   "FileType": "EEE_PLATFORM_SCHEMATIC",
-  "FormatVersion": "1.0.0",
+  "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Butterworth Low-Pass Filter",
-  "Description": "Second-order passive RLC low-pass network with Butterworth damping. Both test points should read approximately 1 V at DC.",
+  "Description": "Second-order Butterworth LC low-pass filter (L=2 H, C=1 µF, R=1 kΩ, f0≈112.5 Hz, Q=0.707) with sine waveform configuration and DC passband operating point verification.",
   "Components": [
     {
       "Id": "a1000000-0000-0000-0000-000000000001",
       "ComponentType": "VoltageSource",
       "Name": "VIN",
       "Reference": "VIN",
+      "Description": "AC signal source with DC bias for passband verification",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "1"
+        "LogicalColumn": "1",
+        "WaveformType": "Sine"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 1.0
+        "Voltage": 1.0,
+        "SineOffset": 0.0,
+        "SineAmplitude": 1.0,
+        "SineFrequency": 112.5,
+        "SinePhase": 0.0
       },
       "CustomProperties": {}
     },
@@ -24,10 +34,15 @@
       "ComponentType": "Ground",
       "Name": "GND",
       "Reference": "GND",
+      "Description": "Circuit ground reference",
       "StringParameters": {
         "LogicalRow": "7",
         "LogicalColumn": "1"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {},
       "CustomProperties": {}
     },
@@ -36,10 +51,15 @@
       "ComponentType": "Inductor",
       "Name": "L1",
       "Reference": "L1",
+      "Description": "Filter inductor (Butterworth Q = 0.707, f0 ≈ 112.5 Hz)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "2"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "Inductance": 2.0
       },
@@ -50,10 +70,15 @@
       "ComponentType": "Capacitor",
       "Name": "C1",
       "Reference": "C1",
+      "Description": "Filter capacitor",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "3"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "Capacitance": 1e-06
       },
@@ -64,10 +89,15 @@
       "ComponentType": "Resistor",
       "Name": "RLOAD",
       "Reference": "RLOAD",
+      "Description": "Termination load resistance (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "7",
         "LogicalColumn": "3"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "Resistance": 1000.0
       },
@@ -78,11 +108,16 @@
       "ComponentType": "Probe",
       "Name": "TP_IN",
       "Reference": "TP_IN",
+      "Description": "Input test point",
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
         "ExpectedVoltage": "1"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
@@ -96,11 +131,16 @@
       "ComponentType": "Probe",
       "Name": "TP_OUT",
       "Reference": "TP_OUT",
+      "Description": "Filtered output test point",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "4",
         "ExpectedVoltage": "1"
       },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },

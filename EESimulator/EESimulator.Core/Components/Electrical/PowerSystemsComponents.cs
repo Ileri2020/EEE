@@ -288,7 +288,7 @@ public sealed class ACTransformerComponent : PowerSystemComponent
     }
 }
 
-/// <summary>Steady-state synchronous source represented by phase terminals and machine nameplate parameters.</summary>
+/// <summary>Synchronous source with a field winding and phase terminals.</summary>
 public sealed class SynchronousGeneratorComponent : PowerSystemComponent
 {
     public override string ComponentType => "SynchronousGenerator";
@@ -312,6 +312,9 @@ public sealed class SynchronousGeneratorComponent : PowerSystemComponent
     public double InertiaConstant { get => Number(nameof(InertiaConstant), 3); set => SetNumber(nameof(InertiaConstant), value, 0); }
     public double DampingCoefficient { get => Number(nameof(DampingCoefficient), 0); set => SetNumber(nameof(DampingCoefficient), value, 0); }
     public double FieldExcitation { get => Number(nameof(FieldExcitation), 1); set => SetNumber(nameof(FieldExcitation), value, 0); }
+    public double RatedFieldVoltage { get => Number(nameof(RatedFieldVoltage), 5); set => SetNumber(nameof(RatedFieldVoltage), value, 0.01); }
+    public double FieldResistance { get => Number(nameof(FieldResistance), 5); set => SetNumber(nameof(FieldResistance), value, 1e-6); }
+    public double FieldInductance { get => Number(nameof(FieldInductance), 0.1); set => SetNumber(nameof(FieldInductance), value, 0); }
     public double InitialRotorAngle { get => Number(nameof(InitialRotorAngle), 0); set => SetNumber(nameof(InitialRotorAngle), value); }
     public double MechanicalInputPower { get => Number(nameof(MechanicalInputPower), 8000); set => SetNumber(nameof(MechanicalInputPower), value, 0); }
     public string ConnectionType { get => Text(nameof(ConnectionType), "Star"); set => SetText(nameof(ConnectionType), value); }
@@ -327,9 +330,23 @@ public sealed class SynchronousGeneratorComponent : PowerSystemComponent
     public double FrequencyDeviation => SynchronousSpeedRpm <= 0 ? 0 : (RotationalSpeedRpm - SynchronousSpeedRpm) * NumberOfPoles / 120;
     public double ElectricalLosses => OutputCurrent * OutputCurrent * ArmatureResistance * NumberOfPhases;
     public double EfficiencyPercent => MechanicalInputPower <= 0 ? 0 : 100 * Math.Clamp(ActivePower / MechanicalInputPower, 0, 1);
+    public override void ValidateConfiguration()
+    {
+        if (!double.IsFinite(RatedVoltage) || RatedVoltage <= 0 ||
+            !double.IsFinite(RatedFrequency) || RatedFrequency <= 0 ||
+            !double.IsFinite(RatedFieldVoltage) || RatedFieldVoltage <= 0 ||
+            !double.IsFinite(FieldResistance) || FieldResistance <= 0 ||
+            !double.IsFinite(FieldInductance) || FieldInductance < 0 ||
+            !double.IsFinite(FieldExcitation) || FieldExcitation < 0)
+        {
+            throw new InvalidOperationException("Generator voltage, frequency, field resistance, and excitation must be finite and positive; field inductance must be finite and non-negative.");
+        }
+    }
+
     public SynchronousGeneratorComponent()
     {
         Pins.Add(new("A", "Phase A", -20, -14)); Pins.Add(new("B", "Phase B", -20, 0)); Pins.Add(new("C", "Phase C", -20, 14)); Pins.Add(new("N", "Neutral", 20, 0));
+        Pins.Add(new("field_positive", "Field +", -20, 28)); Pins.Add(new("field_negative", "Field −", 20, 28));
     }
 }
 
@@ -386,6 +403,183 @@ public sealed class InductionMotorComponent : PowerSystemComponent
     public double Losses => Math.Max(0, InputPower - MechanicalOutputPower);
     public double CalculatedTorque => SynchronousSpeedRpm <= 0 ? 0 : MechanicalOutputPower / Math.Max(2 * Math.PI * SynchronousSpeedRpm / 60 * (1 - Slip), 1e-6);
     public InductionMotorComponent() { Pins.Add(new("A", "Phase A", -20, -14)); Pins.Add(new("B", "Phase B", -20, 0)); Pins.Add(new("C", "Phase C", -20, 14)); Pins.Add(new("N", "Neutral", 20, 0)); }
+}
+
+/// <summary>Fixed-speed permanent-magnet DC motor armature equivalent with back EMF and torque output.</summary>
+public sealed class PermanentMagnetDcMotorComponent : PowerSystemComponent
+{
+    public override string ComponentType => "PermanentMagnetDcMotor";
+    public override string StableTypeId => "machine.pmdc-motor";
+    public override string SpicePrefix => "MDC";
+    public override string Description => "Fixed-speed PMDC armature model with back EMF";
+    public double ArmatureResistance { get => Number(nameof(ArmatureResistance), 1); set => SetNumber(nameof(ArmatureResistance), value, 1e-6); }
+    public double ArmatureInductance { get => Number(nameof(ArmatureInductance), 0.01); set => SetNumber(nameof(ArmatureInductance), value, 0); }
+    public double BackEmfConstant { get => Number(nameof(BackEmfConstant), 0.05); set => SetNumber(nameof(BackEmfConstant), value, 0); }
+    public double TorqueConstant { get => Number(nameof(TorqueConstant), 0.05); set => SetNumber(nameof(TorqueConstant), value, 0); }
+    public double SpeedRpm { get => Number(nameof(SpeedRpm), 1200); set => SetNumber(nameof(SpeedRpm), value, 0); }
+    public double LoadTorque { get => Number(nameof(LoadTorque), 0); set => SetNumber(nameof(LoadTorque), value, 0); }
+    public double BackEmfVoltage => BackEmfConstant * SpeedRpm * 2 * Math.PI / 60;
+    public double ElectromagneticTorque => TorqueConstant * LiveCurrent;
+    public double NetTorque => ElectromagneticTorque - LoadTorque;
+
+    public override void ValidateConfiguration()
+    {
+        if (!double.IsFinite(ArmatureResistance) || ArmatureResistance <= 0 ||
+            !double.IsFinite(ArmatureInductance) || ArmatureInductance < 0 ||
+            !double.IsFinite(BackEmfConstant) || BackEmfConstant < 0 ||
+            !double.IsFinite(TorqueConstant) || TorqueConstant < 0 ||
+            !double.IsFinite(SpeedRpm) || SpeedRpm < 0 ||
+            !double.IsFinite(LoadTorque) || LoadTorque < 0)
+        {
+            throw new InvalidOperationException("PMDC motor parameters must be finite, with positive armature resistance and non-negative remaining values.");
+        }
+    }
+
+    public PermanentMagnetDcMotorComponent()
+    {
+        Pins.Add(new("positive", "+", -20, 0));
+        Pins.Add(new("negative", "−", 20, 0));
+    }
+}
+
+/// <summary>Fixed-speed three-phase BLDC motor with trapezoidal back EMF and phase terminals.</summary>
+public sealed class BrushlessDcMotorComponent : PowerSystemComponent
+{
+    public override string ComponentType => "BrushlessDcMotor";
+    public override string StableTypeId => "machine.bldc-motor";
+    public override string SpicePrefix => "MBC";
+    public override string Description => "Fixed-speed BLDC motor with trapezoidal phase back EMF";
+    public double PhaseResistance { get => Number(nameof(PhaseResistance), 0.5); set => SetNumber(nameof(PhaseResistance), value, 1e-6); }
+    public double PhaseInductance { get => Number(nameof(PhaseInductance), 0.002); set => SetNumber(nameof(PhaseInductance), value, 0); }
+    public double BackEmfConstant { get => Number(nameof(BackEmfConstant), 0.02); set => SetNumber(nameof(BackEmfConstant), value, 0); }
+    public double TorqueConstant { get => Number(nameof(TorqueConstant), 0.02); set => SetNumber(nameof(TorqueConstant), value, 0); }
+    public double SpeedRpm { get => Number(nameof(SpeedRpm), 1500); set => SetNumber(nameof(SpeedRpm), value, 0); }
+    public int PolePairs { get => (int)Number(nameof(PolePairs), 2); set => SetNumber(nameof(PolePairs), Math.Max(value, 1)); }
+    public double InitialElectricalAngle { get => Number(nameof(InitialElectricalAngle), 0); set => SetNumber(nameof(InitialElectricalAngle), value); }
+    public double LoadTorque { get => Number(nameof(LoadTorque), 0); set => SetNumber(nameof(LoadTorque), value, 0); }
+    public double ElectricalFrequency => SpeedRpm * PolePairs / 60;
+    public double BackEmfPeak => BackEmfConstant * ElectricalFrequency * 2 * Math.PI;
+    public double ElectromagneticTorque { get; private set; }
+    public double NetTorque => ElectromagneticTorque - LoadTorque;
+
+    public override void ValidateConfiguration()
+    {
+        if (!double.IsFinite(PhaseResistance) || PhaseResistance <= 0 ||
+            !double.IsFinite(PhaseInductance) || PhaseInductance < 0 ||
+            !double.IsFinite(BackEmfConstant) || BackEmfConstant < 0 ||
+            !double.IsFinite(TorqueConstant) || TorqueConstant < 0 ||
+            !double.IsFinite(SpeedRpm) || SpeedRpm < 0 ||
+            PolePairs < 1 ||
+            !double.IsFinite(InitialElectricalAngle) ||
+            !double.IsFinite(LoadTorque) || LoadTorque < 0)
+        {
+            throw new InvalidOperationException("BLDC motor parameters must be finite, with positive phase resistance and non-negative remaining values.");
+        }
+    }
+
+    public BrushlessDcMotorComponent()
+    {
+        Pins.Add(new("A", "Phase A", -20, -14));
+        Pins.Add(new("B", "Phase B", -20, 0));
+        Pins.Add(new("C", "Phase C", -20, 14));
+        Pins.Add(new("N", "Neutral", 20, 0));
+    }
+
+    public void UpdatePhaseCurrents(double phaseA, double phaseB, double phaseC, double electricalAngleDegrees)
+    {
+        ElectromagneticTorque = TorqueConstant * (
+            phaseA * BackEmfShape(electricalAngleDegrees) +
+            phaseB * BackEmfShape(electricalAngleDegrees - 120) +
+            phaseC * BackEmfShape(electricalAngleDegrees + 120));
+    }
+
+    public static double BackEmfShape(double angleDegrees)
+    {
+        double angle = ((angleDegrees % 360) + 360) % 360;
+        if (angle < 30) return angle / 30;
+        if (angle < 150) return 1;
+        if (angle < 210) return 1 - (angle - 150) / 30;
+        if (angle < 330) return -1;
+        return -1 + (angle - 330) / 30;
+    }
+}
+
+/// <summary>Fixed-speed single-phase motor equivalent with main and capacitor-start auxiliary windings.</summary>
+public sealed class SinglePhaseInductionMotorComponent : PowerSystemComponent
+{
+    public override string ComponentType => "SinglePhaseInductionMotor";
+    public override string StableTypeId => "machine.single-phase-induction-motor";
+    public override string SpicePrefix => "MSP";
+    public override string Description => "Single-phase motor equivalent with auxiliary winding and start capacitor";
+    public double Frequency { get => Number(nameof(Frequency), 50); set => SetNumber(nameof(Frequency), value, 0.01); }
+    public double MainWindingResistance { get => Number(nameof(MainWindingResistance), 20); set => SetNumber(nameof(MainWindingResistance), value, 1e-6); }
+    public double MainWindingInductance { get => Number(nameof(MainWindingInductance), 0.15); set => SetNumber(nameof(MainWindingInductance), value, 0); }
+    public double AuxiliaryWindingResistance { get => Number(nameof(AuxiliaryWindingResistance), 30); set => SetNumber(nameof(AuxiliaryWindingResistance), value, 1e-6); }
+    public double AuxiliaryWindingInductance { get => Number(nameof(AuxiliaryWindingInductance), 0.1); set => SetNumber(nameof(AuxiliaryWindingInductance), value, 0); }
+    public double StartCapacitance { get => Number(nameof(StartCapacitance), 100e-6); set => SetNumber(nameof(StartCapacitance), value, 1e-12); }
+    public double SpeedRpm { get => Number(nameof(SpeedRpm), 1400); set => SetNumber(nameof(SpeedRpm), value, 0); }
+
+    public override void ValidateConfiguration()
+    {
+        if (!double.IsFinite(Frequency) || Frequency <= 0 ||
+            !double.IsFinite(MainWindingResistance) || MainWindingResistance <= 0 ||
+            !double.IsFinite(MainWindingInductance) || MainWindingInductance < 0 ||
+            !double.IsFinite(AuxiliaryWindingResistance) || AuxiliaryWindingResistance <= 0 ||
+            !double.IsFinite(AuxiliaryWindingInductance) || AuxiliaryWindingInductance < 0 ||
+            !double.IsFinite(StartCapacitance) || StartCapacitance <= 0 ||
+            !double.IsFinite(SpeedRpm) || SpeedRpm < 0)
+        {
+            throw new InvalidOperationException("Single-phase motor parameters must be finite, with positive winding resistance, frequency, and capacitance.");
+        }
+    }
+
+    public SinglePhaseInductionMotorComponent()
+    {
+        Pins.Add(new("line", "Line", -20, 0));
+        Pins.Add(new("neutral", "Neutral", 20, 0));
+    }
+}
+
+/// <summary>Ideal averaged three-phase inverter output for variable-frequency drive studies.</summary>
+public sealed class VariableFrequencyDriveComponent : PowerSystemComponent
+{
+    public override string ComponentType => "VariableFrequencyDrive";
+    public override string StableTypeId => "power-electronics.variable-frequency-drive";
+    public override string SpicePrefix => "VFD";
+    public override string Description => "Averaged three-phase variable-frequency inverter";
+    public double DcBusVoltage { get => Number(nameof(DcBusVoltage), 48); set => SetNumber(nameof(DcBusVoltage), value, 0); }
+    public double RatedInputPower { get => Number(nameof(RatedInputPower), 60); set => SetNumber(nameof(RatedInputPower), value, 0.01); }
+    public double OutputFrequency { get => Number(nameof(OutputFrequency), 50); set => SetNumber(nameof(OutputFrequency), value, 0.01); }
+    public double ModulationIndex { get => Number(nameof(ModulationIndex), 0.8); set => SetNumber(nameof(ModulationIndex), Math.Clamp(value, 0, 1)); }
+    public double OutputResistance { get => Number(nameof(OutputResistance), 0.1); set => SetNumber(nameof(OutputResistance), value, 0); }
+    public double OutputInductance { get => Number(nameof(OutputInductance), 0.001); set => SetNumber(nameof(OutputInductance), value, 0); }
+    public string PhaseSequence { get => Text(nameof(PhaseSequence), "ABC"); set { if (value is not ("ABC" or "ACB")) throw new ArgumentException("Phase sequence must be ABC or ACB."); SetText(nameof(PhaseSequence), value); } }
+    public double PhaseVoltagePeak => DcBusVoltage * ModulationIndex / 2;
+
+    public override void ValidateConfiguration()
+    {
+        if (!double.IsFinite(DcBusVoltage) || DcBusVoltage < 0 ||
+            !double.IsFinite(RatedInputPower) || RatedInputPower <= 0 ||
+            !double.IsFinite(OutputFrequency) || OutputFrequency <= 0 ||
+            !double.IsFinite(ModulationIndex) || ModulationIndex < 0 || ModulationIndex > 1 ||
+            !double.IsFinite(OutputResistance) || OutputResistance < 0 ||
+            !double.IsFinite(OutputInductance) || OutputInductance < 0 ||
+            PhaseSequence is not ("ABC" or "ACB"))
+        {
+            throw new InvalidOperationException("VFD parameters must be finite and within their configured physical ranges.");
+        }
+    }
+
+    public VariableFrequencyDriveComponent()
+    {
+        Pins.Add(new("dc_positive", "DC +", -24, -18));
+        Pins.Add(new("dc_negative", "DC −", -24, 18));
+        Pins.Add(new("A", "Phase A", 24, -18));
+        Pins.Add(new("B", "Phase B", 24, -6));
+        Pins.Add(new("C", "Phase C", 24, 6));
+        Pins.Add(new("N", "Neutral", 24, 18));
+        Pins.Add(new("enable", "Enable", 0, 28));
+    }
 }
 
 /// <summary>Household AC bulb modeled as a switched resistive load with optional dimming.</summary>

@@ -117,7 +117,7 @@ public class PythonCodeGenerator
                     state = legacyElectricalState > 0.5;
             }
 
-            yield return $"eesim.set_logic({name}, {state.ToString().ToLowerInvariant()})";
+            yield return $"eesim.set_logic({name}, {state ? "True" : "False"})";
             emittedProperties.Add(nameof(LogicInputComponent.State));
         }
 

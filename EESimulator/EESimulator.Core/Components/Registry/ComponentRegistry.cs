@@ -301,10 +301,13 @@ public static class ComponentRegistry
         });
         Register<SynchronousGeneratorComponent>("machine.synchronous-generator", "SynchronousGenerator", "Electrical Machines", "GEN", d =>
         {
-            d.Description = "Steady-state synchronous generator";
+            d.Description = "Three-phase synchronous generator with field-winding excitation";
             d.Icon = "generator.svg";
             d.DefaultParameters[nameof(SynchronousGeneratorComponent.RatedVoltage)] = 400;
             d.DefaultParameters[nameof(SynchronousGeneratorComponent.RatedFrequency)] = 50;
+            d.DefaultParameters[nameof(SynchronousGeneratorComponent.RatedFieldVoltage)] = 5;
+            d.DefaultParameters[nameof(SynchronousGeneratorComponent.FieldResistance)] = 5;
+            d.DefaultParameters[nameof(SynchronousGeneratorComponent.FieldInductance)] = 0.1;
         });
         Register<InductionMotorComponent>("machine.induction-motor", "InductionMotor", "Electrical Machines", "MTR", d =>
         {
@@ -312,6 +315,49 @@ public static class ComponentRegistry
             d.Icon = "motor.svg";
             d.DefaultParameters[nameof(InductionMotorComponent.RatedVoltage)] = 400;
             d.DefaultParameters[nameof(InductionMotorComponent.RatedPower)] = 1500;
+        });
+        Register<PermanentMagnetDcMotorComponent>("machine.pmdc-motor", "PermanentMagnetDcMotor", "Electrical Machines", "MDC", d =>
+        {
+            d.Description = "Fixed-speed PMDC armature model with configurable resistance, inductance, speed, and load torque";
+            d.Icon = "motor.svg";
+            d.DefaultParameters[nameof(PermanentMagnetDcMotorComponent.ArmatureResistance)] = 1;
+            d.DefaultParameters[nameof(PermanentMagnetDcMotorComponent.ArmatureInductance)] = 0.01;
+            d.DefaultParameters[nameof(PermanentMagnetDcMotorComponent.BackEmfConstant)] = 0.05;
+            d.DefaultParameters[nameof(PermanentMagnetDcMotorComponent.TorqueConstant)] = 0.05;
+            d.DefaultParameters[nameof(PermanentMagnetDcMotorComponent.SpeedRpm)] = 1200;
+        });
+        Register<BrushlessDcMotorComponent>("machine.bldc-motor", "BrushlessDcMotor", "Electrical Machines", "MBC", d =>
+        {
+            d.Description = "Fixed-speed three-phase BLDC model with trapezoidal back EMF";
+            d.Icon = "motor.svg";
+            d.DefaultParameters[nameof(BrushlessDcMotorComponent.PhaseResistance)] = 0.5;
+            d.DefaultParameters[nameof(BrushlessDcMotorComponent.PhaseInductance)] = 0.002;
+            d.DefaultParameters[nameof(BrushlessDcMotorComponent.BackEmfConstant)] = 0.02;
+            d.DefaultParameters[nameof(BrushlessDcMotorComponent.TorqueConstant)] = 0.02;
+            d.DefaultParameters[nameof(BrushlessDcMotorComponent.SpeedRpm)] = 1500;
+            d.DefaultParameters[nameof(BrushlessDcMotorComponent.PolePairs)] = 2;
+        });
+        Register<SinglePhaseInductionMotorComponent>("machine.single-phase-induction-motor", "SinglePhaseInductionMotor", "Electrical Machines", "MSP", d =>
+        {
+            d.Description = "Fixed-speed single-phase motor equivalent with main and capacitor-start auxiliary windings";
+            d.Icon = "motor.svg";
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.Frequency)] = 50;
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.MainWindingResistance)] = 20;
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.MainWindingInductance)] = 0.15;
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.AuxiliaryWindingResistance)] = 30;
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.AuxiliaryWindingInductance)] = 0.1;
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.StartCapacitance)] = 100e-6;
+            d.DefaultParameters[nameof(SinglePhaseInductionMotorComponent.SpeedRpm)] = 1400;
+        });
+        Register<VariableFrequencyDriveComponent>("power-electronics.variable-frequency-drive", "VariableFrequencyDrive", "Power Electronics", "VFD", d =>
+        {
+            d.Description = "Ideal averaged three-phase inverter with adjustable output frequency and modulation index";
+            d.DefaultParameters[nameof(VariableFrequencyDriveComponent.DcBusVoltage)] = 48;
+            d.DefaultParameters[nameof(VariableFrequencyDriveComponent.RatedInputPower)] = 60;
+            d.DefaultParameters[nameof(VariableFrequencyDriveComponent.OutputFrequency)] = 50;
+            d.DefaultParameters[nameof(VariableFrequencyDriveComponent.ModulationIndex)] = 0.8;
+            d.DefaultParameters[nameof(VariableFrequencyDriveComponent.OutputResistance)] = 0.1;
+            d.DefaultParameters[nameof(VariableFrequencyDriveComponent.OutputInductance)] = 0.001;
         });
         Register<ACBulbComponent>("load.ac-bulb", "ACBulb", "Electrical Loads", "ACB", d =>
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using EESimulator.Core.Components.Base;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.Electronics;
@@ -14,6 +15,55 @@ using SpiceSharp.Simulations;
 namespace EESimulator.Engine.Simulation;
 public partial class SpiceSharpAdapter
 {
+    private static bool IsPinConnected(CircuitNode circuit, Guid componentId, string pinId) =>
+        circuit.Connections.Any(connection =>
+            (connection.FromComponentId == componentId &&
+             connection.FromPin.Equals(pinId, StringComparison.OrdinalIgnoreCase)) ||
+            (connection.ToComponentId == componentId &&
+             connection.ToPin.Equals(pinId, StringComparison.OrdinalIgnoreCase)));
+
+    private static bool ReadControlPinState(
+        CircuitNode circuit,
+        CircuitTopology topology,
+        Guid componentId,
+        string pinId)
+    {
+        if (!topology.PinToNetMap.TryGetValue(new PinReference(componentId, pinId), out var net))
+            return true;
+
+        foreach (var connectedPin in net.ConnectedPins)
+        {
+            LogicInputComponent? input = circuit.Components
+                .FirstOrDefault(component => component.Id == connectedPin.ComponentId) as LogicInputComponent;
+            if (input != null && connectedPin.PinId.Equals("out", StringComparison.OrdinalIgnoreCase))
+                return input.State;
+        }
+
+        return true;
+    }
+
+    private static SpiceSharp.Components.Pwl CreateBrushlessBackEmfWaveform(
+        double peakVoltage,
+        double electricalFrequency,
+        double phaseAngleDegrees,
+        double stopTime)
+    {
+        double duration = Math.Max(stopTime, 1e-9);
+        int sampleCount = (int)Math.Clamp(Math.Ceiling(duration * electricalFrequency * 12), 1, 100_000);
+        var points = new double[(sampleCount + 1) * 2];
+        for (int index = 0; index <= sampleCount; index++)
+        {
+            double time = duration * index / sampleCount;
+            double angle = phaseAngleDegrees + 360 * electricalFrequency * time;
+            points[index * 2] = time;
+            points[index * 2 + 1] = peakVoltage * BrushlessDcMotorComponent.BackEmfShape(angle);
+        }
+
+        var waveform = new SpiceSharp.Components.Pwl();
+        waveform.SetPoints(points);
+        return waveform;
+    }
+
     private static string ResolveProbeReferenceNode(CircuitTopology topology, string groundGroup)
     {
         if (groundGroup.Equals(GroundComponent.DefaultGroundGroup, StringComparison.OrdinalIgnoreCase))
@@ -164,8 +214,159 @@ public partial class SpiceSharpAdapter
                         break;
                     }
 
+                    case PermanentMagnetDcMotorComponent motor:
+                    {
+                        motor.ValidateConfiguration();
+                        string internalNode = $"{motor.Name}_armature_internal";
+                        string emfNode = $"{motor.Name}_back_emf";
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{motor.Name}_armature_R", nodeA, internalNode, motor.ArmatureResistance));
+                        if (motor.ArmatureInductance > 0)
+                            spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                $"{motor.Name}_armature_L", internalNode, emfNode, motor.ArmatureInductance));
+                        else
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"{motor.Name}_armature_link", internalNode, emfNode, 1e-6));
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(
+                            motor.Name, emfNode, nodeB, motor.BackEmfVoltage));
+                        break;
+                    }
+
+                    case BrushlessDcMotorComponent motor:
+                    {
+                        motor.ValidateConfiguration();
+                        string neutral = GetNetForPin(motor.Id, "N");
+                        string[] phasePins = { "A", "B", "C" };
+                        for (int phase = 0; phase < phasePins.Length; phase++)
+                        {
+                            string phaseName = phasePins[phase];
+                            string phaseNode = GetNetForPin(motor.Id, phaseName);
+                            string sourceName = phase == 0 ? motor.Name : $"{motor.Name}_phase{phaseName}";
+                            string internalNode = $"{sourceName}_internal";
+                            string emfNode = $"{sourceName}_emf";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"{sourceName}_R", phaseNode, internalNode, motor.PhaseResistance));
+                            if (motor.PhaseInductance > 0)
+                                spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                    $"{sourceName}_L", internalNode, emfNode, motor.PhaseInductance));
+                            else
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                    $"{sourceName}_link", internalNode, emfNode, 1e-6));
+
+                            double phaseAngle = motor.InitialElectricalAngle + (phase switch
+                            {
+                                1 => -120,
+                                2 => 120,
+                                _ => 0
+                            });
+                            var source = new SpiceSharp.Components.VoltageSource(
+                                sourceName,
+                                emfNode,
+                                neutral,
+                                motor.BackEmfPeak * BrushlessDcMotorComponent.BackEmfShape(phaseAngle));
+                            if (settings.Analysis == AnalysisType.Transient && motor.ElectricalFrequency > 0)
+                            {
+                                var waveform = CreateBrushlessBackEmfWaveform(
+                                    motor.BackEmfPeak,
+                                    motor.ElectricalFrequency,
+                                    phaseAngle,
+                                    settings.StopTime);
+                                source.Parameters.Waveform = waveform;
+                            }
+                            spiceCircuit.Add(source);
+                        }
+                        break;
+                    }
+
+                    case SinglePhaseInductionMotorComponent motor:
+                    {
+                        motor.ValidateConfiguration();
+                        string mainInternal = $"{motor.Name}_main_internal";
+                        string mainSense = $"{motor.Name}_main_sense";
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{motor.Name}_main_R", nodeA, mainInternal, motor.MainWindingResistance));
+                        if (motor.MainWindingInductance > 0)
+                            spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                $"{motor.Name}_main_L", mainInternal, mainSense, motor.MainWindingInductance));
+                        else
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"{motor.Name}_main_link", mainInternal, mainSense, 1e-6));
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageSource(motor.Name, mainSense, nodeB, 0));
+
+                        string auxiliaryInternal = $"{motor.Name}_auxiliary_internal";
+                        string auxiliaryCapacitor = $"{motor.Name}_auxiliary_capacitor";
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{motor.Name}_auxiliary_R", nodeA, auxiliaryInternal, motor.AuxiliaryWindingResistance));
+                        if (motor.AuxiliaryWindingInductance > 0)
+                            spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                $"{motor.Name}_auxiliary_L", auxiliaryInternal, auxiliaryCapacitor, motor.AuxiliaryWindingInductance));
+                        else
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"{motor.Name}_auxiliary_link", auxiliaryInternal, auxiliaryCapacitor, 1e-6));
+                        spiceCircuit.Add(new SpiceSharp.Components.Capacitor(
+                            $"{motor.Name}_start_capacitor", auxiliaryCapacitor, nodeB, motor.StartCapacitance));
+                        break;
+                    }
+
+                    case VariableFrequencyDriveComponent drive:
+                    {
+                        drive.ValidateConfiguration();
+                        double outputPeak = ReadControlPinState(circuit, topology, drive.Id, "enable")
+                            ? drive.PhaseVoltagePeak
+                            : 0;
+                        string neutral = GetNetForPin(drive.Id, "N");
+                        string[] phasePins = { "A", "B", "C" };
+                        for (int phase = 0; phase < phasePins.Length; phase++)
+                        {
+                            string phaseName = phasePins[phase];
+                            string phaseNode = GetNetForPin(drive.Id, phaseName);
+                            string sourceName = phase == 0 ? drive.Name : $"{drive.Name}_phase{phaseName}";
+                            string internalNode = $"{sourceName}_internal";
+                            string sourceNode = $"{sourceName}_source";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"{sourceName}_R", sourceNode, phaseNode, Math.Max(drive.OutputResistance, 1e-6)));
+                            if (drive.OutputInductance > 0)
+                                spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                    $"{sourceName}_L", internalNode, sourceNode, drive.OutputInductance));
+                            else
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                    $"{sourceName}_link", internalNode, sourceNode, 1e-6));
+
+                            double phaseOrder = drive.PhaseSequence == "ACB" ? -1 : 1;
+                            double phaseAngle = phaseOrder * phase * 120;
+                            var source = new SpiceSharp.Components.VoltageSource(
+                                sourceName,
+                                internalNode,
+                                neutral,
+                                outputPeak * Math.Cos(phaseAngle * Math.PI / 180));
+                            source.Parameters.Waveform = new SpiceSharp.Components.Sine(
+                                0,
+                                outputPeak,
+                                drive.OutputFrequency,
+                                0,
+                                0,
+                                (phaseAngle + 90) * Math.PI / 180);
+                            spiceCircuit.Add(source);
+                        }
+
+                        string dcPositive = GetNetForPin(drive.Id, "dc_positive");
+                        string dcNegative = GetNetForPin(drive.Id, "dc_negative");
+                        if (dcPositive.Equals(dcNegative, StringComparison.OrdinalIgnoreCase))
+                            throw new InvalidOperationException($"VFD '{drive.Name}' requires separate DC-positive and DC-negative nets.");
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{drive.Name}_dc_input",
+                            dcPositive,
+                            dcNegative,
+                            outputPeak > 0
+                                ? Math.Max(drive.DcBusVoltage * drive.DcBusVoltage /
+                                           Math.Max(drive.RatedInputPower, 0.01), 1e-6)
+                                : 1e12));
+                        break;
+                    }
+
                     case InductionMotorComponent motor:
                     {
+                        motor.ValidateConfiguration();
                         string neutral = motor.Pins.Count > 3 ? GetNetForPin(motor.Id, motor.Pins[3].Id) : "0";
                         void AddMotorPhase(string phaseName, string phaseNode)
                         {
@@ -337,6 +538,21 @@ public partial class SpiceSharpAdapter
                     {
                         generator.ValidateConfiguration();
                         string neutral = generator.Pins.Count > 3 ? GetNetForPin(generator.Id, generator.Pins[3].Id) : "0";
+                        if (IsPinConnected(circuit, generator.Id, "field_positive") &&
+                            IsPinConnected(circuit, generator.Id, "field_negative"))
+                        {
+                            string fieldPositive = GetNetForPin(generator.Id, "field_positive");
+                            string fieldNegative = GetNetForPin(generator.Id, "field_negative");
+                            string fieldInternal = $"{generator.Name}_field_internal";
+                            spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                $"{generator.Name}_field_R", fieldPositive, fieldInternal, generator.FieldResistance));
+                            if (generator.FieldInductance > 0)
+                                spiceCircuit.Add(new SpiceSharp.Components.Inductor(
+                                    $"{generator.Name}_field_L", fieldInternal, fieldNegative, generator.FieldInductance));
+                            else
+                                spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                                    $"{generator.Name}_field_link", fieldInternal, fieldNegative, 1e-6));
+                        }
                         double peakVoltage = generator.GeneratedEmf * Math.Sqrt(2);
                         int phases = Math.Clamp(generator.NumberOfPhases, 1, 3);
                         for (int phase = 0; phase < phases; phase++)
@@ -348,7 +564,7 @@ public partial class SpiceSharpAdapter
                             var source = new SpiceSharp.Components.VoltageSource(sourceName, internalNode, neutral,
                                 generator.GeneratedEmf * Math.Cos(angle * Math.PI / 180));
                             source.Parameters.Waveform = new SpiceSharp.Components.Sine(0, peakVoltage,
-                                generator.RatedFrequency, 0, 0, angle * Math.PI / 180.0);
+                                generator.RatedFrequency, 0, 0, (angle + 90) * Math.PI / 180.0);
                             spiceCircuit.Add(source);
                             string reactanceNode = $"{sourceName}_xd_{generator.Id.ToString("N")[..8]}";
                             spiceCircuit.Add(new SpiceSharp.Components.Resistor($"{sourceName}_armatureR", internalNode, reactanceNode,

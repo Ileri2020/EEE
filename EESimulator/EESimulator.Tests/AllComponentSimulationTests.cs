@@ -34,7 +34,7 @@ public sealed class AllComponentSimulationTests
     public void Test_All_116_Components_In_Simulated_Circuits()
     {
         int passed = 0;
-        int total = 116;
+        int total = 120;
         Log($"================================================================================");
         Log($"STARTING COMPREHENSIVE SIMULATED CIRCUIT TEST FOR ALL {total} COMPONENTS");
         Log($"================================================================================");
@@ -1299,6 +1299,99 @@ public sealed class AllComponentSimulationTests
             Assert.Equal("7408", ttl.PartNumber);
             passed++;
             Log($"[{passed}/{total}] Testing TTL 7408 (ttl.7408) | Nodes: [pin1..pin14] | Simulation result: Quad AND package matches expected calculation: 7408 -> PASSED");
+        }
+
+        // 117. PermanentMagnetDcMotor
+        {
+            var circuit = new CircuitNode();
+            var source = new VoltageSourceComponent { Name = "VDC", Voltage = 12 };
+            var motor = new PermanentMagnetDcMotorComponent { Name = "MOTOR" };
+            var ground = new GroundNode { Name = "GND" };
+            circuit.AddChild(source);
+            circuit.AddChild(motor);
+            circuit.AddChild(ground);
+            Connect(circuit, source, "positive", motor, "positive");
+            Connect(circuit, motor, "negative", ground, "gnd");
+            Connect(circuit, source, "negative", ground, "gnd");
+            var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+            Assert.True(simulation.Success, simulation.Message);
+            Assert.True(motor.BackEmfVoltage > 0);
+            Assert.True(motor.LiveCurrent > 0);
+            passed++;
+            Log($"[{passed}/{total}] Testing PMDC motor (machine.pmdc-motor) | Nodes: [positive, negative] | Back EMF={motor.BackEmfVoltage:F3} V, armature current={motor.LiveCurrent:F3} A -> PASSED");
+        }
+
+        // 118. BrushlessDcMotor
+        {
+            var circuit = new CircuitNode();
+            var source = new VoltageSourceComponent { Name = "VDC", Voltage = 12 };
+            var drive = new VariableFrequencyDriveComponent { Name = "VFD", DcBusVoltage = 12, OutputFrequency = 50 };
+            var enable = new LogicInputComponent("ENABLE") { State = true };
+            var motor = new BrushlessDcMotorComponent { Name = "MOTOR", SpeedRpm = 1500, PolePairs = 2 };
+            var ground = new GroundNode { Name = "GND" };
+            circuit.AddChild(source);
+            circuit.AddChild(drive);
+            circuit.AddChild(enable);
+            circuit.AddChild(motor);
+            circuit.AddChild(ground);
+            Connect(circuit, source, "positive", drive, "dc_positive");
+            Connect(circuit, source, "negative", ground, "gnd");
+            Connect(circuit, ground, "gnd", drive, "dc_negative");
+            Connect(circuit, enable, "out", drive, "enable");
+            foreach (string phase in new[] { "A", "B", "C" })
+                Connect(circuit, drive, phase, motor, phase);
+            Connect(circuit, drive, "N", motor, "N");
+            Connect(circuit, drive, "N", ground, "gnd");
+            var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+            Assert.True(simulation.Success, simulation.Message);
+            Assert.True(double.IsFinite(motor.ElectromagneticTorque));
+            Assert.Contains("I(MOTOR_phaseB)", simulation.OperatingPointCurrents.Keys);
+            passed++;
+            Log($"[{passed}/{total}] Testing BLDC motor (machine.bldc-motor) | Nodes: [A, B, C, N] | Phase currents and trapezoidal back EMF solved -> PASSED");
+        }
+
+        // 119. SinglePhaseInductionMotor
+        {
+            var circuit = new CircuitNode();
+            var source = new VoltageSourceComponent { Name = "VAC", Voltage = 12 };
+            var motor = new SinglePhaseInductionMotorComponent { Name = "MOTOR" };
+            var ground = new GroundNode { Name = "GND" };
+            circuit.AddChild(source);
+            circuit.AddChild(motor);
+            circuit.AddChild(ground);
+            Connect(circuit, source, "positive", motor, "line");
+            Connect(circuit, motor, "neutral", ground, "gnd");
+            Connect(circuit, source, "negative", ground, "gnd");
+            var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+            Assert.True(simulation.Success, simulation.Message);
+            Assert.True(motor.StartCapacitance > 0);
+            Assert.True(motor.LiveCurrent > 0);
+            passed++;
+            Log($"[{passed}/{total}] Testing single-phase induction motor (machine.single-phase-induction-motor) | Main and capacitor-start windings solved -> PASSED");
+        }
+
+        // 120. VariableFrequencyDrive
+        {
+            var circuit = new CircuitNode();
+            var source = new VoltageSourceComponent { Name = "VDC", Voltage = 12 };
+            var drive = new VariableFrequencyDriveComponent { Name = "VFD", DcBusVoltage = 12, OutputFrequency = 10 };
+            var enable = new LogicInputComponent("ENABLE") { State = true };
+            var ground = new GroundNode { Name = "GND" };
+            circuit.AddChild(source);
+            circuit.AddChild(drive);
+            circuit.AddChild(enable);
+            circuit.AddChild(ground);
+            Connect(circuit, source, "positive", drive, "dc_positive");
+            Connect(circuit, source, "negative", ground, "gnd");
+            Connect(circuit, ground, "gnd", drive, "dc_negative");
+            Connect(circuit, enable, "out", drive, "enable");
+            Connect(circuit, drive, "N", ground, "gnd");
+            var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+            Assert.True(simulation.Success, simulation.Message);
+            Assert.Equal(10, drive.OutputFrequency);
+            Assert.True(drive.LivePinVoltages["A"] > 0);
+            passed++;
+            Log($"[{passed}/{total}] Testing averaged VFD (power-electronics.variable-frequency-drive) | DC bus, enable, and 10Hz three-phase output solved -> PASSED");
         }
 
         Log($"================================================================================");

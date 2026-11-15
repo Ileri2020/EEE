@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Automatic Voltage Regulator (AVR)",
-  "Description": "Generator excitation/control teaching model with synchronous-generator parameters, adjustable reference/excitation sources, toggleable enable and measurement probes. Closed-loop regulation is conceptual.",
+  "Description": "Steady-state AVR study with a synchronous-generator field winding, op-amp controller, voltage feedback network, and reference/output probes. Rotor and controller transient dynamics are not modeled.",
   "Components": [
     {
       "Id": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
@@ -55,32 +55,20 @@
     },
     {
       "Id": "165e9102-3249-51cf-b86d-c85236421958",
-      "ComponentType": "VoltageSource",
-      "Reference": "V_EXC",
-      "Name": "V_EXC",
-      "Description": "Editable low-voltage DC source",
+      "ComponentType": "Resistor",
+      "Reference": "R_SENSE_TOP",
+      "Name": "R_SENSE_TOP",
+      "Description": "Generator voltage feedback resistor",
       "StringParameters": {
         "LogicalRow": "1",
-        "LogicalColumn": "2",
-        "WaveformType": "DC"
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 5.0,
-        "SineOffset": 0.0,
-        "SineAmplitude": 5.0,
-        "SineFrequency": 50.0,
-        "SinePhase": 0.0,
-        "PulseInitial": 0.0,
-        "PulsePulsed": 5.0,
-        "PulseDelay": 0.001,
-        "PulseRiseTime": 1e-06,
-        "PulseFallTime": 1e-06,
-        "PulseWidth": 0.005,
-        "PulsePeriod": 0.01
+        "Resistance": 17800.0
       },
       "CustomProperties": {}
     },
@@ -113,32 +101,29 @@
     },
     {
       "Id": "ad7a83fc-86b9-5cd1-9aaf-7c3daa2a32a0",
-      "ComponentType": "LogicInput",
-      "Reference": "AVR_ENABLE",
-      "Name": "AVR_ENABLE",
-      "Description": "User-toggleable input",
+      "ComponentType": "Resistor",
+      "Reference": "R_SENSE_BOTTOM",
+      "Name": "R_SENSE_BOTTOM",
+      "Description": "Generator voltage feedback return resistor",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "1",
-        "State": "True"
+        "LogicalColumn": "1"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "HighVoltage": 5.0,
-        "LowVoltage": 0.0,
-        "State": 1.0
+        "Resistance": 10000.0
       },
       "CustomProperties": {}
     },
     {
       "Id": "c550262a-aac6-5ec8-afab-feff1dd03770",
-      "ComponentType": "LogicOutput",
-      "Reference": "AVR_STATUS",
-      "Name": "AVR_STATUS",
-      "Description": "LogicOutput",
+      "ComponentType": "Resistor",
+      "Reference": "R_FEEDBACK",
+      "Name": "R_FEEDBACK",
+      "Description": "AVR negative-feedback resistor",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "2"
@@ -147,7 +132,35 @@
       "ScaleX": 1.0,
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
-      "ElectricalParameters": {},
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ComponentType": "OpAmp",
+      "Reference": "AVR",
+      "Name": "AVR",
+      "Description": "Closed-loop field voltage controller",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0,
+        "Vos": 0.001,
+        "Ib": 0.00000008,
+        "CMRR": 90.0
+      },
       "CustomProperties": {}
     },
     {
@@ -205,7 +218,7 @@
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "4",
-        "ExpectedVoltage": "0"
+        "ExpectedVoltage": "13.8564"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -255,20 +268,11 @@
     },
     {
       "Id": "1b35ab82-eeec-540f-8e20-234f97e560cb",
-      "FromComponentId": "165e9102-3249-51cf-b86d-c85236421958",
-      "FromPin": "negative",
+      "FromComponentId": "ad7a83fc-86b9-5cd1-9aaf-7c3daa2a32a0",
+      "FromPin": "pin2",
       "ToComponentId": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
       "ToPin": "gnd",
       "NetName": "0",
-      "Resistance": 0.0
-    },
-    {
-      "Id": "b0822c38-007a-5977-8ee7-c6716270661e",
-      "FromComponentId": "ad7a83fc-86b9-5cd1-9aaf-7c3daa2a32a0",
-      "FromPin": "out",
-      "ToComponentId": "c550262a-aac6-5ec8-afab-feff1dd03770",
-      "ToPin": "in",
-      "NetName": "AVR_STATUS",
       "Resistance": 0.0
     },
     {
@@ -282,11 +286,11 @@
     },
     {
       "Id": "4c7e95f8-6f5c-57ca-a27b-2d790f198828",
-      "FromComponentId": "165e9102-3249-51cf-b86d-c85236421958",
-      "FromPin": "positive",
-      "ToComponentId": "f781c424-4886-5c3f-b23d-76a4c910c7b6",
-      "ToPin": "in",
-      "NetName": "V_EXC",
+      "FromComponentId": "820f8af4-7775-58b9-8ef0-fd1d304d892b",
+      "FromPin": "A",
+      "ToComponentId": "165e9102-3249-51cf-b86d-c85236421958",
+      "ToPin": "pin1",
+      "NetName": "GEN_A",
       "Resistance": 0.0
     },
     {
@@ -300,11 +304,92 @@
     },
     {
       "Id": "6d5ec9bb-6cc6-5c0a-950f-6b5308d50f2f",
-      "FromComponentId": "c550262a-aac6-5ec8-afab-feff1dd03770",
-      "FromPin": "in",
+      "FromComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "FromPin": "out",
       "ToComponentId": "585de936-fc1b-5740-a27b-7c518aa5206f",
       "ToPin": "in",
-      "NetName": "AVR_STATUS",
+      "NetName": "AVR_OUTPUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "23730e14-18a1-4ae3-96d2-9563de08e1f1",
+      "FromComponentId": "165e9102-3249-51cf-b86d-c85236421958",
+      "FromPin": "pin2",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "in_neg",
+      "NetName": "GEN_SENSE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d44cff8a-ae92-466c-8518-031b32fce88e",
+      "FromComponentId": "ad7a83fc-86b9-5cd1-9aaf-7c3daa2a32a0",
+      "FromPin": "pin1",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "in_neg",
+      "NetName": "GEN_SENSE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "5e8e5c72-32fc-466c-9016-8a57e64dbf94",
+      "FromComponentId": "c550262a-aac6-5ec8-afab-feff1dd03770",
+      "FromPin": "pin1",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "out",
+      "NetName": "AVR_OUTPUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0c243b70-ef78-4a34-9a58-0f55361f876b",
+      "FromComponentId": "c550262a-aac6-5ec8-afab-feff1dd03770",
+      "FromPin": "pin2",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "in_neg",
+      "NetName": "GEN_SENSE",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "2f84f715-a886-4b13-9465-23b94f9da8e8",
+      "FromComponentId": "dfa86b87-44b4-5b74-97a9-1598aad07b36",
+      "FromPin": "positive",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "in_pos",
+      "NetName": "V_REF",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a61cda40-f58f-45e3-bf31-b4fc01cf5da5",
+      "FromComponentId": "820f8af4-7775-58b9-8ef0-fd1d304d892b",
+      "FromPin": "N",
+      "ToComponentId": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0cfa8683-cc9e-4e8c-a7bf-46eb48f37af5",
+      "FromComponentId": "820f8af4-7775-58b9-8ef0-fd1d304d892b",
+      "FromPin": "field_positive",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "out",
+      "NetName": "FIELD_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a3fa1929-85da-4ab1-b274-2b084aa03d75",
+      "FromComponentId": "820f8af4-7775-58b9-8ef0-fd1d304d892b",
+      "FromPin": "field_negative",
+      "ToComponentId": "4a8329ec-8f27-5d19-b9c8-2520eafd5d7e",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a74f571b-57ab-4cce-b9de-69a822bd31be",
+      "FromComponentId": "f781c424-4886-5c3f-b23d-76a4c910c7b6",
+      "FromPin": "in",
+      "ToComponentId": "c85e1f3a-3ca4-4a14-934c-6e9a1f2c507d",
+      "ToPin": "out",
+      "NetName": "AVR_OUTPUT",
       "Resistance": 0.0
     }
   ]
