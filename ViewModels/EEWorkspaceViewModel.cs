@@ -335,13 +335,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
                 ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
             if (_uiSnapshotTimer != null)
             {
-                _uiSnapshotTimer.Interval = TimeSpan.FromMilliseconds(10);
                 _uiSnapshotTimer.Tick += (_, _) => PublishPendingUiSnapshots();
             }
         }
 
         if (_uiSnapshotTimer != null)
+        {
+            ScheduleUiSnapshotTick();
             _uiSnapshotTimer.Start();
+        }
         else if (Microsoft.Maui.ApplicationModel.MainThread.IsMainThread)
             PublishPendingUiSnapshots();
         else
@@ -392,6 +394,44 @@ public partial class EEWorkspaceViewModel : ObservableObject
             _uiSnapshotTimer?.Stop();
             _pendingSnapshotForce = false;
         }
+        else
+        {
+            ScheduleUiSnapshotTick();
+        }
+    }
+
+    private void ScheduleUiSnapshotTick()
+    {
+        if (_uiSnapshotTimer == null) return;
+
+        var now = DateTime.UtcNow;
+        int delayMs = Math.Clamp(Preferences.Default.Get("Settings.UiSnapshotDelayMs", 40), 0, 1000);
+        var delayDue = _pendingSnapshotSinceUtc + TimeSpan.FromMilliseconds(delayMs);
+        var nextDue = DateTime.MaxValue;
+
+        if (_pendingGraphSnapshot != null)
+        {
+            int graphHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
+            var rateDue = _lastGraphRefreshUtc == DateTime.MinValue
+                ? now
+                : _lastGraphRefreshUtc + TimeSpan.FromMilliseconds(1000.0 / graphHz);
+            nextDue = Min(nextDue, Max(delayDue, rateDue));
+        }
+
+        if (_pendingViewportSnapshot != null)
+        {
+            int viewportHz = Math.Clamp(Preferences.Default.Get("Settings.ViewportRefreshHz", 30), 1, 120);
+            var rateDue = _lastUiRefreshUtc == DateTime.MinValue
+                ? now
+                : _lastUiRefreshUtc + TimeSpan.FromMilliseconds(1000.0 / viewportHz);
+            nextDue = Min(nextDue, Max(delayDue, rateDue));
+        }
+
+        double waitMs = Math.Clamp((nextDue - now).TotalMilliseconds, 1, 1000);
+        _uiSnapshotTimer.Interval = TimeSpan.FromMilliseconds(waitMs);
+
+        static DateTime Min(DateTime left, DateTime right) => left < right ? left : right;
+        static DateTime Max(DateTime left, DateTime right) => left > right ? left : right;
     }
 
     private static (double VoltageCenter, double VoltageAmplitude, double VoltageFrequency,
