@@ -13,14 +13,14 @@ public sealed record FiredComponentEvent(Guid ComponentId, string ComponentRefer
 /// <summary>Evaluates measurement triggers after a circuit solve; targets are intentionally UI-only.</summary>
 public static class ComponentEventEvaluator
 {
-    public static IReadOnlyList<FiredComponentEvent> Evaluate(CircuitNode circuit)
+    public static IReadOnlyList<FiredComponentEvent> Evaluate(CircuitNode circuit, SimulationSnapshot? snapshot = null)
     {
         var active = new List<FiredComponentEvent>();
         foreach (var component in circuit.Components)
         {
             foreach (var trigger in component.EventTriggers)
             {
-                bool condition = Compare(ReadMeasurement(component, trigger.Measurement), trigger.Comparison, trigger.Threshold);
+                bool condition = Compare(ReadMeasurement(component, trigger.Measurement, snapshot), trigger.Comparison, trigger.Threshold);
                 if (trigger.Mode.Equals("While true", StringComparison.OrdinalIgnoreCase))
                     trigger.IsFired = condition;
                 else if (condition)
@@ -33,8 +33,15 @@ public static class ComponentEventEvaluator
         return active;
     }
 
-    private static double ReadMeasurement(ComponentNode component, string measurement)
+    private static double ReadMeasurement(ComponentNode component, string measurement, SimulationSnapshot? snapshot)
     {
+        if (snapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true)
+        {
+            if (measurement.Equals("Current", StringComparison.OrdinalIgnoreCase)) return state.LiveCurrent;
+            if (measurement.Equals("State", StringComparison.OrdinalIgnoreCase)) return state.IsOn ? 1 : 0;
+            return state.LiveVoltage;
+        }
+
         if (measurement.Equals("Current", StringComparison.OrdinalIgnoreCase)) return component.LiveCurrent;
         if (measurement.Equals("State", StringComparison.OrdinalIgnoreCase)) return ReadState(component) ? 1 : 0;
         return component.LiveVoltage;

@@ -259,69 +259,218 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial SimulationSnapshot? GraphSimulationSnapshot { get; set; }
 
-    private readonly Dictionary<Guid, double> _lastUiVoltageByComponent = new();
-    private readonly Dictionary<Guid, double> _lastUiCurrentByComponent = new();
-    private readonly Dictionary<Guid, ComponentLiveState> _lastUiDiscreteStateByComponent = new();
+    [ObservableProperty]
+    public partial SimulationSnapshot? ViewportSimulationSnapshot { get; set; }
+
     private DateTime _lastUiRefreshUtc = DateTime.MinValue;
     private DateTime _lastGraphRefreshUtc = DateTime.MinValue;
+    private DateTime _pendingSnapshotSinceUtc;
+    private SimulationSnapshot? _pendingViewportSnapshot;
+    private SimulationSnapshot? _pendingGraphSnapshot;
+    private bool _pendingSnapshotForce;
+    private Microsoft.Maui.Dispatching.IDispatcherTimer? _uiSnapshotTimer;
 
-    private bool ShouldPublishUiFrame(bool force = false)
+    private bool ShouldPublishUiFrame(SimulationSnapshot snapshot, bool force = false)
     {
-        var viewportHz = Math.Max(1, Preferences.Default.Get("Settings.ViewportRefreshHz", 30));
         var minVoltageThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.VoltageChangeThreshold", 0.01));
         var minCurrentThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.CurrentChangeThreshold", 0.001));
-        var reactiveThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.ReactiveOscillationThreshold", 0.02));
-        var refreshInterval = TimeSpan.FromMilliseconds(1000.0 / viewportHz);
+        var reactiveRatio = Math.Max(0.0, Preferences.Default.Get("Settings.ReactiveOscillationThreshold", 0.02));
+        var previous = ViewportSimulationSnapshot;
 
-        if (!force && DateTime.UtcNow - _lastUiRefreshUtc < refreshInterval)
-            return false;
+        if (force || previous == null || previous.ComponentStates.Count != snapshot.ComponentStates.Count)
+            return true;
 
-        foreach (var component in Circuit.Components)
+        foreach (var entry in snapshot.ComponentStates)
         {
-            var currentVoltage = component.LiveVoltage;
-            var currentCurrent = component.LiveCurrent;
-            var previousVoltage = _lastUiVoltageByComponent.TryGetValue(component.Id, out var lastVoltage) ? lastVoltage : currentVoltage;
-            var previousCurrent = _lastUiCurrentByComponent.TryGetValue(component.Id, out var lastCurrent) ? lastCurrent : currentCurrent;
-            var voltageDelta = Math.Abs(currentVoltage - previousVoltage);
-            var currentDelta = Math.Abs(currentCurrent - previousCurrent);
-            var reactiveDelta = Math.Abs(currentVoltage - previousVoltage) + Math.Abs(currentCurrent - previousCurrent);
-
-            if (voltageDelta > minVoltageThreshold || currentDelta > minCurrentThreshold || reactiveDelta > reactiveThreshold)
+            if (!previous.ComponentStates.TryGetValue(entry.Key, out var oldState))
                 return true;
 
-            if (CurrentSimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var currentState) == true &&
-                _lastUiDiscreteStateByComponent.TryGetValue(component.Id, out var previousState) &&
-                (currentState.IsOn != previousState.IsOn ||
-                 currentState.IsBrokenDown != previousState.IsBrokenDown ||
-                 Math.Abs(currentState.Brightness - previousState.Brightness) > reactiveThreshold))
+            bool hasNewWaveform = snapshot.ComponentWaveforms.TryGetValue(entry.Key, out var newWaveform);
+            bool hadOldWaveform = previous.ComponentWaveforms.TryGetValue(entry.Key, out var oldWaveform);
+            if (hasNewWaveform != hadOldWaveform)
+                return true;
+
+            if (hasNewWaveform && hadOldWaveform)
+            {
+                var newEnvelope = GetWaveformEnvelope(newWaveform!);
+                var oldEnvelope = GetWaveformEnvelope(oldWaveform!);
+                if (Math.Abs(newEnvelope.VoltageCenter - oldEnvelope.VoltageCenter) > minVoltageThreshold ||
+                    Math.Abs(newEnvelope.CurrentCenter - oldEnvelope.CurrentCenter) > minCurrentThreshold ||
+                    Math.Abs(newEnvelope.VoltageAmplitude - oldEnvelope.VoltageAmplitude) >
+                        Math.Max(minVoltageThreshold, oldEnvelope.VoltageAmplitude * reactiveRatio) ||
+                    Math.Abs(newEnvelope.CurrentAmplitude - oldEnvelope.CurrentAmplitude) >
+                        Math.Max(minCurrentThreshold, oldEnvelope.CurrentAmplitude * reactiveRatio) ||
+                    IsMeaningfulFrequencyChange(newEnvelope.VoltageFrequency, oldEnvelope.VoltageFrequency, reactiveRatio) ||
+                    IsMeaningfulFrequencyChange(newEnvelope.CurrentFrequency, oldEnvelope.CurrentFrequency, reactiveRatio))
+                    return true;
+
+                continue;
+            }
+
+            if (Math.Abs(entry.Value.LiveVoltage - oldState.LiveVoltage) > minVoltageThreshold ||
+                Math.Abs(entry.Value.LiveCurrent - oldState.LiveCurrent) > minCurrentThreshold ||
+                entry.Value.IsOn != oldState.IsOn ||
+                entry.Value.IsBrokenDown != oldState.IsBrokenDown ||
+                Math.Abs(entry.Value.Brightness - oldState.Brightness) > reactiveRatio)
                 return true;
         }
 
-        return force || _lastUiRefreshUtc == DateTime.MinValue;
+        return false;
     }
 
     private void PublishUiSyncFrame(bool force = false)
     {
-        int graphHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
-        if (CurrentSimulationSnapshot != null &&
-            (force || DateTime.UtcNow - _lastGraphRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / graphHz)))
+        if (CurrentSimulationSnapshot == null)
+            return;
+
+        if (_pendingViewportSnapshot == null && _pendingGraphSnapshot == null)
+            _pendingSnapshotSinceUtc = DateTime.UtcNow;
+        _pendingViewportSnapshot = CurrentSimulationSnapshot;
+        _pendingGraphSnapshot = CurrentSimulationSnapshot;
+        _pendingSnapshotForce |= force;
+
+        if (_uiSnapshotTimer == null)
         {
-            GraphSimulationSnapshot = CurrentSimulationSnapshot;
-            _lastGraphRefreshUtc = DateTime.UtcNow;
+            _uiSnapshotTimer = Application.Current?.Dispatcher?.CreateTimer()
+                ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
+            if (_uiSnapshotTimer != null)
+            {
+                _uiSnapshotTimer.Interval = TimeSpan.FromMilliseconds(10);
+                _uiSnapshotTimer.Tick += (_, _) => PublishPendingUiSnapshots();
+            }
         }
 
-        if (!ShouldPublishUiFrame(force)) return;
+        if (_uiSnapshotTimer != null)
+            _uiSnapshotTimer.Start();
+        else if (Microsoft.Maui.ApplicationModel.MainThread.IsMainThread)
+            PublishPendingUiSnapshots();
+        else
+            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(PublishPendingUiSnapshots);
+    }
 
+    private void PublishPendingUiSnapshots()
+    {
+        if (_pendingViewportSnapshot == null && _pendingGraphSnapshot == null)
+        {
+            _uiSnapshotTimer?.Stop();
+            _pendingSnapshotForce = false;
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        bool force = _pendingSnapshotForce;
+        int delayMs = Math.Clamp(Preferences.Default.Get("Settings.UiSnapshotDelayMs", 40), 0, 1000);
+        if (!force && now - _pendingSnapshotSinceUtc < TimeSpan.FromMilliseconds(delayMs))
+            return;
+
+        int graphHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
+        if (_pendingGraphSnapshot != null &&
+            (force || now - _lastGraphRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / graphHz)))
+        {
+            GraphSimulationSnapshot = _pendingGraphSnapshot;
+            _pendingGraphSnapshot = null;
+            _lastGraphRefreshUtc = now;
+        }
+
+        int viewportHz = Math.Clamp(Preferences.Default.Get("Settings.ViewportRefreshHz", 30), 1, 120);
+        if (_pendingViewportSnapshot != null &&
+            (force || now - _lastUiRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / viewportHz)))
+        {
+            var candidate = _pendingViewportSnapshot;
+            _pendingViewportSnapshot = null;
+            if (ShouldPublishUiFrame(candidate, force))
+            {
+                ApplySimulationSnapshotToCircuit(candidate);
+                ViewportSimulationSnapshot = candidate;
+                _lastUiRefreshUtc = now;
+                CircuitChanged?.Invoke();
+            }
+        }
+
+        if (_pendingViewportSnapshot == null && _pendingGraphSnapshot == null)
+        {
+            _uiSnapshotTimer?.Stop();
+            _pendingSnapshotForce = false;
+        }
+    }
+
+    private static (double VoltageCenter, double VoltageAmplitude, double VoltageFrequency,
+        double CurrentCenter, double CurrentAmplitude, double CurrentFrequency)
+        GetWaveformEnvelope(ComponentWaveformState waveform)
+    {
+        static (double Center, double Amplitude, double Frequency) Measure(
+            IReadOnlyList<double> times,
+            IReadOnlyList<double> values)
+        {
+            if (values.Count == 0 || times.Count < 2) return (0, 0, 0);
+            double min = double.PositiveInfinity;
+            double max = double.NegativeInfinity;
+            for (int index = 0; index < values.Count; index++)
+            {
+                min = Math.Min(min, values[index]);
+                max = Math.Max(max, values[index]);
+            }
+            double center = (min + max) / 2.0;
+            int positiveCrossings = 0;
+            int count = Math.Min(times.Count, values.Count);
+            for (int index = 1; index < count; index++)
+                if (values[index - 1] <= center && values[index] > center)
+                    positiveCrossings++;
+            double duration = times[count - 1] - times[0];
+            double frequency = duration > 0 ? positiveCrossings / duration : 0;
+            return (center, (max - min) / 2.0, frequency);
+        }
+
+        var voltage = Measure(waveform.Times, waveform.Voltages);
+        var current = Measure(waveform.Times, waveform.Currents);
+        return (voltage.Center, voltage.Amplitude, voltage.Frequency,
+            current.Center, current.Amplitude, current.Frequency);
+    }
+
+    private static bool IsMeaningfulFrequencyChange(double current, double previous, double thresholdRatio) =>
+        current > 0 && previous > 0 && Math.Abs(current - previous) > previous * thresholdRatio;
+
+    private void ApplySimulationSnapshotToCircuit(SimulationSnapshot snapshot)
+    {
         foreach (var component in Circuit.Components)
         {
-            _lastUiVoltageByComponent[component.Id] = component.LiveVoltage;
-            _lastUiCurrentByComponent[component.Id] = component.LiveCurrent;
-            if (CurrentSimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true)
-                _lastUiDiscreteStateByComponent[component.Id] = state;
-        }
+            if (snapshot.ComponentStates.TryGetValue(component.Id, out var state))
+            {
+                component.LiveVoltage = state.LiveVoltage;
+                component.LiveCurrent = state.LiveCurrent;
+                component.LivePinVoltages.Clear();
+                foreach (var pinVoltage in state.PinVoltages)
+                    component.LivePinVoltages[pinVoltage.Key] = pinVoltage.Value;
+            }
 
-        _lastUiRefreshUtc = DateTime.UtcNow;
-        CircuitChanged?.Invoke();
+            component.WaveformTime.Clear();
+            component.WaveformVoltage.Clear();
+            component.WaveformCurrent.Clear();
+            component.WaveformNodeVoltages.Clear();
+            component.WaveformPinCurrents.Clear();
+            if (!snapshot.ComponentWaveforms.TryGetValue(component.Id, out var waveform))
+                continue;
+
+            component.WaveformTime.AddRange(waveform.Times);
+            component.WaveformVoltage.AddRange(waveform.Voltages);
+            component.WaveformCurrent.AddRange(waveform.Currents);
+            foreach (var entry in waveform.NodeVoltages)
+                component.WaveformNodeVoltages[entry.Key] = entry.Value.ToList();
+            foreach (var entry in waveform.PinCurrents)
+                component.WaveformPinCurrents[entry.Key] = entry.Value.ToList();
+        }
+    }
+
+    private void ResetPendingUiSnapshots()
+    {
+        _pendingViewportSnapshot = null;
+        _pendingGraphSnapshot = null;
+        _pendingSnapshotForce = false;
+        _uiSnapshotTimer?.Stop();
+        _lastUiRefreshUtc = DateTime.MinValue;
+        _lastGraphRefreshUtc = DateTime.MinValue;
+        ViewportSimulationSnapshot = null;
+        GraphSimulationSnapshot = null;
     }
 
     public bool HasSelectedComponent => SelectedComponent != null;

@@ -286,8 +286,8 @@ public partial class SchematicViewport
         var pin = comp.Pins.FirstOrDefault();
         double voltage = pin != null ? Math.Abs(SamplePinVoltage(comp, pin)) : 0.0;
         double current = pin != null
-            ? Math.Abs(SamplePinCurrent(comp, pin, comp.LiveCurrent))
-            : Math.Abs(comp.LiveCurrent);
+            ? Math.Abs(SamplePinCurrent(comp, pin, GetLiveCurrent(comp)))
+            : Math.Abs(GetLiveCurrent(comp));
         Color c = GetElectricalStateColor(voltage, current);
         canvas.FillColor = c;
         canvas.FillCircle(0, 0, 4.5f);

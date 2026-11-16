@@ -105,6 +105,10 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnGraphRefreshHzChanged(int value) => PersistInt(nameof(GraphRefreshHz), Math.Clamp(value, 1, 120));
 
     [ObservableProperty]
+    public partial int UiSnapshotDelayMs { get; set; } = 40;
+    partial void OnUiSnapshotDelayMsChanged(int value) => PersistInt(nameof(UiSnapshotDelayMs), Math.Clamp(value, 0, 1000));
+
+    [ObservableProperty]
     public partial double VoltageChangeThreshold { get; set; } = 0.01;
     partial void OnVoltageChangeThresholdChanged(double value) => PersistDouble(nameof(VoltageChangeThreshold), Math.Max(value, 0));
 
@@ -343,6 +347,7 @@ public partial class SettingsViewModel : ObservableObject
         AutoRunSimulation          = Preferences.Default.Get($"Settings.{nameof(AutoRunSimulation)}",         false);
         ViewportRefreshHz          = Preferences.Default.Get($"Settings.{nameof(ViewportRefreshHz)}",         30);
         GraphRefreshHz             = Preferences.Default.Get($"Settings.{nameof(GraphRefreshHz)}",            20);
+        UiSnapshotDelayMs          = Preferences.Default.Get($"Settings.{nameof(UiSnapshotDelayMs)}",         40);
         VoltageChangeThreshold     = Preferences.Default.Get($"Settings.{nameof(VoltageChangeThreshold)}",    0.01);
         CurrentChangeThreshold     = Preferences.Default.Get($"Settings.{nameof(CurrentChangeThreshold)}",    0.001);
         ReactiveOscillationThreshold = Preferences.Default.Get($"Settings.{nameof(ReactiveOscillationThreshold)}", 0.02);
@@ -396,6 +401,7 @@ public partial class SettingsViewModel : ObservableObject
         AutoRunSimulation           = false;
         ViewportRefreshHz           = 30;
         GraphRefreshHz              = 20;
+        UiSnapshotDelayMs           = 40;
         VoltageChangeThreshold      = 0.01;
         CurrentChangeThreshold      = 0.001;
         ReactiveOscillationThreshold = 0.02;

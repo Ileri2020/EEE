@@ -367,7 +367,7 @@
                                TextColor="#8B949E"
                                FontSize="12"/>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
                             <!-- Show Grid -->
                             <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
                                 <Label Grid.Column="0" Text="Show Schematic Grid" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
@@ -434,7 +434,7 @@
                                TextColor="#8B949E"
                                FontSize="12"/>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="20">
                             <!-- Auto Run Simulation -->
                             <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
                                 <Label Grid.Column="0" Text="Auto-Run Simulation on Edit" TextColor="#C9D1D9" FontSize="13" VerticalOptions="Center"/>
@@ -460,23 +460,28 @@
                                 <Entry Text="{Binding GraphRefreshHz}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
                             </VerticalStackLayout>
 
-                            <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                            <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
+                                <Label Text="UI SNAPSHOT DELAY (ms)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                <Entry Text="{Binding UiSnapshotDelayMs}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Row="3" Grid.Column="0" Spacing="4">
                                 <Label Text="VOLTAGE DELTA THRESHOLD" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                 <Entry Text="{Binding VoltageChangeThreshold}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
                             </VerticalStackLayout>
 
-                            <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                            <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="4">
                                 <Label Text="CURRENT DELTA THRESHOLD" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                 <Entry Text="{Binding CurrentChangeThreshold}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
                             </VerticalStackLayout>
 
-                            <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
+                            <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="4">
                                 <Label Text="REACTIVE OSCILLATION THRESHOLD" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                 <Entry Text="{Binding ReactiveOscillationThreshold}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
                             </VerticalStackLayout>
 
                                 <!-- Keys are fetched only for in-memory use and are not persisted on the device. -->
-                                <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="4">
+                                <VerticalStackLayout Grid.Row="5" Grid.ColumnSpan="2" Spacing="4">
                                     <Label Text="HCVP API BASE URL" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Entry Text="{Binding RemoteApiBaseUrl}"
                                         Placeholder="https://your-hcvp-host"
@@ -491,7 +496,7 @@
                                         TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 
-                                <VerticalStackLayout Grid.Row="5" Grid.ColumnSpan="2" Spacing="4">
+                                <VerticalStackLayout Grid.Row="6" Grid.ColumnSpan="2" Spacing="4">
                                     <Label Text="EEE APP TOKEN (OPTIONAL — PERSONAL KEY &amp; PUBLISHING)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                         <Entry Grid.Column="0"
@@ -510,7 +515,7 @@
                                            TextColor="#8B949E" FontSize="10"/>
                                 </VerticalStackLayout>
 
-                            <Border Grid.Row="6" Grid.ColumnSpan="2" Padding="14" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
+                            <Border Grid.Row="7" Grid.ColumnSpan="2" Padding="14" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">
                                 <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
                                 <VerticalStackLayout Spacing="10">
                                     <Grid ColumnDefinitions="*,Auto">

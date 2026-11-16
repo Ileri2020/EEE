@@ -239,7 +239,7 @@ public partial class SchematicViewport
 
             if (route.Owner is WireComponent wire)
             {
-                double current = SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent);
+                double current = SampleComponentWaveform(wire, current: true);
                 direction = GetElectronDirection(current);
                 double voltage = wire.Pins
                     .Select(pin => Math.Abs(SamplePinVoltage(wire, pin)))
@@ -252,14 +252,14 @@ public partial class SchematicViewport
             }
             else if (route.Connection != null && route.FromComp != null && route.ToComp != null && route.FromPin != null && route.ToPin != null)
             {
-                double fromCurrent = SampleWaveformValue(route.FromComp.WaveformCurrent, route.FromComp.LiveCurrent);
-                double toCurrent = SampleWaveformValue(route.ToComp.WaveformCurrent, route.ToComp.LiveCurrent);
+                double fromCurrent = SampleComponentWaveform(route.FromComp, current: true);
+                double toCurrent = SampleComponentWaveform(route.ToComp, current: true);
                 double fromPinCurrent = SamplePinCurrent(route.FromComp, route.FromPin, fromCurrent);
                 double toPinCurrent = SamplePinCurrent(route.ToComp, route.ToPin, toCurrent);
                 direction = GetElectronDirection(fromPinCurrent, toPinCurrent);
                 speed = CalculateFlowSpeed(
-                    Math.Abs(SampleWaveformValue(route.FromComp.WaveformVoltage, route.FromComp.LiveVoltage) -
-                             SampleWaveformValue(route.ToComp.WaveformVoltage, route.ToComp.LiveVoltage)),
+                    Math.Abs(SampleComponentWaveform(route.FromComp, current: false) -
+                             SampleComponentWaveform(route.ToComp, current: false)),
                     Math.Max(Math.Abs(fromPinCurrent), Math.Abs(toPinCurrent)));
             }
 
@@ -292,19 +292,31 @@ public partial class SchematicViewport
 
     private double SamplePinCurrent(ComponentNode component, ComponentPin pin, double fallback)
     {
-        if (component.WaveformPinCurrents.TryGetValue(pin.Id, out var samples))
+        if (SimulationSnapshot?.ComponentWaveforms.TryGetValue(component.Id, out var waveform) == true &&
+            waveform.PinCurrents.TryGetValue(pin.Id, out var samples))
             return SampleWaveformValue(samples, fallback);
 
         int pinIndex = component.Pins.IndexOf(pin);
-        double branchCurrent = SampleWaveformValue(component.WaveformCurrent, component.LiveCurrent);
+        double branchCurrent = SampleComponentWaveform(component, current: true);
         return pinIndex == 1 ? -branchCurrent : branchCurrent;
     }
 
-    private double SampleWaveformValue(List<double> samples, double fallback)
+    private double SampleWaveformValue(IReadOnlyList<double> samples, double fallback)
     {
         if (samples.Count == 0) return fallback;
         int index = Math.Clamp((int)(ElectricityAnimPhase * samples.Count), 0, samples.Count - 1);
         return samples[index];
+    }
+
+    private double SampleComponentWaveform(ComponentNode component, bool current)
+    {
+        if (SimulationSnapshot?.ComponentWaveforms.TryGetValue(component.Id, out var waveform) == true)
+            return SampleWaveformValue(current ? waveform.Currents : waveform.Voltages, current ? GetLiveCurrent(component) : GetLiveVoltage(component));
+
+        if (SimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true)
+            return current ? state.LiveCurrent : state.LiveVoltage;
+
+        return current ? component.LiveCurrent : component.LiveVoltage;
     }
 
     private void DrawCachedWireRoute(ICanvas canvas, CachedWireRoute route)
@@ -363,7 +375,7 @@ public partial class SchematicViewport
                 .Select(pin => Math.Abs(SamplePinVoltage(wire, pin)))
                 .DefaultIfEmpty(0)
                 .Max();
-            double current = Math.Abs(SampleWaveformValue(wire.WaveformCurrent, wire.LiveCurrent));
+            double current = Math.Abs(SampleComponentWaveform(wire, current: true));
             return GetElectricalStateColor(voltage, current);
         }
 
@@ -373,8 +385,8 @@ public partial class SchematicViewport
 
         double fromVoltage = Math.Abs(SamplePinVoltage(route.FromComp, route.FromPin));
         double toVoltage = Math.Abs(SamplePinVoltage(route.ToComp, route.ToPin));
-        double fromCurrent = Math.Abs(SamplePinCurrent(route.FromComp, route.FromPin, route.FromComp.LiveCurrent));
-        double toCurrent = Math.Abs(SamplePinCurrent(route.ToComp, route.ToPin, route.ToComp.LiveCurrent));
+        double fromCurrent = Math.Abs(SamplePinCurrent(route.FromComp, route.FromPin, GetLiveCurrent(route.FromComp)));
+        double toCurrent = Math.Abs(SamplePinCurrent(route.ToComp, route.ToPin, GetLiveCurrent(route.ToComp)));
         return GetElectricalStateColor(Math.Max(fromVoltage, toVoltage), Math.Max(fromCurrent, toCurrent));
     }
 
@@ -398,11 +410,25 @@ public partial class SchematicViewport
 
     private double SamplePinVoltage(ComponentNode component, ComponentPin pin)
     {
-        double liveVoltage = component.LivePinVoltages.TryGetValue(pin.Id, out var voltage) ? voltage : 0.0;
-        return component.WaveformNodeVoltages.TryGetValue(pin.Id, out var samples)
-            ? SampleWaveformValue(samples, liveVoltage)
-            : liveVoltage;
+        double liveVoltage = SimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true &&
+            state.PinVoltages.TryGetValue(pin.Id, out var snapshotVoltage)
+                ? snapshotVoltage
+                : component.LivePinVoltages.TryGetValue(pin.Id, out var voltage) ? voltage : 0.0;
+        if (SimulationSnapshot?.ComponentWaveforms.TryGetValue(component.Id, out var waveform) == true &&
+            waveform.NodeVoltages.TryGetValue(pin.Id, out var samples))
+            return SampleWaveformValue(samples, liveVoltage);
+        return liveVoltage;
     }
+
+    private double GetLiveVoltage(ComponentNode component) =>
+        SimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true
+            ? state.LiveVoltage
+            : component.LiveVoltage;
+
+    private double GetLiveCurrent(ComponentNode component) =>
+        SimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true
+            ? state.LiveCurrent
+            : component.LiveCurrent;
 
     private static List<float> FindCrossings(PointF start, PointF end, bool horizontal, List<List<PointF>> previousPaths)
     {
@@ -491,7 +517,7 @@ public partial class SchematicViewport
         }
     }
 
-    private static void DrawWireMeasurement(ICanvas canvas, WireComponent wire, List<PointF> path)
+    private void DrawWireMeasurement(ICanvas canvas, WireComponent wire, List<PointF> path)
     {
         if (path.Count < 2) return;
         var midpoint = path[path.Count / 2];
@@ -502,9 +528,9 @@ public partial class SchematicViewport
         canvas.DrawRoundedRectangle(midpoint.X + 4, midpoint.Y - 19, 84, 30, 4);
         canvas.FontColor = Color.FromArgb("#56D364");
         canvas.FontSize = 8f;
-        canvas.DrawString($"{wire.LiveVoltage:F2} V", midpoint.X + 8, midpoint.Y - 17, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.DrawString($"{GetLiveVoltage(wire):F2} V", midpoint.X + 8, midpoint.Y - 17, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
         canvas.FontColor = Color.FromArgb("#79C0FF");
-        canvas.DrawString($"{wire.LiveCurrent * 1000:F1} mA", midpoint.X + 8, midpoint.Y - 5, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.DrawString($"{GetLiveCurrent(wire) * 1000:F1} mA", midpoint.X + 8, midpoint.Y - 5, 76, 11, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
     private void DrawComponents(ICanvas canvas, RectF dirtyRect)
@@ -566,7 +592,8 @@ public partial class SchematicViewport
             canvas.StrokeDashPattern = null;
         }
 
-        bool isBroken = comp.IsBrokenDown;
+        bool hasSimulationState = SimulationSnapshot?.ComponentStates.TryGetValue(comp.Id, out var simulationState) == true;
+        bool isBroken = hasSimulationState ? simulationState.IsBrokenDown : comp.IsBrokenDown;
         if (isBroken)
         {
             // Glowing red breakdown / overload halo behind the component
@@ -581,7 +608,7 @@ public partial class SchematicViewport
             canvas.DrawString("⚡", (float)layout.HalfWidth - 5, (float)-layout.HalfHeight - 5, 10, 10, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
 
-        bool isOn = comp switch
+        bool isOn = hasSimulationState ? simulationState.IsOn : comp switch
         {
             EESimulator.Core.Components.Electronics.LEDComponent led => led.IsOn,
             EESimulator.Core.Components.Electrical.BulbComponent bulb => bulb.IsOn,
@@ -594,8 +621,8 @@ public partial class SchematicViewport
             EESimulator.Core.Components.Electronics.ButtonComponent button => button.IsPressed,
             _ => (comp.CustomProperties.TryGetValue("IsOn", out var cVal) && Convert.ToBoolean(cVal))
                  || (comp.ElectricalParameters.TryGetValue("IsOn", out var pVal) && pVal > 0.5)
-                 || (comp.ComponentType == "LED" && comp.LiveVoltage >= 1.5)
-                 || (comp.ComponentType == "Bulb" && comp.LiveVoltage >= 1.0)
+                 || (comp.ComponentType == "LED" && GetLiveVoltage(comp) >= 1.5)
+                 || (comp.ComponentType == "Bulb" && GetLiveVoltage(comp) >= 1.0)
         };
 
         canvas.SaveState();
@@ -846,9 +873,9 @@ public partial class SchematicViewport
         canvas.DrawRoundedRectangle(0, 0, width, height, 4);
         canvas.FontColor = Color.FromArgb("#56D364");
         canvas.FontSize = 8.5f;
-        canvas.DrawString($"👁 {component.LiveVoltage:F2} V", 4, 2, 76, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.DrawString($"👁 {GetLiveVoltage(component):F2} V", 4, 2, 76, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
         canvas.FontColor = Color.FromArgb("#79C0FF");
-        canvas.DrawString($"{component.LiveCurrent * 1000:F1} mA", 4, 15, 76, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.DrawString($"{GetLiveCurrent(component) * 1000:F1} mA", 4, 15, 76, 12, HorizontalAlignment.Left, VerticalAlignment.Center);
         canvas.RestoreState();
     }
 

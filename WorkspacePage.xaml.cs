@@ -58,8 +58,6 @@ public partial class WorkspacePage : ContentPage
                 MainWorkspace.SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
                 MainWorkspace.SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
                 MainWorkspace.SchematicCanvas.Invalidate();
-                if (vm.IsWaveformDrawerOpen)
-                    MainWorkspace.WaveformCanvas.Invalidate();
                 if (vm.IsDescriptionSidebarVisible)
                     MainWorkspace.SelectedComponentIcon.Invalidate();
             });

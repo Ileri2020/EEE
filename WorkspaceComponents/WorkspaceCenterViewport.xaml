@@ -6,6 +6,7 @@
                 <views:SchematicViewport
                     x:Name="SchematicCanvas"
                     Circuit="{Binding Circuit}"
+                    SimulationSnapshot="{Binding ViewportSimulationSnapshot}"
                     LiveMeasurementsVisible="{Binding IsLiveMeasurementsVisible}"
                     IsVisible="{Binding IsSchematicViewActive}"
                     HorizontalOptions="Fill"

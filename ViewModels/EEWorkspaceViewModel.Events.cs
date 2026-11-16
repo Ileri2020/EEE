@@ -185,7 +185,7 @@ public partial class EEWorkspaceViewModel
 
     private void DispatchTriggeredUiEvents()
     {
-        var activeEvents = ComponentEventEvaluator.Evaluate(Circuit);
+        var activeEvents = ComponentEventEvaluator.Evaluate(Circuit, CurrentSimulationSnapshot);
         var activeIds = activeEvents.Select(item => item.TriggerId).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var item in activeEvents)
         {

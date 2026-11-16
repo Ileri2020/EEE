@@ -29,14 +29,16 @@ public readonly record struct ComponentLiveState(
     double LiveCurrent,
     bool IsOn,
     double Brightness,
-    bool IsBrokenDown
+    bool IsBrokenDown,
+    IReadOnlyDictionary<string, double> PinVoltages
 );
 
 public sealed record ComponentWaveformState(
     IReadOnlyList<double> Times,
     IReadOnlyList<double> Voltages,
     IReadOnlyList<double> Currents,
-    IReadOnlyDictionary<string, IReadOnlyList<double>> NodeVoltages
+    IReadOnlyDictionary<string, IReadOnlyList<double>> NodeVoltages,
+    IReadOnlyDictionary<string, IReadOnlyList<double>> PinCurrents
 );
 
 public static class SimulationSnapshotFactory
@@ -52,21 +54,38 @@ public static class SimulationSnapshotFactory
             void ExtractComponentState(int index)
             {
                 var comp = components[index];
-                bool isOn = false;
-                double brightness = 0.0;
-                if (comp is EESimulator.Core.Components.Electronics.LEDComponent led)
-                    isOn = led.IsOn;
-                else if (comp is EESimulator.Core.Components.Electrical.BulbComponent bulb)
+                bool isOn = comp switch
                 {
-                    isOn = bulb.IsOn;
+                    EESimulator.Core.Components.Electronics.LEDComponent led => led.IsOn,
+                    EESimulator.Core.Components.Electrical.BulbComponent visualBulb => visualBulb.IsOn,
+                    EESimulator.Core.Components.Electrical.ACBulbComponent acBulb => acBulb.InitiallyOn && acBulb.ScheduleActive,
+                    EESimulator.Core.Components.Electronics.LogicOutputComponent logicOutput => logicOutput.IsOn,
+                    EESimulator.Core.Components.Electronics.LogicInputComponent logicInput => logicInput.State,
+                    EESimulator.Core.Components.Electronics.ClockComponent clock => clock.State,
+                    EESimulator.Core.Components.Electronics.PinComponent pin => pin.Value > 0,
+                    EESimulator.Core.Components.Electronics.ConstantComponent constant => constant.Value > 0,
+                    EESimulator.Core.Components.Electronics.ButtonComponent button => button.IsPressed,
+                    _ => (comp.CustomProperties.TryGetValue("IsOn", out var customOn) &&
+                          bool.TryParse(customOn?.ToString(), out var parsedOn) && parsedOn) ||
+                         (comp.ElectricalParameters.TryGetValue("IsOn", out var parameterOn) && parameterOn > 0.5) ||
+                         (comp.ComponentType == "LED" && comp.LiveVoltage >= 1.5) ||
+                         (comp.ComponentType == "Bulb" && comp.LiveVoltage >= 1.0)
+                };
+                double brightness = 0.0;
+                if (comp is EESimulator.Core.Components.Electrical.BulbComponent bulb)
+                {
                     brightness = bulb.Brightness;
                 }
-                else if (comp is EESimulator.Core.Components.Electronics.LogicOutputComponent lout)
-                    isOn = lout.IsOn;
 
                 componentStates[index] = new KeyValuePair<Guid, ComponentLiveState>(
                     comp.Id,
-                    new ComponentLiveState(comp.LiveVoltage, comp.LiveCurrent, isOn, brightness, comp.IsBrokenDown));
+                    new ComponentLiveState(
+                        comp.LiveVoltage,
+                        comp.LiveCurrent,
+                        isOn,
+                        brightness,
+                        comp.IsBrokenDown,
+                        new Dictionary<string, double>(comp.LivePinVoltages, StringComparer.OrdinalIgnoreCase)));
             }
 
             if (components.Count >= 8)
@@ -87,11 +106,16 @@ public static class SimulationSnapshotFactory
                     pair => pair.Key,
                     pair => (IReadOnlyList<double>)Array.AsReadOnly(pair.Value.ToArray()),
                     StringComparer.OrdinalIgnoreCase);
+                var pinCurrents = component.WaveformPinCurrents.ToDictionary(
+                    pair => pair.Key,
+                    pair => (IReadOnlyList<double>)Array.AsReadOnly(pair.Value.ToArray()),
+                    StringComparer.OrdinalIgnoreCase);
                 waveforms[component.Id] = new ComponentWaveformState(
                     Array.AsReadOnly(component.WaveformTime.ToArray()),
                     Array.AsReadOnly(component.WaveformVoltage.ToArray()),
                     Array.AsReadOnly(component.WaveformCurrent.ToArray()),
-                    nodeVoltages);
+                    nodeVoltages,
+                    pinCurrents);
             }
         }
 

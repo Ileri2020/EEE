@@ -130,10 +130,10 @@ public class WaveformViewport : GraphicsView, IDrawable
                         WaveformSignalKind.PinVoltage when waveform.NodeVoltages.TryGetValue(signal.SignalId, out var pinValues) => pinValues,
                         _ => Array.Empty<double>()
                     };
-                    return (Signal: signal, Times: waveform.Times.ToList(), Values: values.ToList());
+                    return (Signal: signal, Times: waveform.Times, Values: values);
                 }
 
-                return (Signal: signal, Times: new System.Collections.Generic.List<double>(), Values: new System.Collections.Generic.List<double>());
+                return (Signal: signal, Times: Array.Empty<double>(), Values: Array.Empty<double>());
             })
             .Where(trace => trace.Times.Count >= 2 && trace.Values.Count >= 2)
             .ToList();
@@ -152,7 +152,7 @@ public class WaveformViewport : GraphicsView, IDrawable
         bool hasVoltage = traces.Any(trace => trace.Signal.Kind != WaveformSignalKind.ComponentCurrent);
         bool hasCurrent = traces.Any(trace => trace.Signal.Kind == WaveformSignalKind.ComponentCurrent);
 
-        static (double Min, double Span) ComputeScale(System.Collections.Generic.IEnumerable<(WaveformSignal Signal, System.Collections.Generic.List<double> Times, System.Collections.Generic.List<double> Values)> traceList, bool isCurrent)
+        static (double Min, double Span) ComputeScale(System.Collections.Generic.IEnumerable<(WaveformSignal Signal, System.Collections.Generic.IReadOnlyList<double> Times, System.Collections.Generic.IReadOnlyList<double> Values)> traceList, bool isCurrent)
         {
             double min = double.MaxValue;
             double max = double.MinValue;
@@ -230,6 +230,6 @@ public class WaveformViewport : GraphicsView, IDrawable
             8, h - 17, w - 16, 14, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
-    private static double traceTimeRange(System.Collections.Generic.List<(WaveformSignal Signal, System.Collections.Generic.List<double> Times, System.Collections.Generic.List<double> Values)> traces) =>
+    private static double traceTimeRange(System.Collections.Generic.List<(WaveformSignal Signal, System.Collections.Generic.IReadOnlyList<double> Times, System.Collections.Generic.IReadOnlyList<double> Values)> traces) =>
         traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Max();
 }

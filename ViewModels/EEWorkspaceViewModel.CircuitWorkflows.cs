@@ -141,13 +141,13 @@ public partial class EEWorkspaceViewModel
         AnalyticsOutput = "Running circuit analysis…";
         try
         {
+            var (result, snapshot) = await _simWorker.ExecuteAsync(Circuit, new SimulationSettings());
+            CurrentSimulationSnapshot = snapshot;
+            _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             AnalyticsOutput = await Task.Run(() =>
-            {
-                var result = _simManager.Run(Circuit, new SimulationSettings());
-                _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
-                return CircuitAnalyticsService.Analyze(Circuit, result, SelectedAnalyticsMode, SelectedComponent);
-            });
+                CircuitAnalyticsService.Analyze(Circuit, result, SelectedAnalyticsMode, SelectedComponent));
             DispatchTriggeredUiEvents();
+            PublishUiSyncFrame();
             OnPropertyChanged(nameof(SelectedComponent));
         }
         catch (Exception ex)
@@ -264,6 +264,7 @@ public partial class EEWorkspaceViewModel
             }
             settings.StepTime = Math.Max(settings.StepTime,
                 Math.Max(settings.StopTime - settings.StartTime, 0.02) / 50.0);
+            settings.CaptureAllWaveforms = true;
             var (results, snapshot) = await _simWorker.ExecuteAsync(Circuit, settings);
             CurrentSimulationSnapshot = snapshot;
             if (DateTime.UtcNow - _lastPlaybackConsoleUpdateUtc >= TimeSpan.FromSeconds(1))
@@ -421,9 +422,11 @@ public partial class EEWorkspaceViewModel
                 (_simManager.LastResults == null || !string.Equals(_lastSimulationCircuitSnapshot, currentCircuitSnapshot, StringComparison.Ordinal)))
             {
                 AiSchemaStatus = "Measuring the current schematic…";
-                await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
+                var (_, snapshot) = await _simWorker.ExecuteAsync(Circuit, new SimulationSettings());
+                CurrentSimulationSnapshot = snapshot;
                 _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
                 DispatchTriggeredUiEvents();
+                PublishUiSyncFrame();
             }
             var draft = await _remoteApi.GenerateSchemaScriptAsync(
                 requestPrompt,
@@ -598,12 +601,7 @@ public partial class EEWorkspaceViewModel
         CanUndo = false;
         CanRedo = false;
         CurrentSimulationSnapshot = null;
-        GraphSimulationSnapshot = null;
-        _lastUiVoltageByComponent.Clear();
-        _lastUiCurrentByComponent.Clear();
-        _lastUiDiscreteStateByComponent.Clear();
-        _lastUiRefreshUtc = DateTime.MinValue;
-        _lastGraphRefreshUtc = DateTime.MinValue;
+        ResetPendingUiSnapshots();
         CircuitChanged?.Invoke();
     }
 
@@ -904,12 +902,7 @@ public partial class EEWorkspaceViewModel
         CanUndo       = false;
         CanRedo       = false;
         CurrentSimulationSnapshot = null;
-        GraphSimulationSnapshot = null;
-        _lastUiVoltageByComponent.Clear();
-        _lastUiCurrentByComponent.Clear();
-        _lastUiDiscreteStateByComponent.Clear();
-        _lastUiRefreshUtc = DateTime.MinValue;
-        _lastGraphRefreshUtc = DateTime.MinValue;
+        ResetPendingUiSnapshots();
         CircuitChanged?.Invoke();
     }
 

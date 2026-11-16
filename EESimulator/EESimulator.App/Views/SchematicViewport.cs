@@ -4,6 +4,7 @@ using Microsoft.Maui.Graphics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Models;
+using EESimulator.Engine.Simulation;
 
 namespace EESimulator.App.Views;
 
@@ -24,6 +25,16 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     {
         get => (CircuitNode?)GetValue(CircuitProperty);
         set => SetValue(CircuitProperty, value);
+    }
+
+    public static readonly BindableProperty SimulationSnapshotProperty =
+        BindableProperty.Create(nameof(SimulationSnapshot), typeof(SimulationSnapshot), typeof(SchematicViewport), null,
+            propertyChanged: (b, _, _) => ((SchematicViewport)b).Invalidate());
+
+    public SimulationSnapshot? SimulationSnapshot
+    {
+        get => (SimulationSnapshot?)GetValue(SimulationSnapshotProperty);
+        set => SetValue(SimulationSnapshotProperty, value);
     }
 
     public static readonly BindableProperty LiveMeasurementsVisibleProperty =
