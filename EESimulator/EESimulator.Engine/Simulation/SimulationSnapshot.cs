@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using EESimulator.Core.Models;
 
@@ -20,6 +21,7 @@ public class SimulationSnapshot
     public IReadOnlyDictionary<string, double> OperatingPointVoltages { get; init; } = new Dictionary<string, double>();
     public IReadOnlyDictionary<string, double> OperatingPointCurrents { get; init; } = new Dictionary<string, double>();
     public IReadOnlyDictionary<Guid, ComponentLiveState> ComponentStates { get; init; } = new Dictionary<Guid, ComponentLiveState>();
+    public IReadOnlyDictionary<Guid, ComponentWaveformState> ComponentWaveforms { get; init; } = new Dictionary<Guid, ComponentWaveformState>();
 }
 
 public readonly record struct ComponentLiveState(
@@ -30,11 +32,19 @@ public readonly record struct ComponentLiveState(
     bool IsBrokenDown
 );
 
+public sealed record ComponentWaveformState(
+    IReadOnlyList<double> Times,
+    IReadOnlyList<double> Voltages,
+    IReadOnlyList<double> Currents,
+    IReadOnlyDictionary<string, IReadOnlyList<double>> NodeVoltages
+);
+
 public static class SimulationSnapshotFactory
 {
     public static SimulationSnapshot CreateSnapshot(CircuitNode circuit, SimulationSettings settings, SimulationResultsData results)
     {
         var states = new Dictionary<Guid, ComponentLiveState>();
+        var waveforms = new Dictionary<Guid, ComponentWaveformState>();
         if (circuit != null)
         {
             var components = circuit.Components;
@@ -67,6 +77,22 @@ public static class SimulationSnapshotFactory
 
             foreach (var componentState in componentStates)
                 states.Add(componentState.Key, componentState.Value);
+
+            foreach (var component in components)
+            {
+                if (component.WaveformTime.Count == 0)
+                    continue;
+
+                var nodeVoltages = component.WaveformNodeVoltages.ToDictionary(
+                    pair => pair.Key,
+                    pair => (IReadOnlyList<double>)Array.AsReadOnly(pair.Value.ToArray()),
+                    StringComparer.OrdinalIgnoreCase);
+                waveforms[component.Id] = new ComponentWaveformState(
+                    Array.AsReadOnly(component.WaveformTime.ToArray()),
+                    Array.AsReadOnly(component.WaveformVoltage.ToArray()),
+                    Array.AsReadOnly(component.WaveformCurrent.ToArray()),
+                    nodeVoltages);
+            }
         }
 
         return new SimulationSnapshot
@@ -78,7 +104,8 @@ public static class SimulationSnapshotFactory
             DeviceTimeSeconds = settings.DeviceTimeSeconds,
             OperatingPointVoltages = results != null ? new Dictionary<string, double>(results.OperatingPointVoltages) : new Dictionary<string, double>(),
             OperatingPointCurrents = results != null ? new Dictionary<string, double>(results.OperatingPointCurrents) : new Dictionary<string, double>(),
-            ComponentStates = states
+            ComponentStates = states,
+            ComponentWaveforms = waveforms
         };
     }
 }

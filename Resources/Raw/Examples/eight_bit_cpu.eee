@@ -22,7 +22,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 1.0
+        "State": 1.0
       },
       "CustomProperties": {}
     },
@@ -43,7 +43,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 0.0
+        "State": 0.0
       },
       "CustomProperties": {}
     },
@@ -64,7 +64,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 1.0
+        "State": 1.0
       },
       "CustomProperties": {}
     },
@@ -85,7 +85,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 0.0
+        "State": 0.0
       },
       "CustomProperties": {}
     },
@@ -106,7 +106,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 0.0
+        "State": 0.0
       },
       "CustomProperties": {}
     },
@@ -127,7 +127,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 0.0
+        "State": 0.0
       },
       "CustomProperties": {}
     },
@@ -148,7 +148,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 0.0
+        "State": 0.0
       },
       "CustomProperties": {}
     },
@@ -169,7 +169,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 0.0
+        "State": 0.0
       },
       "CustomProperties": {}
     },
@@ -210,7 +210,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "LogicLevel": 1.0
+        "State": 1.0
       },
       "CustomProperties": {}
     },

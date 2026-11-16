@@ -273,7 +273,7 @@ public partial class EEWorkspaceViewModel
             }
             DispatchTriggeredUiEvents();
             OnPropertyChanged(nameof(SelectedComponent));
-            CircuitChanged?.Invoke();
+            PublishUiSyncFrame();
         }
         catch (Exception ex)
         {
@@ -375,6 +375,10 @@ public partial class EEWorkspaceViewModel
                 break;
             case "Open Settings":
                 _ = OpenSettings();
+                break;
+            case "Clear Circuit":
+                ClearCircuitForScript();
+                ScriptText = _sync.CurrentScript;
                 break;
             default:
                 StatusText = $"Action [{button.Label}]: {act}";
@@ -572,14 +576,35 @@ public partial class EEWorkspaceViewModel
         };
     }
 
-    private void ClearCircuitForScript()
+    private void ClearCircuitForScript(bool resetScript = true)
     {
         foreach (var child in Circuit.Children.ToList())
             Circuit.RemoveChild(child);
 
         CommandManager.Clear();
+        if (resetScript)
+        {
+            _sync.Reset();
+            ScriptText = _sync.CurrentScript;
+        }
+        SelectedComponent = null;
+        SelectedConnection = null;
+        WaveformComponent = null;
+        WaveformSignals.Clear();
+        IsWaveformDrawerOpen = false;
+        ConsoleOutput = string.Empty;
+        StatusText = resetScript ? "Circuit and script cleared" : "Circuit cleared by script";
+        ProjectName = "Untitled.eesim";
         CanUndo = false;
         CanRedo = false;
+        CurrentSimulationSnapshot = null;
+        GraphSimulationSnapshot = null;
+        _lastUiVoltageByComponent.Clear();
+        _lastUiCurrentByComponent.Clear();
+        _lastUiDiscreteStateByComponent.Clear();
+        _lastUiRefreshUtc = DateTime.MinValue;
+        _lastGraphRefreshUtc = DateTime.MinValue;
+        CircuitChanged?.Invoke();
     }
 
     private static async Task<string> EnsurePythonModuleDirectoryAsync()
@@ -627,7 +652,8 @@ public partial class EEWorkspaceViewModel
             StatusText = scriptHadErrors
                 ? "Script had errors. Simulating the resulting circuit state for AI feedback…"
                 : "Changes applied. Running operating-point simulation for AI feedback…";
-            var feedback = await Task.Run(() => _simManager.Run(Circuit, new SimulationSettings()));
+            var (feedback, snapshot) = await _simWorker.ExecuteAsync(Circuit, new SimulationSettings());
+            CurrentSimulationSnapshot = snapshot;
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
             ConsoleOutput = commandOutput + "\n" + FormatResults(feedback);
             DispatchTriggeredUiEvents();
@@ -640,7 +666,6 @@ public partial class EEWorkspaceViewModel
             StatusText = feedback.Success
                 ? scriptHadErrors ? "Script partially applied; simulation complete" : "Script applied and simulated ✓"
                 : scriptHadErrors ? "Script had errors; simulation failed" : "Script applied; simulation failed";
-            CircuitChanged?.Invoke();
         }
         catch (Exception ex)
         {
@@ -652,6 +677,7 @@ public partial class EEWorkspaceViewModel
             IsSimulating = false;
             OnPropertyChanged(nameof(SelectedComponent));
             _isApplyingScript = false;
+            PublishUiSyncFrame();
             if (_simulationRefreshRequested)
             {
                 _simulationRefreshRequested = false;
@@ -802,7 +828,7 @@ public partial class EEWorkspaceViewModel
         {
             IsSimulating = false;
             OnPropertyChanged(nameof(SelectedComponent));
-            CircuitChanged?.Invoke();
+            PublishUiSyncFrame();
             if (_simulationRefreshRequested)
             {
                 _simulationRefreshRequested = false;
@@ -853,7 +879,10 @@ public partial class EEWorkspaceViewModel
     }
 
     [RelayCommand]
-    private void ClearConsole() => ConsoleOutput = string.Empty;
+    private void ClearCircuitAndScript()
+    {
+        ClearCircuitForScript();
+    }
 
     [RelayCommand]
     private void NewCircuit()
@@ -862,12 +891,26 @@ public partial class EEWorkspaceViewModel
             Circuit.RemoveChild(child);
 
         CommandManager.Clear();
-        ScriptText    = "# EESimulator Python Console\n";
+        _sync.Reset();
+        ScriptText    = _sync.CurrentScript;
+        SelectedComponent = null;
+        SelectedConnection = null;
+        WaveformComponent = null;
+        WaveformSignals.Clear();
+        IsWaveformDrawerOpen = false;
         ConsoleOutput = string.Empty;
         StatusText    = "New circuit";
         ProjectName   = "Untitled.eesim";
         CanUndo       = false;
         CanRedo       = false;
+        CurrentSimulationSnapshot = null;
+        GraphSimulationSnapshot = null;
+        _lastUiVoltageByComponent.Clear();
+        _lastUiCurrentByComponent.Clear();
+        _lastUiDiscreteStateByComponent.Clear();
+        _lastUiRefreshUtc = DateTime.MinValue;
+        _lastGraphRefreshUtc = DateTime.MinValue;
+        CircuitChanged?.Invoke();
     }
 
     // Called by the canvas when user clicks a component

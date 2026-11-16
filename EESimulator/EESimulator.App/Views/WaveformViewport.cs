@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using Microsoft.Maui.Graphics;
 using EESimulator.Core.Models;
+using EESimulator.Engine.Simulation;
 
 namespace EESimulator.App.Views;
 
@@ -21,6 +22,16 @@ public class WaveformViewport : GraphicsView, IDrawable
     {
         get => (ComponentNode?)GetValue(MonitoredComponentProperty);
         set => SetValue(MonitoredComponentProperty, value);
+    }
+
+    public static readonly BindableProperty SimulationSnapshotProperty =
+        BindableProperty.Create(nameof(SimulationSnapshot), typeof(SimulationSnapshot), typeof(WaveformViewport), null,
+            propertyChanged: (b, _, __) => ((WaveformViewport)b).Invalidate());
+
+    public SimulationSnapshot? SimulationSnapshot
+    {
+        get => (SimulationSnapshot?)GetValue(SimulationSnapshotProperty);
+        set => SetValue(SimulationSnapshotProperty, value);
     }
 
     public static readonly BindableProperty SignalsProperty =
@@ -110,17 +121,19 @@ public class WaveformViewport : GraphicsView, IDrawable
             .Where(signal => signal.IsSelected)
             .Select(signal =>
             {
-                lock (signal.Component)
+                if (SimulationSnapshot?.ComponentWaveforms.TryGetValue(signal.Component.Id, out var waveform) == true)
                 {
                     var values = signal.Kind switch
                     {
-                        WaveformSignalKind.ComponentVoltage => signal.Component.WaveformVoltage,
-                        WaveformSignalKind.ComponentCurrent => signal.Component.WaveformCurrent,
-                        WaveformSignalKind.PinVoltage when signal.Component.WaveformNodeVoltages.TryGetValue(signal.SignalId, out var pinValues) => pinValues,
-                        _ => new System.Collections.Generic.List<double>()
+                        WaveformSignalKind.ComponentVoltage => waveform.Voltages,
+                        WaveformSignalKind.ComponentCurrent => waveform.Currents,
+                        WaveformSignalKind.PinVoltage when waveform.NodeVoltages.TryGetValue(signal.SignalId, out var pinValues) => pinValues,
+                        _ => Array.Empty<double>()
                     };
-                    return (Signal: signal, Times: signal.Component.WaveformTime.ToList(), Values: values.ToList());
+                    return (Signal: signal, Times: waveform.Times.ToList(), Values: values.ToList());
                 }
+
+                return (Signal: signal, Times: new System.Collections.Generic.List<double>(), Values: new System.Collections.Generic.List<double>());
             })
             .Where(trace => trace.Times.Count >= 2 && trace.Values.Count >= 2)
             .ToList();

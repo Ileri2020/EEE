@@ -95,7 +95,7 @@
     },
     {
       "Id": "9dd9b617-f9c7-4bbc-a6c9-40a92764e189",
-      "ComponentType": "NotGate",
+      "ComponentType": "NOT",
       "Reference": "INV_Q1",
       "Name": "INV_Q1",
       "Description": "Inverter decoding Red phase (~Q1)",
@@ -112,7 +112,7 @@
     },
     {
       "Id": "d6ff5d4a-bdee-4220-a034-ff48292a9511",
-      "ComponentType": "NotGate",
+      "ComponentType": "NOT",
       "Reference": "INV_Q0",
       "Name": "INV_Q0",
       "Description": "Inverter for Green phase decode (~Q0)",
@@ -129,7 +129,7 @@
     },
     {
       "Id": "ad14e729-cf8b-49de-83a6-e4a0defe6c7f",
-      "ComponentType": "AndGate",
+      "ComponentType": "AND",
       "Reference": "AND_GREEN",
       "Name": "AND_GREEN",
       "Description": "AND gate decoding Green phase (Q1 & ~Q0)",

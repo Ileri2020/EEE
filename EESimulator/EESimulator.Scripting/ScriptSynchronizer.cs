@@ -75,6 +75,26 @@ public class ScriptSynchronizer
         _userScript.AppendLine();
     }
 
+    public void Reset()
+    {
+        if (_isSynchronizing) return;
+
+        try
+        {
+            _isSynchronizing = true;
+            _userScript.Clear();
+            _autoScript.Clear();
+            _userScript.AppendLine("# EESimulator Script Session");
+            _userScript.AppendLine("circuit = app.get_current_circuit()");
+            _userScript.AppendLine();
+            ScriptUpdated?.Invoke(CurrentScript);
+        }
+        finally
+        {
+            _isSynchronizing = false;
+        }
+    }
+
     /// <summary>
     /// Called by the workspace ViewModel after any project load or new-circuit operation.
     /// Replaces the tracked circuit reference and regenerates the full auto-generated block (§5.A).

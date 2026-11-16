@@ -67,12 +67,12 @@ public partial class EEWorkspaceViewModel
             switch (method)
             {
                 case "new_circuit" when args.Length >= 1:
-                    ClearCircuitForScript();
+                    ClearCircuitForScript(resetScript: false);
                     Circuit.Title = Unquote(args[0]);
                     return $"[ok] new circuit '{Circuit.Title}' created";
 
                 case "clear_circuit" or "clear":
-                    ClearCircuitForScript();
+                    ClearCircuitForScript(resetScript: false);
                     return "[ok] circuit cleared";
 
                 case "add_component" when args.Length >= 4:

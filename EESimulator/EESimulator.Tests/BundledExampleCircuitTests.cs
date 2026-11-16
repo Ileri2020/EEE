@@ -19,6 +19,26 @@ namespace EESimulator.Tests;
 public sealed class BundledExampleCircuitTests
 {
     [Fact]
+    public void Traffic_light_controller_probes_are_connected_by_component_id()
+    {
+        string exampleFile = Path.Combine(
+            FindRepositoryRoot(),
+            "Resources",
+            "Raw",
+            "Examples",
+            "traffic_light_controller.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var probes = circuit.Components.OfType<ProbeComponent>().ToArray();
+        string endpoints = string.Join(", ", circuit.Connections.Select(connection =>
+            $"{connection.FromComponentId}/{connection.ToComponentId}"));
+
+        Assert.All(probes, probe => Assert.True(
+            circuit.Connections.Any(connection =>
+                connection.FromComponentId == probe.Id || connection.ToComponentId == probe.Id),
+            $"{probe.Name} ({probe.Id}) is not connected. Connection endpoints: {endpoints}"));
+    }
+
+    [Fact]
     public void Complex_showcase_ground_groups_follow_the_power_zones()
     {
         string repositoryRoot = FindRepositoryRoot();

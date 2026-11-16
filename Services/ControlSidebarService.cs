@@ -121,6 +121,7 @@ public static class ControlSidebarService
         // Project
         "Save Project",
         "Clear Console",
+        "Clear Circuit",
 
         // Help
         "Open Help",
@@ -133,6 +134,10 @@ public static class ControlSidebarService
         if (!TryLoadFromPreferences())
         {
             PopulateDefaults();
+        }
+        else if (!CustomButtons.Any(button => button.ActionName == "Clear Circuit"))
+        {
+            AddButton("CLR", "Clear Circuit");
         }
     }
 
@@ -204,6 +209,7 @@ public static class ControlSidebarService
             new CustomControlButton { Label = "ZOT", ActionName = "Zoom Out",                 Category = "View",        Description = "Zoom out viewport" },
             new CustomControlButton { Label = "UND", ActionName = "Undo",                     Category = "Edit",        Description = "Undo previous circuit command" },
             new CustomControlButton { Label = "RED", ActionName = "Redo",                     Category = "Edit",        Description = "Redo reverted circuit command" },
+            new CustomControlButton { Label = "CLR", ActionName = "Clear Circuit",           Category = "Project",     Description = "Clear the circuit and reset the script state" },
         };
 
         foreach (var btn in defaults)
@@ -257,7 +263,7 @@ public static class ControlSidebarService
         "Component Edit Dialog"                                             => "Properties",
         "Zoom In" or "Zoom Out" or "Reset / Fit View"                      => "View",
         "Undo" or "Redo"                                                    => "Edit",
-        "Save Project" or "Clear Console"                                   => "Project",
+        "Save Project" or "Clear Console" or "Clear Circuit"              => "Project",
         "Toggle Component Palette" or "Toggle Waveform Drawer"
             or "Toggle Control Sidebar" or "Toggle Description Sidebar"
             or "Toggle Script / Schematic"                                  => "Panels",

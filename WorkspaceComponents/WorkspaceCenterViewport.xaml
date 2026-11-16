@@ -94,7 +94,7 @@
                         <Button Grid.Column="2"
                                 Text="Clear"
                                 Style="{StaticResource ToolBtn}"
-                                Command="{Binding ClearConsoleCommand}"/>
+                                Command="{Binding ClearCircuitAndScriptCommand}"/>
                     </Grid>
 
                           <!-- AI schema-to-script drafting (the app calls Gemini directly) -->
@@ -241,6 +241,7 @@
                     <views:WaveformViewport Grid.Row="1"
                                             x:Name="WaveformCanvas"
                                             MonitoredComponent="{Binding WaveformComponent}"
+                                            SimulationSnapshot="{Binding GraphSimulationSnapshot}"
                                             Signals="{Binding WaveformSignals}"
                                             HorizontalOptions="Fill"
                                             VerticalOptions="Fill"/>

@@ -256,6 +256,74 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsAcSourceSelected))]
     public partial ComponentNode? SelectedComponent { get; set; }
 
+    [ObservableProperty]
+    public partial SimulationSnapshot? GraphSimulationSnapshot { get; set; }
+
+    private readonly Dictionary<Guid, double> _lastUiVoltageByComponent = new();
+    private readonly Dictionary<Guid, double> _lastUiCurrentByComponent = new();
+    private readonly Dictionary<Guid, ComponentLiveState> _lastUiDiscreteStateByComponent = new();
+    private DateTime _lastUiRefreshUtc = DateTime.MinValue;
+    private DateTime _lastGraphRefreshUtc = DateTime.MinValue;
+
+    private bool ShouldPublishUiFrame(bool force = false)
+    {
+        var viewportHz = Math.Max(1, Preferences.Default.Get("Settings.ViewportRefreshHz", 30));
+        var minVoltageThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.VoltageChangeThreshold", 0.01));
+        var minCurrentThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.CurrentChangeThreshold", 0.001));
+        var reactiveThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.ReactiveOscillationThreshold", 0.02));
+        var refreshInterval = TimeSpan.FromMilliseconds(1000.0 / viewportHz);
+
+        if (!force && DateTime.UtcNow - _lastUiRefreshUtc < refreshInterval)
+            return false;
+
+        foreach (var component in Circuit.Components)
+        {
+            var currentVoltage = component.LiveVoltage;
+            var currentCurrent = component.LiveCurrent;
+            var previousVoltage = _lastUiVoltageByComponent.TryGetValue(component.Id, out var lastVoltage) ? lastVoltage : currentVoltage;
+            var previousCurrent = _lastUiCurrentByComponent.TryGetValue(component.Id, out var lastCurrent) ? lastCurrent : currentCurrent;
+            var voltageDelta = Math.Abs(currentVoltage - previousVoltage);
+            var currentDelta = Math.Abs(currentCurrent - previousCurrent);
+            var reactiveDelta = Math.Abs(currentVoltage - previousVoltage) + Math.Abs(currentCurrent - previousCurrent);
+
+            if (voltageDelta > minVoltageThreshold || currentDelta > minCurrentThreshold || reactiveDelta > reactiveThreshold)
+                return true;
+
+            if (CurrentSimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var currentState) == true &&
+                _lastUiDiscreteStateByComponent.TryGetValue(component.Id, out var previousState) &&
+                (currentState.IsOn != previousState.IsOn ||
+                 currentState.IsBrokenDown != previousState.IsBrokenDown ||
+                 Math.Abs(currentState.Brightness - previousState.Brightness) > reactiveThreshold))
+                return true;
+        }
+
+        return force || _lastUiRefreshUtc == DateTime.MinValue;
+    }
+
+    private void PublishUiSyncFrame(bool force = false)
+    {
+        int graphHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
+        if (CurrentSimulationSnapshot != null &&
+            (force || DateTime.UtcNow - _lastGraphRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / graphHz)))
+        {
+            GraphSimulationSnapshot = CurrentSimulationSnapshot;
+            _lastGraphRefreshUtc = DateTime.UtcNow;
+        }
+
+        if (!ShouldPublishUiFrame(force)) return;
+
+        foreach (var component in Circuit.Components)
+        {
+            _lastUiVoltageByComponent[component.Id] = component.LiveVoltage;
+            _lastUiCurrentByComponent[component.Id] = component.LiveCurrent;
+            if (CurrentSimulationSnapshot?.ComponentStates.TryGetValue(component.Id, out var state) == true)
+                _lastUiDiscreteStateByComponent[component.Id] = state;
+        }
+
+        _lastUiRefreshUtc = DateTime.UtcNow;
+        CircuitChanged?.Invoke();
+    }
+
     public bool HasSelectedComponent => SelectedComponent != null;
     public bool IsAcSourceSelected => SelectedComponent is ACSourceComponent;
 

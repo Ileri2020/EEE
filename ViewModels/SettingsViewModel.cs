@@ -97,6 +97,26 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnAutoRunSimulationChanged(bool value) => PersistBool(nameof(AutoRunSimulation), value);
 
     [ObservableProperty]
+    public partial int ViewportRefreshHz { get; set; } = 30;
+    partial void OnViewportRefreshHzChanged(int value) => PersistInt(nameof(ViewportRefreshHz), Math.Clamp(value, 1, 120));
+
+    [ObservableProperty]
+    public partial int GraphRefreshHz { get; set; } = 20;
+    partial void OnGraphRefreshHzChanged(int value) => PersistInt(nameof(GraphRefreshHz), Math.Clamp(value, 1, 120));
+
+    [ObservableProperty]
+    public partial double VoltageChangeThreshold { get; set; } = 0.01;
+    partial void OnVoltageChangeThresholdChanged(double value) => PersistDouble(nameof(VoltageChangeThreshold), Math.Max(value, 0));
+
+    [ObservableProperty]
+    public partial double CurrentChangeThreshold { get; set; } = 0.001;
+    partial void OnCurrentChangeThresholdChanged(double value) => PersistDouble(nameof(CurrentChangeThreshold), Math.Max(value, 0));
+
+    [ObservableProperty]
+    public partial double ReactiveOscillationThreshold { get; set; } = 0.02;
+    partial void OnReactiveOscillationThresholdChanged(double value) => PersistDouble(nameof(ReactiveOscillationThreshold), Math.Max(value, 0));
+
+    [ObservableProperty]
     public partial string DefaultCategory { get; set; } = "All";
 
     partial void OnDefaultCategoryChanged(string value) => PersistString(nameof(DefaultCategory), value);
@@ -302,6 +322,9 @@ public partial class SettingsViewModel : ObservableObject
     private static void PersistDouble(string key, double value)
         => Preferences.Default.Set($"Settings.{key}", value);
 
+    private static void PersistInt(string key, int value)
+        => Preferences.Default.Set($"Settings.{key}", value);
+
     private static void PersistString(string key, string value)
         => Preferences.Default.Set($"Settings.{key}", value);
 
@@ -318,6 +341,11 @@ public partial class SettingsViewModel : ObservableObject
         DefaultConsoleVisible      = Preferences.Default.Get($"Settings.{nameof(DefaultConsoleVisible)}",     false);
         DefaultWaveformDrawerVisible = Preferences.Default.Get($"Settings.{nameof(DefaultWaveformDrawerVisible)}", false);
         AutoRunSimulation          = Preferences.Default.Get($"Settings.{nameof(AutoRunSimulation)}",         false);
+        ViewportRefreshHz          = Preferences.Default.Get($"Settings.{nameof(ViewportRefreshHz)}",         30);
+        GraphRefreshHz             = Preferences.Default.Get($"Settings.{nameof(GraphRefreshHz)}",            20);
+        VoltageChangeThreshold     = Preferences.Default.Get($"Settings.{nameof(VoltageChangeThreshold)}",    0.01);
+        CurrentChangeThreshold     = Preferences.Default.Get($"Settings.{nameof(CurrentChangeThreshold)}",    0.001);
+        ReactiveOscillationThreshold = Preferences.Default.Get($"Settings.{nameof(ReactiveOscillationThreshold)}", 0.02);
         DefaultCategory            = Preferences.Default.Get($"Settings.{nameof(DefaultCategory)}",           "All");
         EnableTimeScaling = Preferences.Default.Get($"Settings.{nameof(EnableTimeScaling)}", false);
         SimulationTimeUnit = Preferences.Default.Get($"Settings.{nameof(SimulationTimeUnit)}", "seconds");
@@ -366,6 +394,20 @@ public partial class SettingsViewModel : ObservableObject
         DefaultConsoleVisible       = false;
         DefaultWaveformDrawerVisible = false;
         AutoRunSimulation           = false;
+        ViewportRefreshHz           = 30;
+        GraphRefreshHz              = 20;
+        VoltageChangeThreshold      = 0.01;
+        CurrentChangeThreshold      = 0.001;
+        ReactiveOscillationThreshold = 0.02;
+        EnableTimeScaling           = false;
+        SimulationTimeUnit          = "seconds";
+        DeviceTimeUnit              = "hours";
+        SimulationTimeAmount        = 30;
+        DeviceTimeAmount            = 1;
+        SimulationTimeStepSeconds   = 0.04;
+        AutomaticTimeStepSelection  = true;
+        SimulationStartTimeSeconds  = 0;
+        SimulationDurationSeconds   = 60;
         DefaultCategory             = "All";
         ShowToast("Settings reset to factory defaults.");
     }
