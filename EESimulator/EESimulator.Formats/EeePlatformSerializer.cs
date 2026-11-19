@@ -358,7 +358,7 @@ public static class EeePlatformSerializer
             try
             {
                 string textValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-                object convertedValue = propertyType == typeof(string)
+                object? convertedValue = propertyType == typeof(string)
                     ? textValue
                     : propertyType.IsEnum
                         ? Enum.Parse(propertyType, textValue, ignoreCase: true)

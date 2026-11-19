@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EESimulator.Engine.Simulation;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 

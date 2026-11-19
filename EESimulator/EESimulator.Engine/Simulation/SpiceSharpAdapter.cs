@@ -85,7 +85,11 @@ public partial class SpiceSharpAdapter : ISimulationEngine
     public SimulationResultsData RunSimulation(CircuitNode circuit, SimulationSettings settings)
     {
         if (circuit == null)
-            return RunSimulationOnce(circuit, settings);
+            return new SimulationResultsData
+            {
+                Success = false,
+                Message = "Circuit is null."
+            };
 
         var fieldRegulatedGenerators = circuit.Components
             .OfType<SynchronousGeneratorComponent>()
