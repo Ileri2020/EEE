@@ -62,6 +62,26 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private const float GridSize = 20f;
     private int _structureRefreshPending;
 
+    // ── Interaction redraw loop ──────────────────────────────────────────────
+    private volatile bool _interactionDirty;
+    private Microsoft.Maui.Dispatching.IDispatcherTimer? _interactionTimer;
+
+    /// <summary>
+    /// Indicates whether the user is actively performing a touch/mouse gesture
+    /// (panning, pinching, moving a component, or stretching).
+    /// Used to give high priority to interaction and avoid animation contention.
+    /// </summary>
+    public bool IsUserInteracting =>
+        _isBackgroundPanning || _isMovingComponent || _isPinching || _isStretchingComponent || _isDrawingWire;
+
+    /// <summary>
+    /// Flags the viewport as needing an interaction redraw on the dedicated 60 Hz interaction loop.
+    /// </summary>
+    public void RequestInteractionRedraw()
+    {
+        _interactionDirty = true;
+    }
+
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<ComponentNode>? ComponentSelected;
     public event EventHandler<ComponentNode>? LogicInputToggled;
@@ -156,6 +176,26 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         pointerGesture.PointerMoved    += OnPointerMoved;
         pointerGesture.PointerReleased += OnPointerReleased;
         GestureRecognizers.Add(pointerGesture);
+
+        // Dedicated interaction loop timer: runs at configurable rate (default 16 ms = 60 Hz)
+        // so zoom, pan, and cursor operations never wait for solver calculation passes.
+        int intervalMs = SimulationPerformanceProfile.Current.InteractionLoopIntervalMs;
+        _interactionTimer = Application.Current?.Dispatcher?.CreateTimer()
+            ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
+        if (_interactionTimer != null)
+        {
+            _interactionTimer.Interval = TimeSpan.FromMilliseconds(intervalMs > 0 ? intervalMs : 16);
+            _interactionTimer.IsRepeating = true;
+            _interactionTimer.Tick += (_, _) =>
+            {
+                if (_interactionDirty)
+                {
+                    _interactionDirty = false;
+                    Invalidate();
+                }
+            };
+            _interactionTimer.Start();
+        }
     }
 
     // ── Circuit change subscription ───────────────────────────────────────────────
@@ -366,7 +406,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                     _pressedComp.X = _componentDragStartX + ((float)e.TotalX - _componentDragStartTotalX) / _zoom;
                     _pressedComp.Y = _componentDragStartY + ((float)e.TotalY - _componentDragStartTotalY) / _zoom;
                     _componentDragMoved = true;
-                    Invalidate();
+                    RequestInteractionRedraw();
                 }
                 else if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase) ||
                          _isBackgroundPanning)
@@ -377,13 +417,13 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 #if !WINDOWS
                     _panX = _lastPanX + (float)e.TotalX;
                     _panY = _lastPanY + (float)e.TotalY;
-                    Invalidate();
+                    RequestInteractionRedraw();
 #else
                     if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase))
                     {
                         _panX = _lastPanX + (float)e.TotalX;
                         _panY = _lastPanY + (float)e.TotalY;
-                        Invalidate();
+                        RequestInteractionRedraw();
                     }
                     // Background pan on Windows: handled by OnPointerMoved instead.
 #endif
@@ -396,6 +436,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             case GestureStatus.Canceled:
                 _isBackgroundPanning = false;
                 FinishComponentDrag();
+                Invalidate();
                 break;
         }
     }

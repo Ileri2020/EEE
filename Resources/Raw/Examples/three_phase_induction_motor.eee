@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,8 +31,8 @@
       "Name": "M1",
       "Description": "InductionMotor",
       "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "1",
+        "LogicalRow": "4",
+        "LogicalColumn": "4",
         "ConnectionType": "Star"
       },
       "Rotation": 0.0,
@@ -68,7 +68,7 @@
       "Name": "V_A",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "3",
+        "LogicalRow": "2",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -132,7 +132,7 @@
       "Name": "V_C",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "5",
+        "LogicalRow": "6",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -164,8 +164,8 @@
       "Name": "TP_PHASE_A",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1",
+        "LogicalRow": "2",
+        "LogicalColumn": "5",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "132.7905619"
@@ -186,8 +186,8 @@
       "Reference": "TP_REFERENCE",
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "8",
+        "LogicalColumn": "2",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,

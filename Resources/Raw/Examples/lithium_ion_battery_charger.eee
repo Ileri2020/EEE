@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,7 +31,7 @@
       "Name": "V_CHARGE",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
         "LogicalColumn": "1",
         "WaveformType": "DC"
       },
@@ -63,8 +63,8 @@
       "Name": "R_LIMIT",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalRow": "4",
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -84,7 +84,7 @@
       "Description": "Battery",
       "StringParameters": {
         "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -106,8 +106,8 @@
       "Name": "D_CHARGE",
       "Description": "LED",
       "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "1",
+        "LogicalRow": "6",
+        "LogicalColumn": "5",
         "Color": "Red"
       },
       "Rotation": 0.0,
@@ -127,8 +127,8 @@
       "Name": "TP_BATTERY",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1",
+        "LogicalRow": "3",
+        "LogicalColumn": "6",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "2.45398124"
@@ -149,8 +149,8 @@
       "Reference": "TP_REFERENCE",
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "8",
+        "LogicalColumn": "2",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,

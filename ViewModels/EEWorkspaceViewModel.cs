@@ -270,11 +270,36 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private bool _pendingSnapshotForce;
     private Microsoft.Maui.Dispatching.IDispatcherTimer? _uiSnapshotTimer;
 
+    // Cached performance settings (refreshed at most once per second to avoid hot-path Preferences I/O)
+    private int _cachedUiSnapshotDelayMs = 40;
+    private int _cachedGraphRefreshHz = 20;
+    private int _cachedViewportRefreshHz = 30;
+    private double _cachedVoltageChangeThreshold = 0.01;
+    private double _cachedCurrentChangeThreshold = 0.001;
+    private double _cachedReactiveOscillationThreshold = 0.02;
+    private DateTime _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+
+    private void EnsureSettingsCached()
+    {
+        var now = DateTime.UtcNow;
+        if (now - _lastSettingsCacheRefreshUtc < TimeSpan.FromSeconds(1))
+            return;
+
+        _cachedUiSnapshotDelayMs = Math.Clamp(Preferences.Default.Get("Settings.UiSnapshotDelayMs", 40), 0, 1000);
+        _cachedGraphRefreshHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
+        _cachedViewportRefreshHz = Math.Clamp(Preferences.Default.Get("Settings.ViewportRefreshHz", 30), 1, 120);
+        _cachedVoltageChangeThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.VoltageChangeThreshold", 0.01));
+        _cachedCurrentChangeThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.CurrentChangeThreshold", 0.001));
+        _cachedReactiveOscillationThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.ReactiveOscillationThreshold", 0.02));
+        _lastSettingsCacheRefreshUtc = now;
+    }
+
     private bool ShouldPublishUiFrame(SimulationSnapshot snapshot, bool force = false)
     {
-        var minVoltageThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.VoltageChangeThreshold", 0.01));
-        var minCurrentThreshold = Math.Max(0.0, Preferences.Default.Get("Settings.CurrentChangeThreshold", 0.001));
-        var reactiveRatio = Math.Max(0.0, Preferences.Default.Get("Settings.ReactiveOscillationThreshold", 0.02));
+        EnsureSettingsCached();
+        var minVoltageThreshold = _cachedVoltageChangeThreshold;
+        var minCurrentThreshold = _cachedCurrentChangeThreshold;
+        var reactiveRatio = _cachedReactiveOscillationThreshold;
         var previous = ViewportSimulationSnapshot;
 
         if (force || previous == null || previous.ComponentStates.Count != snapshot.ComponentStates.Count)
@@ -359,13 +384,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
             return;
         }
 
+        EnsureSettingsCached();
         var now = DateTime.UtcNow;
         bool force = _pendingSnapshotForce;
-        int delayMs = Math.Clamp(Preferences.Default.Get("Settings.UiSnapshotDelayMs", 40), 0, 1000);
+        int delayMs = _cachedUiSnapshotDelayMs;
         if (!force && now - _pendingSnapshotSinceUtc < TimeSpan.FromMilliseconds(delayMs))
             return;
 
-        int graphHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
+        int graphHz = _cachedGraphRefreshHz;
         if (_pendingGraphSnapshot != null &&
             (force || now - _lastGraphRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / graphHz)))
         {
@@ -374,7 +400,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             _lastGraphRefreshUtc = now;
         }
 
-        int viewportHz = Math.Clamp(Preferences.Default.Get("Settings.ViewportRefreshHz", 30), 1, 120);
+        int viewportHz = _cachedViewportRefreshHz;
         if (_pendingViewportSnapshot != null &&
             (force || now - _lastUiRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / viewportHz)))
         {
@@ -404,14 +430,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         if (_uiSnapshotTimer == null) return;
 
+        EnsureSettingsCached();
         var now = DateTime.UtcNow;
-        int delayMs = Math.Clamp(Preferences.Default.Get("Settings.UiSnapshotDelayMs", 40), 0, 1000);
+        int delayMs = _cachedUiSnapshotDelayMs;
         var delayDue = _pendingSnapshotSinceUtc + TimeSpan.FromMilliseconds(delayMs);
         var nextDue = DateTime.MaxValue;
 
         if (_pendingGraphSnapshot != null)
         {
-            int graphHz = Math.Clamp(Preferences.Default.Get("Settings.GraphRefreshHz", 20), 1, 120);
+            int graphHz = _cachedGraphRefreshHz;
             var rateDue = _lastGraphRefreshUtc == DateTime.MinValue
                 ? now
                 : _lastGraphRefreshUtc + TimeSpan.FromMilliseconds(1000.0 / graphHz);
@@ -420,7 +447,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
         if (_pendingViewportSnapshot != null)
         {
-            int viewportHz = Math.Clamp(Preferences.Default.Get("Settings.ViewportRefreshHz", 30), 1, 120);
+            int viewportHz = _cachedViewportRefreshHz;
             var rateDue = _lastUiRefreshUtc == DateTime.MinValue
                 ? now
                 : _lastUiRefreshUtc + TimeSpan.FromMilliseconds(1000.0 / viewportHz);

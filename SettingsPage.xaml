@@ -460,7 +460,12 @@
                                 <Entry Text="{Binding GraphRefreshHz}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
                             </VerticalStackLayout>
 
-                            <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
+                            <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                                <Label Text="INTERACTION LOOP (Hz)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
+                                <Entry Text="{Binding InteractionLoopHz}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
                                 <Label Text="UI SNAPSHOT DELAY (ms)" TextColor="#8B949E" FontSize="11" FontAttributes="Bold"/>
                                 <Entry Text="{Binding UiSnapshotDelayMs}" Keyboard="Numeric" BackgroundColor="#0D1117" TextColor="#C9D1D9"/>
                             </VerticalStackLayout>

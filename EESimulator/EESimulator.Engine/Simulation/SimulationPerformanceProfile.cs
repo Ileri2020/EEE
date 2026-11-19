@@ -37,6 +37,28 @@ public class SimulationPerformanceProfile
     /// <summary>Whether to cull off-screen components during schematic drawing.</summary>
     public bool EnableViewportCulling { get; set; } = true;
 
+    /// <summary>
+    /// Target interval in milliseconds for the interaction-only redraw loop (pan, zoom, wire-draw).
+    /// Set independently from the simulation-driven animation timer so panning never waits for a solver step.
+    /// Default 16 ms ≈ 60 fps.
+    /// </summary>
+    public int InteractionLoopIntervalMs { get; set; } = 16;
+
+    /// <summary>
+    /// Number of recent voltage/current samples retained per component in the circular value buffer
+    /// sent to the graph viewport. Larger values → smoother graph animation at lower poll rates.
+    /// Default 128 samples.
+    /// </summary>
+    public int MaxValueBufferLength { get; set; } = 128;
+
+    /// <summary>
+    /// Minimum fractional change in a component's voltage or current envelope required to
+    /// trigger a graph redraw. Values below this fraction of the current amplitude are considered
+    /// "stable oscillation" and do not cause a graph Invalidate call.
+    /// Default 0.01 (1 %).
+    /// </summary>
+    public double GraphStabilityFraction { get; set; } = 0.01;
+
     private static SimulationPerformanceProfile? _current;
     public static SimulationPerformanceProfile Current
     {

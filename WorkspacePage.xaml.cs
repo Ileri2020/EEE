@@ -64,6 +64,10 @@ public partial class WorkspacePage : ContentPage
 
         vm.AnimationFrameRequested += () =>
         {
+            // If the user is actively panning, pinching, or moving, give full priority to the interaction
+            // so canvas zoom and pan never lag or stutter.
+            if (MainWorkspace.SchematicCanvas.IsUserInteracting) return;
+
             MainWorkspace.SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
             MainWorkspace.SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
             MainWorkspace.SchematicCanvas.Invalidate();

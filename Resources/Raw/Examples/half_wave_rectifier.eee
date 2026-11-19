@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,7 +31,7 @@
       "Name": "V_AC",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -63,8 +63,8 @@
       "Name": "D1",
       "Description": "Diode",
       "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -84,8 +84,8 @@
       "Name": "R_LOAD",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -105,7 +105,7 @@
       "Description": "Capacitor",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "1"
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -124,8 +124,8 @@
       "Name": "L1",
       "Description": "Bulb",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1"
+        "LogicalRow": "4",
+        "LogicalColumn": "6"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -146,8 +146,8 @@
       "Name": "TP_RECTIFIED",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
+        "LogicalRow": "2",
+        "LogicalColumn": "5",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "11.26433783"
@@ -168,8 +168,8 @@
       "Reference": "TP_REFERENCE",
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "8",
+        "LogicalColumn": "2",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,

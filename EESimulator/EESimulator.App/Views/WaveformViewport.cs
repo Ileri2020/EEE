@@ -16,7 +16,13 @@ public class WaveformViewport : GraphicsView, IDrawable
 {
     public static readonly BindableProperty MonitoredComponentProperty =
         BindableProperty.Create(nameof(MonitoredComponent), typeof(ComponentNode), typeof(WaveformViewport),
-            null, propertyChanged: (b, _, __) => ((WaveformViewport)b).Invalidate());
+            null, propertyChanged: (b, _, _) =>
+            {
+                var vp = (WaveformViewport)b;
+                vp._rollingBuffers.Clear();
+                vp._lastDrawnEnvelopes.Clear();
+                vp.Invalidate();
+            });
 
     public ComponentNode? MonitoredComponent
     {
@@ -26,7 +32,7 @@ public class WaveformViewport : GraphicsView, IDrawable
 
     public static readonly BindableProperty SimulationSnapshotProperty =
         BindableProperty.Create(nameof(SimulationSnapshot), typeof(SimulationSnapshot), typeof(WaveformViewport), null,
-            propertyChanged: (b, _, __) => ((WaveformViewport)b).Invalidate());
+            propertyChanged: (b, _, n) => ((WaveformViewport)b).OnSimulationSnapshotChanged(n as SimulationSnapshot));
 
     public SimulationSnapshot? SimulationSnapshot
     {
@@ -52,10 +58,170 @@ public class WaveformViewport : GraphicsView, IDrawable
         Color.FromArgb("#39D353"), Color.FromArgb("#FFA657")
     };
 
+    // Rolling circular buffers of historical (Time, Value) points per signal key.
+    // Retains full array history so the graph continues rendering smoothly even when
+    // solver call rates reduce or when values stabilize.
+    private readonly Dictionary<string, (List<double> Times, List<double> Values)> _rollingBuffers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, (double Min, double Max, int Count)> _lastDrawnEnvelopes = new(StringComparer.OrdinalIgnoreCase);
+
     public WaveformViewport()
     {
         Drawable = this;
         BackgroundColor = Color.FromArgb("#0A0E14");
+    }
+
+    private static string GetSignalKey(WaveformSignal signal) =>
+        $"{signal.Component.Id}:{signal.SignalId}:{signal.Kind}";
+
+    private void OnSimulationSnapshotChanged(SimulationSnapshot? snapshot)
+    {
+        if (snapshot == null) return;
+        bool bufferUpdated = UpdateRollingBuffers(snapshot);
+        if (bufferUpdated)
+        {
+            Invalidate();
+        }
+    }
+
+    private bool UpdateRollingBuffers(SimulationSnapshot snapshot)
+    {
+        if (Signals == null || Signals.Count == 0) return false;
+        int maxPoints = Math.Max(SimulationPerformanceProfile.Current.MaxWaveformPoints, 128);
+        bool anyBufferUpdated = false;
+
+        foreach (var signal in Signals.Where(s => s.IsSelected))
+        {
+            string key = GetSignalKey(signal);
+            if (!_rollingBuffers.TryGetValue(key, out var buffer))
+            {
+                buffer = (new List<double>(maxPoints), new List<double>(maxPoints));
+                _rollingBuffers[key] = buffer;
+            }
+
+            // Case 1: Transient waveform data array available from solver
+            if (snapshot.ComponentWaveforms.TryGetValue(signal.Component.Id, out var waveform))
+            {
+                var values = signal.Kind switch
+                {
+                    WaveformSignalKind.ComponentVoltage => waveform.Voltages,
+                    WaveformSignalKind.ComponentCurrent => waveform.Currents,
+                    WaveformSignalKind.PinVoltage when waveform.NodeVoltages.TryGetValue(signal.SignalId, out var pinValues) => pinValues,
+                    _ => Array.Empty<double>()
+                };
+
+                if (waveform.Times.Count >= 2 && values.Count >= 2)
+                {
+                    if (buffer.Times.Count == 0 || waveform.Times[0] <= buffer.Times[^1] - 0.001)
+                    {
+                        // New transient run or sweep reset
+                        buffer.Times.Clear();
+                        buffer.Values.Clear();
+                        int start = Math.Max(0, waveform.Times.Count - maxPoints);
+                        for (int i = start; i < waveform.Times.Count; i++)
+                        {
+                            buffer.Times.Add(waveform.Times[i]);
+                            buffer.Values.Add(values[i]);
+                        }
+                        if (CheckEnvelopeChange(key, buffer.Values))
+                            anyBufferUpdated = true;
+                    }
+                    else
+                    {
+                        double lastT = buffer.Times[^1];
+                        bool added = false;
+                        for (int i = 0; i < waveform.Times.Count; i++)
+                        {
+                            if (waveform.Times[i] > lastT + 1e-9)
+                            {
+                                buffer.Times.Add(waveform.Times[i]);
+                                buffer.Values.Add(values[i]);
+                                added = true;
+                            }
+                        }
+                        while (buffer.Times.Count > maxPoints)
+                        {
+                            buffer.Times.RemoveAt(0);
+                            buffer.Values.RemoveAt(0);
+                        }
+                        if (added && CheckEnvelopeChange(key, buffer.Values))
+                            anyBufferUpdated = true;
+                    }
+                    continue;
+                }
+            }
+
+            // Case 2: Only DC / Live operating point state available
+            if (snapshot.ComponentStates.TryGetValue(signal.Component.Id, out var state))
+            {
+                double val = signal.Kind switch
+                {
+                    WaveformSignalKind.ComponentVoltage => state.LiveVoltage,
+                    WaveformSignalKind.ComponentCurrent => state.LiveCurrent,
+                    WaveformSignalKind.PinVoltage when state.PinVoltages.TryGetValue(signal.SignalId, out var pv) => pv,
+                    _ => 0.0
+                };
+                double t = snapshot.DeviceTimeSeconds;
+
+                if (buffer.Times.Count == 0)
+                {
+                    buffer.Times.Add(Math.Max(0, t - 0.02));
+                    buffer.Values.Add(val);
+                    buffer.Times.Add(t);
+                    buffer.Values.Add(val);
+                    anyBufferUpdated = true;
+                }
+                else
+                {
+                    if (t > buffer.Times[^1] + 1e-6)
+                    {
+                        buffer.Times.Add(t);
+                        buffer.Values.Add(val);
+                        while (buffer.Times.Count > maxPoints)
+                        {
+                            buffer.Times.RemoveAt(0);
+                            buffer.Values.RemoveAt(0);
+                        }
+                        if (CheckEnvelopeChange(key, buffer.Values))
+                            anyBufferUpdated = true;
+                    }
+                    else if (Math.Abs(buffer.Values[^1] - val) > 1e-6)
+                    {
+                        buffer.Values[^1] = val;
+                        anyBufferUpdated = true;
+                    }
+                }
+            }
+        }
+
+        return anyBufferUpdated;
+    }
+
+    private bool CheckEnvelopeChange(string key, List<double> values)
+    {
+        if (values.Count == 0) return true;
+        double min = double.MaxValue;
+        double max = double.MinValue;
+        for (int i = 0; i < values.Count; i++)
+        {
+            if (values[i] < min) min = values[i];
+            if (values[i] > max) max = values[i];
+        }
+
+        double span = Math.Max(max - min, 1e-6);
+        double fraction = SimulationPerformanceProfile.Current.GraphStabilityFraction;
+
+        if (_lastDrawnEnvelopes.TryGetValue(key, out var prev))
+        {
+            if (Math.Abs(min - prev.Min) < span * fraction &&
+                Math.Abs(max - prev.Max) < span * fraction &&
+                Math.Abs(values.Count - prev.Count) <= 1)
+            {
+                return false; // Stable oscillation; skip redundant graph invalidation
+            }
+        }
+
+        _lastDrawnEnvelopes[key] = (min, max, values.Count);
+        return true;
     }
 
     private void OnSignalsChanged(ObservableCollection<WaveformSignal>? oldSignals, ObservableCollection<WaveformSignal>? newSignals)
@@ -70,6 +236,8 @@ public class WaveformViewport : GraphicsView, IDrawable
             newSignals.CollectionChanged += OnSignalCollectionChanged;
             foreach (var signal in newSignals) signal.PropertyChanged += OnSignalPropertyChanged;
         }
+        _rollingBuffers.Clear();
+        _lastDrawnEnvelopes.Clear();
         Invalidate();
     }
 
@@ -121,6 +289,12 @@ public class WaveformViewport : GraphicsView, IDrawable
             .Where(signal => signal.IsSelected)
             .Select(signal =>
             {
+                string key = GetSignalKey(signal);
+                if (_rollingBuffers.TryGetValue(key, out var buffer) && buffer.Times.Count >= 2 && buffer.Values.Count >= 2)
+                {
+                    return (Signal: signal, Times: (IReadOnlyList<double>)buffer.Times, Values: (IReadOnlyList<double>)buffer.Values);
+                }
+
                 if (SimulationSnapshot?.ComponentWaveforms.TryGetValue(signal.Component.Id, out var waveform) == true)
                 {
                     var values = signal.Kind switch
@@ -133,7 +307,7 @@ public class WaveformViewport : GraphicsView, IDrawable
                     return (Signal: signal, Times: waveform.Times, Values: values);
                 }
 
-                return (Signal: signal, Times: Array.Empty<double>(), Values: Array.Empty<double>());
+                return (Signal: signal, Times: (IReadOnlyList<double>)Array.Empty<double>(), Values: (IReadOnlyList<double>)Array.Empty<double>());
             })
             .Where(trace => trace.Times.Count >= 2 && trace.Values.Count >= 2)
             .ToList();

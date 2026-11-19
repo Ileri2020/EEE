@@ -13,8 +13,8 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "1"
+        "LogicalRow": "8",
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -31,8 +31,8 @@
       "Name": "GEN1",
       "Description": "SynchronousGenerator",
       "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "1",
+        "LogicalRow": "4",
+        "LogicalColumn": "2",
         "ConnectionType": "Star",
         "GroundingConfiguration": "Grounded neutral",
         "PhaseSequence": "ABC"
@@ -63,8 +63,8 @@
       "Name": "R_A",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalRow": "2",
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -84,7 +84,7 @@
       "Description": "Resistor",
       "StringParameters": {
         "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -103,8 +103,8 @@
       "Name": "R_C",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "1"
+        "LogicalRow": "6",
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -123,8 +123,8 @@
       "Name": "TP_PHASE_A",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1",
+        "LogicalRow": "2",
+        "LogicalColumn": "6",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "230.8939243"
@@ -145,8 +145,8 @@
       "Reference": "TP_REFERENCE",
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "8",
+        "LogicalColumn": "4",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,

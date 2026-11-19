@@ -101,6 +101,15 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnViewportRefreshHzChanged(int value) => PersistInt(nameof(ViewportRefreshHz), Math.Clamp(value, 1, 120));
 
     [ObservableProperty]
+    public partial int InteractionLoopHz { get; set; } = 60;
+    partial void OnInteractionLoopHzChanged(int value)
+    {
+        int clamped = Math.Clamp(value, 15, 120);
+        PersistInt(nameof(InteractionLoopHz), clamped);
+        SimulationPerformanceProfile.Current.InteractionLoopIntervalMs = 1000 / clamped;
+    }
+
+    [ObservableProperty]
     public partial int GraphRefreshHz { get; set; } = 20;
     partial void OnGraphRefreshHzChanged(int value) => PersistInt(nameof(GraphRefreshHz), Math.Clamp(value, 1, 120));
 
@@ -346,6 +355,8 @@ public partial class SettingsViewModel : ObservableObject
         DefaultWaveformDrawerVisible = Preferences.Default.Get($"Settings.{nameof(DefaultWaveformDrawerVisible)}", false);
         AutoRunSimulation          = Preferences.Default.Get($"Settings.{nameof(AutoRunSimulation)}",         false);
         ViewportRefreshHz          = Preferences.Default.Get($"Settings.{nameof(ViewportRefreshHz)}",         30);
+        InteractionLoopHz          = Preferences.Default.Get($"Settings.{nameof(InteractionLoopHz)}",         60);
+        SimulationPerformanceProfile.Current.InteractionLoopIntervalMs = 1000 / Math.Clamp(InteractionLoopHz, 15, 120);
         GraphRefreshHz             = Preferences.Default.Get($"Settings.{nameof(GraphRefreshHz)}",            20);
         UiSnapshotDelayMs          = Preferences.Default.Get($"Settings.{nameof(UiSnapshotDelayMs)}",         40);
         VoltageChangeThreshold     = Preferences.Default.Get($"Settings.{nameof(VoltageChangeThreshold)}",    0.01);
@@ -400,6 +411,8 @@ public partial class SettingsViewModel : ObservableObject
         DefaultWaveformDrawerVisible = false;
         AutoRunSimulation           = false;
         ViewportRefreshHz           = 30;
+        InteractionLoopHz           = 60;
+        SimulationPerformanceProfile.Current.InteractionLoopIntervalMs = 16;
         GraphRefreshHz              = 20;
         UiSnapshotDelayMs           = 40;
         VoltageChangeThreshold      = 0.01;

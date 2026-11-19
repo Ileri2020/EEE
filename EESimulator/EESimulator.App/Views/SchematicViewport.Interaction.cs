@@ -81,7 +81,7 @@ public partial class SchematicViewport
             float dy = (float)pos.Value.Y - _bgPanStartScreen.Y;
             _panX = _bgPanStartX + dx;
             _panY = _bgPanStartY + dy;
-            Invalidate();
+            RequestInteractionRedraw();
             return;
         }
 
@@ -108,14 +108,14 @@ public partial class SchematicViewport
             _selectedComponent.ScaleX = newSx;
             _selectedComponent.ScaleY = newSy;
             UpdateRotateHandle();
-            Invalidate();
+            RequestInteractionRedraw();
             return;
         }
 
         if (_isDrawingWire)
         {
             _wireCursorWorld = ToWorld((float)pos.Value.X, (float)pos.Value.Y);
-            Invalidate();
+            RequestInteractionRedraw();
         }
     }
 
@@ -124,6 +124,7 @@ public partial class SchematicViewport
         _isBackgroundPanning = false;
         _isStretchingComponent = false;
         _stretchHandleIndex = -1;
+        Invalidate();
     }
 
     private void FinishComponentDrag()
@@ -158,7 +159,7 @@ public partial class SchematicViewport
         _zoom = Math.Clamp(_zoom * factor, MinZoom, MaxZoom);
         _panX = screenX - worldPoint.X * _zoom;
         _panY = screenY - worldPoint.Y * _zoom;
-        Invalidate();
+        RequestInteractionRedraw();
     }
 
     public void ZoomBy(float factor)

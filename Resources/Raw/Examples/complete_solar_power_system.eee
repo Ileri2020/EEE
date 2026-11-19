@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,7 +31,7 @@
       "Name": "PV1",
       "Description": "SolarPanel",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
         "LogicalColumn": "1",
         "Enabled": "True"
       },
@@ -56,8 +56,8 @@
       "Name": "BAT1",
       "Description": "Battery",
       "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalRow": "4",
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -79,8 +79,8 @@
       "Name": "R_LOAD",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalRow": "3",
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -99,8 +99,8 @@
       "Name": "D_STATUS",
       "Description": "LED",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1",
+        "LogicalRow": "5",
+        "LogicalColumn": "7",
         "Color": "Red"
       },
       "Rotation": 0.0,
@@ -121,7 +121,7 @@
       "Description": "LED current-limiting resistor",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "1"
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -140,8 +140,8 @@
       "Name": "TP_DC_BUS",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "4",
+        "LogicalColumn": "6",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "12.593735964384416"
@@ -163,7 +163,7 @@
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
         "LogicalRow": "8",
-        "LogicalColumn": "1",
+        "LogicalColumn": "2",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,
