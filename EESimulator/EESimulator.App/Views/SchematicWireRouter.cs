@@ -54,15 +54,15 @@ internal static class SchematicWireRouter
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
-        var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
-        var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
+        var startLead = GetClearPinLead(fromComponent, start, startDirection);
+        var endLead = GetClearPinLead(toComponent, end, endDirection);
         var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
         var routeObstacles = GetObstacles(allComponents);
         var targetLeadObstacles = GetObstacles(allComponents, toComponent);
         return CombinePaths(
-            FindOrthogonalPath(start, startLead, sourceLeadObstacles, priorPaths),
+            FindOrthogonalPath(start, startLead, sourceLeadObstacles),
             FindOrthogonalPath(startLead, endLead, routeObstacles, priorPaths),
-            FindOrthogonalPath(endLead, end, targetLeadObstacles, priorPaths));
+            FindOrthogonalPath(endLead, end, targetLeadObstacles));
     }
 
     public static List<PointF> RouteWireComponent(
@@ -84,9 +84,23 @@ internal static class SchematicWireRouter
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
         var wireObstacles = GetObstacles(allComponents, wire);
         return CombinePaths(
-            FindOrthogonalPath(start, startLead, wireObstacles, priorPaths),
+            FindOrthogonalPath(start, startLead, wireObstacles),
             FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
-            FindOrthogonalPath(endLead, end, wireObstacles, priorPaths));
+            FindOrthogonalPath(endLead, end, wireObstacles));
+    }
+
+    private static PointF GetClearPinLead(ComponentNode component, PointF pinPosition, PointF direction)
+    {
+        var halfExtents = LogicalGridSchematicLayout.GetVisualHalfExtents(component);
+        bool horizontal = MathF.Abs(direction.X) >= MathF.Abs(direction.Y);
+        float projectedPinOffset = horizontal
+            ? MathF.Abs(pinPosition.X - (float)component.X)
+            : MathF.Abs(pinPosition.Y - (float)component.Y);
+        float halfExtent = horizontal ? (float)halfExtents.HalfWidth : (float)halfExtents.HalfHeight;
+        float leadLength = Math.Max(PinLeadLength, halfExtent - projectedPinOffset + ObstaclePadding + 2f);
+        return new PointF(
+            pinPosition.X + direction.X * leadLength,
+            pinPosition.Y + direction.Y * leadLength);
     }
 
     private static PointF TransformLocal(ComponentNode component, float x, float y)
@@ -239,7 +253,8 @@ internal static class SchematicWireRouter
                 if (next.X < minX || next.X > maxX || next.Y < minY || next.Y > maxY || visited.Contains(next)) continue;
                 PointF currentWorld = ToWorld(current);
                 PointF nextWorld = ToWorld(next);
-                if (IsBlocked(nextWorld, obstacles) || SharesOccupiedWireLane(currentWorld, nextWorld, priorPaths)) continue;
+                if (IsBlocked(nextWorld, obstacles) || SegmentBlocked(currentWorld, nextWorld, obstacles) ||
+                    SharesOccupiedWireLane(currentWorld, nextWorld, priorPaths)) continue;
 
                 int nextCost = cost[current] + 1;
                 if (cost.TryGetValue(next, out var knownCost) && knownCost <= nextCost) continue;

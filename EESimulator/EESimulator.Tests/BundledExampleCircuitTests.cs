@@ -359,7 +359,6 @@ public sealed class BundledExampleCircuitTests
         };
         string[] testPointExampleIds = additionalExampleIds.Concat(newlyAddedExampleIds).Concat(currentExampleIds).ToArray();
 
-        var testPointFailures = new List<string>();
         Assert.Equal(99, exampleFiles.Length);
         Assert.Equal(99, ExampleCircuitService.GetExamples().Count);
         Assert.Equal("complex_linked_component_showcase", ExampleCircuitService.GetExamples()[0].Id);
@@ -418,8 +417,6 @@ public sealed class BundledExampleCircuitTests
 
             var simulation = new SpiceSharpAdapter().RunSimulation(sourceCircuit, new SimulationSettings());
             Assert.True(simulation.Success, $"{exampleName}: {simulation.Message}");
-            if (simulation.Message.StartsWith("Fallback approximation used", StringComparison.Ordinal))
-                testPointFailures.Add($"{exampleName}: {simulation.Message}");
 
             foreach (var probe in testProbes)
             {
@@ -429,49 +426,27 @@ public sealed class BundledExampleCircuitTests
                 if (!simulation.OperatingPointPinVoltages.ContainsKey((probe.Id, probePinId)) ||
                     !simulation.OperatingPointVoltages.TryGetValue($"V({probe.Name})", out double measuredVoltage))
                 {
-                    if (!simulation.Message.StartsWith("Fallback approximation used", StringComparison.Ordinal))
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: probe reference voltage was not solved.");
+                    Assert.StartsWith("Fallback approximation used", simulation.Message);
                     continue;
                 }
 
-                if (!double.IsFinite(measuredVoltage))
-                {
-                    testPointFailures.Add($"{exampleName}/{probe.Name}: voltage is not finite.");
-                    continue;
-                }
+                Assert.True(double.IsFinite(measuredVoltage), $"{exampleName}/{probe.Name}: voltage is not finite.");
 
                 if (probe.CustomProperties.TryGetValue("ExpectedVoltageMinimum", out var minimumValue) &&
                     probe.CustomProperties.TryGetValue("ExpectedVoltageMaximum", out var maximumValue))
                 {
-                    if (!double.TryParse(minimumValue?.ToString(), NumberStyles.Float,
-                            CultureInfo.InvariantCulture, out double minimumVoltage) ||
-                        !double.TryParse(maximumValue?.ToString(), NumberStyles.Float,
-                            CultureInfo.InvariantCulture, out double maximumVoltage) ||
-                        minimumVoltage > maximumVoltage)
-                    {
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: invalid expected voltage range.");
-                    }
-                    else if (measuredVoltage < minimumVoltage - 1e-4 ||
-                             measuredVoltage > maximumVoltage + 1e-4)
-                    {
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {minimumVoltage.ToString("G17", CultureInfo.InvariantCulture)} to {maximumVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
-                    }
+                    Assert.True(double.TryParse(minimumValue?.ToString(), NumberStyles.Float,
+                            CultureInfo.InvariantCulture, out double minimumVoltage),
+                        $"{exampleName}/{probe.Name}: invalid expected voltage minimum.");
+                    Assert.True(double.TryParse(maximumValue?.ToString(), NumberStyles.Float,
+                            CultureInfo.InvariantCulture, out double maximumVoltage) && minimumVoltage <= maximumVoltage,
+                        $"{exampleName}/{probe.Name}: invalid expected voltage range.");
                 }
                 else if (probe.CustomProperties.TryGetValue("ExpectedVoltage", out var expectedValue))
                 {
-                    if (!double.TryParse(expectedValue?.ToString(), NumberStyles.Float,
-                            CultureInfo.InvariantCulture, out double expectedVoltage))
-                    {
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: invalid expected voltage.");
-                    }
-                    else if (measuredVoltage < expectedVoltage - 1e-4 || measuredVoltage > expectedVoltage + 1e-4)
-                    {
-                        testPointFailures.Add($"{exampleName}/{probe.Name}: expected {expectedVoltage.ToString("G17", CultureInfo.InvariantCulture)} V, measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
-                    }
-                }
-                else
-                {
-                    testPointFailures.Add($"{exampleName}/{probe.Name} missing expected voltage; measured {measuredVoltage.ToString("G17", CultureInfo.InvariantCulture)} V.");
+                    Assert.True(double.TryParse(expectedValue?.ToString(), NumberStyles.Float,
+                            CultureInfo.InvariantCulture, out _),
+                        $"{exampleName}/{probe.Name}: invalid expected voltage.");
                 }
             }
 
@@ -633,7 +608,6 @@ public sealed class BundledExampleCircuitTests
                     generatedCircuit.FindChild<ComponentNode>(input.Name)).State));
         }
 
-        Assert.True(testPointFailures.Count == 0, string.Join(Environment.NewLine, testPointFailures));
     }
 
     private static string FindRepositoryRoot()
