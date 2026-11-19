@@ -41,12 +41,17 @@ echo ===========================================================================
 echo EEE FULL TEST SUITE RUNNER
 echo Target: %TEST_PROJECT%
 echo Runs every C# test in the project, including bundled-example layout, probe, simulation, and Python round-trip tests.
-echo Also runs every EESimulator.Tests\Python\test_*.py suite through the managed IronPython API.
+echo Runs every EESimulator.Tests\Python\test_*.py suite through IronPython.
+echo If an Android device is attached, also runs the complex-example smoke test through Python3Android.
 echo Full output log: %LOG_FILE%
 if defined BUILD_FLAGS echo Mode: reusing the existing build (--no-build --no-restore)
 echo ================================================================================
 "%DOTNET%" test "%TEST_PROJECT%" %BUILD_FLAGS% --logger "console;verbosity=normal" %TEST_ARGS% > "%LOG_FILE%" 2>&1
 set "RESULT=%ERRORLEVEL%"
+if "%RESULT%"=="0" (
+	call "%~dp0test-android-python.bat" >> "%LOG_FILE%" 2>&1
+	if errorlevel 1 set "RESULT=1"
+)
 
 echo.
 type "%LOG_FILE%"

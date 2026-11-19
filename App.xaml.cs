@@ -38,4 +38,13 @@ public partial class App : Application
 	{
 		return new Window(new EELoadingPage(_services));
 	}
+
+#if ANDROID
+	protected override void OnStart()
+	{
+		base.OnStart();
+		if (MainActivity.ConsumePython3AndroidSmokeRequest())
+			_ = AndroidPython3SmokeRunner.RunAsync();
+	}
+#endif
 }
