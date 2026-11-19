@@ -592,7 +592,8 @@ public partial class SchematicViewport
             canvas.StrokeDashPattern = null;
         }
 
-        bool hasSimulationState = SimulationSnapshot?.ComponentStates.TryGetValue(comp.Id, out var simulationState) == true;
+        ComponentLiveState simulationState = default;
+        bool hasSimulationState = SimulationSnapshot?.ComponentStates.TryGetValue(comp.Id, out simulationState) == true;
         bool isBroken = hasSimulationState ? simulationState.IsBrokenDown : comp.IsBrokenDown;
         if (isBroken)
         {

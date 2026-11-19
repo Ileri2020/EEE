@@ -49,8 +49,18 @@ public sealed class ManagedPythonScriptEngine
             try
             {
                 string pythonSource = BuildPythonSource(
-                    script, scriptName, listener.LocalEndpoint.Port, bridgeToken, additionalSearchPaths);
-                string output = await Task.Run(() => environment.RunCode(pythonSource));
+                    script, scriptName, ((IPEndPoint)listener.LocalEndpoint).Port, bridgeToken, additionalSearchPaths);
+                string output = await Task.Run(() =>
+                {
+                    string result = environment.RunCode(pythonSource, out string error, out int errorCode);
+                    if (errorCode != 0)
+                        throw new InvalidOperationException(string.IsNullOrWhiteSpace(error)
+                            ? $"Python execution failed with code {errorCode}."
+                            : error);
+                    return string.IsNullOrWhiteSpace(error) ? result : $"{result}{Environment.NewLine}{error}";
+                });
+                cancellation.Cancel();
+                listener.Stop();
                 await bridgeTask;
                 if (!string.IsNullOrEmpty(output))
                     onOutput?.Invoke(output);
