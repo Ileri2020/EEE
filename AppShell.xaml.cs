@@ -13,4 +13,13 @@ public partial class AppShell : Shell
             () => services.GetRequiredService<SettingsPage>());
         Routing.RegisterRoute("account-detail", typeof(AccountPage));
     }
+
+    /// <summary>
+    /// Attaches an already instantiated and inflated WorkspacePage directly to the Shell content,
+    /// eliminating deferred template instantiation and preventing blank screen delays on Android.
+    /// </summary>
+    public void AttachWorkspacePage(WorkspacePage page)
+    {
+        WorkspaceShellContent.Content = page;
+    }
 }

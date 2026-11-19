@@ -100,7 +100,7 @@ public class SimulationPerformanceProfile
         TargetAnimationFps = 25,
         SolveInterval = TimeSpan.FromMilliseconds(300),
         ParticleDensityMultiplier = 0.5f,
-        EnableWireBridges = false,
+        EnableWireBridges = true,
         MaxWaveformPoints = 300,
         EnableViewportCulling = true
     };

@@ -151,7 +151,7 @@ public partial class SchematicViewport
         // 1. Process wire components
         foreach (var wire in components.OfType<WireComponent>())
         {
-            var path = SchematicWireRouter.RouteWireComponent(wire, components);
+            var path = SchematicWireRouter.RouteWireComponent(wire, components, allPriorPaths);
             var route = BuildCachedRoute(wire.Id, wire, null, null, null, null, null, path, allPriorPaths);
             _cachedWireRoutes.Add(route);
             allPriorPaths.Add(path);
@@ -167,7 +167,8 @@ public partial class SchematicViewport
             var toPin = toComp.GetPin(conn.ToPin);
             if (fromPin == null || toPin == null) continue;
 
-            var path = SchematicWireRouter.RouteConnection(fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints);
+            var path = SchematicWireRouter.RouteConnection(
+                fromComp, fromPin, toComp, toPin, components, conn.RoutingPoints, allPriorPaths);
             var route = BuildCachedRoute(conn.Id, null, conn, fromComp, toComp, fromPin, toPin, path, allPriorPaths);
             _cachedWireRoutes.Add(route);
             allPriorPaths.Add(path);

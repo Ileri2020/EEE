@@ -13,6 +13,7 @@ internal static class SchematicWireRouter
     private const float GridStep = 10f;
     private const float ObstaclePadding = 2f;
     private const float PinLeadLength = 14f;
+    private const float WireLaneClearance = 7f;
 
     private readonly record struct GridPoint(int X, int Y);
     private readonly record struct Obstacle(float Left, float Top, float Right, float Bottom);
@@ -29,33 +30,45 @@ internal static class SchematicWireRouter
         ComponentNode toComponent,
         ComponentPin toPin,
         IEnumerable<ComponentNode> allComponents,
-        IReadOnlyList<Point2D>? routingPoints = null)
+        IReadOnlyList<Point2D>? routingPoints = null,
+        IReadOnlyList<List<PointF>>? priorPaths = null)
     {
         var start = GetPinWorldPosition(fromComponent, fromPin);
         var end = GetPinWorldPosition(toComponent, toPin);
+        priorPaths ??= Array.Empty<List<PointF>>();
         if (routingPoints is { Count: > 0 })
         {
-            var routedPathObstacles = GetObstacles(allComponents, fromComponent, toComponent);
             var points = new List<PointF> { start };
             points.AddRange(routingPoints.Select(point => new PointF((float)point.X, (float)point.Y)));
             points.Add(end);
             var routed = new List<List<PointF>>();
             for (int index = 0; index < points.Count - 1; index++)
-                routed.Add(FindOrthogonalPath(points[index], points[index + 1], routedPathObstacles));
+            {
+                var excluded = index == 0
+                    ? new[] { fromComponent }
+                    : index == points.Count - 2 ? new[] { toComponent } : Array.Empty<ComponentNode>();
+                routed.Add(FindOrthogonalPath(
+                    points[index], points[index + 1], GetObstacles(allComponents, excluded), priorPaths));
+            }
             return CombinePaths(routed.ToArray());
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
-        var connectionObstacles = GetObstacles(allComponents, fromComponent, toComponent);
+        var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
+        var routeObstacles = GetObstacles(allComponents);
+        var targetLeadObstacles = GetObstacles(allComponents, toComponent);
         return CombinePaths(
-            FindOrthogonalPath(start, startLead, connectionObstacles),
-            FindOrthogonalPath(startLead, endLead, connectionObstacles),
-            FindOrthogonalPath(endLead, end, connectionObstacles));
+            FindOrthogonalPath(start, startLead, sourceLeadObstacles, priorPaths),
+            FindOrthogonalPath(startLead, endLead, routeObstacles, priorPaths),
+            FindOrthogonalPath(endLead, end, targetLeadObstacles, priorPaths));
     }
 
-    public static List<PointF> RouteWireComponent(WireComponent wire, IEnumerable<ComponentNode> allComponents)
+    public static List<PointF> RouteWireComponent(
+        WireComponent wire,
+        IEnumerable<ComponentNode> allComponents,
+        IReadOnlyList<List<PointF>>? priorPaths = null)
     {
         var startPin = wire.Pins.FirstOrDefault();
         var endPin = wire.Pins.Skip(1).FirstOrDefault();
@@ -64,15 +77,16 @@ internal static class SchematicWireRouter
 
         var start = GetPinWorldPosition(wire, startPin);
         var end = GetPinWorldPosition(wire, endPin);
+        priorPaths ??= Array.Empty<List<PointF>>();
         var startDirection = GetPinOutwardDirection(wire, startPin, end);
         var endDirection = GetPinOutwardDirection(wire, endPin, start);
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
         var wireObstacles = GetObstacles(allComponents, wire);
         return CombinePaths(
-            FindOrthogonalPath(start, startLead, wireObstacles),
-            FindOrthogonalPath(startLead, endLead, wireObstacles),
-            FindOrthogonalPath(endLead, end, wireObstacles));
+            FindOrthogonalPath(start, startLead, wireObstacles, priorPaths),
+            FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
+            FindOrthogonalPath(endLead, end, wireObstacles, priorPaths));
     }
 
     private static PointF TransformLocal(ComponentNode component, float x, float y)
@@ -146,14 +160,17 @@ internal static class SchematicWireRouter
         return Simplify(path);
     }
 
-    private static List<PointF> FindOrthogonalPath(PointF start, PointF end, List<Obstacle> obstacles)
+    private static List<PointF> FindOrthogonalPath(
+        PointF start,
+        PointF end,
+        List<Obstacle> obstacles,
+        IReadOnlyList<List<PointF>>? priorPaths = null)
     {
+        priorPaths ??= Array.Empty<List<PointF>>();
         var horizontalFirst = new List<PointF> { start, new(end.X, start.Y), end };
         var verticalFirst = new List<PointF> { start, new(start.X, end.Y), end };
-        bool horizontalFirstClear = !SegmentBlocked(horizontalFirst[0], horizontalFirst[1], obstacles) &&
-            !SegmentBlocked(horizontalFirst[1], horizontalFirst[2], obstacles);
-        bool verticalFirstClear = !SegmentBlocked(verticalFirst[0], verticalFirst[1], obstacles) &&
-            !SegmentBlocked(verticalFirst[1], verticalFirst[2], obstacles);
+        bool horizontalFirstClear = IsRouteClear(horizontalFirst, obstacles, priorPaths);
+        bool verticalFirstClear = IsRouteClear(verticalFirst, obstacles, priorPaths);
 
         if (verticalFirstClear)
             return Simplify(verticalFirst);
@@ -165,13 +182,15 @@ internal static class SchematicWireRouter
         if (startGrid == endGrid)
         {
             if ((MathF.Abs(start.X - end.X) < 0.01f || MathF.Abs(start.Y - end.Y) < 0.01f) &&
-                !SegmentBlocked(start, end, obstacles))
+                !SegmentBlocked(start, end, obstacles) && !SharesOccupiedWireLane(start, end, priorPaths))
                 return new List<PointF> { start, end };
             var firstElbow = new PointF(end.X, start.Y);
-            if (!SegmentBlocked(start, firstElbow, obstacles) && !SegmentBlocked(firstElbow, end, obstacles))
+            if (!SegmentBlocked(start, firstElbow, obstacles) && !SegmentBlocked(firstElbow, end, obstacles) &&
+                !SharesOccupiedWireLane(start, firstElbow, priorPaths) && !SharesOccupiedWireLane(firstElbow, end, priorPaths))
                 return new List<PointF> { start, firstElbow, end };
             var secondElbow = new PointF(start.X, end.Y);
-            if (!SegmentBlocked(start, secondElbow, obstacles) && !SegmentBlocked(secondElbow, end, obstacles))
+            if (!SegmentBlocked(start, secondElbow, obstacles) && !SegmentBlocked(secondElbow, end, obstacles) &&
+                !SharesOccupiedWireLane(start, secondElbow, priorPaths) && !SharesOccupiedWireLane(secondElbow, end, priorPaths))
                 return new List<PointF> { start, secondElbow, end };
             return new List<PointF>();
         }
@@ -211,14 +230,16 @@ internal static class SchematicWireRouter
                 var completePath = new List<PointF> { start };
                 completePath.AddRange(reversed);
                 completePath.Add(end);
-                return EnsureOrthogonal(Simplify(completePath), obstacles);
+                return EnsureOrthogonal(Simplify(completePath), obstacles, priorPaths);
             }
 
             foreach (var direction in directions)
             {
                 var next = new GridPoint(current.X + direction.X, current.Y + direction.Y);
                 if (next.X < minX || next.X > maxX || next.Y < minY || next.Y > maxY || visited.Contains(next)) continue;
-                if (IsBlocked(ToWorld(next), obstacles)) continue;
+                PointF currentWorld = ToWorld(current);
+                PointF nextWorld = ToWorld(next);
+                if (IsBlocked(nextWorld, obstacles) || SharesOccupiedWireLane(currentWorld, nextWorld, priorPaths)) continue;
 
                 int nextCost = cost[current] + 1;
                 if (cost.TryGetValue(next, out var knownCost) && knownCost <= nextCost) continue;
@@ -252,7 +273,10 @@ internal static class SchematicWireRouter
         return true;
     }
 
-    private static List<PointF> EnsureOrthogonal(List<PointF> points, List<Obstacle> obstacles)
+    private static List<PointF> EnsureOrthogonal(
+        List<PointF> points,
+        List<Obstacle> obstacles,
+        IReadOnlyList<List<PointF>> priorPaths)
     {
         var result = new List<PointF>();
         foreach (var point in points)
@@ -263,17 +287,21 @@ internal static class SchematicWireRouter
                 if (MathF.Abs(previous.X - point.X) > 0.01f && MathF.Abs(previous.Y - point.Y) > 0.01f)
                 {
                     var firstElbow = new PointF(point.X, previous.Y);
-                    if (!SegmentBlocked(previous, firstElbow, obstacles) && !SegmentBlocked(firstElbow, point, obstacles))
+                    if (!SegmentBlocked(previous, firstElbow, obstacles) && !SegmentBlocked(firstElbow, point, obstacles) &&
+                        !SharesOccupiedWireLane(previous, firstElbow, priorPaths) &&
+                        !SharesOccupiedWireLane(firstElbow, point, priorPaths))
                         result.Add(firstElbow);
                     else
                     {
                         var secondElbow = new PointF(previous.X, point.Y);
-                        if (SegmentBlocked(previous, secondElbow, obstacles) || SegmentBlocked(secondElbow, point, obstacles))
+                        if (SegmentBlocked(previous, secondElbow, obstacles) || SegmentBlocked(secondElbow, point, obstacles) ||
+                            SharesOccupiedWireLane(previous, secondElbow, priorPaths) ||
+                            SharesOccupiedWireLane(secondElbow, point, priorPaths))
                             return new List<PointF>();
                         result.Add(secondElbow);
                     }
                 }
-                else if (SegmentBlocked(previous, point, obstacles))
+                else if (SegmentBlocked(previous, point, obstacles) || SharesOccupiedWireLane(previous, point, priorPaths))
                 {
                     return new List<PointF>();
                 }
@@ -281,6 +309,60 @@ internal static class SchematicWireRouter
             result.Add(point);
         }
         return Simplify(result);
+    }
+
+    private static bool IsRouteClear(
+        IReadOnlyList<PointF> points,
+        List<Obstacle> obstacles,
+        IReadOnlyList<List<PointF>> priorPaths)
+    {
+        for (int index = 0; index < points.Count - 1; index++)
+        {
+            if (SegmentBlocked(points[index], points[index + 1], obstacles) ||
+                SharesOccupiedWireLane(points[index], points[index + 1], priorPaths))
+                return false;
+        }
+        return true;
+    }
+
+    private static bool SharesOccupiedWireLane(
+        PointF start,
+        PointF end,
+        IReadOnlyList<List<PointF>> priorPaths)
+    {
+        bool horizontal = MathF.Abs(start.Y - end.Y) < 0.01f;
+        bool vertical = MathF.Abs(start.X - end.X) < 0.01f;
+        if (!horizontal && !vertical) return false;
+
+        float currentMin = horizontal ? Math.Min(start.X, end.X) : Math.Min(start.Y, end.Y);
+        float currentMax = horizontal ? Math.Max(start.X, end.X) : Math.Max(start.Y, end.Y);
+        float lane = horizontal ? start.Y : start.X;
+
+        foreach (List<PointF> priorPath in priorPaths)
+        {
+            for (int index = 0; index < priorPath.Count - 1; index++)
+            {
+                PointF priorStart = priorPath[index];
+                PointF priorEnd = priorPath[index + 1];
+                bool priorHorizontal = MathF.Abs(priorStart.Y - priorEnd.Y) < 0.01f;
+                bool priorVertical = MathF.Abs(priorStart.X - priorEnd.X) < 0.01f;
+                if (horizontal && priorHorizontal && MathF.Abs(lane - priorStart.Y) < WireLaneClearance)
+                {
+                    float priorMin = Math.Min(priorStart.X, priorEnd.X);
+                    float priorMax = Math.Max(priorStart.X, priorEnd.X);
+                    if (Math.Min(currentMax, priorMax) - Math.Max(currentMin, priorMin) > PinLeadLength + 1)
+                        return true;
+                }
+                else if (vertical && priorVertical && MathF.Abs(lane - priorStart.X) < WireLaneClearance)
+                {
+                    float priorMin = Math.Min(priorStart.Y, priorEnd.Y);
+                    float priorMax = Math.Max(priorStart.Y, priorEnd.Y);
+                    if (Math.Min(currentMax, priorMax) - Math.Max(currentMin, priorMin) > PinLeadLength + 1)
+                        return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static int Manhattan(GridPoint a, GridPoint b) => Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
