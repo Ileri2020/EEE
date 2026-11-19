@@ -2,9 +2,14 @@
 
 import builtins
 import json
+import socket
 
 _protocol_output = None
 _protocol_input = None
+_protocol_socket = None
+_protocol_token = None
+_socket_output = None
+_socket_input = None
 
 
 def attach(protocol_output, protocol_input):
@@ -13,10 +18,44 @@ def attach(protocol_output, protocol_input):
     _protocol_input = protocol_input
 
 
+def attach_socket(port, token):
+    global _protocol_socket, _protocol_token, _socket_output, _socket_input
+    _protocol_socket = socket.create_connection(("127.0.0.1", port))
+    _protocol_token = token
+    _socket_input = _protocol_socket.makefile("r", encoding="utf-8")
+    _socket_output = _protocol_socket.makefile("w", encoding="utf-8")
+
+
+def detach_socket():
+    global _protocol_socket, _protocol_token, _socket_output, _socket_input
+    if _socket_output is not None:
+        _socket_output.close()
+    if _socket_input is not None:
+        _socket_input.close()
+    if _protocol_socket is not None:
+        _protocol_socket.close()
+    _protocol_socket = None
+    _protocol_token = None
+    _socket_output = None
+    _socket_input = None
+
+
 def _call(script):
     bridge = getattr(builtins, "app_bridge", None)
     if bridge is not None:
         response = bridge.Execute(script)
+        if not response["success"]:
+            raise RuntimeError(response["message"])
+        return response["result"]
+
+    if _socket_output is not None and _socket_input is not None:
+        _socket_output.write(json.dumps(
+            {"token": _protocol_token, "script": script}, ensure_ascii=False) + "\n")
+        _socket_output.flush()
+        response_line = _socket_input.readline()
+        if not response_line:
+            raise RuntimeError("The EESimulator scripting host stopped unexpectedly.")
+        response = json.loads(response_line)
         if not response["success"]:
             raise RuntimeError(response["message"])
         return response["result"]

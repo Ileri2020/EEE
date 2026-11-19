@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,7 +31,7 @@
       "Name": "V_SIGNAL",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -63,8 +63,8 @@
       "Name": "R_SERIES",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -84,7 +84,7 @@
       "Description": "Capacitor",
       "StringParameters": {
         "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -103,8 +103,8 @@
       "Name": "R_SHUNT",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "1"
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -123,8 +123,8 @@
       "Name": "C_SHUNT",
       "Description": "Capacitor",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1"
+        "LogicalRow": "5",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -143,8 +143,8 @@
       "Name": "R_LOAD",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2"
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -164,7 +164,7 @@
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
         "LogicalRow": "2",
-        "LogicalColumn": "2",
+        "LogicalColumn": "4",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "0"
@@ -185,8 +185,8 @@
       "Reference": "TP_REFERENCE",
       "Description": "TP_REFERENCE voltage test point; expected 0 V.",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "8",
+        "LogicalColumn": "5",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,

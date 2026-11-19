@@ -636,7 +636,7 @@ public partial class EEWorkspaceViewModel
             ConsoleOutput = "";
             _scriptExecutionHadErrors = false;
             string pythonModuleDirectory = await EnsurePythonModuleDirectoryAsync();
-            _pythonScriptEngine.Execute(
+            await _pythonScriptEngine.ExecuteAsync(
                 ScriptText,
                 "workspace.py",
                 new[] { pythonModuleDirectory },

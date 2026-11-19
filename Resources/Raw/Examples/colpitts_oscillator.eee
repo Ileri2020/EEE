@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "8",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,7 +31,7 @@
       "Name": "V_EXCITE",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "4",
         "LogicalColumn": "1",
         "WaveformType": "Sine"
       },
@@ -63,8 +63,8 @@
       "Name": "L_TANK",
       "Description": "Inductor",
       "StringParameters": {
-        "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -84,8 +84,8 @@
       "Name": "C1",
       "Description": "Capacitor",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -105,7 +105,7 @@
       "Description": "Capacitor",
       "StringParameters": {
         "LogicalRow": "5",
-        "LogicalColumn": "1"
+        "LogicalColumn": "3"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -125,7 +125,7 @@
       "Description": "Resistor",
       "StringParameters": {
         "LogicalRow": "6",
-        "LogicalColumn": "1"
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -144,8 +144,8 @@
       "Name": "TP_DIVIDER",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
+        "LogicalRow": "4",
+        "LogicalColumn": "4",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "0"
@@ -166,8 +166,8 @@
       "Reference": "TP_REFERENCE",
       "Description": "Reference test point with expected voltage.",
       "StringParameters": {
-        "LogicalRow": "7",
-        "LogicalColumn": "1",
+        "LogicalRow": "8",
+        "LogicalColumn": "4",
         "ExpectedVoltage": "0"
       },
       "Rotation": 0.0,

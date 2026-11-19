@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+#if !ANDROID
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
+#endif
 
 namespace EESimulator.Scripting.Execution;
 
@@ -39,6 +41,7 @@ public sealed class ManagedPythonScriptBridge
     public Dictionary<string, object?> Execute(string script) => _execute(script);
 }
 
+#if !ANDROID
 public sealed class ManagedPythonScriptEngine
 {
     private readonly ManagedPythonScriptBridge _bridge;
@@ -121,4 +124,12 @@ public sealed class ManagedPythonScriptEngine
                 onOutput?.Invoke(Encoding.UTF8.GetString(output.ToArray()));
         }
     }
+
+    public Task ExecuteAsync(string script, string scriptName, IEnumerable<string>? additionalSearchPaths = null,
+        Action<string>? onOutput = null)
+    {
+        Execute(script, scriptName, additionalSearchPaths, onOutput);
+        return Task.CompletedTask;
+    }
 }
+#endif

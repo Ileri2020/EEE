@@ -13,7 +13,7 @@
       "Name": "GND",
       "Description": "Ground",
       "StringParameters": {
-        "LogicalRow": "1",
+        "LogicalRow": "7",
         "LogicalColumn": "1"
       },
       "Rotation": 0.0,
@@ -31,7 +31,7 @@
       "Name": "U1_555_OUTPUT",
       "Description": "VoltageSource",
       "StringParameters": {
-        "LogicalRow": "2",
+        "LogicalRow": "3",
         "LogicalColumn": "1",
         "WaveformType": "Pulse"
       },
@@ -64,7 +64,7 @@
       "Description": "Resistor",
       "StringParameters": {
         "LogicalRow": "3",
-        "LogicalColumn": "1"
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -83,8 +83,8 @@
       "Name": "R2",
       "Description": "Resistor",
       "StringParameters": {
-        "LogicalRow": "4",
-        "LogicalColumn": "1"
+        "LogicalRow": "5",
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -103,8 +103,8 @@
       "Name": "C_TIMING",
       "Description": "Capacitor",
       "StringParameters": {
-        "LogicalRow": "5",
-        "LogicalColumn": "1"
+        "LogicalRow": "7",
+        "LogicalColumn": "2"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -123,8 +123,8 @@
       "Name": "L_OUTPUT",
       "Description": "Bulb",
       "StringParameters": {
-        "LogicalRow": "6",
-        "LogicalColumn": "1"
+        "LogicalRow": "3",
+        "LogicalColumn": "4"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -145,8 +145,8 @@
       "Name": "TP_OUT",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "1",
-        "LogicalColumn": "2",
+        "LogicalRow": "2",
+        "LogicalColumn": "4",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "5"
@@ -168,8 +168,8 @@
       "Name": "TP_TIMING",
       "Description": "Test point: high-impedance voltage measurement",
       "StringParameters": {
-        "LogicalRow": "2",
-        "LogicalColumn": "2",
+        "LogicalRow": "6",
+        "LogicalColumn": "3",
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ExpectedVoltage": "4.97166153"

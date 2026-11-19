@@ -171,6 +171,14 @@ public partial class EEWorkspaceViewModel
 
         Circuit.Title = newCircuit.Title;
         Circuit.Description = newCircuit.Description;
+        Circuit.LogicalGridRowSpacing = newCircuit.LogicalGridRowSpacing;
+        Circuit.LogicalGridColumnSpacing = newCircuit.LogicalGridColumnSpacing;
+        LogicalGridLayoutResult layout = LogicalGridSchematicLayout.Calculate(Circuit);
+        foreach (LogicalGridPlacement placement in layout.Placements)
+        {
+            placement.Component.X = placement.X;
+            placement.Component.Y = placement.Y;
+        }
         RefreshGroundGroupOptions();
         ProjectName = projectName;
         CurrentFilePath = filePath;
