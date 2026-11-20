@@ -978,8 +978,12 @@ public partial class EEWorkspaceViewModel
             string windowDesc = probe.TimeRangeDuration > 0
                 ? $"t={winStart:G}s‥{winStart + probe.TimeRangeDuration:G}s"
                 : winStart > 0 ? $"t≥{winStart:G}s" : "all time";
+            string oscTag = probe.IsOscillating
+                ? $", Osc: {probe.Frequency:F1}Hz"
+                : ", Steady DC";
             string meta = $"{probe.MeasurementMode}, {windowDesc}" +
                           (step > 1 ? $", ×{step} step" : "") +
+                          $", Min: {probe.Minimum:G4}{unit}, Max: {probe.Maximum:G4}{unit}, Range: {probe.AmplitudeRange:G4}{unit}{oscTag}" +
                           $", {entries.Count} pts";
 
             sb.Append($"  {probe.Reference} ({meta}): [");

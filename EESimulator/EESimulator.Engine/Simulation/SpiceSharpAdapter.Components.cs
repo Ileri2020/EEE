@@ -1205,8 +1205,26 @@ public partial class SpiceSharpAdapter
                         string vNeg = GetPinNode(opamp, "v_neg", 4);
 
                         double aol = Math.Max(opamp.OpenLoopGain, 1.0);
-                        var vcvs = new SpiceSharp.Components.VoltageControlledVoltageSource(opamp.Name, outNode, "0", inPos, inNeg, aol);
-                        spiceCircuit.Add(vcvs);
+                        double gbw = Math.Max(opamp.GainBandwidth, 1.0);
+                        const double dominantPoleResistance = 1e6;
+                        double dominantPoleTimeConstant = aol / (2.0 * Math.PI * gbw);
+                        string openLoopNode = $"{opamp.Name}_open_loop";
+                        string outputStageNode = $"{opamp.Name}_output_stage";
+
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageControlledVoltageSource(
+                            $"{opamp.Name}_open_loop_gain", openLoopNode, "0", inPos, inNeg, aol));
+                        spiceCircuit.Add(new SpiceSharp.Components.Resistor(
+                            $"{opamp.Name}_dominant_pole_resistance",
+                            openLoopNode,
+                            outputStageNode,
+                            dominantPoleResistance));
+                        spiceCircuit.Add(new SpiceSharp.Components.Capacitor(
+                            $"{opamp.Name}_dominant_pole_capacitance",
+                            outputStageNode,
+                            "0",
+                            dominantPoleTimeConstant / dominantPoleResistance));
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageControlledVoltageSource(
+                            opamp.Name, outNode, "0", outputStageNode, "0", 1.0));
 
                         if (vPos != "0" && !HasExternalSupplySource(circuit, vPos, GetPinNode))
                         {
@@ -1215,6 +1233,18 @@ public partial class SpiceSharpAdapter
                         if (vNeg != "0" && !HasExternalSupplySource(circuit, vNeg, GetPinNode))
                         {
                             spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{opamp.Name}_vn", vNeg, "0", opamp.SupplyNegative));
+                        }
+
+                        if (vPos != "0" && vNeg != "0")
+                        {
+                            var clampModel = new SpiceSharp.Components.DiodeModel($"{opamp.Name}_clamp_model");
+                            clampModel.Parameters.SaturationCurrent = 1e-14;
+                            clampModel.Parameters.EmissionCoefficient = 1.0;
+                            spiceCircuit.Add(clampModel);
+                            spiceCircuit.Add(new SpiceSharp.Components.Diode(
+                                $"{opamp.Name}_positive_clamp", outNode, vPos, $"{opamp.Name}_clamp_model"));
+                            spiceCircuit.Add(new SpiceSharp.Components.Diode(
+                                $"{opamp.Name}_negative_clamp", vNeg, outNode, $"{opamp.Name}_clamp_model"));
                         }
                         break;
                     }

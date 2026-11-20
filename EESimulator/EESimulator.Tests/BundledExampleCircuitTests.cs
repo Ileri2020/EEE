@@ -672,10 +672,16 @@ public sealed class BundledExampleCircuitTests
         Assert.InRange(acValues.Min(), -13.0, -10.0);
         Assert.InRange(acValues.Max(), 10.0, 13.0);
         Assert.True(acValues.Max() - acValues.Min() > 20.0, "AC probe must swing > 20 V peak-to-peak.");
+        Assert.True(acProbe.IsOscillating, "AC input probe must discover oscillation.");
+        Assert.InRange(acProbe.Frequency, 50.0, 70.0);
+        Assert.True(acProbe.AmplitudeRange > 20.0, "AC probe must have amplitude range > 20 V.");
+        Assert.Equal(acProbe.Minimum, acValues.Min(), precision: 3);
+        Assert.Equal(acProbe.Maximum, acValues.Max(), precision: 3);
 
         Assert.NotEmpty(recValues);
         Assert.InRange(recValues.Min(), -0.5, 0.5);
         Assert.InRange(recValues.Max(), 8.0, 13.0);
+        Assert.True(recProbe.AmplitudeRange > 8.0, "Rectified output must have amplitude range > 8 V.");
     }
 
     [Fact]
@@ -702,6 +708,11 @@ public sealed class BundledExampleCircuitTests
         Assert.InRange(values.Min(), 0.0, 0.5);
         Assert.InRange(values.Max(), 4.5, 5.5);
         Assert.True(values.Max() - values.Min() >= 4.0, "Pulse output range must swing by >= 4.0 V.");
+        Assert.True(outProbe.IsOscillating, "555 astable oscillator must discover oscillation and not remain flat DC.");
+        Assert.InRange(outProbe.Frequency, 500.0, 1500.0);
+        Assert.True(outProbe.AmplitudeRange >= 4.0, "Pulse output amplitude range must be >= 4.0 V.");
+        Assert.Equal(outProbe.Minimum, values.Min(), precision: 3);
+        Assert.Equal(outProbe.Maximum, values.Max(), precision: 3);
     }
 
     [Fact]
@@ -735,6 +746,10 @@ public sealed class BundledExampleCircuitTests
         Assert.InRange(v1.Max(), 0.0, 5.5);
         Assert.InRange(v2.Min(), 0.0, 1.5);
         Assert.InRange(v2.Max(), 0.0, 5.5);
+        Assert.Equal(probeOut1.Minimum, v1.Min(), precision: 3);
+        Assert.Equal(probeOut1.Maximum, v1.Max(), precision: 3);
+        Assert.Equal(probeOut2.Minimum, v2.Min(), precision: 3);
+        Assert.Equal(probeOut2.Maximum, v2.Max(), precision: 3);
     }
 
     [Fact]
@@ -815,8 +830,12 @@ public sealed class BundledExampleCircuitTests
 
         Assert.NotEmpty(values);
         Assert.True(values.Length <= probe.MaxReadings);
-        Assert.InRange(values.Min(), -3.0, 2.5);
-        Assert.InRange(values.Max(), -2.5, 3.0);
+        double minimumOutput = values.Min();
+        double maximumOutput = values.Max();
+        Assert.True(minimumOutput >= -3.0 && minimumOutput <= 2.5,
+            $"Triangle output minimum was {minimumOutput:G17} V; maximum was {maximumOutput:G17} V.");
+        Assert.True(maximumOutput >= -2.5 && maximumOutput <= 3.0,
+            $"Triangle output maximum was {maximumOutput:G17} V; minimum was {minimumOutput:G17} V.");
         Assert.True(values.Max() - values.Min() >= 0.0, "Triangle wave output span must be non-negative.");
     }
 
@@ -915,7 +934,7 @@ public sealed class BundledExampleCircuitTests
         var settings = new SimulationSettings
         {
             AnalysisType = "Transient",
-            StopTime = 0.003,
+            StopTime = 0.02,
             StepTime = 1e-5,
             CaptureAllWaveforms = true
         };
@@ -942,7 +961,7 @@ public sealed class BundledExampleCircuitTests
         var settings = new SimulationSettings
         {
             AnalysisType = "Transient",
-            StopTime = 0.003,
+            StopTime = 0.06,
             StepTime = 1e-5,
             CaptureAllWaveforms = true
         };

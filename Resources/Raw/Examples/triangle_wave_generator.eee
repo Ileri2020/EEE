@@ -82,7 +82,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Voltage": 2.5,
+        "Voltage": 0.0,
         "SineOffset": 0.0,
         "SineAmplitude": 2.5,
         "SineFrequency": 500.0,

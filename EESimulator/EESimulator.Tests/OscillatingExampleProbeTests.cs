@@ -62,6 +62,42 @@ public sealed class OscillatingExampleProbeTests
         Assert.All(times, time =>
             Assert.InRange(time, rangeStart, rangeStart + rangeDuration + 1e-9));
         Assert.All(values, value => Assert.True(double.IsFinite(value), $"{filename}/{probeName} captured {value}."));
+
+        // Verify probe discoverability properties: min, max, amplitude range, frequency, and oscillation state
+        Assert.True(double.IsFinite(probe.Minimum), $"{filename}/{probeName}: Minimum must be finite.");
+        Assert.True(double.IsFinite(probe.Maximum), $"{filename}/{probeName}: Maximum must be finite.");
+        Assert.True(probe.Maximum >= probe.Minimum, $"{filename}/{probeName}: Maximum must be >= Minimum.");
+        Assert.Equal(probe.AmplitudeRange, probe.Maximum - probe.Minimum, precision: 3);
+        Assert.Equal(probe.PeakToPeak, probe.AmplitudeRange, precision: 3);
+
+        // Verify the probe discovers that the signal oscillates and is not flat DC
+        Assert.True(probe.AmplitudeRange >= 0.01,
+            $"{filename}/{probeName} should exhibit signal variation (amplitude range: {probe.AmplitudeRange:G4}), not flat DC.");
+        Assert.True(probe.IsOscillating || probe.AmplitudeRange >= 0.05,
+            $"{filename}/{probeName} failed oscillation discovery: IsOscillating={probe.IsOscillating}, Vpp={probe.AmplitudeRange:G4}, Freq={probe.Frequency:F1}Hz");
+    }
+
+    [Fact]
+    public void DC_reference_probe_discovers_zero_frequency_and_no_oscillation()
+    {
+        string exampleFile = Path.Combine(FindExamplesDirectory(), "rc_low_pass.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+        var refProbe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_REFERENCE"));
+
+        var settings = new SimulationSettings
+        {
+            Analysis = AnalysisType.Transient,
+            StopTime = 0.001,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (_, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, refProbe, settings);
+        Assert.NotEmpty(values);
+        Assert.False(refProbe.IsOscillating, "DC ground reference probe must discover that it is NOT oscillating.");
+        Assert.InRange(refProbe.AmplitudeRange, 0.0, 1e-4);
+        Assert.Equal(0.0, refProbe.Frequency);
     }
 
     private static string FindExamplesDirectory()

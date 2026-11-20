@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using EESimulator.Core.Components.Base;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Models;
@@ -209,6 +212,265 @@ public class ProbeComponent : GeneralComponent
             CustomProperties[nameof(RealtimeArray)] = value.ToString();
             NotifyModified(nameof(RealtimeArray));
         }
+    }
+
+    /// <summary>
+    /// Threshold in volts (or amps) above which a signal's peak-to-peak variation is considered oscillating.
+    /// Default: 0.05.
+    /// </summary>
+    public double OscillationThreshold
+    {
+        get => CustomProperties.TryGetValue(nameof(OscillationThreshold), out var v) &&
+               double.TryParse(v?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : 0.05;
+        set
+        {
+            CustomProperties[nameof(OscillationThreshold)] = value.ToString("G", CultureInfo.InvariantCulture);
+            NotifyModified(nameof(OscillationThreshold));
+        }
+    }
+
+    /// <summary>Discovered minimum voltage or current value across the captured waveform window.</summary>
+    public double Minimum
+    {
+        get
+        {
+            var metrics = CalculateWaveformMetrics();
+            if (metrics.HasData) return metrics.Min;
+            if (CustomProperties.TryGetValue(nameof(Minimum), out var v) &&
+                double.TryParse(v?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                return d;
+            if (CustomProperties.TryGetValue("ExpectedVoltageMinimum", out var evm) &&
+                double.TryParse(evm?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ed))
+                return ed;
+            return 0.0;
+        }
+        set
+        {
+            CustomProperties[nameof(Minimum)] = value.ToString("G", CultureInfo.InvariantCulture);
+            NotifyModified(nameof(Minimum));
+        }
+    }
+
+    /// <summary>Discovered maximum voltage or current value across the captured waveform window.</summary>
+    public double Maximum
+    {
+        get
+        {
+            var metrics = CalculateWaveformMetrics();
+            if (metrics.HasData) return metrics.Max;
+            if (CustomProperties.TryGetValue(nameof(Maximum), out var v) &&
+                double.TryParse(v?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                return d;
+            if (CustomProperties.TryGetValue("ExpectedVoltageMaximum", out var evm) &&
+                double.TryParse(evm?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ed))
+                return ed;
+            return 0.0;
+        }
+        set
+        {
+            CustomProperties[nameof(Maximum)] = value.ToString("G", CultureInfo.InvariantCulture);
+            NotifyModified(nameof(Maximum));
+        }
+    }
+
+    /// <summary>Peak-to-peak amplitude range (Maximum - Minimum).</summary>
+    public double AmplitudeRange
+    {
+        get
+        {
+            var metrics = CalculateWaveformMetrics();
+            if (metrics.HasData) return metrics.PeakToPeak;
+            if (CustomProperties.TryGetValue(nameof(AmplitudeRange), out var v) &&
+                double.TryParse(v?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                return d;
+            return Math.Max(0.0, Maximum - Minimum);
+        }
+        set
+        {
+            CustomProperties[nameof(AmplitudeRange)] = value.ToString("G", CultureInfo.InvariantCulture);
+            NotifyModified(nameof(AmplitudeRange));
+        }
+    }
+
+    /// <summary>Peak-to-peak amplitude range alias.</summary>
+    public double PeakToPeak => AmplitudeRange;
+
+    /// <summary>
+    /// Discovered fundamental oscillation frequency (in Hz) computed from cycle mean-crossings.
+    /// Returns 0.0 for DC signals or non-periodic transients.
+    /// </summary>
+    public double Frequency
+    {
+        get
+        {
+            var metrics = CalculateWaveformMetrics();
+            if (metrics.HasData) return metrics.Frequency;
+            if (CustomProperties.TryGetValue(nameof(Frequency), out var v) &&
+                double.TryParse(v?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                return d;
+            return 0.0;
+        }
+        set
+        {
+            CustomProperties[nameof(Frequency)] = value.ToString("G", CultureInfo.InvariantCulture);
+            NotifyModified(nameof(Frequency));
+        }
+    }
+
+    /// <summary>
+    /// Discovers whether the measured signal actively oscillates (is AC, pulse, or periodic)
+    /// rather than remaining steady DC.
+    /// </summary>
+    public bool IsOscillating
+    {
+        get
+        {
+            var metrics = CalculateWaveformMetrics();
+            if (metrics.HasData) return metrics.IsOscillating;
+            if (CustomProperties.TryGetValue(nameof(IsOscillating), out var v) &&
+                bool.TryParse(v?.ToString(), out var b))
+                return b;
+            return AmplitudeRange >= OscillationThreshold;
+        }
+        set
+        {
+            CustomProperties[nameof(IsOscillating)] = value.ToString();
+            NotifyModified(nameof(IsOscillating));
+        }
+    }
+
+    public record struct WaveformMetrics(
+        bool HasData,
+        double Min,
+        double Max,
+        double PeakToPeak,
+        double Frequency,
+        bool IsOscillating);
+
+    public WaveformMetrics CalculateWaveformMetrics()
+    {
+        List<double> times;
+        List<double> values;
+        lock (this)
+        {
+            if (WaveformTime == null || WaveformTime.Count == 0)
+                return new WaveformMetrics(false, 0, 0, 0, 0, false);
+
+            times = new List<double>(WaveformTime);
+            string pinId = Pins.FirstOrDefault()?.Id ?? "in";
+            if (WaveformNodeVoltages.TryGetValue(pinId, out var nv) && nv.Count > 0)
+                values = new List<double>(nv);
+            else if (WaveformVoltage.Count > 0)
+                values = new List<double>(WaveformVoltage);
+            else
+                return new WaveformMetrics(false, 0, 0, 0, 0, false);
+        }
+
+        if (times.Count == 0 || values.Count == 0)
+            return new WaveformMetrics(false, 0, 0, 0, 0, false);
+
+        double winStart = TimeRangeStart;
+        double winEnd = TimeRangeDuration > 0 ? winStart + TimeRangeDuration : double.MaxValue;
+
+        var filteredTimes = new List<double>();
+        var filteredVals = new List<double>();
+        int count = Math.Min(times.Count, values.Count);
+        for (int i = 0; i < count; i++)
+        {
+            double t = times[i];
+            if (t >= winStart && t <= winEnd)
+            {
+                filteredTimes.Add(t);
+                filteredVals.Add(values[i]);
+            }
+        }
+
+        if (filteredVals.Count == 0)
+        {
+            filteredTimes = times;
+            filteredVals = values;
+        }
+
+        double min = double.MaxValue;
+        double max = double.MinValue;
+        double sum = 0.0;
+        for (int i = 0; i < filteredVals.Count; i++)
+        {
+            double v = filteredVals[i];
+            if (v < min) min = v;
+            if (v > max) max = v;
+            sum += v;
+        }
+
+        double vpp = Math.Max(0.0, max - min);
+        double threshold = OscillationThreshold;
+        if (vpp < threshold || filteredVals.Count < 3)
+        {
+            return new WaveformMetrics(true, min, max, vpp, 0.0, false);
+        }
+
+        double mean = sum / filteredVals.Count;
+        var upwardCrossingTimes = new List<double>();
+        for (int i = 1; i < filteredVals.Count; i++)
+        {
+            double vPrev = filteredVals[i - 1];
+            double vCurr = filteredVals[i];
+            if (vPrev < mean && vCurr >= mean)
+            {
+                double tPrev = filteredTimes[i - 1];
+                double tCurr = filteredTimes[i];
+                double frac = Math.Abs(vCurr - vPrev) > 1e-12 ? (mean - vPrev) / (vCurr - vPrev) : 0.0;
+                upwardCrossingTimes.Add(tPrev + frac * (tCurr - tPrev));
+            }
+        }
+
+        double freq = 0.0;
+        bool isOsc = false;
+        if (upwardCrossingTimes.Count >= 2)
+        {
+            double totalPeriod = upwardCrossingTimes[^1] - upwardCrossingTimes[0];
+            int cycles = upwardCrossingTimes.Count - 1;
+            if (totalPeriod > 0 && cycles > 0)
+            {
+                double avgPeriod = totalPeriod / cycles;
+                freq = 1.0 / avgPeriod;
+                isOsc = true;
+            }
+        }
+        else
+        {
+            var downwardCrossingTimes = new List<double>();
+            for (int i = 1; i < filteredVals.Count; i++)
+            {
+                double vPrev = filteredVals[i - 1];
+                double vCurr = filteredVals[i];
+                if (vPrev > mean && vCurr <= mean)
+                {
+                    double tPrev = filteredTimes[i - 1];
+                    double tCurr = filteredTimes[i];
+                    double frac = Math.Abs(vCurr - vPrev) > 1e-12 ? (mean - vPrev) / (vCurr - vPrev) : 0.0;
+                    downwardCrossingTimes.Add(tPrev + frac * (tCurr - tPrev));
+                }
+            }
+
+            if (downwardCrossingTimes.Count >= 2)
+            {
+                double totalPeriod = downwardCrossingTimes[^1] - downwardCrossingTimes[0];
+                int cycles = downwardCrossingTimes.Count - 1;
+                if (totalPeriod > 0 && cycles > 0)
+                {
+                    double avgPeriod = totalPeriod / cycles;
+                    freq = 1.0 / avgPeriod;
+                    isOsc = true;
+                }
+            }
+            else
+            {
+                isOsc = vpp >= threshold && (max - mean > threshold / 3) && (mean - min > threshold / 3);
+            }
+        }
+
+        return new WaveformMetrics(true, min, max, vpp, freq, isOsc);
     }
 
     public ProbeComponent()
