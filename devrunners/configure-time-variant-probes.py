@@ -38,6 +38,13 @@ PROBE_SETTINGS = {
     "class_b_push_pull_amplifier.eee": (0.005, 0.01, 1, 80),
     "class_c_rf_amplifier.eee": (0.0001, 0.0001, 1, 80),
     "class_d_audio_amplifier.eee": (0.001, 0.002, 2, 100),
+    "inverting_amplifier.eee": (0.0, 0.01, 1, 50),
+    "non_inverting_amplifier.eee": (0.0, 0.01, 1, 50),
+    "voltage_follower.eee": (0.0, 0.01, 1, 50),
+    "summing_amplifier.eee": (0.0, 0.01, 1, 50),
+    "opamp_integrator.eee": (0.0, 0.01, 1, 50),
+    "opamp_differentiator.eee": (0.0, 0.01, 1, 50),
+    "opamp_comparator.eee": (0.0, 0.01, 1, 50),
 }
 
 PREFERRED_PROBES = {
@@ -51,6 +58,13 @@ PREFERRED_PROBES = {
     "sawtooth_wave_generator.eee": "TP_OUT",
     "555_timer_monostable.eee": "TP_OUT",
     "schmitt_trigger.eee": "TP_OUT",
+    "inverting_amplifier.eee": "TP_OUT",
+    "non_inverting_amplifier.eee": "TP_OUT",
+    "voltage_follower.eee": "TP_OUT",
+    "summing_amplifier.eee": "TP_OUT",
+    "opamp_integrator.eee": "TP_OUT",
+    "opamp_differentiator.eee": "TP_OUT",
+    "opamp_comparator.eee": "TP_OUT",
 }
 
 

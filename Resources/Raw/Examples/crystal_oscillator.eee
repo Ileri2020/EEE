@@ -186,7 +186,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_F",
       "Name": "R_F",
-      "Description": "Negative feedback resistor (47 kΩ)",
+      "Description": "High-impedance feedback resistor for crystal startup (470 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "5"
@@ -196,7 +196,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Resistance": 47000.0
+        "Resistance": 470000.0
       },
       "CustomProperties": {}
     },
@@ -262,7 +262,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Oscillator output load resistor (1 kΩ)",
+      "Description": "Oscillator output load resistor (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "7"
@@ -272,7 +272,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Resistance": 1000.0
+        "Resistance": 10000.0
       },
       "CustomProperties": {}
     },

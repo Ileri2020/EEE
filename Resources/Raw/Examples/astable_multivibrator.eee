@@ -60,7 +60,9 @@
         "Bf": 100.0,
         "Is": 1e-14,
         "Vaf": 0.0,
-        "Br": 1.0
+        "Br": 1.0,
+        "Cje": 2.201e-11,
+        "Cjc": 7.306e-12
       },
       "CustomProperties": {}
     },
@@ -82,7 +84,9 @@
         "Bf": 100.0,
         "Is": 1e-14,
         "Vaf": 0.0,
-        "Br": 1.0
+        "Br": 1.0,
+        "Cje": 2.201e-11,
+        "Cjc": 7.306e-12
       },
       "CustomProperties": {}
     },
@@ -178,7 +182,7 @@
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
         "Capacitance": 1e-06,
-        "InitialCondition": 0.5
+        "InitialCondition": 0.1
       },
       "CustomProperties": {}
     },

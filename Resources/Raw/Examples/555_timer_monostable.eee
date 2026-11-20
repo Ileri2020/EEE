@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "555 Timer Monostable",
-  "Description": "Precision monostable one-shot multivibrator timing circuit with a fast negative-going trigger input (5V to -5V), single-supply timing comparator (LM741, +12V/0V rails), 8V reference threshold, 51 ms timing charge network (R = 47 kΩ, C = 1 µF), rapid discharge diode, and 1 kΩ output load with pulse indicator LED.",
+  "Description": "Single-supply comparator monostable with a brief 0-to-5V set trigger, positive-feedback latch, 8V reset threshold, 47 ms timing network, rapid capacitor discharge, and a loaded 0-to-12V pulse output.",
   "Components": [
     {
       "Id": "899b2b59-e78e-419f-8cc4-12346e5e4fdc",
@@ -67,7 +67,7 @@
       "ComponentType": "VoltageSource",
       "Reference": "V_TRIG",
       "Name": "V_TRIG",
-      "Description": "External pulse trigger generator",
+      "Description": "Brief positive set pulse for the monostable latch",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "1",
@@ -79,22 +79,22 @@
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
         "Voltage": 5.0,
-        "PulseInitial": 5.0,
-        "PulsePulsed": -5.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 5.0,
         "PulseDelay": 0.005,
         "PulseRiseTime": 1e-06,
         "PulseFallTime": 1e-06,
         "PulseWidth": 0.002,
-        "PulsePeriod": 0.05
+        "PulsePeriod": 0.2
       },
       "CustomProperties": {}
     },
     {
       "Id": "ae985332-50c5-4b39-bb13-798515f77f6d",
-      "ComponentType": "Capacitor",
-      "Reference": "C_TRIG",
-      "Name": "C_TRIG",
-      "Description": "Trigger differentiator coupling capacitor (1 µF)",
+      "ComponentType": "Resistor",
+      "Reference": "R_SET",
+      "Name": "R_SET",
+      "Description": "Trigger pulse current-limiting resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "2"
@@ -104,8 +104,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Capacitance": 1e-06,
-        "InitialCondition": 0.0
+        "Resistance": 1000.0
       },
       "CustomProperties": {}
     },
@@ -114,7 +113,7 @@
       "ComponentType": "Diode",
       "Reference": "D_TRIG",
       "Name": "D_TRIG",
-      "Description": "Negative trigger steering diode",
+      "Description": "Set-pulse steering diode for the latch",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "3"
@@ -143,10 +142,10 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Aol": 1000.0,
+        "Aol": 100000.0,
         "GBW": 1000000.0,
         "VccPlus": 12.0,
-        "VccMinus": -12.0
+        "VccMinus": 0.0
       },
       "CustomProperties": {}
     },
@@ -155,7 +154,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_REF1",
       "Name": "R_REF1",
-      "Description": "Upper reference divider resistor (10 kΩ)",
+      "Description": "Output-to-latch feedback resistor (11 kΩ)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "3"
@@ -165,7 +164,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Resistance": 10000.0
+        "Resistance": 11000.0
       },
       "CustomProperties": {}
     },
@@ -174,7 +173,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_REF2",
       "Name": "R_REF2",
-      "Description": "Lower reference divider resistor (10 kΩ)",
+      "Description": "Latch-state pull-down resistor (20 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "3"
@@ -295,8 +294,8 @@
         "LogicalColumn": "1",
         "ExpectedVoltage": "5.0",
         "ArrayOutputEnabled": "True",
-        "TimeRangeStart": "0.0",
-        "TimeRangeDuration": "0.005",
+        "TimeRangeStart": "0.004",
+        "TimeRangeDuration": "0.004",
         "TimeScaleFactor": "1",
         "MaxReadings": "60",
         "RealtimeArray": "False"
@@ -312,8 +311,8 @@
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ArrayOutputEnabled": "True",
-        "TimeRangeStart": "0.0",
-        "TimeRangeDuration": "0.005",
+        "TimeRangeStart": "0.004",
+        "TimeRangeDuration": "0.004",
         "TimeScaleFactor": "1",
         "MaxReadings": "60",
         "RealtimeArray": "False"
@@ -426,11 +425,11 @@
     },
     {
       "Id": "239fe4e8-2528-407e-b65c-038edb4a0d8b",
-      "FromComponentId": "899b2b59-e78e-419f-8cc4-12346e5e4fdc",
-      "FromPin": "positive",
+      "FromComponentId": "6482fc7c-87a6-409e-8fa7-d09f9e52e2da",
+      "FromPin": "out",
       "ToComponentId": "48b3ac3b-b7f9-4970-b592-20c17334fc29",
       "ToPin": "pin1",
-      "NetName": "VCC_NET",
+      "NetName": "PULSE_OUT",
       "Resistance": 0.0
     },
     {
@@ -438,8 +437,8 @@
       "FromComponentId": "48b3ac3b-b7f9-4970-b592-20c17334fc29",
       "FromPin": "pin2",
       "ToComponentId": "6482fc7c-87a6-409e-8fa7-d09f9e52e2da",
-      "ToPin": "in_neg",
-      "NetName": "REF_THRESH",
+      "ToPin": "in_pos",
+      "NetName": "LATCH_SET",
       "Resistance": 0.0
     },
     {
@@ -448,7 +447,7 @@
       "FromPin": "pin2",
       "ToComponentId": "c983417a-9661-46bb-a340-afeb027feb1d",
       "ToPin": "pin1",
-      "NetName": "REF_THRESH",
+      "NetName": "LATCH_SET",
       "Resistance": 0.0
     },
     {
@@ -456,8 +455,8 @@
       "FromComponentId": "48b3ac3b-b7f9-4970-b592-20c17334fc29",
       "FromPin": "pin2",
       "ToComponentId": "dbb93f75-15f3-4b5e-a03a-68f3e70cb514",
-      "ToPin": "anode",
-      "NetName": "REF_THRESH",
+      "ToPin": "cathode",
+      "NetName": "LATCH_SET",
       "Resistance": 0.0
     },
     {
@@ -483,8 +482,8 @@
       "FromComponentId": "ae985332-50c5-4b39-bb13-798515f77f6d",
       "FromPin": "pin2",
       "ToComponentId": "dbb93f75-15f3-4b5e-a03a-68f3e70cb514",
-      "ToPin": "cathode",
-      "NetName": "TRIG_PULSE",
+      "ToPin": "anode",
+      "NetName": "TRIG_SET",
       "Resistance": 0.0
     },
     {
@@ -519,7 +518,7 @@
       "FromComponentId": "bfb56e68-8f9b-4414-88d2-f9b78461db1f",
       "FromPin": "pin2",
       "ToComponentId": "6482fc7c-87a6-409e-8fa7-d09f9e52e2da",
-      "ToPin": "in_pos",
+      "ToPin": "in_neg",
       "NetName": "TIMING_NODE",
       "Resistance": 0.0
     },

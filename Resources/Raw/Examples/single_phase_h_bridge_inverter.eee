@@ -77,7 +77,7 @@
         "SineAmplitude": 24,
         "SineFrequency": 1000,
         "SinePhase": 0,
-        "PulseInitial": 0.0,
+        "PulseInitial": -24.0,
         "PulsePulsed": 24,
         "PulseDelay": 0.0,
         "PulseRiseTime": 1e-06,

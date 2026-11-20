@@ -767,6 +767,14 @@ public partial class SpiceSharpAdapter
                         if (b.ReverseGainBeta > 0) bModel.Parameters.BetaR = b.ReverseGainBeta;
                         if (b.SaturationCurrent > 0) bModel.Parameters.SatCur = b.SaturationCurrent;
                         if (b.EarlyVoltage > 0) bModel.Parameters.EarlyVoltageForward = b.EarlyVoltage;
+                        if (b.BaseEmitterJunctionCapacitance > 0)
+                            bModel.Parameters.DepletionCapBe = b.BaseEmitterJunctionCapacitance;
+                        if (b.BaseCollectorJunctionCapacitance > 0)
+                            bModel.Parameters.DepletionCapBc = b.BaseCollectorJunctionCapacitance;
+                        if (b.ForwardTransitTime > 0)
+                            bModel.Parameters.TransitTimeForward = b.ForwardTransitTime;
+                        if (b.ReverseTransitTime > 0)
+                            bModel.Parameters.TransitTimeReverse = b.ReverseTransitTime;
 
                         string cNode = GetPinNode(b, "collector", 1);
                         string bNode = GetPinNode(b, "base", 0);
@@ -1238,7 +1246,7 @@ public partial class SpiceSharpAdapter
                         if (!vPos.Equals(vNeg, StringComparison.OrdinalIgnoreCase))
                         {
                             var clampModel = new SpiceSharp.Components.DiodeModel($"{opamp.Name}_clamp_model");
-                            clampModel.Parameters.SaturationCurrent = 1e-14;
+                            clampModel.Parameters.SaturationCurrent = 1e-8;
                             clampModel.Parameters.EmissionCoefficient = 1.0;
                             spiceCircuit.Add(clampModel);
                             spiceCircuit.Add(new SpiceSharp.Components.Diode(

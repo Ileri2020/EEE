@@ -47,6 +47,30 @@ public class BJTComponent : ElectronicComponent
         set => ElectricalParameters["Br"] = value;
     }
 
+    public double BaseEmitterJunctionCapacitance
+    {
+        get => ElectricalParameters.TryGetValue("Cje", out var val) ? val : 0.0;
+        set => ElectricalParameters["Cje"] = value;
+    }
+
+    public double BaseCollectorJunctionCapacitance
+    {
+        get => ElectricalParameters.TryGetValue("Cjc", out var val) ? val : 0.0;
+        set => ElectricalParameters["Cjc"] = value;
+    }
+
+    public double ForwardTransitTime
+    {
+        get => ElectricalParameters.TryGetValue("Tf", out var val) ? val : 0.0;
+        set => ElectricalParameters["Tf"] = value;
+    }
+
+    public double ReverseTransitTime
+    {
+        get => ElectricalParameters.TryGetValue("Tr", out var val) ? val : 0.0;
+        set => ElectricalParameters["Tr"] = value;
+    }
+
     public BJTComponent()
     {
         // Pin layout: Base (left), Collector (top-right), Emitter (bottom-right)

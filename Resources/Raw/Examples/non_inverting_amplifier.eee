@@ -1,0 +1,534 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Non-Inverting Amplifier",
+  "Description": "Non-inverting operational amplifier stage with dual split DC supplies (+15V, -15V, middle GND reference), input signal applied directly to (+) input, resistor divider feedback (R1 = 10 kOhm, R2 = 20 kOhm) on (-) input, closed-loop gain Av = 1 + R2/R1 = 3.0, and 10 kOhm load.",
+  "LogicalGridRowSpacing": 100.0,
+  "LogicalGridColumnSpacing": 100.0,
+  "Author": "EESimulator Examples",
+  "CreatedAt": "2026-11-20T16:00:00Z",
+  "SavedAt": "2026-11-20T16:00:00Z",
+  "Revision": "1",
+  "Tags": [
+    "OpAmp",
+    "Amplifier",
+    "Educational",
+    "Analog"
+  ],
+  "SimulationSettings": {
+    "AnalysisType": "OperatingPoint",
+    "TransientStartTime": 0.0,
+    "TransientStopTime": 0.01,
+    "TransientStepTime": 1e-05,
+    "AcSweepType": "Decade",
+    "AcPoints": 10,
+    "AcStartFrequency": 1.0,
+    "AcStopFrequency": 100000.0,
+    "DcSweepSource": "V1",
+    "DcStart": 0.0,
+    "DcStop": 5.0,
+    "DcStep": 0.1
+  },
+  "Components": [
+    {
+      "Id": "73748667-dbe2-5856-8fa9-8d1dbecc5fb4",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "noninv_amp_GND",
+      "Description": "Circuit Ground Reference",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "ace9d09a-c2ef-5069-95be-7d16888cc3dd",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_POS",
+      "Name": "noninv_amp_V_POS",
+      "Description": "+15V DC Positive Op-Amp Supply",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Voltage": 15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "7f734741-91a0-5480-be51-f716eb1fb591",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_NEG",
+      "Name": "noninv_amp_V_NEG",
+      "Description": "-15V DC Negative Op-Amp Supply",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "4",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Voltage": 15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "d226ae83-741c-5416-923a-7dd2aa2abc6e",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_IN",
+      "Name": "noninv_amp_V_IN",
+      "Description": "1.0V DC Non-Inverting Input Signal",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Voltage": 1.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "noninv_amp_U1",
+      "Description": "Operational Amplifier (LM741 Non-Inverting Stage)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "34c39d94-4eef-577c-a8a1-9c7887be47c9",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R1",
+      "Name": "noninv_amp_R1",
+      "Description": "Feedback Divider Shunt Resistor (10 kOhm)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "3be4d17f-90ed-573f-b6c4-c552111d4a81",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R2",
+      "Name": "noninv_amp_R2",
+      "Description": "Feedback Divider Series Resistor (20 kOhm, Gain = 1 + R2/R1 = 3.0)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 20000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2e3a5f2c-92a0-51ca-a8a8-29e2d569d5e2",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "noninv_amp_R_LOAD",
+      "Description": "Output Load Resistor (10 kOhm)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 10000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "6660c44e-7192-5a40-925c-857f76b43b99",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "noninv_amp_TP_IN",
+      "Description": "Non-Inverting Input Test Point (1.0 V)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "0.98",
+        "ExpectedVoltageMaximum": "1.02",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "0.98",
+        "ExpectedVoltageMaximum": "1.02",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      }
+    },
+    {
+      "Id": "f48d8bf2-b067-5014-a7b8-4dbcba87a227",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_FEEDBACK",
+      "Name": "noninv_amp_TP_FEEDBACK",
+      "Description": "Feedback Node Test Point (1.0 V, Virtual Short)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "4",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "0.98",
+        "ExpectedVoltageMaximum": "1.02"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "0.98",
+        "ExpectedVoltageMaximum": "1.02"
+      }
+    },
+    {
+      "Id": "ff6d6191-494a-5b20-8d45-e840777604ec",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "noninv_amp_TP_OUT",
+      "Description": "Non-Inverted Output Test Point (3.0 V, Gain = 3.0)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "3",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "3.0",
+        "ExpectedVoltageMinimum": "2.95",
+        "ExpectedVoltageMaximum": "3.05",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "3.0",
+        "ExpectedVoltageMinimum": "2.95",
+        "ExpectedVoltageMaximum": "3.05",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      }
+    },
+    {
+      "Id": "48d54c63-1570-5c3e-b170-5c6748b38e56",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_V_POS",
+      "Name": "noninv_amp_TP_V_POS",
+      "Description": "Positive Rail Supply (+15.0 V)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "15.0",
+        "ExpectedVoltageMinimum": "14.9",
+        "ExpectedVoltageMaximum": "15.1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "15.0",
+        "ExpectedVoltageMinimum": "14.9",
+        "ExpectedVoltageMaximum": "15.1"
+      }
+    },
+    {
+      "Id": "78e3989e-f2c9-5799-b9fe-8ad8c7f6d4cc",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_V_NEG",
+      "Name": "noninv_amp_TP_V_NEG",
+      "Description": "Negative Rail Supply (-15.0 V)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "5",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "-15.0",
+        "ExpectedVoltageMinimum": "-15.1",
+        "ExpectedVoltageMaximum": "-14.9"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "-15.0",
+        "ExpectedVoltageMinimum": "-15.1",
+        "ExpectedVoltageMaximum": "-14.9"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "b8129e49-8204-5c82-b92a-e630796b3bf7",
+      "FromComponentId": "ace9d09a-c2ef-5069-95be-7d16888cc3dd",
+      "FromPin": "positive",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "v_pos",
+      "NetName": "V_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c1a956a8-ef6f-54fa-9de0-0171c9f94647",
+      "FromComponentId": "ace9d09a-c2ef-5069-95be-7d16888cc3dd",
+      "FromPin": "negative",
+      "ToComponentId": "73748667-dbe2-5856-8fa9-8d1dbecc5fb4",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "948b5866-407d-5ee6-8a4e-b1a02bb17664",
+      "FromComponentId": "7f734741-91a0-5480-be51-f716eb1fb591",
+      "FromPin": "positive",
+      "ToComponentId": "73748667-dbe2-5856-8fa9-8d1dbecc5fb4",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "120b6c69-5189-51f1-8535-8ced9f70002e",
+      "FromComponentId": "7f734741-91a0-5480-be51-f716eb1fb591",
+      "FromPin": "negative",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "v_neg",
+      "NetName": "V_NEG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "94db5818-51ba-50a7-8971-278d37d175b3",
+      "FromComponentId": "d226ae83-741c-5416-923a-7dd2aa2abc6e",
+      "FromPin": "negative",
+      "ToComponentId": "73748667-dbe2-5856-8fa9-8d1dbecc5fb4",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d759789b-6ef4-5378-a2fd-0f6931742496",
+      "FromComponentId": "d226ae83-741c-5416-923a-7dd2aa2abc6e",
+      "FromPin": "positive",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "in_pos",
+      "NetName": "NET_IN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3dfa05be-f0c4-5907-bebe-6488cd518b38",
+      "FromComponentId": "34c39d94-4eef-577c-a8a1-9c7887be47c9",
+      "FromPin": "pin1",
+      "ToComponentId": "73748667-dbe2-5856-8fa9-8d1dbecc5fb4",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "88cf82b3-5b35-51a2-893c-342d1af572ee",
+      "FromComponentId": "34c39d94-4eef-577c-a8a1-9c7887be47c9",
+      "FromPin": "pin2",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "in_neg",
+      "NetName": "NET_FB",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "87e988fe-0caf-5a65-b086-1095eaccdbb5",
+      "FromComponentId": "3be4d17f-90ed-573f-b6c4-c552111d4a81",
+      "FromPin": "pin1",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "in_neg",
+      "NetName": "NET_FB",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0e02c572-a6ea-5c2a-ae72-eb200a21808d",
+      "FromComponentId": "3be4d17f-90ed-573f-b6c4-c552111d4a81",
+      "FromPin": "pin2",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "out",
+      "NetName": "NET_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0ee3135c-468a-55e7-9c81-e62afc2af82d",
+      "FromComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "FromPin": "out",
+      "ToComponentId": "2e3a5f2c-92a0-51ca-a8a8-29e2d569d5e2",
+      "ToPin": "pin1",
+      "NetName": "NET_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c7aa0e28-9fb8-5c01-bff6-7f61a7194b9a",
+      "FromComponentId": "2e3a5f2c-92a0-51ca-a8a8-29e2d569d5e2",
+      "FromPin": "pin2",
+      "ToComponentId": "73748667-dbe2-5856-8fa9-8d1dbecc5fb4",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "56ccdba7-8a0f-5f00-b03b-4072d2322e0a",
+      "FromComponentId": "6660c44e-7192-5a40-925c-857f76b43b99",
+      "FromPin": "in",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "in_pos",
+      "NetName": "NET_IN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "92d02db5-8c01-549d-b104-fba2210e1422",
+      "FromComponentId": "f48d8bf2-b067-5014-a7b8-4dbcba87a227",
+      "FromPin": "in",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "in_neg",
+      "NetName": "NET_FB",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d59c760b-5f77-51aa-9414-22aae41a184f",
+      "FromComponentId": "ff6d6191-494a-5b20-8d45-e840777604ec",
+      "FromPin": "in",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "out",
+      "NetName": "NET_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "aba104d7-27a6-5fbc-a776-cba678c94781",
+      "FromComponentId": "48d54c63-1570-5c3e-b170-5c6748b38e56",
+      "FromPin": "in",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "v_pos",
+      "NetName": "V_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "3cfc18cd-b56a-5e02-8a80-739da10fc207",
+      "FromComponentId": "78e3989e-f2c9-5799-b9fe-8ad8c7f6d4cc",
+      "FromPin": "in",
+      "ToComponentId": "0b0df381-275f-501f-bb87-f21bb615a9a3",
+      "ToPin": "v_neg",
+      "NetName": "V_NEG",
+      "Resistance": 0.0
+    }
+  ]
+}

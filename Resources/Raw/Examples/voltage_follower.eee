@@ -1,0 +1,427 @@
+{
+  "FileType": "EEE_PLATFORM_SCHEMATIC",
+  "FormatVersion": "1.1.0",
+  "Application": "EESimulator",
+  "Title": "Voltage Follower",
+  "Description": "Unity-gain voltage follower (buffer) amplifier with dual split DC supply (+15V, -15V, middle GND reference), direct feedback connection from output to (-) input (Av = 1.0, Vout = Vin = 2.5V), high input impedance preventing source loading, and low output impedance driving 1 kOhm load.",
+  "LogicalGridRowSpacing": 100.0,
+  "LogicalGridColumnSpacing": 100.0,
+  "Author": "EESimulator Examples",
+  "CreatedAt": "2026-11-20T16:00:00Z",
+  "SavedAt": "2026-11-20T16:00:00Z",
+  "Revision": "1",
+  "Tags": [
+    "OpAmp",
+    "Amplifier",
+    "Educational",
+    "Analog"
+  ],
+  "SimulationSettings": {
+    "AnalysisType": "OperatingPoint",
+    "TransientStartTime": 0.0,
+    "TransientStopTime": 0.01,
+    "TransientStepTime": 1e-05,
+    "AcSweepType": "Decade",
+    "AcPoints": 10,
+    "AcStartFrequency": 1.0,
+    "AcStopFrequency": 100000.0,
+    "DcSweepSource": "V1",
+    "DcStart": 0.0,
+    "DcStop": 5.0,
+    "DcStep": 0.1
+  },
+  "Components": [
+    {
+      "Id": "aa0d9846-dc69-5eb1-8f95-2e2c8d2fa80a",
+      "StableTypeId": "electrical.ground",
+      "ComponentType": "Ground",
+      "Reference": "GND",
+      "Name": "buffer_GND",
+      "Description": "Circuit Ground Reference",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {},
+      "CustomProperties": {}
+    },
+    {
+      "Id": "cffe5fdc-a3fc-5492-85ef-afed105c8ad0",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_POS",
+      "Name": "buffer_V_POS",
+      "Description": "+15V DC Positive Op-Amp Supply",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Voltage": 15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2b532b6d-b786-5fae-a3ad-21da7eb718ec",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_NEG",
+      "Name": "buffer_V_NEG",
+      "Description": "-15V DC Negative Op-Amp Supply",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "4",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Voltage": 15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "f160352b-526a-5424-b889-47ef3837e5b4",
+      "StableTypeId": "electrical.voltagesource",
+      "ComponentType": "VoltageSource",
+      "Reference": "V_IN",
+      "Name": "buffer_V_IN",
+      "Description": "2.5V DC Input Voltage",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "WaveformType": "DC"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Voltage": 2.5
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "StableTypeId": "electronics.opamp",
+      "ComponentType": "OpAmp",
+      "Reference": "U1",
+      "Name": "buffer_U1",
+      "Description": "Operational Amplifier (LM741 Unity-Gain Buffer)",
+      "StringParameters": {
+        "LogicalRow": "3",
+        "LogicalColumn": "3"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Aol": 100000.0,
+        "GBW": 1000000.0,
+        "SR": 0.5,
+        "VccPlus": 15.0,
+        "VccMinus": -15.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "12a82240-898b-5b4a-b982-ef8626d4ff04",
+      "StableTypeId": "electrical.resistor",
+      "ComponentType": "Resistor",
+      "Reference": "R_LOAD",
+      "Name": "buffer_R_LOAD",
+      "Description": "Heavy Output Load Resistor (1 kOhm)",
+      "StringParameters": {
+        "LogicalRow": "4",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 1000.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "331c2096-9d1b-5d7d-9ee0-48126f47df11",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_IN",
+      "Name": "buffer_TP_IN",
+      "Description": "High-Impedance Input Test Point (2.5 V)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "1",
+        "LogicalColumn": "1",
+        "ExpectedVoltage": "2.5",
+        "ExpectedVoltageMinimum": "2.48",
+        "ExpectedVoltageMaximum": "2.52",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "2.5",
+        "ExpectedVoltageMinimum": "2.48",
+        "ExpectedVoltageMaximum": "2.52",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      }
+    },
+    {
+      "Id": "49c005ab-c092-51d1-9e3a-811db0c669e6",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_OUT",
+      "Name": "buffer_TP_OUT",
+      "Description": "Low-Impedance Buffered Output Test Point (2.5 V, Av = 1.0)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "3",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "2.5",
+        "ExpectedVoltageMinimum": "2.48",
+        "ExpectedVoltageMaximum": "2.52",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "2.5",
+        "ExpectedVoltageMinimum": "2.48",
+        "ExpectedVoltageMaximum": "2.52",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.01",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      }
+    },
+    {
+      "Id": "ce4b925d-230e-51c1-acca-85e15e97d144",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_V_POS",
+      "Name": "buffer_TP_V_POS",
+      "Description": "Positive Rail Supply (+15.0 V)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "1",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "15.0",
+        "ExpectedVoltageMinimum": "14.9",
+        "ExpectedVoltageMaximum": "15.1"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "15.0",
+        "ExpectedVoltageMinimum": "14.9",
+        "ExpectedVoltageMaximum": "15.1"
+      }
+    },
+    {
+      "Id": "7a9c3b02-8770-53fb-940d-d61a53dbf965",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_V_NEG",
+      "Name": "buffer_TP_V_NEG",
+      "Description": "Negative Rail Supply (-15.0 V)",
+      "StringParameters": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "LogicalRow": "5",
+        "LogicalColumn": "5",
+        "ExpectedVoltage": "-15.0",
+        "ExpectedVoltageMinimum": "-15.1",
+        "ExpectedVoltageMaximum": "-14.9"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "-15.0",
+        "ExpectedVoltageMinimum": "-15.1",
+        "ExpectedVoltageMaximum": "-14.9"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "3cc44686-0b20-52b5-8a97-b8915c27383b",
+      "FromComponentId": "cffe5fdc-a3fc-5492-85ef-afed105c8ad0",
+      "FromPin": "positive",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "v_pos",
+      "NetName": "V_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "ccd9ee90-c40b-5d12-9ba4-e0c8b8a076ae",
+      "FromComponentId": "cffe5fdc-a3fc-5492-85ef-afed105c8ad0",
+      "FromPin": "negative",
+      "ToComponentId": "aa0d9846-dc69-5eb1-8f95-2e2c8d2fa80a",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "77444d7b-92b7-5250-821b-60d1c6e46346",
+      "FromComponentId": "2b532b6d-b786-5fae-a3ad-21da7eb718ec",
+      "FromPin": "positive",
+      "ToComponentId": "aa0d9846-dc69-5eb1-8f95-2e2c8d2fa80a",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "15bda48a-2617-5dcf-8146-bb391a6efa42",
+      "FromComponentId": "2b532b6d-b786-5fae-a3ad-21da7eb718ec",
+      "FromPin": "negative",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "v_neg",
+      "NetName": "V_NEG",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b5df3789-865f-5fc7-b918-8c37a0a8d560",
+      "FromComponentId": "f160352b-526a-5424-b889-47ef3837e5b4",
+      "FromPin": "negative",
+      "ToComponentId": "aa0d9846-dc69-5eb1-8f95-2e2c8d2fa80a",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "c315d036-024d-551d-b7fe-4c082fa39f0b",
+      "FromComponentId": "f160352b-526a-5424-b889-47ef3837e5b4",
+      "FromPin": "positive",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "in_pos",
+      "NetName": "NET_IN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "f6ed5490-7b9a-569d-8759-eb9db90cf5b0",
+      "FromComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "FromPin": "out",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "in_neg",
+      "NetName": "NET_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "6945de92-3c6b-560b-ba30-50fbc04a1a6f",
+      "FromComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "FromPin": "out",
+      "ToComponentId": "12a82240-898b-5b4a-b982-ef8626d4ff04",
+      "ToPin": "pin1",
+      "NetName": "NET_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "0a6488a5-1a84-515b-973e-56bfa9faa037",
+      "FromComponentId": "12a82240-898b-5b4a-b982-ef8626d4ff04",
+      "FromPin": "pin2",
+      "ToComponentId": "aa0d9846-dc69-5eb1-8f95-2e2c8d2fa80a",
+      "ToPin": "gnd",
+      "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "fa49cac7-6f4f-5338-a4b3-d8c26d6bed6a",
+      "FromComponentId": "331c2096-9d1b-5d7d-9ee0-48126f47df11",
+      "FromPin": "in",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "in_pos",
+      "NetName": "NET_IN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a752f91e-b310-53df-aaf4-b52c5fecad95",
+      "FromComponentId": "49c005ab-c092-51d1-9e3a-811db0c669e6",
+      "FromPin": "in",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "out",
+      "NetName": "NET_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "d39e2779-bc9f-53d9-a840-d91249918011",
+      "FromComponentId": "ce4b925d-230e-51c1-acca-85e15e97d144",
+      "FromPin": "in",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "v_pos",
+      "NetName": "V_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "9591bd34-572f-5476-922b-7be69ecd0154",
+      "FromComponentId": "7a9c3b02-8770-53fb-940d-d61a53dbf965",
+      "FromPin": "in",
+      "ToComponentId": "2a7202e3-d2a3-544d-84cc-5ce823531981",
+      "ToPin": "v_neg",
+      "NetName": "V_NEG",
+      "Resistance": 0.0
+    }
+  ]
+}

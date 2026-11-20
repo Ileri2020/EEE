@@ -348,7 +348,7 @@
     {
       "Id": "5b934fca-b2e0-4da5-bd61-fa462e4ebbff",
       "FromComponentId": "f033b584-8a12-49fd-9e1f-e524bdee4eb8",
-      "FromPin": "positive",
+      "FromPin": "negative",
       "ToComponentId": "ea00a24e-560b-499d-b6dd-58d0631501de",
       "ToPin": "gnd",
       "NetName": "0",
@@ -375,7 +375,7 @@
     {
       "Id": "ac7b630a-958d-4901-a281-94447412982b",
       "FromComponentId": "f033b584-8a12-49fd-9e1f-e524bdee4eb8",
-      "FromPin": "negative",
+      "FromPin": "positive",
       "ToComponentId": "ff44ecc4-967f-4875-9620-654ca34afdd1",
       "ToPin": "v_neg",
       "NetName": "V_NEG",
@@ -393,7 +393,7 @@
     {
       "Id": "34a9b342-0ec5-476f-b4a9-b436ee23060f",
       "FromComponentId": "f033b584-8a12-49fd-9e1f-e524bdee4eb8",
-      "FromPin": "negative",
+      "FromPin": "positive",
       "ToComponentId": "0cc3498b-e21d-469f-a4c1-a344f2f908ab",
       "ToPin": "v_neg",
       "NetName": "V_NEG",

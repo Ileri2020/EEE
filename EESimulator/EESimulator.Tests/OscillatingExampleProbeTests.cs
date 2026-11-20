@@ -1,5 +1,6 @@
 using EEE.Services;
 using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Components.General;
 using EESimulator.Core.Models;
 using EESimulator.Engine.Simulation;
@@ -14,7 +15,7 @@ public sealed class OscillatingExampleProbeTests
     [
         ["colpitts_oscillator.eee", "TP_DIVIDER", 0.0001, 0.0001, 2, 100, 0.0002, 1e-6],
         ["hartley_oscillator.eee", "TP_TANK", 0.0002, 0.0001, 2, 80, 0.0003, 1e-6],
-        ["crystal_oscillator.eee", "TP_OUT", 0.001, 0.0005, 5, 100, 0.0015, 5e-6],
+        ["crystal_oscillator.eee", "TP_OUT", 0.005, 0.005, 5, 100, 0.01, 1e-6],
         ["wien_bridge_oscillator.eee", "TP_BRIDGE", 0.01, 0.01, 2, 80, 0.02, 1e-4],
         ["wien_bridge_function_generator.eee", "TP_OUT", 0.01, 0.01, 2, 80, 0.02, 1e-4],
         ["voltage_controlled_oscillator.eee", "TP_TRIANGLE", 0.0, 0.005, 2, 100, 0.005, 2.5e-5],
@@ -55,6 +56,13 @@ public sealed class OscillatingExampleProbeTests
             CaptureAllWaveforms = true
         };
         var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+        string signalDiagnostics = filename == "voltage_controlled_oscillator.eee"
+            ? string.Join("; ", circuit.Components
+                .OfType<OpAmpComponent>()
+                .Select(opAmp => $"{opAmp.Name}: " + string.Join(", ", opAmp.WaveformNodeVoltages
+                    .Where(node => node.Value.Count > 0)
+                    .Select(node => $"{node.Key}={node.Value.Min():G5}..{node.Value.Max():G5}"))))
+            : string.Empty;
 
         Assert.NotEmpty(values);
         Assert.Equal(times.Length, values.Length);
@@ -72,9 +80,9 @@ public sealed class OscillatingExampleProbeTests
 
         // Verify the probe discovers that the signal oscillates and is not flat DC
         Assert.True(probe.AmplitudeRange >= 0.01,
-            $"{filename}/{probeName} should exhibit signal variation (amplitude range: {probe.AmplitudeRange:G4}), not flat DC.");
+            $"{filename}/{probeName} should exhibit signal variation (amplitude range: {probe.AmplitudeRange:G4}), not flat DC. {signalDiagnostics}");
         Assert.True(probe.IsOscillating || probe.AmplitudeRange >= 0.05,
-            $"{filename}/{probeName} failed oscillation discovery: IsOscillating={probe.IsOscillating}, Vpp={probe.AmplitudeRange:G4}, Freq={probe.Frequency:F1}Hz");
+            $"{filename}/{probeName} failed oscillation discovery: IsOscillating={probe.IsOscillating}, Vpp={probe.AmplitudeRange:G4}, Freq={probe.Frequency:F1}Hz. {signalDiagnostics}");
     }
 
     [Fact]

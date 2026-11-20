@@ -100,7 +100,7 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         if (fieldRegulatedGenerators.Length == 0)
             return RunSimulationOnce(circuit, settings);
 
-        const int maximumFieldIterations = 12;
+        const int maximumFieldIterations = 64;
         const double excitationTolerance = 1e-5;
         const double fieldRelaxation = 0.5;
         bool runRequestedAnalysisAfterFieldConvergence = settings.Analysis != AnalysisType.OperatingPoint;

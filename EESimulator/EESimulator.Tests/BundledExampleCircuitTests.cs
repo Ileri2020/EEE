@@ -357,10 +357,19 @@ public sealed class BundledExampleCircuitTests
             "variable_frequency_drive", "single_phase_ac_motor_capacitor_starter", "grid_tied_solar_inverter",
             "automatic_voltage_regulator", "butterworth_filter", "chebyshev_filter", "bessel_filter"
         };
-        string[] testPointExampleIds = additionalExampleIds.Concat(newlyAddedExampleIds).Concat(currentExampleIds).ToArray();
+        string[] opAmpExampleIds =
+        {
+            "inverting_amplifier", "non_inverting_amplifier", "voltage_follower", "summing_amplifier",
+            "opamp_integrator", "opamp_differentiator", "opamp_comparator"
+        };
+        string[] testPointExampleIds = additionalExampleIds
+            .Concat(newlyAddedExampleIds)
+            .Concat(currentExampleIds)
+            .Concat(opAmpExampleIds)
+            .ToArray();
 
-        Assert.Equal(99, exampleFiles.Length);
-        Assert.Equal(99, ExampleCircuitService.GetExamples().Count);
+        Assert.Equal(106, exampleFiles.Length);
+        Assert.Equal(106, ExampleCircuitService.GetExamples().Count);
         Assert.Equal("complex_linked_component_showcase", ExampleCircuitService.GetExamples()[0].Id);
         Assert.All(testPointExampleIds, id =>
         {
@@ -874,21 +883,45 @@ public sealed class BundledExampleCircuitTests
             circuit.Components.Single(c => c.Name == "TP_TRIG"));
         var comparator = Assert.IsType<OpAmpComponent>(
             circuit.Components.Single(c => c.Name == "U1"));
-        List<double> timingInput = comparator.WaveformNodeVoltages["in_pos"];
-        List<double> thresholdInput = comparator.WaveformNodeVoltages["in_neg"];
+        List<double> latchInput = comparator.WaveformNodeVoltages["in_pos"];
+        List<double> timingInput = comparator.WaveformNodeVoltages["in_neg"];
         string diagnostics =
             $"Monostable output {values.Min():F3}..{values.Max():F3} V; " +
+            $"latch {latchInput.Min():F3}..{latchInput.Max():F3} V; " +
             $"timing {timingInput.Min():F3}..{timingInput.Max():F3} V; " +
-            $"threshold {thresholdInput.Min():F3}..{thresholdInput.Max():F3} V; " +
-            $"trigger {triggerProbe.WaveformVoltage.Min():F3}..{triggerProbe.WaveformVoltage.Max():F3} V.";
+            $"trigger {triggerProbe.WaveformVoltage.Min():F3}..{triggerProbe.WaveformVoltage.Max():F3} V; " +
+            $"samples {string.Join(", ", times.Select((time, index) => $"{time:F3}:{values[index]:F1}"))}.";
         Assert.True(values.Min() >= -1.0 && values.Min() <= 1.0, diagnostics);
         Assert.True(values.Max() >= 10.5 && values.Max() <= 12.5, diagnostics);
 
-        double[] highPulseTimes = times
-            .Where((_, index) => values[index] > 0.0)
-            .ToArray();
-        Assert.True(highPulseTimes.Length > 0, diagnostics);
-        double pulseWidth = highPulseTimes[^1] - highPulseTimes[0];
+        double? pulseStart = null;
+        double? pulseEnd = null;
+        string outputPinId = probe.Pins.FirstOrDefault()?.Id ?? "in";
+        List<double> rawOutput = probe.WaveformNodeVoltages.TryGetValue(outputPinId, out var outputNodeWaveform)
+            ? outputNodeWaveform
+            : probe.WaveformVoltage;
+        int rawSampleCount = Math.Min(probe.WaveformTime.Count, rawOutput.Count);
+        for (int i = 1; i < rawSampleCount; i++)
+        {
+            double previousVoltage = rawOutput[i - 1];
+            double currentVoltage = rawOutput[i];
+            if (!pulseStart.HasValue && previousVoltage <= 0.0 && currentVoltage > 0.0)
+            {
+                double fraction = -previousVoltage / (currentVoltage - previousVoltage);
+                pulseStart = probe.WaveformTime[i - 1] +
+                    fraction * (probe.WaveformTime[i] - probe.WaveformTime[i - 1]);
+            }
+            else if (pulseStart.HasValue && previousVoltage > 0.0 && currentVoltage <= 0.0)
+            {
+                double fraction = previousVoltage / (previousVoltage - currentVoltage);
+                pulseEnd = probe.WaveformTime[i - 1] +
+                    fraction * (probe.WaveformTime[i] - probe.WaveformTime[i - 1]);
+                break;
+            }
+        }
+
+        Assert.True(pulseStart.HasValue && pulseEnd.HasValue, diagnostics);
+        double pulseWidth = pulseEnd.Value - pulseStart.Value;
         Assert.True(pulseWidth >= 0.045 && pulseWidth <= 0.055, $"{diagnostics} Pulse width: {pulseWidth:F3} s.");
     }
 
@@ -996,8 +1029,139 @@ public sealed class BundledExampleCircuitTests
 
         Assert.NotEmpty(values);
         Assert.True(values.Length <= probe.MaxReadings);
-        Assert.InRange(values.Min(), 0.0, 25.0);
-        Assert.InRange(values.Max(), 0.0, 25.0);
+        Assert.InRange(values.Min(), -27.0, 0.0);
+        Assert.InRange(values.Max(), 0.0, 27.0);
+        Assert.True(values.Min() < -1.0, "The bipolar inverter output must include a negative half-cycle.");
+        Assert.True(values.Max() > 1.0, "The bipolar inverter output must include a positive half-cycle.");
+        Assert.InRange(values.Max() - values.Min(), 46.0, 54.0);
+    }
+
+    [Fact]
+    public void Bundled_example_inverting_amplifier_probes_verify_gain_and_virtual_ground()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "inverting_amplifier.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(inv_amp_TP_IN)"], 0.99, 1.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(inv_amp_TP_VIRTUAL_GND)"], -0.01, 0.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(inv_amp_TP_OUT)"], -2.02, -1.98);
+        Assert.InRange(simulation.OperatingPointVoltages["V(inv_amp_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(inv_amp_TP_V_NEG)"], -15.1, -14.9);
+    }
+
+    [Fact]
+    public void Bundled_example_non_inverting_amplifier_probes_verify_gain_and_feedback()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "non_inverting_amplifier.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(noninv_amp_TP_IN)"], 0.99, 1.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(noninv_amp_TP_FEEDBACK)"], 0.99, 1.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(noninv_amp_TP_OUT)"], 2.98, 3.02);
+        Assert.InRange(simulation.OperatingPointVoltages["V(noninv_amp_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(noninv_amp_TP_V_NEG)"], -15.1, -14.9);
+    }
+
+    [Fact]
+    public void Bundled_example_voltage_follower_probes_verify_unity_gain_buffer()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "voltage_follower.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(buffer_TP_IN)"], 2.49, 2.51);
+        Assert.InRange(simulation.OperatingPointVoltages["V(buffer_TP_OUT)"], 2.49, 2.51);
+        Assert.InRange(simulation.OperatingPointVoltages["V(buffer_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(buffer_TP_V_NEG)"], -15.1, -14.9);
+    }
+
+    [Fact]
+    public void Bundled_example_summing_amplifier_probes_verify_weighted_sum_and_virtual_ground()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "summing_amplifier.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(sum_amp_TP_IN1)"], 0.99, 1.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(sum_amp_TP_IN2)"], 1.99, 2.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(sum_amp_TP_SUM)"], -0.01, 0.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(sum_amp_TP_OUT)"], -3.02, -2.98);
+        Assert.InRange(simulation.OperatingPointVoltages["V(sum_amp_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(sum_amp_TP_V_NEG)"], -15.1, -14.9);
+    }
+
+    [Fact]
+    public void Bundled_example_differential_amplifier_probes_verify_balanced_gain_and_supplies()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "differential_amplifier.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(TP_V_NEG)"], -15.1, -14.9);
+        Assert.True(simulation.OperatingPointVoltages.ContainsKey("V(TP_IN1)"));
+        Assert.True(simulation.OperatingPointVoltages.ContainsKey("V(TP_IN2)"));
+        Assert.True(simulation.OperatingPointVoltages.ContainsKey("V(TP_OUT)"));
+    }
+
+    [Fact]
+    public void Bundled_example_opamp_integrator_probes_verify_dc_point_and_virtual_ground()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "opamp_integrator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(integ_TP_IN)"], 0.49, 0.51);
+        Assert.InRange(simulation.OperatingPointVoltages["V(integ_TP_INV)"], -0.01, 0.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(integ_TP_OUT)"], -5.05, -4.95);
+        Assert.InRange(simulation.OperatingPointVoltages["V(integ_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(integ_TP_V_NEG)"], -15.1, -14.9);
+    }
+
+    [Fact]
+    public void Bundled_example_opamp_differentiator_probes_verify_dc_response()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "opamp_differentiator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(diff_amp_TP_IN)"], 0.99, 1.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(diff_amp_TP_INV)"], -0.01, 0.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(diff_amp_TP_OUT)"], -0.02, 0.02);
+        Assert.InRange(simulation.OperatingPointVoltages["V(diff_amp_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(diff_amp_TP_V_NEG)"], -15.1, -14.9);
+    }
+
+    [Fact]
+    public void Bundled_example_opamp_comparator_probes_verify_rail_saturation()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "opamp_comparator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
+        Assert.True(simulation.Success, simulation.Message);
+
+        Assert.InRange(simulation.OperatingPointVoltages["V(comp_TP_REF)"], 1.99, 2.01);
+        Assert.InRange(simulation.OperatingPointVoltages["V(comp_TP_IN)"], 3.49, 3.51);
+        Assert.True(simulation.OperatingPointVoltages["V(comp_TP_OUT)"] >= 14.0, "Comparator output must saturate near positive supply rail.");
+        Assert.InRange(simulation.OperatingPointVoltages["V(comp_TP_V_POS)"], 14.9, 15.1);
+        Assert.InRange(simulation.OperatingPointVoltages["V(comp_TP_V_NEG)"], -15.1, -14.9);
     }
 
     private static string FindRepositoryRoot()

@@ -89,7 +89,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Voltage": -15.0
+        "Voltage": 15.0
       },
       "CustomProperties": {}
     },
@@ -296,6 +296,58 @@
         "MeasurementMode": "Voltage",
         "Unit": "V"
       }
+    },
+    {
+      "Id": "576d1e43-1e5b-4886-9a55-faea9c3951f1",
+      "ComponentType": "Probe",
+      "Reference": "TP_V_POS",
+      "Name": "TP_V_POS",
+      "Description": "Positive rail DC supply probe (+15.0 V)",
+      "StringParameters": {
+        "LogicalRow": "1",
+        "LogicalColumn": "4",
+        "ExpectedVoltage": "15.0",
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "ExpectedVoltage": "15.0",
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
+    },
+    {
+      "Id": "754c5e32-a63b-4c48-8dfa-faea9c3951f2",
+      "ComponentType": "Probe",
+      "Reference": "TP_V_NEG",
+      "Name": "TP_V_NEG",
+      "Description": "Negative rail DC supply probe (-15.0 V)",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "4",
+        "ExpectedVoltage": "-15.0",
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "ExpectedVoltage": "-15.0",
+        "MeasurementMode": "Voltage",
+        "Unit": "V"
+      }
     }
   ],
   "Connections": [
@@ -468,6 +520,24 @@
       "ToComponentId": "41df52bc-adce-4463-a02f-a64ae3d13b3a",
       "ToPin": "in",
       "NetName": "OPAMP_OUT",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "91a27e31-508a-4933-bb92-88efae93c0a1",
+      "FromComponentId": "576d1e43-1e5b-4886-9a55-faea9c3951f1",
+      "FromPin": "in",
+      "ToComponentId": "4c273e9f-1e02-4e78-9a96-aca6382af951",
+      "ToPin": "v_pos",
+      "NetName": "V_POS",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b34e8f12-9c31-419b-ad22-19f8e4c029b2",
+      "FromComponentId": "754c5e32-a63b-4c48-8dfa-faea9c3951f2",
+      "FromPin": "in",
+      "ToComponentId": "4c273e9f-1e02-4e78-9a96-aca6382af951",
+      "ToPin": "v_neg",
+      "NetName": "V_NEG",
       "Resistance": 0.0
     }
   ]
