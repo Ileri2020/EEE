@@ -99,6 +99,34 @@ public partial class EEWorkspaceViewModel
     private void ToggleHelp() => IsHelpVisible = !IsHelpVisible;
 
     [RelayCommand]
+    private async Task CopyScriptTextAsync()
+    {
+        try
+        {
+            await Clipboard.Default.SetTextAsync(ScriptText ?? string.Empty);
+            StatusText = "Script copied to clipboard ✓";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Copy failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyConsoleOutputAsync()
+    {
+        try
+        {
+            await Clipboard.Default.SetTextAsync(ConsoleOutput ?? string.Empty);
+            StatusText = "Console output copied to clipboard ✓";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Copy failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     private void ToggleAiPrompt() => IsAiPromptExpanded = !IsAiPromptExpanded;
 
     [RelayCommand]

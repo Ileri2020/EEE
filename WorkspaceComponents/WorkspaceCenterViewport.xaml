@@ -80,7 +80,7 @@
                     <Grid Grid.Row="0"
                           BackgroundColor="#161B22"
                           HeightRequest="36"
-                          ColumnDefinitions="*,Auto,Auto"
+                          ColumnDefinitions="*,Auto,Auto,Auto"
                           Padding="12,0">
                         <Label Grid.Column="0"
                                Text="● script.py"
@@ -88,11 +88,19 @@
                                FontSize="12"
                                VerticalOptions="Center"/>
                         <Button Grid.Column="1"
+                                Text="📋"
+                                Style="{StaticResource IconBtn}"
+                                Command="{Binding CopyScriptTextCommand}"
+                                ToolTipProperties.Text="Copy script to clipboard"
+                                FontSize="12"
+                                Padding="6,4"
+                                Margin="0,4,4,4"/>
+                        <Button Grid.Column="2"
                                 Text="▶  Run"
                                 Style="{StaticResource AccentBtn}"
                                 Command="{Binding RunScriptCommand}"
                                 Margin="0,4,8,4"/>
-                        <Button Grid.Column="2"
+                        <Button Grid.Column="3"
                                 Text="Clear"
                                 Style="{StaticResource ToolBtn}"
                                 Command="{Binding ClearCircuitAndScriptCommand}"/>
@@ -162,12 +170,22 @@
 
                     <!-- Console output -->
                     <Grid Grid.Row="4" BackgroundColor="#0D1117" RowDefinitions="Auto,*">
-                        <Label Grid.Row="0"
-                               Text="Console Output"
-                               TextColor="#8B949E"
-                               FontSize="11"
-                               FontAttributes="Bold"
-                               Padding="12,4"/>
+                        <Grid Grid.Row="0" BackgroundColor="#161B22"
+                              ColumnDefinitions="*,Auto" Padding="12,4">
+                            <Label Grid.Column="0"
+                                   Text="Console Output"
+                                   TextColor="#8B949E"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                            <Button Grid.Column="1"
+                                    Text="📋"
+                                    Style="{StaticResource IconBtn}"
+                                    Command="{Binding CopyConsoleOutputCommand}"
+                                    ToolTipProperties.Text="Copy console output"
+                                    FontSize="11"
+                                    Padding="4,2"/>
+                        </Grid>
                         <ScrollView Grid.Row="1">
                             <Label Text="{Binding ConsoleOutput}"
                                    TextColor="#56D364"

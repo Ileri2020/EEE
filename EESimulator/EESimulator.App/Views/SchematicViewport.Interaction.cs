@@ -351,8 +351,32 @@ public partial class SchematicViewport
         var targetHit = HitTestPin(endWorld.X, endWorld.Y);
         if (targetHit != null && (targetHit.Value.Component != sourceComp || targetHit.Value.Pin != sourcePin))
         {
-            // Connect to hit pin
-            WireConnected?.Invoke(this, (sourceComp, sourcePin, targetHit.Value.Component, targetHit.Value.Pin));
+            var targetComp = targetHit.Value.Component;
+            var targetPin  = targetHit.Value.Pin;
+            var allComps   = Circuit.FindChildren<ComponentNode>().ToList();
+
+            // Check if the auto-route is blocked and needs a junction break-point.
+            if (SchematicWireRouter.NeedsJunctionBreak(
+                    sourceComp, sourcePin, targetComp, targetPin, allComps, out var junctionPt))
+            {
+                // Create an intermediate JunctionComponent and wire two separate legs.
+                var junc = new JunctionComponent
+                {
+                    Name      = $"J_{Guid.NewGuid().ToString("N")[..4]}",
+                    Reference = $"J_{Guid.NewGuid().ToString("N")[..4]}",
+                    X = junctionPt.X,
+                    Y = junctionPt.Y
+                };
+                Circuit.AddChild(junc);
+                var juncPin = junc.Pins.FirstOrDefault() ?? new ComponentPin("1", "1", 0, 0);
+                WireConnected?.Invoke(this, (sourceComp, sourcePin, junc, juncPin));
+                WireConnected?.Invoke(this, (junc, juncPin, targetComp, targetPin));
+            }
+            else
+            {
+                // Normal direct connection.
+                WireConnected?.Invoke(this, (sourceComp, sourcePin, targetComp, targetPin));
+            }
         }
         else
         {
