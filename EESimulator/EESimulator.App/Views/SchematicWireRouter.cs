@@ -50,7 +50,26 @@ internal static class SchematicWireRouter
                 routed.Add(FindOrthogonalPath(
                     points[index], points[index + 1], GetObstacles(allComponents, excluded), priorPaths));
             }
-            return CombinePaths(routed.ToArray());
+            var pathWithPrior = CombinePaths(routed.ToArray());
+            if (pathWithPrior.Count >= 2)
+                return pathWithPrior;
+
+            // Fallback 1: Route without prior paths to avoid congestion drops
+            routed.Clear();
+            for (int index = 0; index < points.Count - 1; index++)
+            {
+                var excluded = index == 0
+                    ? new[] { fromComponent }
+                    : index == points.Count - 2 ? new[] { toComponent } : Array.Empty<ComponentNode>();
+                routed.Add(FindOrthogonalPath(
+                    points[index], points[index + 1], GetObstacles(allComponents, excluded)));
+            }
+            var pathWithoutPrior = CombinePaths(routed.ToArray());
+            if (pathWithoutPrior.Count >= 2)
+                return pathWithoutPrior;
+
+            // Fallback 2: Direct simplified points
+            return Simplify(points);
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
@@ -77,7 +96,12 @@ internal static class SchematicWireRouter
         if (path.Count >= 2)
             return path;
 
-        // Fallback 2: Guaranteed orthogonal elbow route so wire connections are never dropped or hidden
+        // Fallback 2: Direct connection without leads
+        path = FindOrthogonalPath(start, end, routeObstacles);
+        if (path.Count >= 2)
+            return path;
+
+        // Fallback 3: Guaranteed orthogonal elbow route so wire connections are never dropped or hidden
         float midX = (start.X + end.X) / 2f;
         return Simplify(new List<PointF>
         {
@@ -125,8 +149,12 @@ internal static class SchematicWireRouter
         if (path.Count >= 2)
             return path;
 
+        path = FindOrthogonalPath(start, end, wireObstacles);
+        if (path.Count >= 2)
+            return path;
+
         float midX = (start.X + end.X) / 2f;
-        return new List<PointF> { start, new(midX, start.Y), new(midX, end.Y), end };
+        return Simplify(new List<PointF> { start, new(midX, start.Y), new(midX, end.Y), end });
     }
 
     public static bool NeedsJunctionBreak(
@@ -142,9 +170,10 @@ internal static class SchematicWireRouter
         var start = GetPinWorldPosition(fromComponent, fromPin);
         var end = GetPinWorldPosition(toComponent, toPin);
 
+        var obstacles = GetObstacles(components, fromComponent, toComponent);
         var directPath = RouteConnection(
             fromComponent, fromPin, toComponent, toPin, components);
-        if (directPath.Count > 0)
+        if (directPath.Count > 0 && !directPath.Zip(directPath.Skip(1), (a, b) => SegmentBlocked(a, b, obstacles)).Any(b => b))
         {
             junctionPoint = default;
             return false;
@@ -189,7 +218,9 @@ internal static class SchematicWireRouter
                 candidate,
                 end,
                 GetObstacles(components, toComponent));
-            if (firstLeg.Count > 0 && secondLeg.Count > 0)
+            if (firstLeg.Count > 0 && secondLeg.Count > 0 &&
+                !firstLeg.Zip(firstLeg.Skip(1), (a, b) => SegmentBlocked(a, b, obstacles)).Any(b => b) &&
+                !secondLeg.Zip(secondLeg.Skip(1), (a, b) => SegmentBlocked(a, b, obstacles)).Any(b => b))
             {
                 junctionPoint = new PointF(
                     (float)(Math.Round(candidate.X / GridStep) * GridStep),
@@ -274,11 +305,13 @@ internal static class SchematicWireRouter
 
     private static List<PointF> CombinePaths(params List<PointF>[] paths)
     {
-        if (paths.Any(segment => segment.Count == 0))
+        // Skip empty segments rather than discarding the whole wire
+        var validPaths = paths.Where(p => p != null && p.Count > 0).ToList();
+        if (validPaths.Count == 0)
             return new List<PointF>();
 
         var path = new List<PointF>();
-        foreach (var segment in paths)
+        foreach (var segment in validPaths)
         {
             foreach (var point in segment)
             {
@@ -321,7 +354,8 @@ internal static class SchematicWireRouter
             if (!SegmentBlocked(start, secondElbow, obstacles) && !SegmentBlocked(secondElbow, end, obstacles) &&
                 !SharesOccupiedWireLane(start, secondElbow, priorPaths) && !SharesOccupiedWireLane(secondElbow, end, priorPaths))
                 return new List<PointF> { start, secondElbow, end };
-            return new List<PointF>();
+            // Fallback: always emit an elbow, never drop the wire
+            return new List<PointF> { start, firstElbow, end };
         }
 
         int minX = Math.Min(startGrid.X, endGrid.X) - 40;
@@ -379,8 +413,9 @@ internal static class SchematicWireRouter
             }
         }
 
-        // Do not draw a crossing line if no collision-free route could be found.
-        return new List<PointF>();
+        // A* exhausted - fall back to a guaranteed mid-point elbow so the wire is never dropped.
+        float fallbackMidX = (start.X + end.X) / 2f;
+        return Simplify(new List<PointF> { start, new(fallbackMidX, start.Y), new(fallbackMidX, end.Y), end });
     }
 
     private static bool IsBlocked(PointF point, List<Obstacle> obstacles) =>
@@ -424,17 +459,17 @@ internal static class SchematicWireRouter
                     else
                     {
                         var secondElbow = new PointF(previous.X, point.Y);
-                        if (SegmentBlocked(previous, secondElbow, obstacles) || SegmentBlocked(secondElbow, point, obstacles) ||
-                            SharesOccupiedWireLane(previous, secondElbow, priorPaths) ||
-                            SharesOccupiedWireLane(secondElbow, point, priorPaths))
-                            return new List<PointF>();
-                        result.Add(secondElbow);
+                        // Always add an elbow — never return empty and drop the wire
+                        result.Add(!SegmentBlocked(previous, secondElbow, obstacles) &&
+                                   !SegmentBlocked(secondElbow, point, obstacles) &&
+                                   !SharesOccupiedWireLane(previous, secondElbow, priorPaths) &&
+                                   !SharesOccupiedWireLane(secondElbow, point, priorPaths)
+                            ? secondElbow
+                            : firstElbow);
                     }
                 }
-                else if (SegmentBlocked(previous, point, obstacles) || SharesOccupiedWireLane(previous, point, priorPaths))
-                {
-                    return new List<PointF>();
-                }
+                // If the direct segment is blocked, skip the check — we still draw it
+                // so the wire is visible (it may overlap an obstacle but won't vanish).
             }
             result.Add(point);
         }
