@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Forward Converter",
-  "Description": "Isolated step-down forward DC-DC converter stepping 24V DC input to a regulated 5.0V DC output featuring a 50 kHz primary NMOS power switch (IRF540N), core demagnetizing reset clamp diode, 2:1 high-frequency isolation transformer, secondary forward and freewheeling diodes, LC buck output filter (L = 470 \u00b5H, C = 100 \u00b5F), and load with status LED.",
+  "Description": "Isolated step-down forward DC-DC converter stepping 24V DC input to a regulated 5.0V DC output featuring a 50 kHz primary NMOS power switch (IRF540N), core demagnetizing reset clamp diode, 2:1 high-frequency isolation transformer, secondary forward and freewheeling diodes, LC buck output filter (L = 470 µH, C = 100 µF), and load with status LED.",
   "Components": [
     {
       "Id": "37346601-f7af-4d82-b908-50302e310000",
@@ -183,7 +183,7 @@
       "ComponentType": "Inductor",
       "Reference": "L_OUT",
       "Name": "L_OUT",
-      "Description": "Buck output averaging inductor (470 \u00b5H)",
+      "Description": "Buck output averaging inductor (470 µH)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "5"
@@ -202,7 +202,7 @@
       "ComponentType": "Capacitor",
       "Reference": "C_OUT",
       "Name": "C_OUT",
-      "Description": "Shunt output reservoir capacitor (100 \u00b5F)",
+      "Description": "Shunt output reservoir capacitor (100 µF)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "6"
@@ -222,7 +222,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Isolated DC output power load (10 \u03a9)",
+      "Description": "Isolated DC output power load (10 Ω)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "7"
@@ -241,7 +241,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LED",
       "Name": "R_LED",
-      "Description": "LED ballast resistor (470 \u03a9)",
+      "Description": "LED ballast resistor (470 Ω)",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "7"
@@ -283,7 +283,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "ExpectedVoltage": "24.0"
+        "ExpectedVoltage": "24.0",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.0001",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -294,7 +300,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.0001",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       }
     },
     {

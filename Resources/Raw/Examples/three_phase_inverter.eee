@@ -251,7 +251,13 @@
         "LogicalColumn": "2",
         "MeasurementMode": "Voltage",
         "Unit": "V",
-        "ExpectedVoltage": "24"
+        "ExpectedVoltage": "24",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.02",
+        "TimeRangeDuration": "0.04",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -260,7 +266,14 @@
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.02",
+        "TimeRangeDuration": "0.04",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
+      }
     },
     {
       "Id": "2170f7a6-0e2f-4eb0-bc41-26f09ce26269",

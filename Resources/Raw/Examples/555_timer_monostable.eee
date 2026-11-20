@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "555 Timer Monostable",
-  "Description": "Precision monostable one-shot multivibrator timing circuit with a fast negative-going trigger input, operational timing comparator (LM741, \u00b112V rails), reference divider threshold (6V), 51 ms timing charge network (R = 47 k\u03a9, C = 1 \u00b5F), rapid discharge diode, and 1 k\u03a9 output load with pulse indicator LED.",
+  "Description": "Precision monostable one-shot multivibrator timing circuit with a fast negative-going trigger input, operational timing comparator (LM741, ±12V rails), reference divider threshold (6V), 51 ms timing charge network (R = 47 kΩ, C = 1 µF), rapid discharge diode, and 1 kΩ output load with pulse indicator LED.",
   "Components": [
     {
       "Id": "899b2b59-e78e-419f-8cc4-12346e5e4fdc",
@@ -155,7 +155,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_REF1",
       "Name": "R_REF1",
-      "Description": "Upper reference divider resistor (10 k\u03a9)",
+      "Description": "Upper reference divider resistor (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "3"
@@ -174,7 +174,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_REF2",
       "Name": "R_REF2",
-      "Description": "Lower reference divider resistor (10 k\u03a9)",
+      "Description": "Lower reference divider resistor (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "3"
@@ -193,7 +193,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_TIMING",
       "Name": "R_TIMING",
-      "Description": "Monostable timing charge resistor (47 k\u03a9)",
+      "Description": "Monostable timing charge resistor (47 kΩ)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "5"
@@ -212,7 +212,7 @@
       "ComponentType": "Capacitor",
       "Reference": "C_TIMING",
       "Name": "C_TIMING",
-      "Description": "Shunt timing capacitor (1 \u00b5F)",
+      "Description": "Shunt timing capacitor (1 µF)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "5"
@@ -251,7 +251,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Output pulse load resistor (1 k\u03a9)",
+      "Description": "Output pulse load resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "6"
@@ -293,7 +293,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "ExpectedVoltage": "5.0"
+        "ExpectedVoltage": "5.0",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "60",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -304,7 +310,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "60",
+        "RealtimeArray": "False"
       }
     },
     {
@@ -339,7 +351,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "6",
-        "ExpectedVoltage": "10.5"
+        "ExpectedVoltage": "10.5",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "60",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -350,7 +368,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "1",
+        "MaxReadings": "60",
+        "RealtimeArray": "False"
       }
     }
   ],

@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "SEPIC Converter",
-  "Description": "Non-inverting Single-Ended Primary-Inductor Converter (SEPIC) stepping a 12V DC input to a regulated 11.4V DC output featuring a 50 kHz NMOS power switch, primary storage inductor (1 mH), flying energy transfer capacitor (10 \u00b5F), secondary shunt inductor (1 mH), output Schottky rectifier, and shunt capacitive filter with status LED.",
+  "Description": "Non-inverting Single-Ended Primary-Inductor Converter (SEPIC) stepping a 12V DC input to a regulated 11.4V DC output featuring a 50 kHz NMOS power switch, primary storage inductor (1 mH), flying energy transfer capacitor (10 µF), secondary shunt inductor (1 mH), output Schottky rectifier, and shunt capacitive filter with status LED.",
   "Components": [
     {
       "Id": "520808e3-1aa8-4fb2-8358-008ec2b7f67b",
@@ -110,7 +110,7 @@
       "ComponentType": "Capacitor",
       "Reference": "C_SEPIC",
       "Name": "C_SEPIC",
-      "Description": "Energy transfer flying coupling capacitor (10 \u00b5F)",
+      "Description": "Energy transfer flying coupling capacitor (10 µF)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "4"
@@ -168,7 +168,7 @@
       "ComponentType": "Capacitor",
       "Reference": "C_OUT",
       "Name": "C_OUT",
-      "Description": "Shunt output reservoir capacitor (100 \u00b5F)",
+      "Description": "Shunt output reservoir capacitor (100 µF)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "7"
@@ -188,7 +188,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "DC output power load resistor (24 \u03a9)",
+      "Description": "DC output power load resistor (24 Ω)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "8"
@@ -207,7 +207,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LED",
       "Name": "R_LED",
-      "Description": "LED ballast resistor (1 k\u03a9)",
+      "Description": "LED ballast resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "8"
@@ -249,7 +249,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "ExpectedVoltage": "12.0"
+        "ExpectedVoltage": "12.0",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.002",
+        "TimeRangeDuration": "0.0005",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -260,7 +266,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.002",
+        "TimeRangeDuration": "0.0005",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
       }
     },
     {

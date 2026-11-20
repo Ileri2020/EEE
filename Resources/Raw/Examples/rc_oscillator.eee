@@ -511,9 +511,9 @@
       "Id": "696f0e17-5ccd-4ca0-9a6d-fb925b271ae5",
       "FromComponentId": "2fd9b45b-c63e-4dc6-90fb-4a053f28a006",
       "FromPin": "in",
-      "ToComponentId": "11111111-1111-1111-1111-111111110001",
-      "ToPin": "positive",
-      "NetName": "VCC_NET",
+      "ToComponentId": "11111111-1111-1111-1111-111111110005",
+      "ToPin": "collector",
+      "NetName": "COLLECTOR_NET",
       "Resistance": 0.0
     }
   ]

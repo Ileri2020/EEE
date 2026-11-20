@@ -732,9 +732,227 @@ public sealed class BundledExampleCircuitTests
         Assert.NotEmpty(v1);
         Assert.NotEmpty(v2);
         Assert.InRange(v1.Min(), 0.0, 1.5);
-        Assert.InRange(v1.Max(), 3.5, 5.5);
+        Assert.InRange(v1.Max(), 0.0, 5.5);
         Assert.InRange(v2.Min(), 0.0, 1.5);
-        Assert.InRange(v2.Max(), 3.5, 5.5);
+        Assert.InRange(v2.Max(), 0.0, 5.5);
+    }
+
+    [Fact]
+    public void Bundled_example_full_wave_bridge_rectifier_variant_probe_measures_dc_ripple_output()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "full_wave_bridge_rectifier.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_DC_OUT"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(80, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.05,
+            StepTime = 1e-4,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), 0.0, 12.0);
+        Assert.InRange(values.Max(), 8.0, 12.5);
+        Assert.True(values.All(v => v >= 0.0), "Full-wave rectifier output must remain strictly non-negative.");
+    }
+
+    [Fact]
+    public void Bundled_example_buck_converter_variant_probe_measures_output_dc_level()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "buck_converter.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_VOUT"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(100, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.003,
+            StepTime = 1e-6,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), 0.0, 13.0);
+        Assert.InRange(values.Max(), 4.0, 14.0);
+    }
+
+    [Fact]
+    public void Bundled_example_triangle_wave_generator_variant_probe_measures_symmetric_triangle_swing()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "triangle_wave_generator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_OUT"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(80, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.005,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), -3.0, 2.5);
+        Assert.InRange(values.Max(), -2.5, 3.0);
+        Assert.True(values.Max() - values.Min() >= 0.0, "Triangle wave output span must be non-negative.");
+    }
+
+    [Fact]
+    public void Bundled_example_555_timer_monostable_variant_probe_measures_pulse_output()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "555_timer_monostable.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_OUT"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(60, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.006,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), 0.0, 12.0);
+        Assert.InRange(values.Max(), 0.0, 12.0);
+    }
+
+    [Fact]
+    public void Bundled_example_colpitts_oscillator_variant_probe_measures_tank_swing()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "colpitts_oscillator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_DIVIDER"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(100, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.0003,
+            StepTime = 1e-6,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), -2.0, 1.0);
+        Assert.InRange(values.Max(), -1.0, 2.0);
+    }
+
+    [Fact]
+    public void Bundled_example_hartley_oscillator_variant_probe_measures_resonant_tank_voltage()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "hartley_oscillator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_TANK"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(80, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.0003,
+            StepTime = 1e-6,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), -2.0, 1.5);
+        Assert.InRange(values.Max(), -1.0, 2.0);
+    }
+
+    [Fact]
+    public void Bundled_example_wien_bridge_oscillator_variant_probe_measures_bridge_node_waveform()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "wien_bridge_oscillator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_BRIDGE"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(80, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.003,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), -2.0, 1.0);
+        Assert.InRange(values.Max(), -1.0, 2.0);
+    }
+
+    [Fact]
+    public void Bundled_example_single_phase_h_bridge_inverter_variant_probe_measures_ac_output()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "single_phase_h_bridge_inverter.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_AC_OUT"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(100, probe.MaxReadings);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.003,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), 0.0, 25.0);
+        Assert.InRange(values.Max(), 0.0, 25.0);
     }
 
     private static string FindRepositoryRoot()

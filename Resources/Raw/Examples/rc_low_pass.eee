@@ -12,10 +12,17 @@
       "Reference": "V1",
       "StringParameters": {
         "LogicalRow": "1",
-        "LogicalColumn": "1"
+        "LogicalColumn": "1",
+        "WaveformType": "Pulse"
       },
       "ElectricalParameters": {
-        "Voltage": 1.0
+        "Voltage": 1.0,
+        "PulseInitial": 0.0,
+        "PulsePulsed": 1.0,
+        "PulseRiseTime": 1e-09,
+        "PulseFallTime": 1e-09,
+        "PulseWidth": 0.002,
+        "PulsePeriod": 0.004
       },
       "CustomProperties": {}
     },

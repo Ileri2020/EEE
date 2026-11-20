@@ -37,6 +37,10 @@ goto parse_args
 
 :args_parsed
 pushd "%PROJECT_DIR%"
+if exist "%PROJECT_DIR%\devrunners\configure-time-variant-probes.py" (
+	py -3 "%PROJECT_DIR%\devrunners\configure-time-variant-probes.py"
+	if errorlevel 1 python "%PROJECT_DIR%\devrunners\configure-time-variant-probes.py"
+)
 echo ================================================================================
 echo EEE FULL TEST SUITE RUNNER
 echo Target: %TEST_PROJECT%

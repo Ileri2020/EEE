@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "Crystal Oscillator",
-  "Description": "Self-sustaining 16 kHz quartz crystal oscillator using an operational amplifier (LM741, \u00b112V rails) with series motional RLC crystal resonance (Lm = 10 mH, Cm = 10 nF, Rm = 25 \u03a9), shunt case capacitance (C0 = 100 pF), back-to-back diode amplitude stabilization limiter, and 1 k\u03a9 output load.",
+  "Description": "Self-sustaining 16 kHz quartz crystal oscillator using an operational amplifier (LM741, ±12V rails) with series motional RLC crystal resonance (Lm = 10 mH, Cm = 10 nF, Rm = 25 Ω), shunt case capacitance (C0 = 100 pF), back-to-back diode amplitude stabilization limiter, and 1 kΩ output load.",
   "Components": [
     {
       "Id": "7bfa3903-2e30-45e3-b6a1-f69e808d3198",
@@ -128,7 +128,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_CRYSTAL",
       "Name": "R_CRYSTAL",
-      "Description": "Quartz crystal internal series damping resistance (25 \u03a9)",
+      "Description": "Quartz crystal internal series damping resistance (25 Ω)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "4"
@@ -167,7 +167,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_BIAS",
       "Name": "R_BIAS",
-      "Description": "High-impedance non-inverting input ground bias (100 k\u03a9)",
+      "Description": "High-impedance non-inverting input ground bias (100 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "3"
@@ -186,7 +186,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_F",
       "Name": "R_F",
-      "Description": "Negative feedback resistor (47 k\u03a9)",
+      "Description": "Negative feedback resistor (47 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "5"
@@ -205,7 +205,7 @@
       "ComponentType": "Resistor",
       "Reference": "R1",
       "Name": "R1",
-      "Description": "Inverting input gain setting resistor to GND (10 k\u03a9)",
+      "Description": "Inverting input gain setting resistor to GND (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "5",
         "LogicalColumn": "4"
@@ -262,7 +262,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "Oscillator output load resistor (1 k\u03a9)",
+      "Description": "Oscillator output load resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "7"
@@ -285,7 +285,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
-        "ExpectedVoltage": "12.0"
+        "ExpectedVoltage": "12.0",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.0005",
+        "TimeScaleFactor": "5",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -296,7 +302,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.0005",
+        "TimeScaleFactor": "5",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       }
     },
     {
@@ -331,7 +343,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "7",
-        "ExpectedVoltage": "2.80"
+        "ExpectedVoltage": "2.80",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.0005",
+        "TimeScaleFactor": "5",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -342,7 +360,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.0005",
+        "TimeScaleFactor": "5",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       }
     }
   ],

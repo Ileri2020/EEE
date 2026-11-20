@@ -14,7 +14,30 @@ public enum AnalysisType
 
 public class SimulationSettings
 {
-    public AnalysisType Analysis { get; set; } = AnalysisType.OperatingPoint;
+    public AnalysisType Analysis { get; set; } = EESimulator.Engine.Simulation.AnalysisType.OperatingPoint;
+
+    /// <summary>
+    /// String-compatible analysis selector for scripts, serializers, and test/API callers.
+    /// </summary>
+    public string AnalysisType
+    {
+        get => Analysis == EESimulator.Engine.Simulation.AnalysisType.DCSweep
+            ? "DCSweep"
+            : Analysis.ToString();
+        set
+        {
+            if (Enum.TryParse(value, ignoreCase: true, out EESimulator.Engine.Simulation.AnalysisType parsed))
+            {
+                Analysis = parsed;
+            }
+            else
+            {
+                Analysis = value?.Equals("DC", StringComparison.OrdinalIgnoreCase) == true
+                    ? EESimulator.Engine.Simulation.AnalysisType.DCSweep
+                    : EESimulator.Engine.Simulation.AnalysisType.OperatingPoint;
+            }
+        }
+    }
 
     // Transient parameters
     public double StartTime { get; set; } = 0.0;

@@ -81,7 +81,13 @@
         "LogicalColumn": "1",
         "ExpectedVoltage": "2.5",
         "ExpectedVoltageMinimum": "1.0",
-        "ExpectedVoltageMaximum": "4.0"
+        "ExpectedVoltageMaximum": "4.0",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.002",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -92,7 +98,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.001",
+        "TimeRangeDuration": "0.002",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       }
     },
     {

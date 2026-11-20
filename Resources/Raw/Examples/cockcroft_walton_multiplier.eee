@@ -207,7 +207,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "High-impedance bleeder / measurement load (1 M\u03a9)",
+      "Description": "High-impedance bleeder / measurement load (1 MΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "6"
@@ -230,7 +230,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "ExpectedVoltage": "10.0"
+        "ExpectedVoltage": "10.0",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.05",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -241,7 +247,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.05",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
       }
     },
     {

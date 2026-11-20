@@ -109,7 +109,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_IN",
       "Name": "R_IN",
-      "Description": "Integrator input scaling resistor (10 k\u03a9)",
+      "Description": "Integrator input scaling resistor (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "2"
@@ -170,7 +170,7 @@
       "ComponentType": "Resistor",
       "Reference": "R1_SCH",
       "Name": "R1_SCH",
-      "Description": "Schmitt trigger input summing resistor (10 k\u03a9)",
+      "Description": "Schmitt trigger input summing resistor (10 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "4"
@@ -189,7 +189,7 @@
       "ComponentType": "Resistor",
       "Reference": "R2_SCH",
       "Name": "R2_SCH",
-      "Description": "Schmitt trigger positive feedback resistor (22 k\u03a9)",
+      "Description": "Schmitt trigger positive feedback resistor (22 kΩ)",
       "StringParameters": {
         "LogicalRow": "2",
         "LogicalColumn": "5"
@@ -208,7 +208,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_FB",
       "Name": "R_FB",
-      "Description": "Bistable loop feedback resistor (15 k\u03a9)",
+      "Description": "Bistable loop feedback resistor (15 kΩ)",
       "StringParameters": {
         "LogicalRow": "4",
         "LogicalColumn": "4"
@@ -227,7 +227,7 @@
       "ComponentType": "Resistor",
       "Reference": "R_LOAD",
       "Name": "R_LOAD",
-      "Description": "VCO output load resistor (1 k\u03a9)",
+      "Description": "VCO output load resistor (1 kΩ)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "6"
@@ -250,7 +250,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "1",
-        "ExpectedVoltage": "2.50"
+        "ExpectedVoltage": "2.50",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -261,7 +267,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       }
     },
     {
@@ -273,7 +285,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "4",
-        "ExpectedVoltage": "3.20"
+        "ExpectedVoltage": "3.20",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -284,7 +302,13 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ArrayOutputEnabled": "True",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.005",
+        "TimeScaleFactor": "2",
+        "MaxReadings": "100",
+        "RealtimeArray": "False"
       }
     },
     {
