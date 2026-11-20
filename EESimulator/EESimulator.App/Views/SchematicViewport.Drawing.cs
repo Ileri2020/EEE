@@ -237,14 +237,16 @@ public partial class SchematicViewport
 
             int direction = 0;
             float speed = 0f;
+            double vFrom = 0.0;
+            double vTo = 0.0;
 
             if (route.Owner is WireComponent wire)
             {
                 var pin0 = wire.Pins.FirstOrDefault();
                 var pin1 = wire.Pins.Skip(1).FirstOrDefault();
-                double v0 = pin0 != null ? SamplePinVoltage(wire, pin0) : 0.0;
-                double v1 = pin1 != null ? SamplePinVoltage(wire, pin1) : 0.0;
-                double vDelta = v0 - v1;
+                vFrom = pin0 != null ? SamplePinVoltage(wire, pin0) : 0.0;
+                vTo = pin1 != null ? SamplePinVoltage(wire, pin1) : 0.0;
+                double vDelta = vFrom - vTo;
                 double current = Math.Abs(SampleComponentWaveform(wire, current: true));
 
                 if (Math.Abs(vDelta) > 1e-4)
@@ -259,8 +261,8 @@ public partial class SchematicViewport
             }
             else if (route.Connection != null && route.FromComp != null && route.ToComp != null && route.FromPin != null && route.ToPin != null)
             {
-                double vFrom = SamplePinVoltage(route.FromComp, route.FromPin);
-                double vTo = SamplePinVoltage(route.ToComp, route.ToPin);
+                vFrom = SamplePinVoltage(route.FromComp, route.FromPin);
+                vTo = SamplePinVoltage(route.ToComp, route.ToPin);
                 double vDelta = vFrom - vTo;
 
                 double iFrom = Math.Abs(SamplePinCurrent(route.FromComp, route.FromPin, GetLiveCurrent(route.FromComp)));
@@ -268,11 +270,15 @@ public partial class SchematicViewport
                 double branchCurrent = Math.Max(iFrom, iTo);
 
                 bool isFromSource = route.FromComp.ComponentType.Contains("Source", StringComparison.OrdinalIgnoreCase) ||
-                                    route.FromComp.SpicePrefix == "V" || route.FromComp.SpicePrefix == "I";
+                                    route.FromComp.Reference.StartsWith("V", StringComparison.OrdinalIgnoreCase) ||
+                                    route.FromComp.Reference.StartsWith("I", StringComparison.OrdinalIgnoreCase);
                 bool isToSource = route.ToComp.ComponentType.Contains("Source", StringComparison.OrdinalIgnoreCase) ||
-                                  route.ToComp.SpicePrefix == "V" || route.ToComp.SpicePrefix == "I";
-                bool isFromGround = route.FromComp is GroundComponent || route.FromComp.ComponentType.Equals("Ground", StringComparison.OrdinalIgnoreCase);
-                bool isToGround = route.ToComp is GroundComponent || route.ToComp.ComponentType.Equals("Ground", StringComparison.OrdinalIgnoreCase);
+                                  route.ToComp.Reference.StartsWith("V", StringComparison.OrdinalIgnoreCase) ||
+                                  route.ToComp.Reference.StartsWith("I", StringComparison.OrdinalIgnoreCase);
+                bool isFromGround = route.FromComp.ComponentType.Equals("Ground", StringComparison.OrdinalIgnoreCase) ||
+                                    route.FromComp.Reference.StartsWith("GND", StringComparison.OrdinalIgnoreCase);
+                bool isToGround = route.ToComp.ComponentType.Equals("Ground", StringComparison.OrdinalIgnoreCase) ||
+                                  route.ToComp.Reference.StartsWith("GND", StringComparison.OrdinalIgnoreCase);
 
                 // Examine internal voltage drops across attached components to determine flow direction
                 // when connection endpoints sit on the same electrical net (vDelta ~ 0).
