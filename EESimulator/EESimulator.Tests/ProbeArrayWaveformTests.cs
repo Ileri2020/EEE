@@ -74,7 +74,7 @@ public sealed class ProbeArrayWaveformTests
                 : probe.WaveformVoltage.ToArray();
         }
 
-        Assert.True(times.Length > 0, "Probe captured no waveform points.");
+        Assert.True(times.Length > 0, $"Probe captured no waveform points. {result.Message}");
 
         // Apply probe array properties (same logic as FormatProbeArrayOutput)
         double winStart = probe.TimeRangeStart;
@@ -117,7 +117,7 @@ public sealed class ProbeArrayWaveformTests
                      ArrayOutputEnabled = true,
                      TimeRangeStart     = 0.0,
                      TimeRangeDuration  = 0.0005,   // first 500 µs
-                     TimeScaleFactor    = 2,
+                     TimeScaleFactor    = 4,
                      MaxReadings        = 30 };
 
         circuit.AddChild(v); circuit.AddChild(r); circuit.AddChild(c);
@@ -150,7 +150,7 @@ public sealed class ProbeArrayWaveformTests
         int idx1tau = Enumerable.Range(0, times.Length).MinBy(i => Math.Abs(times[i] - tau));
         double v1tau = values[idx1tau];
         Log($"RC low-pass: V at 1τ ({times[idx1tau] * 1e6:F1} µs) = {v1tau:F4} V  (expected ≈ 0.632 V)");
-        Assert.InRange(v1tau, 0.47, 0.75);
+        Assert.InRange(v1tau, 0.55, 0.70);
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -164,7 +164,14 @@ public sealed class ProbeArrayWaveformTests
     public void AC_sine_probe_array_captures_full_swing_min_max_and_amplitude()
     {
         var circuit = new CircuitNode();
-        var v = new ACSourceComponent { Name = "V_AC", Voltage = 10.0, Frequency = 50.0 };
+        var v = new ACSourceComponent
+        {
+            Name = "V_AC",
+            Voltage = 10.0,
+            WaveformType = "Sine",
+            SineAmplitude = 10.0,
+            SineFrequency = 50.0
+        };
         var r = new ResistorComponent { Name = "R_LOAD", Resistance = 1_000.0 };
         var g = new GroundNode { Name = "GND" };
         var p = new ProbeComponent { Name = "P_AC",
@@ -180,7 +187,7 @@ public sealed class ProbeArrayWaveformTests
         Connect(circuit, v, "negative", g, "gnd");
         Connect(circuit, r, "pin1",     p, "in");
 
-        var settings = new SimulationSettings { StopTime = 0.04, StepTime = 1e-5 };
+        var settings = new SimulationSettings { StopTime = 0.04, StepTime = 1e-4 };
         var (times, values) = RunAndGetProbeArray(circuit, p, settings);
 
         double vMax = values.Max();
@@ -217,7 +224,7 @@ public sealed class ProbeArrayWaveformTests
     public void Halfwave_rectifier_probe_array_has_only_positive_half_cycles()
     {
         string file = Path.Combine(ExamplesDir(), "half_wave_rectifier.eee");
-        if (!File.Exists(file)) return; // skip if example not present in this checkout
+        Assert.True(File.Exists(file), $"Expected bundled example is missing: {file}");
 
         CircuitNode circuit = EeePlatformSerializer.LoadFromEee(file);
         var existingProbes = circuit.Components.OfType<ProbeComponent>().ToList();
@@ -240,8 +247,8 @@ public sealed class ProbeArrayWaveformTests
         probe.ArrayOutputEnabled  = true;
         probe.TimeRangeStart      = 0.01;   // skip first 10 ms
         probe.TimeRangeDuration   = 0.04;   // read 2 full cycles
-        probe.TimeScaleFactor     = 2;
-        probe.MaxReadings         = 150;
+        probe.TimeScaleFactor     = 1;
+        probe.MaxReadings         = 500;
 
         var settings = new SimulationSettings
             { StopTime = 0.05, StepTime = 1e-5, CaptureAllWaveforms = true };
@@ -261,7 +268,7 @@ public sealed class ProbeArrayWaveformTests
             .Where(tv => tv.t >= 0.01 && tv.t <= 0.05)
             .Select(tv => tv.v).ToArray();
 
-        if (windowedVals.Length == 0) return; // graceful skip if circuit has no AC source
+        Assert.NotEmpty(windowedVals);
 
         double vMin = windowedVals.Min();
         double vMax = windowedVals.Max();
@@ -333,7 +340,7 @@ public sealed class ProbeArrayWaveformTests
     public void RC_oscillator_probe_array_captures_both_high_and_low_swings()
     {
         string file = Path.Combine(ExamplesDir(), "rc_oscillator.eee");
-        if (!File.Exists(file)) return;
+        Assert.True(File.Exists(file), $"Expected bundled example is missing: {file}");
 
         CircuitNode circuit = EeePlatformSerializer.LoadFromEee(file);
         var probes = circuit.Components.OfType<ProbeComponent>().ToList();
@@ -372,19 +379,13 @@ public sealed class ProbeArrayWaveformTests
             ? nv.ToArray()
             : probe.WaveformVoltage.ToArray();
 
-        if (raw.Length == 0) return; // skip gracefully if no waveform data
+        Assert.NotEmpty(raw);
 
         double vMin = raw.Min();
         double vMax = raw.Max();
         double vRange = vMax - vMin;
 
         Log($"RC oscillator: Vmin={vMin:F3} V, Vmax={vMax:F3} V, range={vRange:F3} V ({raw.Length} raw pts)");
-
-        if (vRange < 1e-6)
-        {
-            Log("RC oscillator is not self-starting in this operating window; skipping swing assertion.");
-            return;
-        }
 
         // An oscillator must swing at least 0.5 V peak-to-peak
         Assert.True(vRange >= 0.5,

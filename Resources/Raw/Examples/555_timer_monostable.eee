@@ -3,7 +3,7 @@
   "FormatVersion": "1.1.0",
   "Application": "EESimulator",
   "Title": "555 Timer Monostable",
-  "Description": "Precision monostable one-shot multivibrator timing circuit with a fast negative-going trigger input, operational timing comparator (LM741, ±12V rails), reference divider threshold (6V), 51 ms timing charge network (R = 47 kΩ, C = 1 µF), rapid discharge diode, and 1 kΩ output load with pulse indicator LED.",
+  "Description": "Precision monostable one-shot multivibrator timing circuit with a fast negative-going trigger input (5V to -5V), single-supply timing comparator (LM741, +12V/0V rails), 8V reference threshold, 51 ms timing charge network (R = 47 kΩ, C = 1 µF), rapid discharge diode, and 1 kΩ output load with pulse indicator LED.",
   "Components": [
     {
       "Id": "899b2b59-e78e-419f-8cc4-12346e5e4fdc",
@@ -30,7 +30,7 @@
       "ComponentType": "VoltageSource",
       "Reference": "VEE",
       "Name": "VEE",
-      "Description": "-12V DC negative rail",
+      "Description": "0V comparator negative supply",
       "StringParameters": {
         "LogicalRow": "6",
         "LogicalColumn": "3",
@@ -41,7 +41,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Voltage": -12.0
+        "Voltage": 0.0
       },
       "CustomProperties": {}
     },
@@ -80,7 +80,7 @@
       "ElectricalParameters": {
         "Voltage": 5.0,
         "PulseInitial": 5.0,
-        "PulsePulsed": 0.0,
+        "PulsePulsed": -5.0,
         "PulseDelay": 0.005,
         "PulseRiseTime": 1e-06,
         "PulseFallTime": 1e-06,
@@ -94,7 +94,7 @@
       "ComponentType": "Capacitor",
       "Reference": "C_TRIG",
       "Name": "C_TRIG",
-      "Description": "Trigger differentiator coupling capacitor (10 nF)",
+      "Description": "Trigger differentiator coupling capacitor (1 µF)",
       "StringParameters": {
         "LogicalRow": "3",
         "LogicalColumn": "2"
@@ -104,7 +104,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Capacitance": 1e-08,
+        "Capacitance": 1e-06,
         "InitialCondition": 0.0
       },
       "CustomProperties": {}
@@ -143,7 +143,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Aol": 100000.0,
+        "Aol": 1000.0,
         "GBW": 1000000.0,
         "VccPlus": 12.0,
         "VccMinus": -12.0
@@ -184,7 +184,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
-        "Resistance": 10000.0
+        "Resistance": 20000.0
       },
       "CustomProperties": {}
     },
@@ -353,9 +353,9 @@
         "LogicalColumn": "6",
         "ExpectedVoltage": "10.5",
         "ArrayOutputEnabled": "True",
-        "TimeRangeStart": "0.0",
-        "TimeRangeDuration": "0.005",
-        "TimeScaleFactor": "1",
+        "TimeRangeStart": "0.004",
+        "TimeRangeDuration": "0.061",
+        "TimeScaleFactor": "100",
         "MaxReadings": "60",
         "RealtimeArray": "False"
       },
@@ -370,9 +370,9 @@
         "MeasurementMode": "Voltage",
         "Unit": "V",
         "ArrayOutputEnabled": "True",
-        "TimeRangeStart": "0.0",
-        "TimeRangeDuration": "0.005",
-        "TimeScaleFactor": "1",
+        "TimeRangeStart": "0.004",
+        "TimeRangeDuration": "0.061",
+        "TimeScaleFactor": "100",
         "MaxReadings": "60",
         "RealtimeArray": "False"
       }
@@ -438,7 +438,7 @@
       "FromComponentId": "48b3ac3b-b7f9-4970-b592-20c17334fc29",
       "FromPin": "pin2",
       "ToComponentId": "6482fc7c-87a6-409e-8fa7-d09f9e52e2da",
-      "ToPin": "in_pos",
+      "ToPin": "in_neg",
       "NetName": "REF_THRESH",
       "Resistance": 0.0
     },
@@ -519,7 +519,7 @@
       "FromComponentId": "bfb56e68-8f9b-4414-88d2-f9b78461db1f",
       "FromPin": "pin2",
       "ToComponentId": "6482fc7c-87a6-409e-8fa7-d09f9e52e2da",
-      "ToPin": "in_neg",
+      "ToPin": "in_pos",
       "NetName": "TIMING_NODE",
       "Resistance": 0.0
     },

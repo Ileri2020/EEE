@@ -185,7 +185,8 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 0.1,
       "ElectricalParameters": {
-        "Capacitance": 1e-08
+        "Capacitance": 1e-08,
+        "InitialCondition": 0.001
       },
       "StringParameters": {
         "LogicalRow": "3",

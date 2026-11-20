@@ -87,7 +87,8 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Capacitance": 1e-08
+        "Capacitance": 1e-08,
+        "InitialCondition": 0.001
       },
       "CustomProperties": {}
     },
@@ -147,7 +148,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Resistance": 20000.0
+        "Resistance": 22000.0
       },
       "CustomProperties": {}
     },

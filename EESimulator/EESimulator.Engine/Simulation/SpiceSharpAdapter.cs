@@ -510,7 +510,12 @@ public partial class SpiceSharpAdapter : ISimulationEngine
             {
                 try
                 {
-                    CaptureTransientWaveforms(waveComps, spiceCircuit, GetNetForPin, topology, settings);
+                    bool useInitialConditions = circuit.Components.Any(component =>
+                        (component is CapacitorComponent capacitor && capacitor.InitialCondition != 0) ||
+                        (component is InductorComponent inductor && inductor.InitialCondition != 0));
+                    CaptureTransientWaveforms(
+                        waveComps, spiceCircuit, GetNetForPin, topology, settings,
+                        useInitialConditions, results.OperatingPointVoltages, circuit.Components);
                 }
                 catch (Exception waveformException)
                 {
@@ -695,19 +700,66 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         SpiceSharp.Circuit spiceCircuit,
         Func<Guid, string, string> getNetForPin,
         CircuitTopology topology,
-        SimulationSettings settings)
+        SimulationSettings settings,
+        bool useInitialConditions,
+        IReadOnlyDictionary<string, double> operatingPointVoltages,
+        IEnumerable<ComponentNode> circuitComponents)
     {
         double start = Math.Max(0.0, settings.StartTime);
         double stop = settings.StopTime > start ? settings.StopTime : start + 0.02;
         double duration = stop - start;
-        // Adaptive time step: allow SpiceSharp's internal LTE (local truncation error) controller
-        // to expand the time step up to maxStep during smooth periods and refine during transitions.
         double initialStep = settings.StepTime > 0 ? settings.StepTime : Math.Min(duration / 50.0, 1e-4);
-        double maxStep = Math.Max(initialStep * 4.0, Math.Min(duration / 20.0, 0.005));
-        var transient = new Transient("EESimulator_Waveform", initialStep, stop, maxStep)
+        double maxStep = initialStep * 4.0;
+        var transient = new Transient("EESimulator_Waveform",
+            new SpiceSharp.Simulations.IntegrationMethods.Trapezoidal
+            {
+                InitialStep = initialStep,
+                MaxStep = maxStep,
+                MinStep = Math.Max(maxStep * 1e-12, 1e-18),
+                StopTime = stop
+            })
         {
-            TimeParameters = { StartTime = start }
+            TimeParameters = { StartTime = start, UseIc = useInitialConditions }
         };
+        if (useInitialConditions)
+        {
+            foreach (var capacitor in circuitComponents.OfType<CapacitorComponent>())
+            {
+                if (capacitor.Pins.Count < 2)
+                    continue;
+
+                string positiveNode = getNetForPin(capacitor.Id, capacitor.Pins[0].Id);
+                string negativeNode = getNetForPin(capacitor.Id, capacitor.Pins[1].Id);
+                if (positiveNode == "0" && negativeNode == "0")
+                    continue;
+
+                double positiveVoltage = positiveNode != "0" &&
+                    operatingPointVoltages.TryGetValue(positiveNode, out double positive)
+                    ? positive
+                    : 0.0;
+                double negativeVoltage = negativeNode != "0" &&
+                    operatingPointVoltages.TryGetValue(negativeNode, out double negative)
+                    ? negative
+                    : 0.0;
+                if (positiveNode != "0")
+                {
+                    transient.TimeParameters.InitialConditions[positiveNode] = positiveVoltage;
+                }
+                if (negativeNode != "0")
+                {
+                    transient.TimeParameters.InitialConditions[negativeNode] = negativeVoltage;
+                }
+                if (capacitor.InitialCondition != 0)
+                {
+                    if (positiveNode != "0")
+                        transient.TimeParameters.InitialConditions[positiveNode] =
+                            negativeVoltage + capacitor.InitialCondition;
+                    else
+                        transient.TimeParameters.InitialConditions[negativeNode] =
+                            positiveVoltage - capacitor.InitialCondition;
+                }
+            }
+        }
 
         string NodeFor(ComponentNode component, int pinIndex) =>
             component.Pins.Count > pinIndex ? getNetForPin(component.Id, component.Pins[pinIndex].Id) : "0";

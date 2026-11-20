@@ -130,7 +130,7 @@
       "ScaleY": 1.0,
       "BreakingCurrent": 1.0,
       "ElectricalParameters": {
-        "Aol": 100000.0,
+        "Aol": 10000.0,
         "GBW": 1000000.0,
         "SR": 0.5,
         "VccPlus": 15.0,

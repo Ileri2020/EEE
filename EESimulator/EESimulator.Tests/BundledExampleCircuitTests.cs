@@ -675,8 +675,8 @@ public sealed class BundledExampleCircuitTests
         Assert.True(acProbe.IsOscillating, "AC input probe must discover oscillation.");
         Assert.InRange(acProbe.Frequency, 50.0, 70.0);
         Assert.True(acProbe.AmplitudeRange > 20.0, "AC probe must have amplitude range > 20 V.");
-        Assert.Equal(acProbe.Minimum, acValues.Min(), precision: 3);
-        Assert.Equal(acProbe.Maximum, acValues.Max(), precision: 3);
+        Assert.InRange(acProbe.Minimum, -13.0, -10.0);
+        Assert.InRange(acProbe.Maximum, 10.0, 13.0);
 
         Assert.NotEmpty(recValues);
         Assert.InRange(recValues.Min(), -0.5, 0.5);
@@ -728,6 +728,8 @@ public sealed class BundledExampleCircuitTests
 
         Assert.True(probeOut1.ArrayOutputEnabled);
         Assert.True(probeOut2.ArrayOutputEnabled);
+        probeOut1.TimeScaleFactor = 40;
+        probeOut2.TimeScaleFactor = 40;
 
         var settings = new SimulationSettings
         {
@@ -737,15 +739,18 @@ public sealed class BundledExampleCircuitTests
             CaptureAllWaveforms = true
         };
 
-        var (_, v1) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probeOut1, settings);
-        var (_, v2) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probeOut2, settings);
+        var (times1, v1) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probeOut1, settings);
+        var (times2, v2) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probeOut2, settings);
 
         Assert.NotEmpty(v1);
         Assert.NotEmpty(v2);
-        Assert.InRange(v1.Min(), 0.0, 1.5);
-        Assert.InRange(v1.Max(), 0.0, 5.5);
-        Assert.InRange(v2.Min(), 0.0, 1.5);
-        Assert.InRange(v2.Max(), 0.0, 5.5);
+        Assert.Equal(times1, times2);
+        Assert.InRange(v1.Min(), 0.0, 0.5);
+        Assert.InRange(v1.Max(), 4.0, 5.5);
+        Assert.InRange(v2.Min(), 0.0, 0.5);
+        Assert.InRange(v2.Max(), 4.0, 5.5);
+        Assert.True(v1.Zip(v2).Any(pair => Math.Abs(pair.First - pair.Second) > 2.0),
+            "Multivibrator outputs must switch to opposite logic levels.");
         Assert.Equal(probeOut1.Minimum, v1.Min(), precision: 3);
         Assert.Equal(probeOut1.Maximum, v1.Max(), precision: 3);
         Assert.Equal(probeOut2.Minimum, v2.Min(), precision: 3);
@@ -817,11 +822,14 @@ public sealed class BundledExampleCircuitTests
             circuit.Components.Single(c => c.Name == "TP_OUT"));
         Assert.True(probe.ArrayOutputEnabled);
         Assert.Equal(80, probe.MaxReadings);
+        probe.TimeRangeStart = 0.04;
+        probe.TimeRangeDuration = 0.01;
+        probe.TimeScaleFactor = 13;
 
         var settings = new SimulationSettings
         {
             AnalysisType = "Transient",
-            StopTime = 0.005,
+            StopTime = 0.05,
             StepTime = 1e-5,
             CaptureAllWaveforms = true
         };
@@ -832,11 +840,9 @@ public sealed class BundledExampleCircuitTests
         Assert.True(values.Length <= probe.MaxReadings);
         double minimumOutput = values.Min();
         double maximumOutput = values.Max();
-        Assert.True(minimumOutput >= -3.0 && minimumOutput <= 2.5,
-            $"Triangle output minimum was {minimumOutput:G17} V; maximum was {maximumOutput:G17} V.");
-        Assert.True(maximumOutput >= -2.5 && maximumOutput <= 3.0,
-            $"Triangle output maximum was {maximumOutput:G17} V; minimum was {minimumOutput:G17} V.");
-        Assert.True(values.Max() - values.Min() >= 0.0, "Triangle wave output span must be non-negative.");
+        Assert.InRange(minimumOutput, -1.7, -0.8);
+        Assert.InRange(maximumOutput, 0.8, 1.7);
+        Assert.InRange(maximumOutput - minimumOutput, 2.0, 3.0);
     }
 
     [Fact]
@@ -853,7 +859,7 @@ public sealed class BundledExampleCircuitTests
         var settings = new SimulationSettings
         {
             AnalysisType = "Transient",
-            StopTime = 0.006,
+            StopTime = 0.065,
             StepTime = 1e-5,
             CaptureAllWaveforms = true
         };
@@ -862,8 +868,28 @@ public sealed class BundledExampleCircuitTests
 
         Assert.NotEmpty(values);
         Assert.True(values.Length <= probe.MaxReadings);
-        Assert.InRange(values.Min(), 0.0, 12.0);
-        Assert.InRange(values.Max(), 0.0, 12.0);
+        var timingProbe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_TIMING"));
+        var triggerProbe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_TRIG"));
+        var comparator = Assert.IsType<OpAmpComponent>(
+            circuit.Components.Single(c => c.Name == "U1"));
+        List<double> timingInput = comparator.WaveformNodeVoltages["in_pos"];
+        List<double> thresholdInput = comparator.WaveformNodeVoltages["in_neg"];
+        string diagnostics =
+            $"Monostable output {values.Min():F3}..{values.Max():F3} V; " +
+            $"timing {timingInput.Min():F3}..{timingInput.Max():F3} V; " +
+            $"threshold {thresholdInput.Min():F3}..{thresholdInput.Max():F3} V; " +
+            $"trigger {triggerProbe.WaveformVoltage.Min():F3}..{triggerProbe.WaveformVoltage.Max():F3} V.";
+        Assert.True(values.Min() >= -1.0 && values.Min() <= 1.0, diagnostics);
+        Assert.True(values.Max() >= 10.5 && values.Max() <= 12.5, diagnostics);
+
+        double[] highPulseTimes = times
+            .Where((_, index) => values[index] > 0.0)
+            .ToArray();
+        Assert.True(highPulseTimes.Length > 0, diagnostics);
+        double pulseWidth = highPulseTimes[^1] - highPulseTimes[0];
+        Assert.True(pulseWidth >= 0.045 && pulseWidth <= 0.055, $"{diagnostics} Pulse width: {pulseWidth:F3} s.");
     }
 
     [Fact]

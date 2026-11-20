@@ -18,9 +18,9 @@ public sealed class OscillatingExampleProbeTests
         ["wien_bridge_oscillator.eee", "TP_BRIDGE", 0.01, 0.01, 2, 80, 0.02, 1e-4],
         ["wien_bridge_function_generator.eee", "TP_OUT", 0.01, 0.01, 2, 80, 0.02, 1e-4],
         ["voltage_controlled_oscillator.eee", "TP_TRIANGLE", 0.0, 0.005, 2, 100, 0.005, 2.5e-5],
-        ["triangle_wave_generator.eee", "TP_OUT", 0.0, 0.004, 2, 80, 0.004, 2e-5],
+        ["triangle_wave_generator.eee", "TP_OUT", 0.04, 0.01, 13, 80, 0.05, 1e-5],
         ["sawtooth_wave_generator.eee", "TP_OUT", 0.0, 0.005, 1, 80, 0.005, 2.5e-5],
-        ["555_timer_monostable.eee", "TP_OUT", 0.0, 0.005, 1, 60, 0.005, 2.5e-5],
+        ["555_timer_monostable.eee", "TP_OUT", 0.004, 0.061, 100, 60, 0.065, 2.5e-5],
         ["schmitt_trigger.eee", "TP_OUT", 0.0, 0.02, 2, 60, 0.02, 1e-4],
     ];
 
