@@ -104,6 +104,46 @@
         "MeasurementMode": "Voltage",
         "Unit": "V"
       }
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000010",
+      "ComponentType": "Probe",
+      "Name": "TP_CAP_WAVEFORM",
+      "Reference": "TP_CAP_WAVEFORM",
+      "Description": "Time-variant array probe capturing capacitor charging waveform.",
+      "StringParameters": {
+        "LogicalRow": "5",
+        "LogicalColumn": "3",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "1.0",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "1",
+        "TimeRangeStart": "0",
+        "TimeRangeDuration": "0.0005",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "1.0",
+        "ExpectedVoltageMinimum": "0.0",
+        "ExpectedVoltageMaximum": "1.0",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "1",
+        "TimeRangeStart": "0",
+        "TimeRangeDuration": "0.0005",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
+      }
     }
   ],
   "Connections": [
@@ -159,6 +199,15 @@
       "ToComponentId": "41000000-0000-0000-0000-000000000001",
       "ToPin": "positive",
       "NetName": "VIN",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000010",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000010",
+      "FromPin": "in",
+      "ToComponentId": "41000000-0000-0000-0000-000000000004",
+      "ToPin": "pin1",
+      "NetName": "VOUT",
       "Resistance": 0.0
     }
   ]

@@ -272,7 +272,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "2",
-        "ExpectedVoltage": "4.8"
+        "ExpectedVoltage": "4.8",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -283,7 +289,14 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ExpectedVoltage": "4.8",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
       }
     },
     {
@@ -295,7 +308,13 @@
       "StringParameters": {
         "LogicalRow": "1",
         "LogicalColumn": "5",
-        "ExpectedVoltage": "0.2"
+        "ExpectedVoltage": "0.2",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -306,7 +325,14 @@
       },
       "CustomProperties": {
         "MeasurementMode": "Voltage",
-        "Unit": "V"
+        "Unit": "V",
+        "ExpectedVoltage": "0.2",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0.0",
+        "TimeRangeDuration": "0.1",
+        "MaxReadings": "50",
+        "RealtimeArray": "False"
       }
     },
     {

@@ -54,7 +54,7 @@ public sealed class ProbeArrayWaveformTests
     /// Run a transient simulation and return the probe's captured waveform (time[], values[]),
     /// filtered and sub-sampled according to the probe's own array output properties.
     /// </summary>
-    private static (double[] Times, double[] Values) RunAndGetProbeArray(
+    internal static (double[] Times, double[] Values) RunAndGetProbeArray(
         CircuitNode circuit, ProbeComponent probe, SimulationSettings settings)
     {
         settings.CaptureAllWaveforms = true;

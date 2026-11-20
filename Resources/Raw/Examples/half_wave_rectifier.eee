@@ -150,7 +150,13 @@
         "LogicalColumn": "5",
         "MeasurementMode": "Voltage",
         "Unit": "V",
-        "ExpectedVoltage": "11.26433783"
+        "ExpectedVoltage": "11.26433783",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0.01",
+        "TimeRangeDuration": "0.04",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
       },
       "Rotation": 0.0,
       "ScaleX": 1.0,
@@ -159,7 +165,60 @@
       "ElectricalParameters": {
         "InputImpedance": 10000000.0
       },
-      "CustomProperties": {}
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "11.26433783",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0.01",
+        "TimeRangeDuration": "0.04",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
+      }
+    },
+    {
+      "Id": "b1000000-0000-0000-0000-000000000020",
+      "StableTypeId": "general.probe",
+      "ComponentType": "Probe",
+      "Reference": "TP_AC_WAVEFORM",
+      "Name": "TP_AC_WAVEFORM",
+      "Description": "Time-variant array probe capturing sinusoidal AC input waveform.",
+      "StringParameters": {
+        "LogicalRow": "2",
+        "LogicalColumn": "1",
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "-13.0",
+        "ExpectedVoltageMaximum": "13.0",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0",
+        "TimeRangeDuration": "0.04",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 1.0,
+      "ElectricalParameters": {
+        "InputImpedance": 10000000.0
+      },
+      "CustomProperties": {
+        "MeasurementMode": "Voltage",
+        "Unit": "V",
+        "ExpectedVoltage": "0.0",
+        "ExpectedVoltageMinimum": "-13.0",
+        "ExpectedVoltageMaximum": "13.0",
+        "ArrayOutputEnabled": "True",
+        "TimeScaleFactor": "2",
+        "TimeRangeStart": "0",
+        "TimeRangeDuration": "0.04",
+        "MaxReadings": "80",
+        "RealtimeArray": "False"
+      }
     },
     {
       "Id": "cce31ad2-2fe2-4ad4-9c72-973ccce52231",
@@ -274,6 +333,15 @@
       "ToComponentId": "9bb83ba3-53e8-43ee-9f04-46de1ce3ddfc",
       "ToPin": "gnd",
       "NetName": "0",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "b2000000-0000-0000-0000-000000000020",
+      "FromComponentId": "b1000000-0000-0000-0000-000000000020",
+      "FromPin": "in",
+      "ToComponentId": "29f06a49-1fef-426a-81f2-871c193c457b",
+      "ToPin": "positive",
+      "NetName": "N2",
       "Resistance": 0.0
     }
   ]
