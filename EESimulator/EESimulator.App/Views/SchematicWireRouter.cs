@@ -57,12 +57,37 @@ internal static class SchematicWireRouter
         var startLead = GetClearPinLead(fromComponent, start, startDirection);
         var endLead = GetClearPinLead(toComponent, end, endDirection);
         var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
-        var routeObstacles = GetObstacles(allComponents);
+        var routeObstacles = GetObstacles(allComponents, fromComponent, toComponent);
         var targetLeadObstacles = GetObstacles(allComponents, toComponent);
-        return CombinePaths(
+
+        var path = CombinePaths(
             FindOrthogonalPath(start, startLead, sourceLeadObstacles),
             FindOrthogonalPath(startLead, endLead, routeObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, targetLeadObstacles));
+
+        if (path.Count >= 2)
+            return path;
+
+        // Fallback 1: Allow lane-sharing with prior paths
+        path = CombinePaths(
+            FindOrthogonalPath(start, startLead, sourceLeadObstacles),
+            FindOrthogonalPath(startLead, endLead, routeObstacles),
+            FindOrthogonalPath(endLead, end, targetLeadObstacles));
+
+        if (path.Count >= 2)
+            return path;
+
+        // Fallback 2: Guaranteed orthogonal elbow route so wire connections are never dropped or hidden
+        float midX = (start.X + end.X) / 2f;
+        return Simplify(new List<PointF>
+        {
+            start,
+            startLead,
+            new(midX, startLead.Y),
+            new(midX, endLead.Y),
+            endLead,
+            end
+        });
     }
 
     public static List<PointF> RouteWireComponent(
@@ -83,10 +108,25 @@ internal static class SchematicWireRouter
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
         var wireObstacles = GetObstacles(allComponents, wire);
-        return CombinePaths(
+
+        var path = CombinePaths(
             FindOrthogonalPath(start, startLead, wireObstacles),
             FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, wireObstacles));
+
+        if (path.Count >= 2)
+            return path;
+
+        path = CombinePaths(
+            FindOrthogonalPath(start, startLead, wireObstacles),
+            FindOrthogonalPath(startLead, endLead, wireObstacles),
+            FindOrthogonalPath(endLead, end, wireObstacles));
+
+        if (path.Count >= 2)
+            return path;
+
+        float midX = (start.X + end.X) / 2f;
+        return new List<PointF> { start, new(midX, start.Y), new(midX, end.Y), end };
     }
 
     public static bool NeedsJunctionBreak(

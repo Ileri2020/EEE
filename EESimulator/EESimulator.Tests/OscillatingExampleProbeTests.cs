@@ -56,7 +56,7 @@ public sealed class OscillatingExampleProbeTests
             CaptureAllWaveforms = true
         };
         var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
-        string signalDiagnostics = filename == "voltage_controlled_oscillator.eee"
+        string signalDiagnostics = filename is "voltage_controlled_oscillator.eee" or "crystal_oscillator.eee"
             ? string.Join("; ", circuit.Components
                 .OfType<OpAmpComponent>()
                 .Select(opAmp => $"{opAmp.Name}: " + string.Join(", ", opAmp.WaveformNodeVoltages

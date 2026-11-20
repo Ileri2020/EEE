@@ -95,7 +95,7 @@
         "RotationalSpeedRpm": 1500.0,
         "PowerFactor": 0.8,
         "FieldExcitation": 1.0,
-        "FieldResistance": 200.0,
+        "FieldResistance": 1000.0,
         "MechanicalInputPower": 800.0
       },
       "CustomProperties": {}

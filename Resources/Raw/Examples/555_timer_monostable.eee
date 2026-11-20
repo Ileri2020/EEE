@@ -222,7 +222,7 @@
       "BreakingCurrent": 10.0,
       "ElectricalParameters": {
         "Capacitance": 1e-06,
-        "InitialCondition": 0.0
+        "InitialCondition": 9.0
       },
       "CustomProperties": {}
     },

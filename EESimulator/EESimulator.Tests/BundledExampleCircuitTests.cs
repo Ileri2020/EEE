@@ -227,8 +227,12 @@ public sealed class BundledExampleCircuitTests
         var simulation = new SpiceSharpAdapter().RunSimulation(circuit, new SimulationSettings());
 
         Assert.True(simulation.Success, simulation.Message);
-        Assert.InRange(generator.FieldExcitation, 0.98, 1.02);
-        Assert.InRange(Math.Abs(generator.LivePinVoltages["field_positive"] - 5), 0, 0.02);
+        string fieldDiagnostics =
+            $"Excitation={generator.FieldExcitation:F5}, field={generator.LivePinVoltages["field_positive"]:F5} V, " +
+            $"AVR={controller.LivePinVoltages["out"]:F5} V, " +
+            $"GEN_A={simulation.OperatingPointVoltages["V(TP_GEN_A)"]:F5} V.";
+        Assert.True(generator.FieldExcitation is >= 0.98 and <= 1.02, fieldDiagnostics);
+        Assert.True(Math.Abs(generator.LivePinVoltages["field_positive"] - 5) <= 0.02, fieldDiagnostics);
         Assert.InRange(
             Math.Abs(simulation.OperatingPointVoltages["V(TP_GEN_A)"] - 13.882816666318293),
             0,

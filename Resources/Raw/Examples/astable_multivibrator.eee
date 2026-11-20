@@ -245,6 +245,44 @@
       "CustomProperties": {}
     },
     {
+      "Id": "c1ffbc31-5b3e-4e8d-a8d1-c0d0e4b527a1",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED1",
+      "Name": "R_LED1",
+      "Description": "Collector indicator LED current limiter (4.7 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "2"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 4700.0
+      },
+      "CustomProperties": {}
+    },
+    {
+      "Id": "4c9228a8-9323-4f16-8f66-886699e8ce34",
+      "ComponentType": "Resistor",
+      "Reference": "R_LED2",
+      "Name": "R_LED2",
+      "Description": "Collector indicator LED current limiter (4.7 kΩ)",
+      "StringParameters": {
+        "LogicalRow": "6",
+        "LogicalColumn": "5"
+      },
+      "Rotation": 0.0,
+      "ScaleX": 1.0,
+      "ScaleY": 1.0,
+      "BreakingCurrent": 10.0,
+      "ElectricalParameters": {
+        "Resistance": 4700.0
+      },
+      "CustomProperties": {}
+    },
+    {
       "Id": "75e383b5-f5db-4b01-896d-fa1e15936f8f",
       "ComponentType": "Probe",
       "Reference": "TP_VCC",
@@ -449,9 +487,18 @@
       "Id": "c0958e89-ffa6-42d3-b84e-9b0fa4fb8604",
       "FromComponentId": "7db39ca2-6b7b-4e6a-bc1b-6b86b9074980",
       "FromPin": "pin2",
+      "ToComponentId": "c1ffbc31-5b3e-4e8d-a8d1-c0d0e4b527a1",
+      "ToPin": "pin1",
+      "NetName": "Q1_COLLECTOR",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "a0b45ad1-2058-4e22-a60f-af20bf0439a1",
+      "FromComponentId": "c1ffbc31-5b3e-4e8d-a8d1-c0d0e4b527a1",
+      "FromPin": "pin2",
       "ToComponentId": "9a345b9a-773f-4d0a-a23e-53fd55661760",
       "ToPin": "anode",
-      "NetName": "Q1_COLLECTOR",
+      "NetName": "LED1_ANODE",
       "Resistance": 0.0
     },
     {
@@ -485,9 +532,18 @@
       "Id": "560722c1-ba6e-4be3-99be-294ad531c822",
       "FromComponentId": "6bdea109-fc89-4387-9a67-7bdaaac909ec",
       "FromPin": "pin2",
+      "ToComponentId": "4c9228a8-9323-4f16-8f66-886699e8ce34",
+      "ToPin": "pin1",
+      "NetName": "Q2_COLLECTOR",
+      "Resistance": 0.0
+    },
+    {
+      "Id": "77c75582-c43c-4c72-81aa-7ff8b353aa24",
+      "FromComponentId": "4c9228a8-9323-4f16-8f66-886699e8ce34",
+      "FromPin": "pin2",
       "ToComponentId": "89cf6b80-db1b-486b-984d-8961b1196fbc",
       "ToPin": "anode",
-      "NetName": "Q2_COLLECTOR",
+      "NetName": "LED2_ANODE",
       "Resistance": 0.0
     },
     {
