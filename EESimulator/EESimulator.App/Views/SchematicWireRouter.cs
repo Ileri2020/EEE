@@ -50,9 +50,7 @@ internal static class SchematicWireRouter
                 routed.Add(FindOrthogonalPath(
                     points[index], points[index + 1], GetObstacles(allComponents, excluded), priorPaths));
             }
-            var waypointPath = CombinePaths(routed.ToArray());
-            if (waypointPath.Count >= 2) return waypointPath;
-            return Simplify(points);
+            return CombinePaths(routed.ToArray());
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
@@ -61,110 +59,10 @@ internal static class SchematicWireRouter
         var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
         var routeObstacles = GetObstacles(allComponents);
         var targetLeadObstacles = GetObstacles(allComponents, toComponent);
-        var routedPath = CombinePaths(
+        return CombinePaths(
             FindOrthogonalPath(start, startLead, sourceLeadObstacles),
             FindOrthogonalPath(startLead, endLead, routeObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, targetLeadObstacles));
-
-        if (routedPath.Count >= 2)
-            return routedPath;
-
-        // Fallback: If grid obstacle router failed to find an unobstructed path, NEVER hide the connection!
-        // Always provide a clean, visible orthogonal elbow route between the two connected pins.
-        float midX = (start.X + end.X) / 2f;
-        return Simplify(new List<PointF>
-        {
-            start,
-            new PointF(midX, start.Y),
-            new PointF(midX, end.Y),
-            end
-        });
-    }
-
-    /// <summary>
-    /// Checks whether auto-routing between two pins is "hard" — i.e. the A* router
-    /// cannot find a clear path AND the elbow fallback crosses component bodies.
-    /// When true, the caller should insert a JunctionComponent at <paramref name="junctionPoint"/>
-    /// and split the connection into two separate legs: source→junction and junction→target.
-    /// </summary>
-    public static bool NeedsJunctionBreak(
-        ComponentNode fromComponent,
-        ComponentPin fromPin,
-        ComponentNode toComponent,
-        ComponentPin toPin,
-        IEnumerable<ComponentNode> allComponents,
-        out PointF junctionPoint)
-    {
-        junctionPoint = default;
-        var allList = allComponents.ToList();
-
-        var start  = GetPinWorldPosition(fromComponent, fromPin);
-        var end    = GetPinWorldPosition(toComponent,   toPin);
-
-        // Build leads
-        var startDir  = GetPinOutwardDirection(fromComponent, fromPin,  end);
-        var endDir    = GetPinOutwardDirection(toComponent,   toPin,    start);
-        var startLead = GetClearPinLead(fromComponent, start, startDir);
-        var endLead   = GetClearPinLead(toComponent,   end,   endDir);
-
-        var sourceObs = GetObstacles(allList, fromComponent);
-        var midObs    = GetObstacles(allList);
-        var targetObs = GetObstacles(allList, toComponent);
-
-        // If A* succeeds for the middle leg the route is clean — no junction needed.
-        var midPath = FindOrthogonalPath(startLead, endLead, midObs);
-        if (midPath.Count >= 2)
-            return false;
-
-        // A* failed. Check whether the elbow fallback passes through any obstacle.
-        float elbowMidX = (start.X + end.X) / 2f;
-        var elbowPath = new List<PointF>
-        {
-            start, new(elbowMidX, start.Y), new(elbowMidX, end.Y), end
-        };
-        bool elbowBlocked = !IsRouteClear(elbowPath, midObs, Array.Empty<List<PointF>>());
-
-        if (!elbowBlocked)
-            return false; // elbow fallback is fine as-is
-
-        // The direct elbow IS blocked. Find a junction point that is clear of all obstacles.
-        // Try candidate positions radiating outward from the midpoint of the two component centers.
-        float cx = (start.X + end.X) / 2f;
-        float cy = (start.Y + end.Y) / 2f;
-
-        // Candidate offsets to try (in world units), spiralling away from the midpoint
-        float[] offsets = { 0f, 40f, -40f, 80f, -80f, 120f, -120f, 160f, -160f };
-        foreach (float oy in offsets)
-        {
-            foreach (float ox in offsets)
-            {
-                float jx = MathF.Round((cx + ox) / GridStep) * GridStep;
-                float jy = MathF.Round((cy + oy) / GridStep) * GridStep;
-                var jPt = new PointF(jx, jy);
-
-                if (IsBlocked(jPt, midObs))
-                    continue;
-
-                // Check that both legs from start→junction and junction→end have clear elbows
-                var leg1a = new List<PointF> { start, new(jx, start.Y), jPt };
-                var leg1b = new List<PointF> { start, new(start.X, jy), jPt };
-                var leg2a = new List<PointF> { jPt, new(end.X, jy), end };
-                var leg2b = new List<PointF> { jPt, new(jx, end.Y), end };
-
-                bool leg1Clear = IsRouteClear(leg1a, sourceObs, Array.Empty<List<PointF>>()) ||
-                                 IsRouteClear(leg1b, sourceObs, Array.Empty<List<PointF>>());
-                bool leg2Clear = IsRouteClear(leg2a, targetObs, Array.Empty<List<PointF>>()) ||
-                                 IsRouteClear(leg2b, targetObs, Array.Empty<List<PointF>>());
-
-                if (leg1Clear && leg2Clear)
-                {
-                    junctionPoint = jPt;
-                    return true;
-                }
-            }
-        }
-
-        return false; // could not find a clear junction point; let caller use elbow fallback
     }
 
     public static List<PointF> RouteWireComponent(
@@ -185,23 +83,10 @@ internal static class SchematicWireRouter
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
         var wireObstacles = GetObstacles(allComponents, wire);
-        var wireRoute = CombinePaths(
+        return CombinePaths(
             FindOrthogonalPath(start, startLead, wireObstacles),
             FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, wireObstacles));
-
-        if (wireRoute.Count >= 2)
-            return wireRoute;
-
-        // Fallback: Always ensure the wire route is drawn
-        float wireMidX = (start.X + end.X) / 2f;
-        return Simplify(new List<PointF>
-        {
-            start,
-            new PointF(wireMidX, start.Y),
-            new PointF(wireMidX, end.Y),
-            end
-        });
     }
 
     private static PointF GetClearPinLead(ComponentNode component, PointF pinPosition, PointF direction)
