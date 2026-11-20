@@ -270,7 +270,8 @@ public partial class EEWorkspaceViewModel
             CurrentSimulationSnapshot = snapshot;
             if (DateTime.UtcNow - _lastPlaybackConsoleUpdateUtc >= TimeSpan.FromSeconds(1))
             {
-                ConsoleOutput = FormatResults(results);
+                // Show scalar results + only real-time-flagged probe arrays during live playback.
+                ConsoleOutput = FormatResults(results) + FormatProbeArrayOutput(realtimeTickOnly: true);
                 _lastPlaybackConsoleUpdateUtc = DateTime.UtcNow;
             }
             DispatchTriggeredUiEvents();
@@ -681,7 +682,7 @@ public partial class EEWorkspaceViewModel
             var (feedback, snapshot) = await _simWorker.ExecuteAsync(Circuit, new SimulationSettings());
             CurrentSimulationSnapshot = snapshot;
             _lastSimulationCircuitSnapshot = EeePlatformSerializer.ExportToEee(Circuit);
-            ConsoleOutput = commandOutput + "\n" + FormatResults(feedback);
+            ConsoleOutput = commandOutput + "\n" + FormatResults(feedback) + FormatProbeArrayOutput();
             DispatchTriggeredUiEvents();
             OnPropertyChanged(nameof(SelectedComponent));
             AiSchemaStatus = feedback.Success
@@ -842,7 +843,7 @@ public partial class EEWorkspaceViewModel
             });
             DispatchTriggeredUiEvents();
 
-            ConsoleOutput = FormatResults(results);
+            ConsoleOutput = FormatResults(results) + FormatProbeArrayOutput();
             AiSchemaStatus = results.Success
                 ? "Simulation feedback refreshed for the next AI request."
                 : $"Simulation feedback unavailable: {results.Message}";

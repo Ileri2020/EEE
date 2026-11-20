@@ -909,6 +909,91 @@ public partial class EEWorkspaceViewModel
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Appends time-variant array output for all probes in the circuit that have
+    /// <see cref="ProbeComponent.ArrayOutputEnabled"/> set to true.
+    /// Called after every simulation step (and optionally after every live-playback tick
+    /// for probes with <see cref="ProbeComponent.RealtimeArray"/> true).
+    /// </summary>
+    private string FormatProbeArrayOutput(bool realtimeTickOnly = false)
+    {
+        var probes = Circuit.FindChildren<ProbeComponent>()
+            .Where(p => p.ArrayOutputEnabled && (!realtimeTickOnly || p.RealtimeArray))
+            .ToList();
+
+        if (probes.Count == 0) return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("=== Probe Waveform Arrays ===");
+
+        foreach (var probe in probes)
+        {
+            List<double> times;
+            List<double> values;
+
+            lock (probe)
+            {
+                times  = new List<double>(probe.WaveformTime);
+                // Use the "in" pin voltage as the primary reading (index 0 pin)
+                var pinId = probe.Pins.FirstOrDefault()?.Id ?? "in";
+                if (probe.WaveformNodeVoltages.TryGetValue(pinId, out var nodeVols) && nodeVols.Count > 0)
+                    values = new List<double>(nodeVols);
+                else
+                    values = new List<double>(probe.WaveformVoltage);
+            }
+
+            if (times.Count == 0 || values.Count == 0)
+            {
+                sb.AppendLine($"  {probe.Reference} ({probe.MeasurementMode}): [no waveform data — run a Transient simulation]");
+                continue;
+            }
+
+            // --- Apply time window ---
+            double winStart = probe.TimeRangeStart;
+            double winEnd   = probe.TimeRangeDuration > 0
+                ? winStart + probe.TimeRangeDuration
+                : double.MaxValue;
+
+            // --- Sub-sample and collect ---
+            int step     = Math.Max(1, probe.TimeScaleFactor);
+            int maxCount = probe.MaxReadings > 0 ? Math.Min(probe.MaxReadings, 500) : 500;
+            string unit  = probe.MeasurementMode.Equals("Current", StringComparison.OrdinalIgnoreCase) ? "A" : "V";
+
+            var entries = new List<(double t, double v)>();
+            for (int i = 0; i < times.Count && i < values.Count; i += step)
+            {
+                double t = times[i];
+                if (t < winStart || t > winEnd) continue;
+                entries.Add((t, values[i]));
+                if (entries.Count >= maxCount) break;
+            }
+
+            if (entries.Count == 0)
+            {
+                sb.AppendLine($"  {probe.Reference}: [no data in window t=[{winStart:G}s … {(probe.TimeRangeDuration > 0 ? (winStart + probe.TimeRangeDuration).ToString("G") + "s" : "end")}]]");
+                continue;
+            }
+
+            // Format: P1 (Voltage, t=0s..2s, step×5, 40 pts): [0.0000V@0.000s, 1.2340V@0.010s, …]
+            string windowDesc = probe.TimeRangeDuration > 0
+                ? $"t={winStart:G}s‥{winStart + probe.TimeRangeDuration:G}s"
+                : winStart > 0 ? $"t≥{winStart:G}s" : "all time";
+            string meta = $"{probe.MeasurementMode}, {windowDesc}" +
+                          (step > 1 ? $", ×{step} step" : "") +
+                          $", {entries.Count} pts";
+
+            sb.Append($"  {probe.Reference} ({meta}): [");
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append($"{entries[i].v:G4}{unit}@{entries[i].t:G4}s");
+            }
+            sb.AppendLine("]");
+        }
+
+        return sb.ToString();
+    }
+
 }
 
 
