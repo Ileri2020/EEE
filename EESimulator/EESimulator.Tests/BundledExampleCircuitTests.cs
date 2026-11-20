@@ -607,7 +607,134 @@ public sealed class BundledExampleCircuitTests
                 Assert.Equal(input.State, Assert.IsType<EESimulator.Core.Components.Electronics.LogicInputComponent>(
                     generatedCircuit.FindChild<ComponentNode>(input.Name)).State));
         }
+    }
 
+    [Fact]
+    public void Bundled_example_rc_low_pass_variant_probe_measures_exponential_charging()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "rc_low_pass.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_CAP_WAVEFORM"));
+        Assert.True(probe.ArrayOutputEnabled);
+        Assert.Equal(50, probe.MaxReadings);
+        Assert.Equal(0.0005, probe.TimeRangeDuration);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.0005,
+            StepTime = 1e-6,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.True(values.Length <= probe.MaxReadings);
+        Assert.InRange(values.Min(), 0.0, 0.1);
+        Assert.InRange(values.Max(), 0.4, 1.05);
+
+        for (int i = 1; i < values.Length; i++)
+        {
+            Assert.True(values[i] >= values[i - 1] - 1e-4,
+                $"Capacitor charge must be monotonic: values[{i}]={values[i]} < values[{i - 1}]={values[i - 1]}");
+        }
+    }
+
+    [Fact]
+    public void Bundled_example_half_wave_rectifier_variant_probes_measure_ac_and_rectified_waveforms()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "half_wave_rectifier.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var acProbe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_AC_WAVEFORM"));
+        var recProbe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_RECTIFIED"));
+
+        Assert.True(acProbe.ArrayOutputEnabled);
+        Assert.True(recProbe.ArrayOutputEnabled);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.04,
+            StepTime = 1e-4,
+            CaptureAllWaveforms = true
+        };
+
+        var (acTimes, acValues) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, acProbe, settings);
+        var (recTimes, recValues) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, recProbe, settings);
+
+        Assert.NotEmpty(acValues);
+        Assert.InRange(acValues.Min(), -13.0, -10.0);
+        Assert.InRange(acValues.Max(), 10.0, 13.0);
+        Assert.True(acValues.Max() - acValues.Min() > 20.0, "AC probe must swing > 20 V peak-to-peak.");
+
+        Assert.NotEmpty(recValues);
+        Assert.InRange(recValues.Min(), -0.5, 0.5);
+        Assert.InRange(recValues.Max(), 8.0, 13.0);
+    }
+
+    [Fact]
+    public void Bundled_example_555_astable_oscillator_variant_probe_measures_pulse_waveform()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "555_astable_oscillator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var outProbe = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_OUT"));
+        Assert.True(outProbe.ArrayOutputEnabled);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.003,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (times, values) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, outProbe, settings);
+
+        Assert.NotEmpty(values);
+        Assert.InRange(values.Min(), 0.0, 0.5);
+        Assert.InRange(values.Max(), 4.5, 5.5);
+        Assert.True(values.Max() - values.Min() >= 4.0, "Pulse output range must swing by >= 4.0 V.");
+    }
+
+    [Fact]
+    public void Bundled_example_astable_multivibrator_variant_probes_measure_complementary_outputs()
+    {
+        string exampleFile = Path.Combine(FindRepositoryRoot(), "Resources", "Raw", "Examples", "astable_multivibrator.eee");
+        CircuitNode circuit = EeePlatformSerializer.LoadFromEee(exampleFile);
+
+        var probeOut1 = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_OUT1"));
+        var probeOut2 = Assert.IsType<ProbeComponent>(
+            circuit.Components.Single(c => c.Name == "TP_OUT2"));
+
+        Assert.True(probeOut1.ArrayOutputEnabled);
+        Assert.True(probeOut2.ArrayOutputEnabled);
+
+        var settings = new SimulationSettings
+        {
+            AnalysisType = "Transient",
+            StopTime = 0.1,
+            StepTime = 5e-5,
+            CaptureAllWaveforms = true
+        };
+
+        var (_, v1) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probeOut1, settings);
+        var (_, v2) = ProbeArrayWaveformTests.RunAndGetProbeArray(circuit, probeOut2, settings);
+
+        Assert.NotEmpty(v1);
+        Assert.NotEmpty(v2);
+        Assert.InRange(v1.Min(), 0.0, 1.5);
+        Assert.InRange(v1.Max(), 3.5, 5.5);
+        Assert.InRange(v2.Min(), 0.0, 1.5);
+        Assert.InRange(v2.Max(), 3.5, 5.5);
     }
 
     private static string FindRepositoryRoot()

@@ -89,6 +89,81 @@ internal static class SchematicWireRouter
             FindOrthogonalPath(endLead, end, wireObstacles));
     }
 
+    public static bool NeedsJunctionBreak(
+        ComponentNode fromComponent,
+        ComponentPin fromPin,
+        ComponentNode toComponent,
+        ComponentPin toPin,
+        IEnumerable<ComponentNode> allComponents,
+        out PointF junctionPoint)
+    {
+        var components = allComponents as IReadOnlyCollection<ComponentNode>
+            ?? allComponents.ToList();
+        var start = GetPinWorldPosition(fromComponent, fromPin);
+        var end = GetPinWorldPosition(toComponent, toPin);
+
+        var directPath = RouteConnection(
+            fromComponent, fromPin, toComponent, toPin, components);
+        if (directPath.Count > 0)
+        {
+            junctionPoint = default;
+            return false;
+        }
+
+        var candidates = new List<PointF>();
+        float midpointX = (float)(Math.Round(((start.X + end.X) / 2f) / GridStep) * GridStep);
+        float midpointY = (float)(Math.Round(((start.Y + end.Y) / 2f) / GridStep) * GridStep);
+        candidates.Add(new PointF(midpointX, start.Y));
+        candidates.Add(new PointF(midpointX, end.Y));
+        candidates.Add(new PointF(start.X, midpointY));
+        candidates.Add(new PointF(end.X, midpointY));
+
+        foreach (var component in components)
+        {
+            if (component == fromComponent || component == toComponent ||
+                component is WireComponent ||
+                component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var bounds = LogicalGridSchematicLayout.GetVisualHalfExtents(component);
+            float left = (float)component.X - (float)bounds.HalfWidth - ObstaclePadding;
+            float right = (float)component.X + (float)bounds.HalfWidth + ObstaclePadding;
+            float top = (float)component.Y - (float)bounds.HalfHeight - ObstaclePadding;
+            float bottom = (float)component.Y + (float)bounds.HalfHeight + ObstaclePadding;
+            candidates.Add(new PointF(left - GridStep, (float)Math.Round(start.Y / GridStep) * GridStep));
+            candidates.Add(new PointF(right + GridStep, (float)Math.Round(end.Y / GridStep) * GridStep));
+            candidates.Add(new PointF((float)Math.Round(start.X / GridStep) * GridStep, top - GridStep));
+            candidates.Add(new PointF((float)Math.Round(end.X / GridStep) * GridStep, bottom + GridStep));
+        }
+
+        foreach (var candidate in candidates)
+        {
+            if (IsBlocked(candidate, GetObstacles(components)))
+                continue;
+
+            var firstLeg = FindOrthogonalPath(
+                start,
+                candidate,
+                GetObstacles(components, fromComponent));
+            var secondLeg = FindOrthogonalPath(
+                candidate,
+                end,
+                GetObstacles(components, toComponent));
+            if (firstLeg.Count > 0 && secondLeg.Count > 0)
+            {
+                junctionPoint = new PointF(
+                    (float)(Math.Round(candidate.X / GridStep) * GridStep),
+                    (float)(Math.Round(candidate.Y / GridStep) * GridStep));
+                return true;
+            }
+        }
+
+        junctionPoint = new PointF(
+            (float)(Math.Round(midpointX / GridStep) * GridStep),
+            (float)(Math.Round(midpointY / GridStep) * GridStep));
+        return true;
+    }
+
     private static PointF GetClearPinLead(ComponentNode component, PointF pinPosition, PointF direction)
     {
         var halfExtents = LogicalGridSchematicLayout.GetVisualHalfExtents(component);

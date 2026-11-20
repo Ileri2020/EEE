@@ -57,7 +57,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private const float MinZoom = 0.2f;
     private const float MaxZoom = 5.0f;
     private float _lastPanX, _lastPanY;
-    private float _lastPinchScale = 1f;
     private bool _isPinching;
     private const float GridSize = 20f;
     private int _structureRefreshPending;
@@ -448,7 +447,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         {
             case GestureStatus.Started:
                 _isPinching = true;
-                _lastPinchScale = 1f;
                 _isBackgroundPanning = false;
                 FinishComponentDrag();
                 break;
@@ -474,7 +472,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
                 _isPinching = false;
-                _lastPinchScale = 1f;
                 Invalidate();
                 break;
         }

@@ -13,7 +13,7 @@ namespace EESimulator.Core.Components.General;
 /// Time-variant array output:
 ///   When <see cref="ArrayOutputEnabled"/> is true the probe emits its captured waveform
 ///   as a compact array in the Python console output after each simulation run:
-///     P1.in: [t=0.000s: 0.0000V, t=0.010s: 1.2340V, …]  (max <MaxReadings> entries)
+///     P1.in: [t=0.000s: 0.0000V, t=0.010s: 1.2340V, …]  (max MaxReadings entries)
 ///   <see cref="TimeScaleFactor"/> sub-samples the raw SpiceSharp points (1 = every point,
 ///   2 = every other, 10 = every 10th, etc.).
 ///   <see cref="TimeRangeStart"/> and <see cref="TimeRangeDuration"/> window the output to any
