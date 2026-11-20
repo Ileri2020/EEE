@@ -183,6 +183,22 @@ public partial class EEWorkspaceViewModel
         ProjectName = projectName;
         CurrentFilePath = filePath;
 
+        if (newCircuit.SimulationSettings is EeeSimulationSettingsDto simSettings)
+        {
+            SelectedAnalysisType = simSettings.AnalysisType;
+            SimTransientStartTime = simSettings.TransientStartTime;
+            SimTransientStopTime = simSettings.TransientStopTime > 0 ? simSettings.TransientStopTime : 0.01;
+            SimTransientStepTime = simSettings.TransientStepTime > 0 ? simSettings.TransientStepTime : 1e-5;
+            SimAcSweepType = simSettings.AcSweepType;
+            SimAcPoints = simSettings.AcPoints > 0 ? simSettings.AcPoints : 10;
+            SimAcStartFrequency = simSettings.AcStartFrequency > 0 ? simSettings.AcStartFrequency : 1.0;
+            SimAcStopFrequency = simSettings.AcStopFrequency > 0 ? simSettings.AcStopFrequency : 1e5;
+            SimDcSweepSource = string.IsNullOrEmpty(simSettings.DcSweepSource) ? "V1" : simSettings.DcSweepSource;
+            SimDcStart = simSettings.DcStart;
+            SimDcStop = simSettings.DcStop;
+            SimDcStep = simSettings.DcStep > 0 ? simSettings.DcStep : 0.1;
+        }
+
         // Notify the script synchronizer so the Python script view reflects the loaded circuit (§5.A)
         _sync.OnCircuitReplaced(Circuit, generatedScript);
         ScriptText = _sync.CurrentScript;
@@ -536,6 +552,22 @@ public partial class EEWorkspaceViewModel
             $".{System.IO.Path.GetFileNameWithoutExtension(fullPath)}.{Guid.NewGuid():N}.tmp{ext}");
         try
         {
+            Circuit.SimulationSettings = new EeeSimulationSettingsDto
+            {
+                AnalysisType = SelectedAnalysisType,
+                TransientStartTime = SimTransientStartTime,
+                TransientStopTime = SimTransientStopTime,
+                TransientStepTime = SimTransientStepTime,
+                AcSweepType = SimAcSweepType,
+                AcPoints = SimAcPoints,
+                AcStartFrequency = SimAcStartFrequency,
+                AcStopFrequency = SimAcStopFrequency,
+                DcSweepSource = SimDcSweepSource,
+                DcStart = SimDcStart,
+                DcStop = SimDcStop,
+                DcStep = SimDcStep
+            };
+
             switch (ext)
             {
                 case ".eee":

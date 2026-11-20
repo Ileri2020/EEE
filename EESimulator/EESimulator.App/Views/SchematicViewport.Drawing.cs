@@ -240,43 +240,139 @@ public partial class SchematicViewport
 
             if (route.Owner is WireComponent wire)
             {
-                double current = SampleComponentWaveform(wire, current: true);
-                direction = GetElectronDirection(current);
-                double voltage = wire.Pins
-                    .Select(pin => Math.Abs(SamplePinVoltage(wire, pin)))
-                    .DefaultIfEmpty()
-                    .Max();
-                speed = CalculateFlowSpeed(Math.Abs(voltage), Math.Abs(current));
+                var pin0 = wire.Pins.FirstOrDefault();
+                var pin1 = wire.Pins.Skip(1).FirstOrDefault();
+                double v0 = pin0 != null ? SamplePinVoltage(wire, pin0) : 0.0;
+                double v1 = pin1 != null ? SamplePinVoltage(wire, pin1) : 0.0;
+                double vDelta = v0 - v1;
+                double current = Math.Abs(SampleComponentWaveform(wire, current: true));
+
+                if (Math.Abs(vDelta) > 1e-4)
+                    direction = vDelta > 0 ? 1 : -1;
+                else if (current > 1e-9)
+                    direction = GetElectronDirection(wire.LiveCurrent);
+
+                speed = CalculateFlowSpeed(Math.Abs(vDelta), current);
 
                 if (wire.ShowLiveProbe || LiveMeasurementsVisible)
                     DrawWireMeasurement(canvas, wire, route.Path);
             }
             else if (route.Connection != null && route.FromComp != null && route.ToComp != null && route.FromPin != null && route.ToPin != null)
             {
-                double fromCurrent = SampleComponentWaveform(route.FromComp, current: true);
-                double toCurrent = SampleComponentWaveform(route.ToComp, current: true);
-                double fromPinCurrent = SamplePinCurrent(route.FromComp, route.FromPin, fromCurrent);
-                double toPinCurrent = SamplePinCurrent(route.ToComp, route.ToPin, toCurrent);
-                direction = GetElectronDirection(fromPinCurrent, toPinCurrent);
-                speed = CalculateFlowSpeed(
-                    Math.Abs(SampleComponentWaveform(route.FromComp, current: false) -
-                             SampleComponentWaveform(route.ToComp, current: false)),
-                    Math.Max(Math.Abs(fromPinCurrent), Math.Abs(toPinCurrent)));
+                double vFrom = SamplePinVoltage(route.FromComp, route.FromPin);
+                double vTo = SamplePinVoltage(route.ToComp, route.ToPin);
+                double vDelta = vFrom - vTo;
+
+                double iFrom = Math.Abs(SamplePinCurrent(route.FromComp, route.FromPin, GetLiveCurrent(route.FromComp)));
+                double iTo = Math.Abs(SamplePinCurrent(route.ToComp, route.ToPin, GetLiveCurrent(route.ToComp)));
+                double branchCurrent = Math.Max(iFrom, iTo);
+
+                bool isFromSource = route.FromComp.ComponentType.Contains("Source", StringComparison.OrdinalIgnoreCase) ||
+                                    route.FromComp.SpicePrefix == "V" || route.FromComp.SpicePrefix == "I";
+                bool isToSource = route.ToComp.ComponentType.Contains("Source", StringComparison.OrdinalIgnoreCase) ||
+                                  route.ToComp.SpicePrefix == "V" || route.ToComp.SpicePrefix == "I";
+                bool isFromGround = route.FromComp is GroundComponent || route.FromComp.ComponentType.Equals("Ground", StringComparison.OrdinalIgnoreCase);
+                bool isToGround = route.ToComp is GroundComponent || route.ToComp.ComponentType.Equals("Ground", StringComparison.OrdinalIgnoreCase);
+
+                // Examine internal voltage drops across attached components to determine flow direction
+                // when connection endpoints sit on the same electrical net (vDelta ~ 0).
+                double maxFromPinV = vFrom, minFromPinV = vFrom;
+                foreach (var pin in route.FromComp.Pins)
+                {
+                    if (pin.Id == route.FromPin.Id) continue;
+                    double pv = SamplePinVoltage(route.FromComp, pin);
+                    if (pv > maxFromPinV) maxFromPinV = pv;
+                    if (pv < minFromPinV) minFromPinV = pv;
+                }
+
+                double maxToPinV = vTo, minToPinV = vTo;
+                foreach (var pin in route.ToComp.Pins)
+                {
+                    if (pin.Id == route.ToPin.Id) continue;
+                    double pv = SamplePinVoltage(route.ToComp, pin);
+                    if (pv > maxToPinV) maxToPinV = pv;
+                    if (pv < minToPinV) minToPinV = pv;
+                }
+
+                double fromInternalDrop = maxFromPinV - minFromPinV;
+                double toInternalDrop = maxToPinV - minToPinV;
+                double effectiveVoltageGap = Math.Max(Math.Abs(vDelta), Math.Max(fromInternalDrop, toInternalDrop));
+
+                // 1. Direct potential difference across wire endpoints: high potential -> low potential
+                if (Math.Abs(vDelta) > 0.005)
+                {
+                    direction = vDelta > 0 ? 1 : -1;
+                }
+                // 2. Active power sources (push current out of positive terminal, receive into negative terminal)
+                else if (isFromSource)
+                {
+                    int sourceSign = GetLiveVoltage(route.FromComp) >= -1e-6 ? 1 : -1;
+                    bool isPositive = route.FromPin.Id.Contains("pos", StringComparison.OrdinalIgnoreCase) ||
+                                      route.FromPin.Id.Equals("1") || route.FromComp.Pins.IndexOf(route.FromPin) == 0;
+                    direction = (isPositive ? 1 : -1) * sourceSign;
+                }
+                else if (isToSource)
+                {
+                    int sourceSign = GetLiveVoltage(route.ToComp) >= -1e-6 ? 1 : -1;
+                    bool isPositive = route.ToPin.Id.Contains("pos", StringComparison.OrdinalIgnoreCase) ||
+                                      route.ToPin.Id.Equals("1") || route.ToComp.Pins.IndexOf(route.ToPin) == 0;
+                    direction = (isPositive ? -1 : 1) * sourceSign;
+                }
+                // 3. Ground connections (positive potential drains into ground; negative potential flows from ground)
+                else if (isToGround)
+                {
+                    direction = vFrom >= 0 ? 1 : -1;
+                }
+                else if (isFromGround)
+                {
+                    direction = vTo >= 0 ? -1 : 1;
+                }
+                // 4. Wire is equipotential (same net/junction tap): follow voltage gradient of components
+                else if (maxFromPinV - vFrom > 0.002)
+                {
+                    // Higher internal potential in FromComp pushing current into wire towards ToComp
+                    direction = 1;
+                }
+                else if (vFrom - minFromPinV > 0.002)
+                {
+                    // Lower internal potential in FromComp drawing current from wire into FromComp
+                    direction = -1;
+                }
+                else if (vTo - minToPinV > 0.002)
+                {
+                    // Lower internal potential in ToComp drawing current from FromComp into ToComp
+                    direction = 1;
+                }
+                else if (maxToPinV - vTo > 0.002)
+                {
+                    // Higher internal potential in ToComp pushing current towards FromComp
+                    direction = -1;
+                }
+                // 5. Fallback to branch current sign
+                else if (branchCurrent > 1e-9)
+                {
+                    direction = GetElectronDirection(
+                        SamplePinCurrent(route.FromComp, route.FromPin, GetLiveCurrent(route.FromComp)),
+                        SamplePinCurrent(route.ToComp, route.ToPin, GetLiveCurrent(route.ToComp)));
+                }
+
+                speed = CalculateFlowSpeed(effectiveVoltageGap, branchCurrent);
             }
 
-            if (IsSimulationPlaying && direction != 0 && speed > 0.01f && route.TotalLength > 1f)
+            bool isEnergizedStatic = (direction == 0 || speed <= 0.01f) && (Math.Abs(vFrom) > 0.05 || Math.Abs(vTo) > 0.05);
+            if (IsSimulationPlaying && route.TotalLength > 1f && (speed > 0.01f || isEnergizedStatic))
                 DrawElectricityDots(canvas, route.Path, direction, speed, route.TotalLength);
         }
     }
 
     private static float CalculateFlowSpeed(double voltageGap, double branchCurrent)
     {
-        if (branchCurrent <= 1e-12)
-            return 0;
+        if (voltageGap < 1e-5 && branchCurrent < 1e-9)
+            return 0f; // Static / balanced bridge / unenergized branch
 
-        float currentFactor = (float)Math.Log10(1 + branchCurrent * 1000);
-        float voltageFactor = Math.Min(1, (float)Math.Log10(1 + voltageGap) / 3);
-        return Math.Clamp(currentFactor * (0.75f + voltageFactor * 0.25f), 0.015f, 1.8f);
+        float voltageFactor = Math.Min(1.5f, (float)Math.Log10(1 + voltageGap * 10) / 2f);
+        float currentFactor = (float)Math.Log10(1 + branchCurrent * 10000);
+        return Math.Clamp(0.18f * voltageFactor + 0.35f * currentFactor, 0.04f, 1.8f);
     }
 
     private static int GetElectronDirection(double current) =>

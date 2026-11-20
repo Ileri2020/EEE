@@ -148,6 +148,11 @@ public static class EeePlatformSerializer
             // CreatedAt and Author are preserved if round-tripping; otherwise left as UtcNow defaults.
         };
 
+        if (circuit.SimulationSettings is EeeSimulationSettingsDto simSettings)
+        {
+            dto.SimulationSettings = simSettings;
+        }
+
         foreach (var comp in circuit.Components)
         {
             var cDto = new EeeComponentDto
@@ -249,7 +254,8 @@ public static class EeePlatformSerializer
             Title = dto.Title,
             Description = dto.Description,
             LogicalGridRowSpacing = dto.LogicalGridRowSpacing,
-            LogicalGridColumnSpacing = dto.LogicalGridColumnSpacing
+            LogicalGridColumnSpacing = dto.LogicalGridColumnSpacing,
+            SimulationSettings = dto.SimulationSettings
         };
 
         var compMap = new Dictionary<Guid, ComponentNode>();

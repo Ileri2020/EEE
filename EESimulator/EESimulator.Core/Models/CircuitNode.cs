@@ -22,6 +22,9 @@ public class CircuitNode : RootNode
 
     public string Version { get; set; } = "1.0.0";
 
+    /// <summary>Simulation settings preserved from the project file (.eee).</summary>
+    public object? SimulationSettings { get; set; }
+
     public double LogicalGridRowSpacing
     {
         get => _logicalGridRowSpacing;

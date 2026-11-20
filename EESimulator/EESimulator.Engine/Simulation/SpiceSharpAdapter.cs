@@ -792,6 +792,13 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                 if (capture.Component.WaveformTime.Count == 0) continue;
                 capture.Component.LiveVoltage = capture.Component.WaveformVoltage[^1];
                 capture.Component.LiveCurrent = capture.Component.WaveformCurrent[^1];
+                foreach (var pin in capture.Pins)
+                {
+                    if (capture.Component.WaveformNodeVoltages.TryGetValue(pin.Id, out var vList) && vList.Count > 0)
+                    {
+                        capture.Component.LivePinVoltages[pin.Id] = vList[^1];
+                    }
+                }
                 double drop = Math.Abs(capture.Component.LiveVoltage);
                 if (capture.Component is BulbComponent bulb)
                 {

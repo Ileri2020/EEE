@@ -50,7 +50,9 @@ internal static class SchematicWireRouter
                 routed.Add(FindOrthogonalPath(
                     points[index], points[index + 1], GetObstacles(allComponents, excluded), priorPaths));
             }
-            return CombinePaths(routed.ToArray());
+            var waypointPath = CombinePaths(routed.ToArray());
+            if (waypointPath.Count >= 2) return waypointPath;
+            return Simplify(points);
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
@@ -59,10 +61,24 @@ internal static class SchematicWireRouter
         var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
         var routeObstacles = GetObstacles(allComponents);
         var targetLeadObstacles = GetObstacles(allComponents, toComponent);
-        return CombinePaths(
+        var routedPath = CombinePaths(
             FindOrthogonalPath(start, startLead, sourceLeadObstacles),
             FindOrthogonalPath(startLead, endLead, routeObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, targetLeadObstacles));
+
+        if (routedPath.Count >= 2)
+            return routedPath;
+
+        // Fallback: If grid obstacle router failed to find an unobstructed path, NEVER hide the connection!
+        // Always provide a clean, visible orthogonal elbow route between the two connected pins.
+        float midX = (start.X + end.X) / 2f;
+        return Simplify(new List<PointF>
+        {
+            start,
+            new PointF(midX, start.Y),
+            new PointF(midX, end.Y),
+            end
+        });
     }
 
     public static List<PointF> RouteWireComponent(
@@ -83,10 +99,23 @@ internal static class SchematicWireRouter
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
         var wireObstacles = GetObstacles(allComponents, wire);
-        return CombinePaths(
+        var wireRoute = CombinePaths(
             FindOrthogonalPath(start, startLead, wireObstacles),
             FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, wireObstacles));
+
+        if (wireRoute.Count >= 2)
+            return wireRoute;
+
+        // Fallback: Always ensure the wire route is drawn
+        float wireMidX = (start.X + end.X) / 2f;
+        return Simplify(new List<PointF>
+        {
+            start,
+            new PointF(wireMidX, start.Y),
+            new PointF(wireMidX, end.Y),
+            end
+        });
     }
 
     private static PointF GetClearPinLead(ComponentNode component, PointF pinPosition, PointF direction)

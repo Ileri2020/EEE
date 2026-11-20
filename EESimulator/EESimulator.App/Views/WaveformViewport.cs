@@ -122,8 +122,7 @@ public class WaveformViewport : GraphicsView, IDrawable
                             buffer.Times.Add(waveform.Times[i]);
                             buffer.Values.Add(values[i]);
                         }
-                        if (CheckEnvelopeChange(key, buffer.Values))
-                            anyBufferUpdated = true;
+                        anyBufferUpdated = true;
                     }
                     else
                     {
@@ -143,7 +142,7 @@ public class WaveformViewport : GraphicsView, IDrawable
                             buffer.Times.RemoveAt(0);
                             buffer.Values.RemoveAt(0);
                         }
-                        if (added && CheckEnvelopeChange(key, buffer.Values))
+                        if (added)
                             anyBufferUpdated = true;
                     }
                     continue;
@@ -181,8 +180,7 @@ public class WaveformViewport : GraphicsView, IDrawable
                             buffer.Times.RemoveAt(0);
                             buffer.Values.RemoveAt(0);
                         }
-                        if (CheckEnvelopeChange(key, buffer.Values))
-                            anyBufferUpdated = true;
+                        anyBufferUpdated = true;
                     }
                     else if (Math.Abs(buffer.Values[^1] - val) > 1e-6)
                     {
@@ -363,6 +361,19 @@ public class WaveformViewport : GraphicsView, IDrawable
         float botPad = 20f;
         float plotH = h - topPad - botPad;
         float laneHeight = hasVoltage && hasCurrent ? plotH / 2f : plotH;
+
+        double globalMinTime = double.MaxValue;
+        double globalMaxTime = double.MinValue;
+        foreach (var trace in traces)
+        {
+            if (trace.Times.Count > 0)
+            {
+                if (trace.Times[0] < globalMinTime) globalMinTime = trace.Times[0];
+                if (trace.Times[^1] > globalMaxTime) globalMaxTime = trace.Times[^1];
+            }
+        }
+        double timeSpan = Math.Max(globalMaxTime - globalMinTime, 1e-6);
+
         int colorIndex = 0;
         foreach (var trace in traces)
         {
@@ -375,9 +386,9 @@ public class WaveformViewport : GraphicsView, IDrawable
             canvas.StrokeSize = 1.8f;
             for (int index = 0; index < count - 1; index++)
             {
-                float x1 = (float)index / (count - 1) * w;
+                float x1 = (float)((trace.Times[index] - globalMinTime) / timeSpan) * w;
                 float y1 = laneTop + currentLaneHeight - (float)((trace.Values[index] - scale.Min) / scale.Span) * currentLaneHeight;
-                float x2 = (float)(index + 1) / (count - 1) * w;
+                float x2 = (float)((trace.Times[index + 1] - globalMinTime) / timeSpan) * w;
                 float y2 = laneTop + currentLaneHeight - (float)((trace.Values[index + 1] - scale.Min) / scale.Span) * currentLaneHeight;
                 canvas.DrawLine(x1, y1, x2, y2);
             }
@@ -400,7 +411,7 @@ public class WaveformViewport : GraphicsView, IDrawable
         }
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 10;
-        canvas.DrawString($"{comp.Reference} · {traces.Count} trace(s) · {traceTimeRange(traces):G4} s",
+        canvas.DrawString($"{comp.Reference} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s (Δ {timeSpan:G4} s)",
             8, h - 17, w - 16, 14, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 

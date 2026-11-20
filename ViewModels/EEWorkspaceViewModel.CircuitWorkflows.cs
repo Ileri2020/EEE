@@ -252,6 +252,7 @@ public partial class EEWorkspaceViewModel
         try
         {
             var settings = BuildSimulationSettings();
+            settings.Analysis = AnalysisType.Transient;
             settings.SolverElapsedTimeSeconds = _pendingSolverElapsedTimeSeconds;
             _pendingSolverElapsedTimeSeconds = 0;
             settings.DeviceTimeSeconds = _deviceTimeSeconds;
