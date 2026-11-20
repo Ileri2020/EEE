@@ -80,6 +80,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     public void RequestInteractionRedraw()
     {
         _interactionDirty = true;
+        Invalidate();
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
@@ -456,15 +457,25 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                 if (e.Scale <= 0 || !float.IsFinite((float)e.Scale))
                     return;
 
-                float scaleDelta = (float)e.Scale / _lastPinchScale;
-                _lastPinchScale = (float)e.Scale;
-                ZoomAt((float)(e.ScaleOrigin.X * Width), (float)(e.ScaleOrigin.Y * Height), scaleDelta);
+                // In MAUI, e.Scale is the relative scale factor for the current instantaneous event.
+                // The rate of change directly scales the zoom speed smoothly and instantaneously.
+                float deltaFromOne = (float)e.Scale - 1f;
+                float scaleDelta = 1f + deltaFromOne * 1.25f;
+                if (scaleDelta <= 0.05f) scaleDelta = 0.05f;
+                if (scaleDelta >= 20.0f) scaleDelta = 20.0f;
+
+                float originX = Width > 0 ? (float)(e.ScaleOrigin.X * Width) : (float)Width / 2f;
+                float originY = Height > 0 ? (float)(e.ScaleOrigin.Y * Height) : (float)Height / 2f;
+
+                ZoomAt(originX, originY, scaleDelta);
+                Invalidate();
                 break;
 
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
                 _isPinching = false;
                 _lastPinchScale = 1f;
+                Invalidate();
                 break;
         }
     }
