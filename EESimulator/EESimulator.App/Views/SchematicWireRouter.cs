@@ -378,8 +378,7 @@ internal static class SchematicWireRouter
         if (component is WireComponent || component is JunctionComponent ||
             component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase) ||
             component.ComponentType.Equals("Junction", StringComparison.OrdinalIgnoreCase) ||
-            component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase) ||
-            component.StableTypeId.Equals("general.node", StringComparison.OrdinalIgnoreCase))
+            component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase))
             return false;
 
         var bounds = LogicalGridSchematicLayout.GetVisualHalfExtents(component);
@@ -407,8 +406,7 @@ internal static class SchematicWireRouter
                 component is JunctionComponent ||
                 component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase) ||
                 component.ComponentType.Equals("Junction", StringComparison.OrdinalIgnoreCase) ||
-                component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase) ||
-                component.StableTypeId.Equals("general.node", StringComparison.OrdinalIgnoreCase))
+                component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             var visualBounds = LogicalGridSchematicLayout.GetVisualHalfExtents(component);

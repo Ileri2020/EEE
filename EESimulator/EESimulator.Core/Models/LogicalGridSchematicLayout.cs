@@ -170,8 +170,7 @@ public static class LogicalGridSchematicLayout
     {
         if (component is JunctionComponent ||
             component.ComponentType.Equals("Junction", StringComparison.OrdinalIgnoreCase) ||
-            component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase) ||
-            component.StableTypeId.Equals("general.node", StringComparison.OrdinalIgnoreCase))
+            component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase))
         {
             return new Footprint(6, 6);
         }
