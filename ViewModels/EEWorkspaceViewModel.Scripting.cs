@@ -138,6 +138,12 @@ public partial class EEWorkspaceViewModel
                         args.Length > 4 ? ParseD(args[4]) : 0.0);
                     return "[ok] connected";
 
+                case "remove_connection" or "delete_connection" when args.Length >= 4:
+                    PythonApi.DeleteConnection(
+                        Unquote(args[0]), Unquote(args[1]),
+                        Unquote(args[2]), Unquote(args[3]));
+                    return "[ok] wire connection removed";
+
                 case "set_position" when args.Length >= 3:
                     PythonApi.SetPosition(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
                     return "[ok] position set";
@@ -336,6 +342,20 @@ public partial class EEWorkspaceViewModel
                 case "add_dnc" or "add_do_not_connect" when args.Length >= 3:
                     PythonApi.AddDoNotConnect(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
                     return $"[ok] DNC marker {Unquote(args[0])} added";
+
+                case "add_node" when args.Length >= 1:
+                    if (args.Length >= 3)
+                        PythonApi.AddNode(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
+                    else
+                        PythonApi.AddNode(Unquote(args[0]), 0, 0);
+                    return $"[ok] node {Unquote(args[0])} added";
+
+                case "add_wire" when args.Length >= 1:
+                    if (args.Length >= 3)
+                        PythonApi.AddWire(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]), args.Length > 3 ? Unquote(args[3]) : "horizontal");
+                    else
+                        PythonApi.AddWire(Unquote(args[0]), 0, 0, args.Length > 1 ? Unquote(args[1]) : "horizontal");
+                    return $"[ok] wire {Unquote(args[0])} added";
 
                 case "add_lossy_transmission_line" or "add_lossy_transmissionline" when args.Length >= 3:
                     PythonApi.AddLossyTransmissionLine(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]),

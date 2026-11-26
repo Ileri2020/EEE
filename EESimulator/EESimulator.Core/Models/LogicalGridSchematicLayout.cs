@@ -62,16 +62,10 @@ public static class LogicalGridSchematicLayout
             return new LogicalGridLayoutResult(Array.Empty<LogicalGridPlacement>(), Array.Empty<SchematicLayoutCollision>());
 
         var footprints = circuit.Components.ToDictionary(component => component, GetFootprint);
-        var schematicFootprints = circuit.Components
-            .Where(component => component is not WireComponent &&
-                !component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase))
-            .Select(component => footprints[component])
-            .ToArray();
-        var spacingFootprints = schematicFootprints.Length == 0
-            ? footprints.Values.ToArray()
-            : schematicFootprints;
-        double emptyColumnWidth = spacingFootprints.Min(footprint => footprint.HalfWidth * 2);
-        double emptyRowHeight = spacingFootprints.Min(footprint => footprint.HalfHeight * 2);
+        const double MinimalMargin = 12.0;
+        const double MinWireRoutingChannel = 24.0;
+        const double CompactEmptyChannel = 20.0;
+
         var cells = logicalComponents
             .GroupBy(component => (Row: component.LogicalRow!.Value, Column: component.LogicalColumn!.Value))
             .ToDictionary(group => group.Key, group => group.ToList());
@@ -79,18 +73,20 @@ public static class LogicalGridSchematicLayout
             .ToDictionary(group => group.Key, group => group.ToList());
         var componentsByColumn = logicalComponents.GroupBy(component => component.LogicalColumn!.Value)
             .ToDictionary(group => group.Key, group => group.ToList());
-        double columnSpacing = circuit.LogicalGridColumnSpacing;
-        double rowSpacing = circuit.LogicalGridRowSpacing;
+
+        // Dynamic spacing: Ensure minimum routing channel clearance even when user spacing is small
+        double columnSpacing = Math.Max(circuit.LogicalGridColumnSpacing, MinWireRoutingChannel);
+        double rowSpacing = Math.Max(circuit.LogicalGridRowSpacing, MinWireRoutingChannel);
         double columnCursor = Math.Max(OriginX, GetManualRightEdge(circuit, footprints) + columnSpacing);
         var columnCenters = new Dictionary<int, double>();
         int previousColumn = 0;
         foreach (int column in componentsByColumn.Keys.OrderBy(value => value))
         {
             int emptyColumns = previousColumn == 0 ? column - 1 : column - previousColumn - 1;
-            columnCursor += (double)emptyColumns * (emptyColumnWidth + columnSpacing);
+            columnCursor += (double)emptyColumns * CompactEmptyChannel;
             double componentWidth = componentsByColumn[column]
                 .Max(component => footprints[component].Rotate(component.Rotation).HalfWidth * 2);
-            double columnWidth = componentWidth;
+            double columnWidth = componentWidth + MinimalMargin;
             columnCenters[column] = columnCursor + columnWidth / 2;
             columnCursor += columnWidth + columnSpacing;
             previousColumn = column;
@@ -103,7 +99,7 @@ public static class LogicalGridSchematicLayout
             double tallestCell = row.Value.Max(cell =>
                 cell.Value.Sum(component => footprints[component].Rotate(component.Rotation).HalfHeight * 2) +
                 Math.Max(0, cell.Value.Count - 1) * SameCellGap);
-            rowHeights[row.Key] = tallestCell;
+            rowHeights[row.Key] = tallestCell + MinimalMargin;
         }
 
         double rowCursor = OriginY;
@@ -111,7 +107,7 @@ public static class LogicalGridSchematicLayout
         foreach (int row in rowHeights.Keys.OrderBy(value => value))
         {
             int emptyRows = previousRow == 0 ? row - 1 : row - previousRow - 1;
-            rowCursor += (double)emptyRows * (emptyRowHeight + rowSpacing);
+            rowCursor += (double)emptyRows * CompactEmptyChannel;
             rowCenters[row] = rowCursor + rowHeights[row] / 2;
             rowCursor += rowHeights[row] + rowSpacing;
             previousRow = row;
@@ -172,6 +168,14 @@ public static class LogicalGridSchematicLayout
 
     private static Footprint GetFootprint(ComponentNode component)
     {
+        if (component is JunctionComponent ||
+            component.ComponentType.Equals("Junction", StringComparison.OrdinalIgnoreCase) ||
+            component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase) ||
+            component.StableTypeId.Equals("general.node", StringComparison.OrdinalIgnoreCase))
+        {
+            return new Footprint(6, 6);
+        }
+
         AdaptiveComponentLayout adaptive = AdaptiveComponentLayout.Get(component);
         double halfWidth = Math.Max(adaptive.HalfWidth, 30 * Math.Max(component.ScaleX, 1));
         double halfHeight = Math.Max(adaptive.HalfHeight, 28 * Math.Max(component.ScaleY, 1));

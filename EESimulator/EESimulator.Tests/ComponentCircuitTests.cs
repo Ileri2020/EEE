@@ -534,7 +534,7 @@ public sealed class ComponentCircuitTests
     }
 
     [Fact]
-    public void Indicator_state_properties_are_read_only_and_voltage_driven()
+    public void Indicator_state_properties_are_read_only_and_led_uses_current()
     {
         var bulb = new BulbComponent();
         var led = new LEDComponent();
@@ -548,7 +548,46 @@ public sealed class ComponentCircuitTests
         Assert.False(bulb.IsOn); Assert.False(led.IsOn); Assert.False(output.IsOn);
 
         bulb.LiveVoltage = 2.0; led.LiveVoltage = 2.0; output.LiveVoltage = 3.0;
-        Assert.True(bulb.IsOn); Assert.True(led.IsOn); Assert.True(output.IsOn);
+        Assert.True(bulb.IsOn); Assert.False(led.IsOn); Assert.True(output.IsOn);
+        led.LiveCurrent = 0.002;
+        Assert.True(led.IsOn);
+    }
+
+    [Fact]
+    public void LED_turns_off_when_removed_wires_break_its_current_loop()
+    {
+        var circuit = new CircuitNode();
+        var supply = new VoltageSourceComponent { Name = "V1", Voltage = 5.0 };
+        var resistor = new ResistorComponent { Name = "R1", Resistance = 100.0 };
+        var led = new LEDComponent { Name = "D1" };
+        var ground = new GroundNode { Name = "GND" };
+        circuit.AddChild(supply);
+        circuit.AddChild(resistor);
+        circuit.AddChild(led);
+        circuit.AddChild(ground);
+        Connect(circuit, supply, "positive", resistor, "pin1");
+        Connect(circuit, resistor, "pin2", led, "anode");
+        Connect(circuit, led, "cathode", ground, "gnd");
+        Connect(circuit, supply, "negative", ground, "gnd");
+
+        var adapter = new SpiceSharpAdapter();
+        var completeResult = adapter.RunSimulation(circuit, new SimulationSettings());
+        Assert.True(completeResult.Success, completeResult.Message);
+        Assert.True(led.IsOn);
+
+        var removedConnections = circuit.Connections.Where(connection =>
+                connection.FromComponentId == resistor.Id && connection.FromPin == "pin2" &&
+                connection.ToComponentId == led.Id && connection.ToPin == "anode" ||
+                connection.FromComponentId == led.Id && connection.FromPin == "cathode" &&
+                connection.ToComponentId == ground.Id && connection.ToPin == "gnd")
+            .ToArray();
+        Assert.Equal(2, removedConnections.Length);
+        foreach (var connection in removedConnections)
+            circuit.RemoveChild(connection);
+
+        adapter.RunSimulation(circuit, new SimulationSettings());
+        Assert.False(led.IsOn);
+        Assert.Equal(0, led.LiveCurrent);
     }
 
     [Fact]

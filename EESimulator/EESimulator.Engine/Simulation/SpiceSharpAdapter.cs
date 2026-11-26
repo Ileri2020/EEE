@@ -71,6 +71,13 @@ public partial class SpiceSharpAdapter : ISimulationEngine
         public Func<ComponentNode, string, int, string> GetPinNode = null!;
     }
 
+    private sealed record FallbackBranch(
+        ComponentNode? Component,
+        NetNode From,
+        NetNode To,
+        bool IsSource,
+        bool IsLoad);
+
     private CompiledSpiceContext? _cachedContext;
     private readonly object _circuitBuildLock = new();
 
@@ -969,62 +976,171 @@ public partial class SpiceSharpAdapter : ISimulationEngine
 
     private static void RunFallbackSolver(CircuitNode circuit, SimulationResultsData results, Exception ex)
     {
-        double sourceVoltage = 0.0;
-        double totalResistance = 0.0;
-        var loads = new List<(ComponentNode comp, double resistance)>();
-
+        results.OperatingPointVoltages.Clear();
+        results.OperatingPointCurrents.Clear();
+        results.OperatingPointPinVoltages.Clear();
+        results.TimePoints.Clear();
+        results.Waveforms.Clear();
         foreach (var comp in circuit.Components)
         {
-            if (comp is VoltageSourceComponent v)
+            comp.LiveVoltage = 0;
+            comp.LiveCurrent = 0;
+            comp.LivePinVoltages.Clear();
+            comp.WaveformTime.Clear();
+            comp.WaveformVoltage.Clear();
+            comp.WaveformCurrent.Clear();
+            comp.WaveformNodeVoltages.Clear();
+            comp.WaveformPinCurrents.Clear();
+            if (comp is BulbComponent bulb)
+                bulb.Brightness = 0;
+        }
+
+        var topology = NetlistBuilder.BuildTopology(circuit);
+        var branches = new List<FallbackBranch>();
+        foreach (var component in circuit.Components)
+        {
+            if (component.Pins.Count != 2 ||
+                (component is not ElectricalComponent &&
+                 component is not LEDComponent &&
+                 component is not WireComponent))
+                continue;
+
+            var fromPin = new PinReference(component.Id, component.Pins[0].Id);
+            var toPin = new PinReference(component.Id, component.Pins[1].Id);
+            if (!topology.PinToNetMap.TryGetValue(fromPin, out var fromNet) ||
+                !topology.PinToNetMap.TryGetValue(toPin, out var toNet))
+                continue;
+
+            bool isSource = component is VoltageSourceComponent source && Math.Abs(source.Voltage) > 1e-12;
+            bool isLoad = component is ResistorComponent resistor && resistor.Resistance > 0 ||
+                          component is BulbComponent loadBulb && loadBulb.Resistance > 0 ||
+                          component is LEDComponent;
+            branches.Add(new FallbackBranch(component, fromNet, toNet, isSource, isLoad));
+        }
+
+        foreach (var connection in topology.ResistiveConnections)
+        {
+            var fromPin = new PinReference(connection.FromComponentId, connection.FromPin);
+            var toPin = new PinReference(connection.ToComponentId, connection.ToPin);
+            if (topology.PinToNetMap.TryGetValue(fromPin, out var fromNet) &&
+                topology.PinToNetMap.TryGetValue(toPin, out var toNet))
+                branches.Add(new FallbackBranch(null, fromNet, toNet, false, false));
+        }
+
+        var adjacency = new Dictionary<NetNode, List<(NetNode Other, FallbackBranch Branch)>>();
+        void AddBranch(FallbackBranch branch)
+        {
+            if (!adjacency.TryGetValue(branch.From, out var fromEdges))
+                adjacency.Add(branch.From, fromEdges = new List<(NetNode, FallbackBranch)>());
+            if (!adjacency.TryGetValue(branch.To, out var toEdges))
+                adjacency.Add(branch.To, toEdges = new List<(NetNode, FallbackBranch)>());
+            fromEdges.Add((branch.To, branch));
+            toEdges.Add((branch.From, branch));
+        }
+
+        foreach (var branch in branches)
+            AddBranch(branch);
+
+        bool HasPoweredLoop(FallbackBranch excludedBranch, bool requireSource, bool requireLoad)
+        {
+            var pending = new Queue<(NetNode Net, bool HasSource, bool HasLoad)>();
+            var visited = new HashSet<(NetNode Net, bool HasSource, bool HasLoad)>();
+            pending.Enqueue((excludedBranch.From, false, false));
+
+            while (pending.Count > 0)
             {
-                sourceVoltage += v.Voltage;
+                var state = pending.Dequeue();
+                if (!visited.Add(state))
+                    continue;
+                if (ReferenceEquals(state.Net, excludedBranch.To) &&
+                    (!requireSource || state.HasSource) &&
+                    (!requireLoad || state.HasLoad))
+                    return true;
+                if (!adjacency.TryGetValue(state.Net, out var edges))
+                    continue;
+
+                foreach (var edge in edges)
+                {
+                    if (ReferenceEquals(edge.Branch, excludedBranch))
+                        continue;
+                    pending.Enqueue((
+                        edge.Other,
+                        state.HasSource || edge.Branch.IsSource,
+                        state.HasLoad || edge.Branch.IsLoad));
+                }
             }
-            else if (comp is ResistorComponent r && r.Resistance > 0)
+
+            return false;
+        }
+
+        var closedLoads = branches
+            .Where(branch => branch.IsLoad && HasPoweredLoop(branch, requireSource: true, requireLoad: false))
+            .ToArray();
+        var closedSources = branches
+            .Where(branch => branch.IsSource && HasPoweredLoop(branch, requireSource: false, requireLoad: true))
+            .ToArray();
+        if (closedLoads.Length == 0 || closedSources.Length == 0)
+        {
+            results.Success = false;
+            results.Message = $"SpiceSharp simulation failed and fallback was skipped because no closed source-to-load loop exists. {GetFallbackFailureDetails(ex)}";
+            return;
+        }
+
+        double sourceVoltage = closedSources
+            .Sum(branch => ((VoltageSourceComponent)branch.Component!).Voltage);
+        double totalResistance = 0;
+        var loads = new List<(ComponentNode Component, double Resistance)>();
+        foreach (var branch in closedLoads)
+        {
+            switch (branch.Component)
             {
-                totalResistance += r.Resistance;
-                loads.Add((r, r.Resistance));
-            }
-            else if (comp is BulbComponent b && b.Resistance > 0)
-            {
-                totalResistance += b.Resistance;
-                loads.Add((b, b.Resistance));
-            }
-            else if (comp is LEDComponent led)
-            {
-                // LED dynamic forward resistance approximation
-                totalResistance += 50.0;
-                loads.Add((led, 50.0));
-            }
-            else if (comp is LogicInputComponent lin)
-            {
-                if (lin.State && lin.HighVoltage > 0)
-                    sourceVoltage += lin.HighVoltage;
+                case ResistorComponent resistor:
+                    totalResistance += resistor.Resistance;
+                    loads.Add((resistor, resistor.Resistance));
+                    break;
+                case BulbComponent bulb:
+                    totalResistance += bulb.Resistance;
+                    loads.Add((bulb, bulb.Resistance));
+                    break;
+                case LEDComponent led:
+                    totalResistance += 50.0;
+                    loads.Add((led, 50.0));
+                    break;
             }
         }
 
-        if (totalResistance > 0 && Math.Abs(sourceVoltage) > 0)
+        if (totalResistance <= 0 || Math.Abs(sourceVoltage) <= 1e-12)
         {
-            double current = sourceVoltage / totalResistance;
-            results.OperatingPointCurrents["I_total"] = current;
+            results.Success = false;
+            results.Message = $"SpiceSharp simulation failed and fallback could not determine a valid source/load operating point. {GetFallbackFailureDetails(ex)}";
+            return;
+        }
 
-            foreach (var (comp, res) in loads)
-            {
-                double vDrop = current * res;
-                comp.LiveVoltage = vDrop;
-                comp.LiveCurrent = current;
-                results.OperatingPointVoltages[$"V({comp.Name})"] = vDrop;
-            }
+        double current = sourceVoltage / totalResistance;
+        results.OperatingPointCurrents["I_total"] = current;
+        foreach (var (component, resistance) in loads)
+        {
+            double voltageDrop = current * resistance;
+            component.LiveVoltage = voltageDrop;
+            component.LiveCurrent = current;
+            results.OperatingPointVoltages[$"V({component.Name})"] = voltageDrop;
+        }
 
-            foreach (var wire in circuit.Components.OfType<WireComponent>())
-            {
-                wire.LiveVoltage = current * wire.Resistance;
-                wire.LiveCurrent = current;
-                results.OperatingPointVoltages[$"V({wire.Name})"] = wire.LiveVoltage;
-                results.OperatingPointCurrents[$"I({wire.Name})"] = wire.LiveCurrent;
-            }
+        foreach (var branch in branches.Where(branch =>
+                     branch.Component is WireComponent &&
+                     HasPoweredLoop(branch, requireSource: true, requireLoad: true)))
+        {
+            var wire = (WireComponent)branch.Component!;
+            wire.LiveVoltage = current * wire.Resistance;
+            wire.LiveCurrent = current;
+            results.OperatingPointVoltages[$"V({wire.Name})"] = wire.LiveVoltage;
+            results.OperatingPointCurrents[$"I({wire.Name})"] = wire.LiveCurrent;
+        }
 
-            foreach (var source in circuit.Components.OfType<VoltageSourceComponent>())
-                source.LiveCurrent = -current;
+        foreach (var branch in closedSources)
+        {
+            var source = (VoltageSourceComponent)branch.Component!;
+            source.LiveCurrent = -current;
         }
 
         results.Success = true;
@@ -1035,4 +1151,12 @@ public partial class SpiceSharpAdapter : ISimulationEngine
             : ex.Message;
         results.Message = $"Fallback approximation used after SpiceSharp failure: {failureDetails}";
     }
+
+    private static string GetFallbackFailureDetails(Exception ex) =>
+        ex is SpiceSharp.Simulations.ValidationFailedException validationFailure
+            ? string.Join("; ", validationFailure.Rules.Violations.Select(violation =>
+                violation is SpiceSharp.Validation.FloatingNodeRuleViolation floating
+                    ? $"Floating node {floating.FloatingVariable.Name} connected to {floating.FixedVariable.Name} by {floating.Type}"
+                    : $"{violation.GetType().Name} ({violation.Rule.GetType().Name})"))
+            : ex.Message;
 }

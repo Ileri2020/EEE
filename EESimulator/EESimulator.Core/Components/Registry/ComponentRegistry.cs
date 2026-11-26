@@ -918,5 +918,7 @@ public static class ComponentRegistry
         RegisterAlias("tff", "electronics.tff");
         RegisterAlias("tristate", "electronics.controlledbuffer");
         RegisterAlias("prng", "electronics.random");
+        RegisterAlias("general.node", "general.junction");
+        RegisterAlias("node", "general.junction");
     }
 }

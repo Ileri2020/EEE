@@ -596,6 +596,8 @@ public partial class EEWorkspaceViewModel
         SelectedConnection = null;
         WaveformComponent = null;
         WaveformSignals.Clear();
+        WaveformTraceCandidates.Clear();
+        OnPropertyChanged(nameof(WaveformGraphSummary));
         IsWaveformDrawerOpen = false;
         ConsoleOutput = string.Empty;
         StatusText = resetScript ? "Circuit and script cleared" : "Circuit cleared by script";
@@ -929,6 +931,8 @@ public partial class EEWorkspaceViewModel
         SelectedConnection = null;
         WaveformComponent = null;
         WaveformSignals.Clear();
+        WaveformTraceCandidates.Clear();
+        OnPropertyChanged(nameof(WaveformGraphSummary));
         IsWaveformDrawerOpen = false;
         ConsoleOutput = string.Empty;
         StatusText    = "New circuit";

@@ -73,47 +73,146 @@ internal static class SchematicWireRouter
         }
         var startDirection = GetPinOutwardDirection(fromComponent, fromPin, end);
         var endDirection = GetPinOutwardDirection(toComponent, toPin, start);
-        var startLead = GetClearPinLead(fromComponent, start, startDirection);
-        var endLead = GetClearPinLead(toComponent, end, endDirection);
-        var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
-        var routeObstacles = GetObstacles(allComponents, fromComponent, toComponent);
-        var targetLeadObstacles = GetObstacles(allComponents, toComponent);
-        if (IsRouteClear(new[] { start, end }, routeObstacles, priorPaths))
-            return new List<PointF> { start, end };
 
-        var path = CombinePaths(
-            FindOrthogonalPath(start, startLead, sourceLeadObstacles),
-            FindOrthogonalPath(startLead, endLead, routeObstacles, priorPaths),
-            FindOrthogonalPath(endLead, end, targetLeadObstacles));
-
-        if (path.Count >= 2)
-            return ShortenRoute(path, routeObstacles, priorPaths);
-
-        // Fallback 1: Allow lane-sharing with prior paths
-        path = CombinePaths(
-            FindOrthogonalPath(start, startLead, sourceLeadObstacles),
-            FindOrthogonalPath(startLead, endLead, routeObstacles),
-            FindOrthogonalPath(endLead, end, targetLeadObstacles));
-
-        if (path.Count >= 2)
-            return ShortenRoute(path, routeObstacles, Array.Empty<List<PointF>>());
-
-        // Fallback 2: Direct connection without leads
-        path = FindOrthogonalPath(start, end, routeObstacles);
-        if (path.Count >= 2)
-            return ShortenRoute(path, routeObstacles, Array.Empty<List<PointF>>());
-
-        // Fallback 3: Guaranteed orthogonal elbow route so wire connections are never dropped or hidden
-        float midX = (start.X + end.X) / 2f;
-        return Simplify(new List<PointF>
+        // 1. Zero-Distance Logic: If components are aligned horizontally or vertically
+        if (MathF.Abs(start.X - end.X) < 1.0f)
         {
-            start,
-            startLead,
-            new(midX, startLead.Y),
-            new(midX, endLead.Y),
-            endLead,
-            end
-        });
+            var direct = new List<PointF> { start, end };
+            var obstacles = GetObstacles(allComponents, fromComponent, toComponent);
+            if (!SegmentBlocked(start, end, obstacles) &&
+                !PiercesComponentBody(fromComponent, start, end) &&
+                !PiercesComponentBody(toComponent, start, end))
+            {
+                return direct;
+            }
+        }
+        else if (MathF.Abs(start.Y - end.Y) < 1.0f)
+        {
+            var direct = new List<PointF> { start, end };
+            var obstacles = GetObstacles(allComponents, fromComponent, toComponent);
+            if (!SegmentBlocked(start, end, obstacles) &&
+                !PiercesComponentBody(fromComponent, start, end) &&
+                !PiercesComponentBody(toComponent, start, end))
+            {
+                return direct;
+            }
+        }
+
+        // 2. Strict 2-Edge Limit & Pin Direction Awareness
+        // Default to orthogonal 2-edge elbow: candidate A (H-first) or candidate B (V-first)
+        var cornerA = new PointF(end.X, start.Y);
+        var cornerB = new PointF(start.X, end.Y);
+        var routeObstacles = GetObstacles(allComponents, fromComponent, toComponent);
+
+        bool validA = IsTwoEdgeCandidateValid(start, cornerA, end, startDirection, endDirection,
+            fromComponent, toComponent, routeObstacles, priorPaths, horizontalFirst: true);
+        bool validB = IsTwoEdgeCandidateValid(start, cornerB, end, startDirection, endDirection,
+            fromComponent, toComponent, routeObstacles, priorPaths, horizontalFirst: false);
+
+        if (validA && !validB)
+            return Simplify(new List<PointF> { start, cornerA, end });
+
+        if (validB && !validA)
+            return Simplify(new List<PointF> { start, cornerB, end });
+
+        if (validA && validB)
+        {
+            int scoreA = ScoreCandidate(start, cornerA, end, startDirection, endDirection, horizontalFirst: true);
+            int scoreB = ScoreCandidate(start, cornerB, end, startDirection, endDirection, horizontalFirst: false);
+            return scoreA >= scoreB
+                ? Simplify(new List<PointF> { start, cornerA, end })
+                : Simplify(new List<PointF> { start, cornerB, end });
+        }
+
+        // Fallback: Test without prior path congestion
+        bool clearA = IsTwoEdgePathClear(start, cornerA, end, fromComponent, toComponent, routeObstacles);
+        bool clearB = IsTwoEdgePathClear(start, cornerB, end, fromComponent, toComponent, routeObstacles);
+
+        if (clearA && !clearB)
+            return Simplify(new List<PointF> { start, cornerA, end });
+        if (clearB && !clearA)
+            return Simplify(new List<PointF> { start, cornerB, end });
+        if (clearA && clearB)
+        {
+            int scoreA = ScoreCandidate(start, cornerA, end, startDirection, endDirection, horizontalFirst: true);
+            int scoreB = ScoreCandidate(start, cornerB, end, startDirection, endDirection, horizontalFirst: false);
+            return scoreA >= scoreB
+                ? Simplify(new List<PointF> { start, cornerA, end })
+                : Simplify(new List<PointF> { start, cornerB, end });
+        }
+
+        // 3. Diagonal Fallback Enforcement:
+        // Diagonals are only used as a last-resort fallback if 2-edge orthogonal route would collide with a component.
+        return new List<PointF> { start, end };
+    }
+
+    private static bool IsTwoEdgePathClear(
+        PointF start, PointF corner, PointF end,
+        ComponentNode fromComp, ComponentNode toComp,
+        List<Obstacle> obstacles)
+    {
+        if (SegmentBlocked(start, corner, obstacles) || SegmentBlocked(corner, end, obstacles))
+            return false;
+        if (PiercesComponentBody(fromComp, start, corner) || PiercesComponentBody(toComp, corner, end))
+            return false;
+        return true;
+    }
+
+    private static bool IsTwoEdgeCandidateValid(
+        PointF start, PointF corner, PointF end,
+        PointF startDir, PointF endDir,
+        ComponentNode fromComp, ComponentNode toComp,
+        List<Obstacle> obstacles,
+        IReadOnlyList<List<PointF>> priorPaths,
+        bool horizontalFirst)
+    {
+        if (!IsTwoEdgePathClear(start, corner, end, fromComp, toComp, obstacles))
+            return false;
+
+        if (SharesOccupiedWireLane(start, corner, priorPaths) || SharesOccupiedWireLane(corner, end, priorPaths))
+            return false;
+
+        if (horizontalFirst)
+        {
+            float dx = corner.X - start.X;
+            if (MathF.Abs(startDir.X) > 0.1f && MathF.Sign(dx) != MathF.Sign(startDir.X))
+                return false;
+        }
+        else
+        {
+            float dy = corner.Y - start.Y;
+            if (MathF.Abs(startDir.Y) > 0.1f && MathF.Sign(dy) != MathF.Sign(startDir.Y))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static int ScoreCandidate(
+        PointF start, PointF corner, PointF end,
+        PointF startDir, PointF endDir,
+        bool horizontalFirst)
+    {
+        int score = 0;
+        if (horizontalFirst)
+        {
+            float dx = corner.X - start.X;
+            if (MathF.Abs(startDir.X) > 0.1f && MathF.Sign(dx) == MathF.Sign(startDir.X))
+                score += 2;
+            float dy = end.Y - corner.Y;
+            if (MathF.Abs(endDir.Y) > 0.1f && MathF.Sign(dy) == -MathF.Sign(endDir.Y))
+                score += 2;
+        }
+        else
+        {
+            float dy = corner.Y - start.Y;
+            if (MathF.Abs(startDir.Y) > 0.1f && MathF.Sign(dy) == MathF.Sign(startDir.Y))
+                score += 2;
+            float dx = end.X - corner.X;
+            if (MathF.Abs(endDir.X) > 0.1f && MathF.Sign(dx) == -MathF.Sign(endDir.X))
+                score += 2;
+        }
+        return score;
     }
 
     public static List<PointF> RouteWireComponent(
@@ -128,37 +227,25 @@ internal static class SchematicWireRouter
 
         var start = GetPinWorldPosition(wire, startPin);
         var end = GetPinWorldPosition(wire, endPin);
+
+        if (wire.Direction.Equals("vertical", StringComparison.OrdinalIgnoreCase))
+            return new List<PointF> { start, end };
+        if (wire.Direction.Equals("horizontal", StringComparison.OrdinalIgnoreCase))
+            return new List<PointF> { start, end };
+
         priorPaths ??= Array.Empty<List<PointF>>();
         var wireObstacles = GetObstacles(allComponents, wire);
         if (IsRouteClear(new[] { start, end }, wireObstacles, priorPaths))
             return new List<PointF> { start, end };
 
-        var startDirection = GetPinOutwardDirection(wire, startPin, end);
-        var endDirection = GetPinOutwardDirection(wire, endPin, start);
-        var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
-        var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
-        var path = CombinePaths(
-            FindOrthogonalPath(start, startLead, wireObstacles),
-            FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
-            FindOrthogonalPath(endLead, end, wireObstacles));
+        var cornerA = new PointF(end.X, start.Y);
+        var cornerB = new PointF(start.X, end.Y);
+        if (!SegmentBlocked(start, cornerA, wireObstacles) && !SegmentBlocked(cornerA, end, wireObstacles))
+            return Simplify(new List<PointF> { start, cornerA, end });
+        if (!SegmentBlocked(start, cornerB, wireObstacles) && !SegmentBlocked(cornerB, end, wireObstacles))
+            return Simplify(new List<PointF> { start, cornerB, end });
 
-        if (path.Count >= 2)
-            return ShortenRoute(path, wireObstacles, priorPaths);
-
-        path = CombinePaths(
-            FindOrthogonalPath(start, startLead, wireObstacles),
-            FindOrthogonalPath(startLead, endLead, wireObstacles),
-            FindOrthogonalPath(endLead, end, wireObstacles));
-
-        if (path.Count >= 2)
-            return ShortenRoute(path, wireObstacles, Array.Empty<List<PointF>>());
-
-        path = FindOrthogonalPath(start, end, wireObstacles);
-        if (path.Count >= 2)
-            return ShortenRoute(path, wireObstacles, Array.Empty<List<PointF>>());
-
-        float midX = (start.X + end.X) / 2f;
-        return Simplify(new List<PointF> { start, new(midX, start.Y), new(midX, end.Y), end });
+        return new List<PointF> { start, end };
     }
 
     public static bool NeedsJunctionBreak(
@@ -286,13 +373,42 @@ internal static class SchematicWireRouter
             : new PointF(0, MathF.Sign(worldY));
     }
 
+    private static bool PiercesComponentBody(ComponentNode component, PointF a, PointF b)
+    {
+        if (component is WireComponent || component is JunctionComponent ||
+            component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase) ||
+            component.ComponentType.Equals("Junction", StringComparison.OrdinalIgnoreCase) ||
+            component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase) ||
+            component.StableTypeId.Equals("general.node", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var bounds = LogicalGridSchematicLayout.GetVisualHalfExtents(component);
+        float shrink = 2f;
+        float halfW = (float)bounds.HalfWidth - shrink;
+        float halfH = (float)bounds.HalfHeight - shrink;
+        if (halfW <= 0 || halfH <= 0) return false;
+
+        var bodyObstacle = new Obstacle(
+            (float)component.X - halfW,
+            (float)component.Y - halfH,
+            (float)component.X + halfW,
+            (float)component.Y + halfH);
+
+        return SegmentIntersectsObstacle(a, b, new List<Obstacle> { bodyObstacle });
+    }
+
     private static List<Obstacle> GetObstacles(IEnumerable<ComponentNode> components, params ComponentNode[] excluded)
     {
         var excludedSet = new HashSet<ComponentNode>(excluded);
         var obstacles = new List<Obstacle>();
         foreach (var component in components)
         {
-            if (excludedSet.Contains(component) || component is WireComponent || component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase))
+            if (excludedSet.Contains(component) || component is WireComponent ||
+                component is JunctionComponent ||
+                component.ComponentType.Equals("Wire", StringComparison.OrdinalIgnoreCase) ||
+                component.ComponentType.Equals("Junction", StringComparison.OrdinalIgnoreCase) ||
+                component.ComponentType.Equals("Node", StringComparison.OrdinalIgnoreCase) ||
+                component.StableTypeId.Equals("general.node", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             var visualBounds = LogicalGridSchematicLayout.GetVisualHalfExtents(component);

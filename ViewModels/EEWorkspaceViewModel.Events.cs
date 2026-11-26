@@ -166,20 +166,23 @@ public partial class EEWorkspaceViewModel
 
         if (enabled)
         {
-            ConfigureWaveformForComponent(component, showTerminalPicker: false);
             if (targetParts.Length == 2)
             {
                 var pin = component.GetPin(targetParts[1]);
-                WaveformSignals.Clear();
-                WaveformSignals.Add(new WaveformSignal(component, pin!.Id,
+                WaveformTraceCandidates.Clear();
+                WaveformTraceCandidates.Add(new WaveformSignal(component, pin!.Id,
                     $"{component.Reference}:{pin.Name} voltage", WaveformSignalKind.PinVoltage));
+                EnableWaveformForComponent(component);
+            }
+            else
+            {
+                ConfigureWaveformForComponent(component, showTerminalPicker: false);
             }
         }
         else
         {
             PythonApi.SetWaveform(component.Name, false);
-            if (WaveformComponent == component)
-                IsWaveformDrawerOpen = false;
+            RemoveWaveformSignals(component);
         }
     }
 

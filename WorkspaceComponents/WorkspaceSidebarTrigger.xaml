@@ -13,16 +13,21 @@
                     <RoundRectangle CornerRadius="8,0,0,8"/>
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
+                    <Button Text="{Binding MainSidebarToggleText}"
+                            Style="{StaticResource IconBtn}"
+                            TextColor="#58A6FF"
+                            FontSize="18"
+                            FontAttributes="Bold"
+                            WidthRequest="28"
+                            HeightRequest="32"
+                            Padding="0"
+                            Command="{Binding ToggleSidebarCommand}"
+                            ToolTipProperties.Text="Toggle main sidebar"/>
                     <Button Text="📋"
                             Style="{StaticResource IconBtn}"
                             TextColor="#E3B341"
                             Command="{Binding ToggleDescriptionSidebarCommand}"
                             ToolTipProperties.Text="Component Description &amp; Properties Sidebar"/>
-                    <Button Text="🧩"
-                            Style="{StaticResource IconBtn}"
-                            TextColor="#58A6FF"
-                            Command="{Binding ToggleSidebarCommand}"
-                            ToolTipProperties.Text="Components Palette Sidebar"/>
                 </VerticalStackLayout>
             </Border>
 </ContentView>

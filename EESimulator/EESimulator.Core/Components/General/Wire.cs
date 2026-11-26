@@ -18,6 +18,33 @@ public class WireComponent : GeneralComponent
     public double EndX { get; set; }
     public double EndY { get; set; }
 
+    private string _direction = "horizontal";
+    public string Direction
+    {
+        get => _direction;
+        set
+        {
+            _direction = value ?? "horizontal";
+            UpdatePinsForDirection();
+            NotifyModified(nameof(Direction));
+        }
+    }
+
+    private void UpdatePinsForDirection()
+    {
+        if (Pins.Count < 2) return;
+        if (_direction.Equals("vertical", StringComparison.OrdinalIgnoreCase))
+        {
+            Pins[0].RelativeX = 0; Pins[0].RelativeY = 0;
+            Pins[1].RelativeX = 0; Pins[1].RelativeY = 40;
+        }
+        else
+        {
+            Pins[0].RelativeX = 0; Pins[0].RelativeY = 0;
+            Pins[1].RelativeX = 40; Pins[1].RelativeY = 0;
+        }
+    }
+
     /// <summary>
     /// Non-negligible real parasitic resistance of the wire in Ohms (0 for ideal short circuit).
     /// </summary>

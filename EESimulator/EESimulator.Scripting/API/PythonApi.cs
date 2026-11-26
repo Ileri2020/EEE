@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using EESimulator.Commands;
 using EESimulator.Commands.Commands;
@@ -23,6 +24,7 @@ public class PythonApi
     private readonly CircuitNode _circuit;
     private readonly SimulationManager _simulationManager;
 
+    public CircuitNode Circuit => _circuit;
     public UIRootNode UI { get; }
 
     public event Action<string>? OnWindowOpenRequested;
@@ -46,6 +48,7 @@ public class PythonApi
     public event Action<string>? OnLogicToggled;
     public event Action? OnDescriptionSidebarToggled;
     public event Action<string>? OnComponentDeleted;
+    public event Action? OnConnectionDeleted;
     public event Action<string>? OnComponentCopied;
     public event Action<string?>? OnSaveRequested;
     public event Action<string, string>? OnSaveAsRequested;
@@ -535,9 +538,61 @@ public class PythonApi
         SetProperty(sourceName, "SffmSignalFreq", signalFreq);
     }
 
-    public void Connect(string fromComponent, string fromPin, string toComponent, string toPin, double resistance = 0.0)
+    public void AddResistorAtGrid(string name, double resistance = 1000.0, int row = 1, int col = 1)
     {
-        var cmd = new ConnectNodesCommand(_circuit, fromComponent, fromPin, toComponent, toPin)
+        AddComponentAtGrid("resistor", name, row, col, resistance);
+    }
+
+    public void AddCapacitorAtGrid(string name, double capacitance = 1e-6, int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("capacitor", name, row, col, capacitance);
+    }
+
+    public void AddInductorAtGrid(string name, double inductance = 1e-3, int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("inductor", name, row, col, inductance);
+    }
+
+    public void AddGroundAtGrid(string name = "GND", int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("ground", name, row, col, 0);
+    }
+
+    public void AddVoltageSourceAtGrid(string name, double dc = 5.0, int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("voltagesource", name, row, col, dc);
+    }
+
+    public void AddCurrentSourceAtGrid(string name, double dc = 0.001, int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("currentsource", name, row, col, dc);
+    }
+
+    public void AddNode(string name, double x = 0, double y = 0)
+    {
+        AddComponent("general.node", name, x, y, 0);
+    }
+
+    public void AddNodeAtGrid(string name, int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("general.node", name, row, col, 0);
+    }
+
+    public void AddWire(string name, double x = 0, double y = 0, string direction = "horizontal")
+    {
+        AddComponent("general.wire", name, x, y, 0);
+        SetComponentProperty(name, "Direction", direction);
+    }
+
+    public void AddWireAtGrid(string name, string direction = "horizontal", int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("general.wire", name, row, col, 0);
+        SetComponentProperty(name, "Direction", direction);
+    }
+
+    public void Connect(string fromComponent, string fromPin, string toComponent, string toPin, double resistance = 0.0, IReadOnlyList<Point2D>? waypoints = null)
+    {
+        var cmd = new ConnectNodesCommand(_circuit, fromComponent, fromPin, toComponent, toPin, routingPoints: waypoints)
         {
             Origin = CommandOrigin.Python
         };
@@ -1050,6 +1105,36 @@ public class PythonApi
             _commandManager.ExecuteCommand(cmd);
             OnComponentDeleted?.Invoke(componentName);
         }
+    }
+
+    public void DeleteConnection(string fromComponentName, string fromPin, string toComponentName, string toPin)
+    {
+        var fromComponent = _circuit.FindChild<ComponentNode>(fromComponentName)
+            ?? throw new KeyNotFoundException($"Component '{fromComponentName}' was not found.");
+        var toComponent = _circuit.FindChild<ComponentNode>(toComponentName)
+            ?? throw new KeyNotFoundException($"Component '{toComponentName}' was not found.");
+
+        var connection = _circuit.Connections.FirstOrDefault(candidate =>
+            candidate.FromComponentId == fromComponent.Id &&
+            candidate.FromPin.Equals(fromPin, StringComparison.OrdinalIgnoreCase) &&
+            candidate.ToComponentId == toComponent.Id &&
+            candidate.ToPin.Equals(toPin, StringComparison.OrdinalIgnoreCase) ||
+            candidate.FromComponentId == toComponent.Id &&
+            candidate.FromPin.Equals(toPin, StringComparison.OrdinalIgnoreCase) &&
+            candidate.ToComponentId == fromComponent.Id &&
+            candidate.ToPin.Equals(fromPin, StringComparison.OrdinalIgnoreCase));
+        if (connection == null)
+            throw new KeyNotFoundException(
+                $"Connection '{fromComponentName}.{fromPin}' to '{toComponentName}.{toPin}' was not found.");
+
+        var command = new RemoveConnectionCommand(_circuit, connection)
+        {
+            Origin = CommandOrigin.Python
+        };
+        if (!_commandManager.ExecuteCommand(command))
+            throw new InvalidOperationException("The wire connection could not be removed.");
+
+        OnConnectionDeleted?.Invoke();
     }
 
     public void SetBreakingCurrent(string componentName, double breakingCurrent)

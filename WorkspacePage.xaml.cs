@@ -3,7 +3,10 @@ using EEE.Services;
 using EESimulator.Core.Models;
 using EESimulator.Core.Components.Electrical;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Storage;
 using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EEE;
@@ -12,6 +15,7 @@ public partial class WorkspacePage : ContentPage
 {
     private readonly EEWorkspaceViewModel _vm;
     private SchematicVideoRecorder? _videoRecorder;
+    private readonly SemaphoreSlim _recordingLifecycle = new(1, 1);
 
     public WorkspacePage(EEWorkspaceViewModel vm)
     {
@@ -105,8 +109,9 @@ public partial class WorkspacePage : ContentPage
                     ? MainWorkspace.SchematicCanvas.CaptureCurrentViewPng(width, height)
                     : MainWorkspace.SchematicCanvas.CaptureRecenteredPng(width, height);
             });
-            await SchematicCaptureService.SavePngAsync(png, path);
-            _vm.StatusText = $"Circuit image saved ({view} view){(string.IsNullOrWhiteSpace(path) ? string.Empty : $" to {path}")}";
+            string destinationPath = ResolveCapturePath(path, ".png");
+            await SchematicCaptureService.SavePngAsync(png, destinationPath);
+            _vm.StatusText = $"Circuit image saved ({view} view) to {destinationPath}";
         }
         catch (Exception exception)
         {
@@ -116,47 +121,71 @@ public partial class WorkspacePage : ContentPage
 
     private async Task StartVideoRecordingAsync(string? path, int frameRate, string format, string view = "recentre")
     {
+        await _recordingLifecycle.WaitAsync();
         try
         {
             if (_videoRecorder != null)
                 throw new InvalidOperationException("A circuit video recording is already active.");
 
             bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
-            var (width, height) = await MainThread.InvokeOnMainThreadAsync(() => GetCaptureDimensions(format));
+            bool isGif = format.Equals("GIF", StringComparison.OrdinalIgnoreCase);
+            var dimensions = await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                var (width, height) = GetCaptureDimensions(format);
+                return (Width: width, Height: height,
+                    ViewportWidth: (float)MainWorkspace.SchematicCanvas.Width,
+                    ViewportHeight: (float)MainWorkspace.SchematicCanvas.Height);
+            });
+            string destinationPath = ResolveCapturePath(path, "." + format.ToLowerInvariant());
+            var viewport = MainWorkspace.SchematicCanvas;
+
+            Func<Task<EESimulator.App.Views.SchematicCapturedFrame>> captureFrameAsync = () =>
+                MainThread.InvokeOnMainThreadAsync(() =>
+                    useScreen
+                        ? viewport.CaptureCurrentViewFrame(
+                            dimensions.Width, dimensions.Height,
+                            dimensions.ViewportWidth, dimensions.ViewportHeight,
+                            includePng: !isGif)
+                        : viewport.CaptureRecenteredFrame(
+                            dimensions.Width, dimensions.Height,
+                            includePng: !isGif));
+
             _videoRecorder = new SchematicVideoRecorder(
-                width,
-                height,
+                dimensions.Width,
+                dimensions.Height,
                 frameRate,
                 format,
-                path,
-                () => MainThread.InvokeOnMainThreadAsync(() =>
-                    useScreen
-                        ? MainWorkspace.SchematicCanvas.CaptureCurrentViewFrame(width, height)
-                        : MainWorkspace.SchematicCanvas.CaptureRecenteredFrame(width, height))
-                    .GetAwaiter().GetResult());
+                destinationPath,
+                captureFrameAsync);
+
             _vm.SetVideoRecordingState(true, frameRate, format);
-            _vm.StatusText = $"Recording {view} circuit view as {format} at {frameRate} fps";
+            _vm.StatusText = $"Recording {view} circuit view as {format} at {frameRate} fps to {destinationPath}";
         }
         catch (Exception exception)
         {
             _vm.SetVideoRecordingState(false, frameRate, format);
             _vm.StatusText = $"{format} recording could not start: {exception.Message}";
         }
+        finally
+        {
+            _recordingLifecycle.Release();
+        }
     }
 
     private async Task StopVideoRecordingAsync()
     {
-        var recorder = _videoRecorder;
-        _videoRecorder = null;
-        if (recorder == null)
-        {
-            _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
-            return;
-        }
-
+        await _recordingLifecycle.WaitAsync();
         try
         {
-            await recorder.StopAsync();
+            var recorder = _videoRecorder;
+            _videoRecorder = null;
+            if (recorder == null)
+            {
+                _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
+                return;
+            }
+
+            await Task.Run(async () => await recorder.StopAsync());
             _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
             _vm.StatusText = $"Circuit {_vm.SelectedVideoFormat} recording saved";
         }
@@ -165,6 +194,32 @@ public partial class WorkspacePage : ContentPage
             _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
             _vm.StatusText = $"{_vm.SelectedVideoFormat} recording failed: {exception.Message}";
         }
+        finally
+        {
+            _recordingLifecycle.Release();
+        }
+    }
+
+    private string ResolveCapturePath(string? path, string extension)
+    {
+        string defaultDir = SchematicCaptureService.GetDefaultMediaDirectory(extension);
+        Directory.CreateDirectory(defaultDir);
+
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            string candidate = path.Trim();
+            if (Path.IsPathRooted(candidate))
+            {
+                string? candidateDir = Path.GetDirectoryName(Path.GetFullPath(candidate));
+                if (!string.IsNullOrEmpty(candidateDir))
+                    Directory.CreateDirectory(candidateDir);
+                return SchematicCaptureService.EnsureExtension(candidate, extension);
+            }
+            return SchematicCaptureService.EnsureExtension(Path.Combine(defaultDir, candidate), extension);
+        }
+
+        string destination = Path.Combine(defaultDir, $"circuit-{DateTime.Now:yyyyMMdd-HHmmss-fff}{extension}");
+        return SchematicCaptureService.EnsureExtension(destination, extension);
     }
 
     private (int Width, int Height) GetCaptureDimensions(string format = "GIF")
@@ -172,9 +227,44 @@ public partial class WorkspacePage : ContentPage
         int width = (int)Math.Round(MainWorkspace.SchematicCanvas.Width);
         int height = (int)Math.Round(MainWorkspace.SchematicCanvas.Height);
         if (width <= 0 || height <= 0)
-            throw new InvalidOperationException("The schematic viewport is not currently laid out.");
-        if (format.Equals("MP4", StringComparison.OrdinalIgnoreCase))
         {
+            width = 800;
+            height = 600;
+        }
+
+        if (format.Equals("GIF", StringComparison.OrdinalIgnoreCase))
+        {
+            const int maxDim = 640;
+            if (width > maxDim || height > maxDim)
+            {
+                if (width >= height)
+                {
+                    height = Math.Max(2, (int)Math.Round((double)height * maxDim / width));
+                    width = maxDim;
+                }
+                else
+                {
+                    width = Math.Max(2, (int)Math.Round((double)width * maxDim / height));
+                    height = maxDim;
+                }
+            }
+        }
+        else if (format.Equals("MP4", StringComparison.OrdinalIgnoreCase))
+        {
+            const int maxDim = 1280;
+            if (width > maxDim || height > maxDim)
+            {
+                if (width >= height)
+                {
+                    height = Math.Max(2, (int)Math.Round((double)height * maxDim / width));
+                    width = maxDim;
+                }
+                else
+                {
+                    width = Math.Max(2, (int)Math.Round((double)width * maxDim / height));
+                    height = maxDim;
+                }
+            }
             width = Math.Max(2, width & ~1);
             height = Math.Max(2, height & ~1);
         }

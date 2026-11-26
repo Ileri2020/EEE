@@ -312,7 +312,7 @@ public class PythonCommandExecutor
         }
 
         var namedConnectionMatch = Regex.Match(line,
-            @"(?:circuit|eesim)\.connect\s*\(\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""(?:\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?))?\s*\)",
+            @"(?:circuit|eesim)\.connect\s*\(\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""(?:\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?))?(?<extra>[^)]*)\)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         if (namedConnectionMatch.Success)
         {
@@ -323,13 +323,14 @@ public class PythonCommandExecutor
             double resistance = namedConnectionMatch.Groups[5].Success
                 ? double.Parse(namedConnectionMatch.Groups[5].Value, NumberStyles.Float, CultureInfo.InvariantCulture)
                 : 0.0;
-            _api.Connect(fromComponent, fromPin, toComponent, toPin, resistance);
+            var waypoints = ParseWaypoints(line);
+            _api.Connect(fromComponent, fromPin, toComponent, toPin, resistance, waypoints);
             return;
         }
 
         // Example: circuit.connect("v1.positive", "r1.pin1") or eesim.connect("v1.positive", "r1.pin1")
         var dotQuotedConnMatch = Regex.Match(line,
-            @"(?:circuit|eesim)\.connect\s*\(\s*""([^""\.]+)\.([^""]+)""\s*,\s*""([^""\.]+)\.([^""]+)""(?:\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?))?\s*\)",
+            @"(?:circuit|eesim)\.connect\s*\(\s*""([^""\.]+)\.([^""]+)""\s*,\s*""([^""\.]+)\.([^""]+)""(?:\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?))?(?<extra>[^)]*)\)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         if (dotQuotedConnMatch.Success)
         {
@@ -340,20 +341,75 @@ public class PythonCommandExecutor
             double resistance = dotQuotedConnMatch.Groups[5].Success
                 ? double.Parse(dotQuotedConnMatch.Groups[5].Value, NumberStyles.Float, CultureInfo.InvariantCulture)
                 : 0.0;
-            _api.Connect(fromComp, fromPin, toComp, toPin, resistance);
+            var waypoints = ParseWaypoints(line);
+            _api.Connect(fromComp, fromPin, toComp, toPin, resistance, waypoints);
             return;
         }
 
         // Example: circuit.connect(v1.positive, r1.pin1)
-        var connMatch = Regex.Match(line, @"(?:circuit|eesim)\.connect\s*\(\s*(\w+)\.(\w+)\s*,\s*(\w+)\.(\w+)\s*\)", RegexOptions.IgnoreCase);
+        var connMatch = Regex.Match(line, @"(?:circuit|eesim)\.connect\s*\(\s*(\w+)\.(\w+)\s*,\s*(\w+)\.(\w+)\s*(?<extra>[^)]*)\)", RegexOptions.IgnoreCase);
         if (connMatch.Success)
         {
             string fromComp = connMatch.Groups[1].Value;
             string fromPin = connMatch.Groups[2].Value;
             string toComp = connMatch.Groups[3].Value;
             string toPin = connMatch.Groups[4].Value;
+            var waypoints = ParseWaypoints(line);
+            _api.Connect(fromComp, fromPin, toComp, toPin, 0.0, waypoints);
+            return;
+        }
 
-            _api.Connect(fromComp, fromPin, toComp, toPin);
+        // Macro helpers: add_resistor, add_capacitor, add_inductor, add_ground, add_node, add_wire
+        var macroMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.(add_resistor|add_capacitor|add_inductor|add_ground|add_node|add_wire)\s*\(\s*""((?:\\.|[^""\\])*)""(?<args>[^)]*)\)",
+            RegexOptions.IgnoreCase);
+        if (macroMatch.Success)
+        {
+            string macroType = macroMatch.Groups[1].Value.ToLowerInvariant();
+            string name = macroMatch.Groups[2].Value;
+            string argsStr = macroMatch.Groups["args"].Value;
+
+            var rowMatch = Regex.Match(argsStr, @"\brow\s*=\s*(\d+)", RegexOptions.IgnoreCase);
+            var colMatch = Regex.Match(argsStr, @"\bcol\s*=\s*(\d+)", RegexOptions.IgnoreCase);
+            bool hasGrid = rowMatch.Success && colMatch.Success;
+            int r = hasGrid ? int.Parse(rowMatch.Groups[1].Value, CultureInfo.InvariantCulture) : 1;
+            int c = hasGrid ? int.Parse(colMatch.Groups[1].Value, CultureInfo.InvariantCulture) : 1;
+
+            var valMatch = Regex.Match(argsStr, @"^\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)");
+            double val = valMatch.Success ? double.Parse(valMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture) : 0;
+
+            switch (macroType)
+            {
+                case "add_resistor":
+                    double res = val > 0 ? val : 1000.0;
+                    if (hasGrid) _api.AddResistorAtGrid(name, res, r, c);
+                    else _api.AddResistor(name, 0, 0, res);
+                    break;
+                case "add_capacitor":
+                    double cap = val > 0 ? val : 1e-6;
+                    if (hasGrid) _api.AddCapacitorAtGrid(name, cap, r, c);
+                    else _api.AddCapacitor(name, 0, 0, cap);
+                    break;
+                case "add_inductor":
+                    double ind = val > 0 ? val : 1e-3;
+                    if (hasGrid) _api.AddInductorAtGrid(name, ind, r, c);
+                    else _api.AddInductor(name, 0, 0, ind);
+                    break;
+                case "add_ground":
+                    if (hasGrid) _api.AddGroundAtGrid(name, r, c);
+                    else _api.AddComponent("ground", name, 0, 0, 0);
+                    break;
+                case "add_node":
+                    if (hasGrid) _api.AddNodeAtGrid(name, r, c);
+                    else _api.AddNode(name, 0, 0);
+                    break;
+                case "add_wire":
+                    var dirMatch = Regex.Match(argsStr, @"\bdirection\s*=\s*""([^""]+)""", RegexOptions.IgnoreCase);
+                    string dir = dirMatch.Success ? dirMatch.Groups[1].Value : "horizontal";
+                    if (hasGrid) _api.AddWireAtGrid(name, dir, r, c);
+                    else _api.AddWire(name, 0, 0, dir);
+                    break;
+            }
             return;
         }
 
@@ -395,6 +451,19 @@ public class PythonCommandExecutor
         if (copyMatch.Success)
         {
             _api.CopyComponent(copyMatch.Groups[1].Value);
+            return;
+        }
+
+        var removeConnectionMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.(?:remove_connection|delete_connection)\s*\(\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*,\s*""((?:\\.|[^""\\])*)""\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (removeConnectionMatch.Success)
+        {
+            string fromComponent = JsonSerializer.Deserialize<string>($"\"{removeConnectionMatch.Groups[1].Value}\"") ?? string.Empty;
+            string fromPin = JsonSerializer.Deserialize<string>($"\"{removeConnectionMatch.Groups[2].Value}\"") ?? string.Empty;
+            string toComponent = JsonSerializer.Deserialize<string>($"\"{removeConnectionMatch.Groups[3].Value}\"") ?? string.Empty;
+            string toPin = JsonSerializer.Deserialize<string>($"\"{removeConnectionMatch.Groups[4].Value}\"") ?? string.Empty;
+            _api.DeleteConnection(fromComponent, fromPin, toComponent, toPin);
             return;
         }
 
@@ -554,5 +623,42 @@ public class PythonCommandExecutor
             _api.SetProperty(name, prop, val);
             return;
         }
+    }
+
+    private List<EESimulator.Core.Models.Point2D>? ParseWaypoints(string line)
+    {
+        var wpMatch = Regex.Match(line, @"waypoints\s*=\s*\[([^\]]*)\]", RegexOptions.IgnoreCase);
+        if (!wpMatch.Success) return null;
+        var list = new List<EESimulator.Core.Models.Point2D>();
+        var tupleMatches = Regex.Matches(wpMatch.Groups[1].Value, @"\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)");
+
+        // Check if circuit has logical grid components
+        var layout = _api.Circuit.Components.Any(c => c.HasLogicalPlacement)
+            ? EESimulator.Core.Models.LogicalGridSchematicLayout.Calculate(_api.Circuit)
+            : null;
+
+        foreach (Match tm in tupleMatches)
+        {
+            double a = double.Parse(tm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            double b = double.Parse(tm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+            // If coordinates are small integers (grid coordinates e.g. row, col or x, y < 60) and layout exists
+            if (layout != null && a < 60 && b < 60 && a >= 1 && b >= 1)
+            {
+                // Find placement or cell center: row=a, col=b or col=a, row=b
+                var compAtCell = layout.Placements.FirstOrDefault(p =>
+                    (p.Component.LogicalRow == (int)a && p.Component.LogicalColumn == (int)b) ||
+                    (p.Component.LogicalRow == (int)b && p.Component.LogicalColumn == (int)a));
+
+                if (compAtCell.Component != null)
+                {
+                    list.Add(new EESimulator.Core.Models.Point2D(compAtCell.X, compAtCell.Y));
+                    continue;
+                }
+            }
+
+            list.Add(new EESimulator.Core.Models.Point2D(a, b));
+        }
+        return list.Count > 0 ? list : null;
     }
 }

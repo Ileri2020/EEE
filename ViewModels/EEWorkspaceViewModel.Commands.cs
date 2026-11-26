@@ -705,9 +705,13 @@ public partial class EEWorkspaceViewModel
         if (SelectedConnection != null)
         {
             var connection = SelectedConnection;
-            Circuit.RemoveChild(connection);
+            CommandManager.ExecuteCommand(new RemoveConnectionCommand(Circuit, connection)
+            {
+                Origin = CommandOrigin.Schematic
+            });
             SelectedConnection = null;
             CircuitChanged?.Invoke();
+            RequestSimulationRefresh();
             StatusText = $"Deleted wire {connection.NetName}";
             return;
         }
@@ -728,6 +732,7 @@ public partial class EEWorkspaceViewModel
         SelectedComponent = null;
         SelectedConnection = null;
         CircuitChanged?.Invoke();
+        RequestSimulationRefresh();
         StatusText = $"Deleted {comp.Reference}";
     }
 
@@ -824,11 +829,11 @@ public partial class EEWorkspaceViewModel
         var component = SelectedComponent;
         if (component == null) return;
 
-        if (component.ShowWaveform)
+        if (component.ShowWaveform &&
+            WaveformSignals.Any(signal => signal.Component.Id == component.Id))
         {
             component.ShowWaveform = false;
-            if (WaveformComponent == component)
-                IsWaveformDrawerOpen = false;
+            RemoveWaveformSignals(component);
             StatusText = $"Waveform disabled for {component.Reference}";
         }
         else
@@ -840,43 +845,47 @@ public partial class EEWorkspaceViewModel
 
     private void ConfigureWaveformForComponent(ComponentNode component, bool showTerminalPicker)
     {
-        WaveformSignals.Clear();
         WaveformTracePickerComponent = component;
+        WaveformTraceCandidates.Clear();
+        foreach (var signal in CreateWaveformSignals(component))
+            WaveformTraceCandidates.Add(signal);
 
-        if (component.Pins.Count > 2)
+        if (component.Pins.Count > 2 && showTerminalPicker)
+        {
+            IsWaveformTracePickerVisible = true;
+            return;
+        }
+
+        EnableWaveformForComponent(component);
+    }
+
+    private static IEnumerable<WaveformSignal> CreateWaveformSignals(ComponentNode component)
+    {
+        if (component is EESimulator.Core.Components.General.ProbeComponent probe)
+        {
+            yield return new WaveformSignal(
+                probe, string.Empty, $"{probe.Reference}: probe voltage", WaveformSignalKind.ComponentVoltage);
+        }
+        else if (component.Pins.Count > 2)
         {
             foreach (var pin in component.Pins)
-                WaveformSignals.Add(new WaveformSignal(component, pin.Id,
-                    $"{pin.Name} ({pin.Id}) voltage", WaveformSignalKind.PinVoltage));
-
-            if (showTerminalPicker)
-            {
-                IsWaveformTracePickerVisible = true;
-                return;
-            }
-        }
-        else if (component.Pins.Count == 2)
-        {
-            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
-                "Component voltage", WaveformSignalKind.ComponentVoltage));
-            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
-                "Component current", WaveformSignalKind.ComponentCurrent));
+                yield return new WaveformSignal(component, pin.Id,
+                    $"{component.Reference}: {pin.Name} voltage", WaveformSignalKind.PinVoltage);
         }
         else if (component.Pins.Count == 1)
         {
             var pin = component.Pins[0];
-            WaveformSignals.Add(new WaveformSignal(component, pin.Id,
-                $"{pin.Name} ({pin.Id}) voltage", WaveformSignalKind.PinVoltage));
+            yield return new WaveformSignal(component, pin.Id,
+                $"{component.Reference}: {pin.Name} voltage", WaveformSignalKind.PinVoltage);
         }
         else
         {
-            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
-                "Component voltage", WaveformSignalKind.ComponentVoltage));
-            WaveformSignals.Add(new WaveformSignal(component, string.Empty,
-                "Component current", WaveformSignalKind.ComponentCurrent));
+            yield return new WaveformSignal(component, string.Empty,
+                $"{component.Reference}: component voltage", WaveformSignalKind.ComponentVoltage);
+            if (component.Pins.Count != 1)
+                yield return new WaveformSignal(component, string.Empty,
+                    $"{component.Reference}: component current", WaveformSignalKind.ComponentCurrent);
         }
-
-        EnableWaveformForComponent(component);
     }
 
     private void PrepareConnectionWaveform(ConnectionNode connection)
@@ -891,22 +900,25 @@ public partial class EEWorkspaceViewModel
             return;
         }
 
-        WaveformSignals.Clear();
+        WaveformTraceCandidates.Clear();
         WaveformTracePickerComponent = from;
-        WaveformSignals.Add(new WaveformSignal(from, fromPin.Id, $"{connection.NetName}: {from.Reference}:{fromPin.Name}", WaveformSignalKind.PinVoltage));
-        WaveformSignals.Add(new WaveformSignal(to, toPin.Id, $"{connection.NetName}: {to.Reference}:{toPin.Name}", WaveformSignalKind.PinVoltage));
+        WaveformTraceCandidates.Add(new WaveformSignal(from, fromPin.Id, $"{connection.NetName}: {from.Reference}:{fromPin.Name}", WaveformSignalKind.PinVoltage));
+        WaveformTraceCandidates.Add(new WaveformSignal(to, toPin.Id, $"{connection.NetName}: {to.Reference}:{toPin.Name}", WaveformSignalKind.PinVoltage));
         IsWaveformTracePickerVisible = true;
     }
 
     private void EnableWaveformForComponent(ComponentNode component)
     {
         component.ShowWaveform = true;
-        foreach (var source in WaveformSignals.Where(signal => signal.IsSelected).Select(signal => signal.Component).Distinct())
+        foreach (var source in WaveformTraceCandidates.Where(signal => signal.IsSelected).Select(signal => signal.Component).Distinct())
             source.ShowWaveform = true;
         WaveformComponent = component;
+        AddSelectedWaveformSignals(WaveformTraceCandidates);
+        SyncEnabledWaveformSignals();
         IsWaveformDrawerOpen = true;
         IsWaveformTracePickerVisible = false;
-        StatusText = $"Waveform enabled for {component.Reference}: {WaveformSignals.Count(signal => signal.IsSelected)} trace(s)";
+        StatusText = $"Waveform enabled for {component.Reference}; graphing {WaveformGraphSummary}";
+        OnPropertyChanged(nameof(WaveformGraphSummary));
         CircuitChanged?.Invoke();
         RequestSimulationRefresh();
     }
@@ -920,7 +932,7 @@ public partial class EEWorkspaceViewModel
             string str => bool.TryParse(str, out var parsed) && parsed,
             _ => true
         };
-        foreach (var signal in WaveformSignals)
+        foreach (var signal in WaveformTraceCandidates)
             signal.IsSelected = selected;
     }
 
@@ -929,7 +941,7 @@ public partial class EEWorkspaceViewModel
     {
         var component = WaveformTracePickerComponent;
         if (component == null) return;
-        if (!WaveformSignals.Any(signal => signal.IsSelected))
+        if (!WaveformTraceCandidates.Any(signal => signal.IsSelected))
         {
             StatusText = "Select at least one terminal waveform.";
             return;
@@ -937,8 +949,57 @@ public partial class EEWorkspaceViewModel
         EnableWaveformForComponent(component);
     }
 
+    private void AddSelectedWaveformSignals(IEnumerable<WaveformSignal> candidates)
+    {
+        foreach (var signal in candidates.Where(candidate => candidate.IsSelected))
+        {
+            bool alreadyAdded = WaveformSignals.Any(existing =>
+                existing.Component.Id == signal.Component.Id &&
+                existing.SignalId.Equals(signal.SignalId, StringComparison.OrdinalIgnoreCase) &&
+                existing.Kind == signal.Kind);
+            if (!alreadyAdded)
+                WaveformSignals.Add(signal);
+        }
+        OnPropertyChanged(nameof(WaveformGraphSummary));
+    }
+
+    private void RemoveWaveformSignals(ComponentNode component)
+    {
+        foreach (var signal in WaveformSignals.Where(signal => signal.Component.Id == component.Id).ToArray())
+            WaveformSignals.Remove(signal);
+        if (WaveformComponent?.Id == component.Id)
+            WaveformComponent = WaveformSignals.FirstOrDefault()?.Component;
+        OnPropertyChanged(nameof(WaveformGraphSummary));
+    }
+
+    private void SyncEnabledWaveformSignals()
+    {
+        foreach (var signal in WaveformSignals.Where(signal =>
+                     signal.Component is EESimulator.Core.Components.General.ProbeComponent &&
+                     !AreProbeWaveformsVisible).ToArray())
+            WaveformSignals.Remove(signal);
+
+        foreach (var component in Circuit.Components.Where(component =>
+                     component.ShowWaveform ||
+                     (AreProbeWaveformsVisible && component is EESimulator.Core.Components.General.ProbeComponent)))
+        {
+            if (component is EESimulator.Core.Components.General.ProbeComponent &&
+                !AreProbeWaveformsVisible)
+                continue;
+            if (WaveformSignals.Any(signal => signal.Component.Id == component.Id))
+                continue;
+            foreach (var signal in CreateWaveformSignals(component))
+                WaveformSignals.Add(signal);
+        }
+
+        OnPropertyChanged(nameof(WaveformGraphSummary));
+    }
+
     [RelayCommand]
     public void CancelWaveformTraceSelection() => IsWaveformTracePickerVisible = false;
+
+    [RelayCommand]
+    private void ToggleProbeWaveforms() => AreProbeWaveformsVisible = !AreProbeWaveformsVisible;
 
     [RelayCommand]
     public void ApplyDescriptionSidebarChanges()

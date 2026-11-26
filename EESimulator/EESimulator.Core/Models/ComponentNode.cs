@@ -309,7 +309,7 @@ public abstract class ComponentNode : RootNode
         return clone;
     }
 
-    public ComponentPin? GetPin(string pinNameOrId)
+    public virtual ComponentPin? GetPin(string pinNameOrId)
     {
         return Pins.Find(p => p.Id.Equals(pinNameOrId, StringComparison.OrdinalIgnoreCase) ||
                               p.Name.Equals(pinNameOrId, StringComparison.OrdinalIgnoreCase));

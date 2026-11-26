@@ -1,4 +1,5 @@
 using EESimulator.Commands;
+using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Models;
 using EESimulator.Scripting.API;
 using EESimulator.Scripting.Execution;
@@ -36,6 +37,25 @@ public sealed class PythonScriptPipelineTests
             engine.ExecuteFile(scriptFile);
             _output.WriteLine($"Completed managed Python suite: {Path.GetFileName(scriptFile)}");
         }
+    }
+
+    [Fact]
+    public void Python_script_can_remove_a_wire_connection()
+    {
+        var circuit = new CircuitNode();
+        var source = new VoltageSourceComponent { Name = "V1" };
+        var resistor = new ResistorComponent { Name = "R1" };
+        circuit.AddChild(source);
+        circuit.AddChild(resistor);
+        circuit.AddChild(new ConnectionNode(source.Id, "positive", resistor.Id, "pin1"));
+
+        var executor = new PythonCommandExecutor(new PythonApi(new CommandManager(), circuit));
+        bool success = executor.ExecuteScript(
+            "circuit.remove_connection(\"V1\", \"positive\", \"R1\", \"pin1\")",
+            out string message);
+
+        Assert.True(success, message);
+        Assert.Empty(circuit.Connections);
     }
 
     private static string FindRepositoryRoot()

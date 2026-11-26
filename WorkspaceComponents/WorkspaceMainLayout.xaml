@@ -20,7 +20,8 @@
             <parts:WorkspaceSidebarTrigger Grid.Column="{OnIdiom Phone=1, Default=2}"
                                            HorizontalOptions="End"
                                            VerticalOptions="Center"
-                                           ZIndex="35" />
+                                           TranslationX="{Binding MainSidebarTriggerTranslationX}"
+                                           ZIndex="50" />
 
             <!-- ── Description & Properties Sidebar (Right) ────────────────── -->
             <parts:WorkspaceDescriptionSidebar x:Name="DescriptionSidebar" Grid.Column="{OnIdiom Phone=1, Default=3}" ZIndex="28" IsVisible="{Binding IsDescriptionSidebarVisible}" />

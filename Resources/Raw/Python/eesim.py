@@ -120,6 +120,30 @@ class CircuitRef:
             raise TypeError("add_component requires either position or row and col.")
         return ComponentRef(str(name))
 
+    def connect(self, *args, **kwargs):
+        return connect(*args, **kwargs)
+
+    def add_resistor(self, name, resistance=1000.0, **kwargs):
+        return add_resistor(name, resistance=resistance, **kwargs)
+
+    def add_capacitor(self, name, capacitance=1e-6, **kwargs):
+        return add_capacitor(name, capacitance=capacitance, **kwargs)
+
+    def add_inductor(self, name, inductance=1e-3, **kwargs):
+        return add_inductor(name, inductance=inductance, **kwargs)
+
+    def add_ground(self, name="GND", **kwargs):
+        return add_ground(name=name, **kwargs)
+
+    def add_node(self, name, **kwargs):
+        return add_node(name=name, **kwargs)
+
+    def add_wire(self, name, direction="horizontal", **kwargs):
+        return add_wire(name=name, direction=direction, **kwargs)
+
+    def add_voltage_source(self, name, dc=5.0, **kwargs):
+        return add_voltage_source(name=name, dc=dc, **kwargs)
+
 
 def clear_circuit():
     _call("eesim.clear_circuit()")
@@ -159,7 +183,7 @@ def set_memory_word(name, address, value):
     _call(f"eesim.set_memory_word({_quoted(name)}, {_number(address)}, {_number(value)})")
 
 
-def connect(*args):
+def connect(*args, **kwargs):
     if len(args) == 2:
         endpoints = args
         resistance = None
@@ -169,7 +193,58 @@ def connect(*args):
     else:
         raise TypeError("connect expects two endpoint names or component/pin pairs.")
     suffix = f", {_number(resistance)}" if resistance is not None else ""
-    _call(f"eesim.connect({_quoted(endpoints[0])}, {_quoted(endpoints[1])}{suffix})")
+
+    extra_parts = []
+    if "waypoints" in kwargs and kwargs["waypoints"] is not None:
+        wp_list = kwargs["waypoints"]
+        wp_str = "[" + ", ".join(f"({_number(pt[0])}, {_number(pt[1])})" for pt in wp_list) + "]"
+        extra_parts.append(f"waypoints={wp_str}")
+    if "exit_direction" in kwargs and kwargs["exit_direction"] is not None:
+        extra_parts.append(f"exit_direction={_quoted(kwargs['exit_direction'])}")
+
+    extra_suffix = (", " + ", ".join(extra_parts)) if extra_parts else ""
+    _call(f"eesim.connect({_quoted(endpoints[0])}, {_quoted(endpoints[1])}{suffix}{extra_suffix})")
+
+
+def add_resistor(name, resistance=1000.0, **kwargs):
+    kwargs["param"] = resistance
+    return add_component("resistor", name, **kwargs)
+
+
+def add_capacitor(name, capacitance=1e-6, **kwargs):
+    kwargs["param"] = capacitance
+    return add_component("capacitor", name, **kwargs)
+
+
+def add_inductor(name, inductance=1e-3, **kwargs):
+    kwargs["param"] = inductance
+    return add_component("inductor", name, **kwargs)
+
+
+def add_ground(name="GND", **kwargs):
+    return add_component("ground", name, **kwargs)
+
+
+def add_node(name, **kwargs):
+    return add_component("general.node", name, **kwargs)
+
+
+def add_wire(name, direction="horizontal", length=40.0, **kwargs):
+    comp = add_component("general.wire", name, **kwargs)
+    set_component_property(name, "Direction", direction)
+    return comp
+
+
+def add_voltage_source(name, dc=5.0, **kwargs):
+    kwargs["param"] = dc
+    return add_component("voltagesource", name, **kwargs)
+
+
+def remove_connection(from_component, from_pin, to_component, to_pin):
+    _call(
+        f"eesim.remove_connection({_quoted(from_component)}, {_quoted(from_pin)}, "
+        f"{_quoted(to_component)}, {_quoted(to_pin)})"
+    )
 
 
 def evaluate_combinational():

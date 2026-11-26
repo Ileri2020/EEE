@@ -20,6 +20,21 @@ public class JunctionComponent : GeneralComponent
         Pins.Add(new ComponentPin("node", "•", 0, 0));
     }
 
+    public override ComponentPin? GetPin(string idOrName)
+    {
+        var pin = base.GetPin(idOrName);
+        if (pin != null) return pin;
+        if (string.IsNullOrEmpty(idOrName) ||
+            idOrName.Equals("pin", StringComparison.OrdinalIgnoreCase) ||
+            idOrName.Equals("node", StringComparison.OrdinalIgnoreCase) ||
+            idOrName.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+            idOrName.Equals("•", StringComparison.OrdinalIgnoreCase))
+        {
+            return Pins.FirstOrDefault();
+        }
+        return Pins.FirstOrDefault();
+    }
+
     public JunctionComponent(string name, double x = 0, double y = 0) : this()
     {
         Name = name;

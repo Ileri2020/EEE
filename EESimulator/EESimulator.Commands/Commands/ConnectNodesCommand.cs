@@ -20,9 +20,10 @@ public class ConnectNodesCommand : ICommand
     public string ToPin { get; }
     public string NetName { get; }
 
+    public IReadOnlyList<Point2D>? RoutingPoints { get; }
     public ConnectionNode? CreatedConnection { get; private set; }
 
-    public ConnectNodesCommand(CircuitNode circuit, string fromComponent, string fromPin, string toComponent, string toPin, string netName = "")
+    public ConnectNodesCommand(CircuitNode circuit, string fromComponent, string fromPin, string toComponent, string toPin, string netName = "", IReadOnlyList<Point2D>? routingPoints = null)
     {
         Circuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
         FromComponentName = fromComponent;
@@ -30,6 +31,7 @@ public class ConnectNodesCommand : ICommand
         ToComponentName = toComponent;
         ToPin = toPin;
         NetName = netName;
+        RoutingPoints = routingPoints;
     }
 
     public bool Execute()
@@ -43,6 +45,10 @@ public class ConnectNodesCommand : ICommand
         if (CreatedConnection == null)
         {
             CreatedConnection = new ConnectionNode(fromComp.Id, FromPin, toComp.Id, ToPin, NetName);
+            if (RoutingPoints != null && RoutingPoints.Count > 0)
+            {
+                CreatedConnection.RoutingPoints.AddRange(RoutingPoints);
+            }
         }
 
         Circuit.AddChild(CreatedConnection);

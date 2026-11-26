@@ -9,8 +9,8 @@ using EESimulator.Engine.Simulation;
 namespace EESimulator.App.Views;
 
 /// <summary>
-/// Oscilloscope / Waveform canvas rendering time-domain voltage and current curves
-/// for the selected component probed via SpiceSharp simulation.
+/// Oscilloscope canvas rendering time-domain voltage and current curves
+/// for all enabled component and probe signals.
 /// </summary>
 public class WaveformViewport : GraphicsView, IDrawable
 {
@@ -19,8 +19,6 @@ public class WaveformViewport : GraphicsView, IDrawable
             null, propertyChanged: (b, _, _) =>
             {
                 var vp = (WaveformViewport)b;
-                vp._rollingBuffers.Clear();
-                vp._lastDrawnEnvelopes.Clear();
                 vp.Invalidate();
             });
 
@@ -264,9 +262,21 @@ public class WaveformViewport : GraphicsView, IDrawable
     private void OnSignalCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.OldItems != null)
-            foreach (WaveformSignal signal in e.OldItems) signal.PropertyChanged -= OnSignalPropertyChanged;
+            foreach (WaveformSignal signal in e.OldItems)
+            {
+                signal.PropertyChanged -= OnSignalPropertyChanged;
+                string key = GetSignalKey(signal);
+                _rollingBuffers.Remove(key);
+                _lastDrawnEnvelopes.Remove(key);
+            }
         if (e.NewItems != null)
-            foreach (WaveformSignal signal in e.NewItems) signal.PropertyChanged += OnSignalPropertyChanged;
+            foreach (WaveformSignal signal in e.NewItems)
+            {
+                signal.PropertyChanged += OnSignalPropertyChanged;
+                string key = GetSignalKey(signal);
+                _rollingBuffers.Remove(key);
+                _lastDrawnEnvelopes.Remove(key);
+            }
         Invalidate();
     }
 
@@ -313,12 +323,12 @@ public class WaveformViewport : GraphicsView, IDrawable
             .Where(trace => trace.Times.Count >= 2 && trace.Values.Count >= 2)
             .ToList();
 
-        if (comp == null || traces.Count == 0)
+        if (traces.Count == 0)
         {
             canvas.FontColor = Color.FromArgb("#484F58");
             canvas.FontSize = 12;
             canvas.DrawString(comp == null
-                ? "No component selected for waveform view. Toggle 📈 on a component."
+                ? "No waveform traces selected. Enable a component waveform or probe traces."
                 : "No transient samples yet. Run the simulation to populate the selected traces.",
                 0, 0, w, h, HorizontalAlignment.Center, VerticalAlignment.Center);
             return;
@@ -473,8 +483,18 @@ public class WaveformViewport : GraphicsView, IDrawable
         // ── Bottom status bar ─────────────────────────────────────────────────
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 10;
+        string componentSummary = string.Join(", ", traces
+            .Select(trace => trace.Signal.Component.Reference)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(3));
+        int additionalComponents = traces
+            .Select(trace => trace.Signal.Component.Id)
+            .Distinct()
+            .Count() - 3;
+        if (additionalComponents > 0)
+            componentSummary += $" +{additionalComponents}";
         canvas.DrawString(
-            $"{comp.Reference} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s · window {visibleDuration:G4} s",
+            $"{componentSummary} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s · window {visibleDuration:G4} s",
             8, h - 17, w - 16, 14, HorizontalAlignment.Left, VerticalAlignment.Center);
 
         // ── X axis time labels (absolute times of visible grid lines) ─────────

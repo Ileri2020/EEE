@@ -234,13 +234,19 @@
                                        FontAttributes="Bold"
                                        FontSize="12"
                                        VerticalOptions="Center"/>
-                                <Label Text="{Binding WaveformComponent.Reference, StringFormat='[{0}]'}"
+                                <Label Text="{Binding WaveformGraphSummary, StringFormat='[{0}]'}"
                                        TextColor="#56D364"
                                        FontSize="11"
                                        FontAttributes="Bold"
                                        VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                            <Button Text="{Binding ProbeWaveformToggleText}"
+                                    Style="{StaticResource ToolBtn}"
+                                    FontSize="10"
+                                    Padding="6,3"
+                                    Command="{Binding ToggleProbeWaveformsCommand}"
+                                    ToolTipProperties.Text="Show or hide waveform traces from every probe"/>
                             <Button Text="Simulate"
                                     Style="{StaticResource ToolBtn}"
                                     FontSize="11"
@@ -326,7 +332,7 @@
                                         Command="{Binding SetAllWaveformSignalsCommand}" CommandParameter="False"/>
                             </HorizontalStackLayout>
                             <ScrollView Grid.Row="2" Padding="12,4">
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding WaveformSignals}" Spacing="4">
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding WaveformTraceCandidates}" Spacing="4">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="core:WaveformSignal">
                                             <Border Padding="8,4" BackgroundColor="#0D1117" Stroke="#30363D" StrokeThickness="1">

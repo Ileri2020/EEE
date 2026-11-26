@@ -54,11 +54,10 @@ public class LEDComponent : ElectronicComponent
     }
 
     /// <summary>
-    /// Indicates whether electrical voltage or current is illuminating the LED.
+    /// Indicates whether forward current is illuminating the LED.
     /// </summary>
     public bool IsOn
-        => Math.Abs(LiveVoltage) >= Math.Min(ForwardVoltage * 0.75, 1.5)
-            || Math.Abs(LiveCurrent) >= 0.001;
+        => LiveCurrent >= 0.001;
 
     public LEDComponent()
     {

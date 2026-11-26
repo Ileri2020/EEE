@@ -39,17 +39,26 @@ public partial class SchematicViewport
     }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
+        => DrawWithCamera(canvas, dirtyRect, _panX, _panY, _zoom);
+
+    private void DrawWithCamera(
+        ICanvas canvas,
+        RectF dirtyRect,
+        float panX,
+        float panY,
+        float zoom,
+        bool? simulationPlayingOverride = null)
     {
         canvas.SaveState();
-        canvas.Translate(_panX, _panY);
-        canvas.Scale(_zoom, _zoom);
+        canvas.Translate(panX, panY);
+        canvas.Scale(zoom, zoom);
 
         DrawGrid(canvas, dirtyRect);
         DrawOriginCross(canvas);
 
         if (Circuit != null)
         {
-            DrawConnections(canvas);
+            DrawConnections(canvas, simulationPlayingOverride);
             DrawComponents(canvas, dirtyRect);
             DrawWireInProgress(canvas);
         }
@@ -218,7 +227,7 @@ public partial class SchematicViewport
         return route;
     }
 
-    private void DrawConnections(ICanvas canvas)
+    private void DrawConnections(ICanvas canvas, bool? simulationPlayingOverride = null)
     {
         if (Circuit == null) return;
         EnsureWireRoutesBuilt();
@@ -239,6 +248,9 @@ public partial class SchematicViewport
             float speed = 0f;
             double vFrom = 0.0;
             double vTo = 0.0;
+            double measuredCurrent = 0.0;
+            double fromPinCurrent = 0.0;
+            double toPinCurrent = 0.0;
 
             if (route.Owner is WireComponent wire)
             {
@@ -247,7 +259,9 @@ public partial class SchematicViewport
                 vFrom = pin0 != null ? SamplePinVoltage(wire, pin0) : 0.0;
                 vTo = pin1 != null ? SamplePinVoltage(wire, pin1) : 0.0;
                 double vDelta = vFrom - vTo;
-                double current = Math.Abs(SampleComponentWaveform(wire, current: true));
+                double current = SampleComponentWaveform(wire, current: true);
+                measuredCurrent = Math.Abs(current);
+                fromPinCurrent = current;
 
                 if (Math.Abs(vDelta) > 1e-4)
                     direction = vDelta > 0 ? 1 : -1;
@@ -265,9 +279,12 @@ public partial class SchematicViewport
                 vTo = SamplePinVoltage(route.ToComp, route.ToPin);
                 double vDelta = vFrom - vTo;
 
-                double iFrom = Math.Abs(SamplePinCurrent(route.FromComp, route.FromPin, GetLiveCurrent(route.FromComp)));
-                double iTo = Math.Abs(SamplePinCurrent(route.ToComp, route.ToPin, GetLiveCurrent(route.ToComp)));
+                fromPinCurrent = SamplePinCurrent(route.FromComp, route.FromPin, GetLiveCurrent(route.FromComp));
+                toPinCurrent = SamplePinCurrent(route.ToComp, route.ToPin, GetLiveCurrent(route.ToComp));
+                double iFrom = Math.Abs(fromPinCurrent);
+                double iTo = Math.Abs(toPinCurrent);
                 double branchCurrent = Math.Max(iFrom, iTo);
+                measuredCurrent = branchCurrent;
 
                 bool isFromSource = route.FromComp.ComponentType.Contains("Source", StringComparison.OrdinalIgnoreCase) ||
                                     route.FromComp.Reference.StartsWith("V", StringComparison.OrdinalIgnoreCase) ||
@@ -365,10 +382,100 @@ public partial class SchematicViewport
                 speed = CalculateFlowSpeed(effectiveVoltageGap, branchCurrent);
             }
 
-            bool isEnergizedStatic = (direction == 0 || speed <= 0.01f) && (Math.Abs(vFrom) > 0.05 || Math.Abs(vTo) > 0.05);
-            if (IsSimulationPlaying && route.TotalLength > 1f && (speed > 0.01f || isEnergizedStatic))
+            if (measuredCurrent < 1e-6)
+            {
+                direction = 0;
+            }
+            else if (route.Owner is WireComponent)
+            {
+                direction = GetElectronDirection(fromPinCurrent);
+            }
+            else
+            {
+                direction = GetElectronDirection(fromPinCurrent, toPinCurrent);
+            }
+
+            bool isSimulationPlaying = simulationPlayingOverride ?? IsSimulationPlaying;
+            if (isSimulationPlaying && route.TotalLength > 1f && direction != 0 && speed > 0.01f)
                 DrawElectricityDots(canvas, route.Path, direction, speed, route.TotalLength);
         }
+
+        DrawAutomaticJunctionDots(canvas);
+    }
+
+    private void DrawAutomaticJunctionDots(ICanvas canvas)
+    {
+        if (_cachedWireRoutes.Count == 0) return;
+
+        var endpoints = new List<(PointF Point, Color Color)>();
+        var allSegments = new List<(PointF Start, PointF End, Color Color)>();
+
+        foreach (var route in _cachedWireRoutes)
+        {
+            if (route.Path.Count == 0) continue;
+            Color color = GetWireRouteColor(route);
+            endpoints.Add((route.Path[0], color));
+            endpoints.Add((route.Path[^1], color));
+
+            for (int i = 0; i < route.Path.Count - 1; i++)
+            {
+                allSegments.Add((route.Path[i], route.Path[i + 1], color));
+            }
+        }
+
+        var junctionDots = new Dictionary<(int X, int Y), Color>();
+
+        // 1. T-Junction: An endpoint of one wire lies strictly on a segment of another wire
+        foreach (var (pt, color) in endpoints)
+        {
+            foreach (var seg in allSegments)
+            {
+                float dStart = MathF.Sqrt(MathF.Pow(pt.X - seg.Start.X, 2) + MathF.Pow(pt.Y - seg.Start.Y, 2));
+                float dEnd = MathF.Sqrt(MathF.Pow(pt.X - seg.End.X, 2) + MathF.Pow(pt.Y - seg.End.Y, 2));
+                if (dStart < 3f || dEnd < 3f) continue;
+
+                if (PointNearSegment(pt, seg.Start, seg.End, 2.0f))
+                {
+                    var key = ((int)MathF.Round(pt.X), (int)MathF.Round(pt.Y));
+                    junctionDots[key] = color;
+                }
+            }
+        }
+
+        // 2. Multi-wire Junction: 3 or more wire endpoints meet at the same location
+        var endpointGroups = endpoints.GroupBy(ep => ((int)MathF.Round(ep.Point.X / 3f), (int)MathF.Round(ep.Point.Y / 3f)));
+        foreach (var group in endpointGroups)
+        {
+            if (group.Count() >= 3)
+            {
+                var first = group.First();
+                var key = ((int)MathF.Round(first.Point.X), (int)MathF.Round(first.Point.Y));
+                junctionDots[key] = first.Color;
+            }
+        }
+
+        foreach (var (coord, color) in junctionDots)
+        {
+            canvas.FillColor = color;
+            canvas.FillCircle(coord.X, coord.Y, 4.0f);
+            canvas.StrokeColor = Colors.White;
+            canvas.StrokeSize = 1.0f;
+            canvas.DrawCircle(coord.X, coord.Y, 4.0f);
+        }
+    }
+
+    private static bool PointNearSegment(PointF pt, PointF a, PointF b, float maxDist)
+    {
+        float dx = b.X - a.X;
+        float dy = b.Y - a.Y;
+        float lenSq = dx * dx + dy * dy;
+        if (lenSq < 0.001f) return false;
+
+        float t = Math.Clamp(((pt.X - a.X) * dx + (pt.Y - a.Y) * dy) / lenSq, 0f, 1f);
+        float projX = a.X + t * dx;
+        float projY = a.Y + t * dy;
+        float distSq = (pt.X - projX) * (pt.X - projX) + (pt.Y - projY) * (pt.Y - projY);
+        return distSq <= maxDist * maxDist;
     }
 
     private static float CalculateFlowSpeed(double voltageGap, double branchCurrent)

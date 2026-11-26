@@ -509,7 +509,12 @@ public partial class EEWorkspaceViewModel
     }
 
     [RelayCommand]
-    private void ToggleWaveformDrawer() => IsWaveformDrawerOpen = !IsWaveformDrawerOpen;
+    private void ToggleWaveformDrawer()
+    {
+        IsWaveformDrawerOpen = !IsWaveformDrawerOpen;
+        if (IsWaveformDrawerOpen)
+            SyncEnabledWaveformSignals();
+    }
 
     [RelayCommand]
     private void CloseWaveformDrawer() => IsWaveformDrawerOpen = false;

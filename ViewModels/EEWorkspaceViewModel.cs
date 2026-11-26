@@ -216,6 +216,30 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsSidebarVisible { get; set; } = true;
 
+    public string MainSidebarToggleText => IsSidebarVisible ? "›" : "‹";
+
+    public double MainSidebarTriggerTranslationX
+    {
+        get
+        {
+            if (DeviceInfo.Idiom == DeviceIdiom.Phone)
+            {
+                if (IsDescriptionSidebarVisible)
+                    return -260;
+                if (IsSidebarVisible)
+                    return -240;
+                return 0;
+            }
+            return 0;
+        }
+    }
+
+    partial void OnIsSidebarVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(MainSidebarToggleText));
+        OnPropertyChanged(nameof(MainSidebarTriggerTranslationX));
+    }
+
     [ObservableProperty]
     public partial bool IsControlSidebarVisible { get; set; } = false;
 
@@ -569,6 +593,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty] public partial string EditGroundGroup { get; set; } = GroundComponent.DefaultGroundGroup;
     [ObservableProperty] public partial double EditBreakingCurrent { get; set; } = 1.0;
     [ObservableProperty] public partial bool IsDescriptionSidebarVisible { get; set; } = false;
+
+    partial void OnIsDescriptionSidebarVisibleChanged(bool value) =>
+        OnPropertyChanged(nameof(MainSidebarTriggerTranslationX));
     [ObservableProperty] public partial string EditConnectionNetName { get; set; } = string.Empty;
     [ObservableProperty] public partial double EditConnectionResistance { get; set; }
 
@@ -873,6 +900,36 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial ComponentNode? WaveformComponent { get; set; }
 
     public ObservableCollection<WaveformSignal> WaveformSignals { get; } = new();
+    public ObservableCollection<WaveformSignal> WaveformTraceCandidates { get; } = new();
+
+    [ObservableProperty]
+    public partial bool AreProbeWaveformsVisible { get; set; } = true;
+
+    public string ProbeWaveformToggleText => AreProbeWaveformsVisible ? "Probes on" : "Probes off";
+
+    public string WaveformGraphSummary
+    {
+        get
+        {
+            int componentCount = WaveformSignals
+                .Where(signal => signal.IsSelected)
+                .Select(signal => signal.Component.Id)
+                .Distinct()
+                .Count();
+            return componentCount switch
+            {
+                0 => "No traces",
+                1 => WaveformSignals.First(signal => signal.IsSelected).Component.Reference,
+                _ => $"{componentCount} components"
+            };
+        }
+    }
+
+    partial void OnAreProbeWaveformsVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ProbeWaveformToggleText));
+        SyncEnabledWaveformSignals();
+    }
 
     [ObservableProperty]
     public partial bool IsWaveformTracePickerVisible { get; set; }
@@ -1362,6 +1419,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi.OnLogicToggled += (name) => CircuitChanged?.Invoke();
         PythonApi.OnDescriptionSidebarToggled += () => ToggleDescriptionSidebar();
         PythonApi.OnComponentDeleted += (name) => CircuitChanged?.Invoke();
+        PythonApi.OnConnectionDeleted += () =>
+        {
+            CircuitChanged?.Invoke();
+            RequestSimulationRefresh();
+        };
         PythonApi.OnComponentCopied += (name) => CircuitChanged?.Invoke();
 
         SaveDestinationFolder = GetDefaultSaveDirectory();
