@@ -164,8 +164,10 @@ public partial class SchematicViewport
         IsSimulationPlaying = false;
 
         // Centre the same world-space centre in the export canvas.
-        float worldCentreX = (Width  / 2f - _panX) / _zoom;
-        float worldCentreY = (Height / 2f - _panY) / _zoom;
+        float viewportWidth = (float)Width;
+        float viewportHeight = (float)Height;
+        float worldCentreX = (viewportWidth / 2f - _panX) / _zoom;
+        float worldCentreY = (viewportHeight / 2f - _panY) / _zoom;
         float exportZoom   = _zoom * scale;
         _panX = width  / 2f - worldCentreX * exportZoom;
         _panY = height / 2f - worldCentreY * exportZoom;
