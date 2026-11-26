@@ -1184,8 +1184,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     /// <summary>Raised when the circuit changes so the canvas can Invalidate immediately.</summary>
     public event Action? CircuitChanged;
-    public event Action<string?>? CircuitImageSaveRequested;
-    public event Action<string?, int, string>? VideoRecordingStartRequested;
+    public event Action<string?, string>? CircuitImageSaveRequested;
+    public event Action<string?, int, string, string>? VideoRecordingStartRequested;
     public event Action? VideoRecordingStopRequested;
     public event Action? AnimationFrameRequested;
     public event Action? ViewportRecenterRequested;
@@ -1343,13 +1343,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi.OnRedoRequested += () => Redo();
         PythonApi.OnProjectNameChanged += name => ProjectName = name;
         PythonApi.OnWaveformDrawerToggleRequested += () => ToggleWaveformDrawer();
-        PythonApi.OnCircuitImageSaveRequested += path => CircuitImageSaveRequested?.Invoke(path);
-        PythonApi.OnVideoRecordingStartRequested += (path, frameRate, format) =>
+        PythonApi.OnCircuitImageSaveRequested += (path, view) => CircuitImageSaveRequested?.Invoke(path, view);
+        PythonApi.OnVideoRecordingStartRequested += (path, frameRate, format, view) =>
         {
             IsVideoRecording = true;
             VideoFrameRate = frameRate;
             SelectedVideoFormat = format;
-            VideoRecordingStartRequested?.Invoke(path, frameRate, format);
+            VideoRecordingStartRequested?.Invoke(path, frameRate, format, view);
         };
         PythonApi.OnVideoRecordingStopRequested += () =>
         {

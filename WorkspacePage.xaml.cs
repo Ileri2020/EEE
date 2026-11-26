@@ -18,8 +18,8 @@ public partial class WorkspacePage : ContentPage
         _vm = vm;
         InitializeComponent();
         BindingContext = vm;
-        vm.CircuitImageSaveRequested += path => _ = SaveCircuitImageAsync(path);
-        vm.VideoRecordingStartRequested += (path, frameRate, format) => _ = StartVideoRecordingAsync(path, frameRate, format);
+        vm.CircuitImageSaveRequested += (path, view) => _ = SaveCircuitImageAsync(path, view);
+        vm.VideoRecordingStartRequested += (path, frameRate, format, view) => _ = StartVideoRecordingAsync(path, frameRate, format, view);
         vm.VideoRecordingStopRequested += () => _ = StopVideoRecordingAsync();
 
         // Wire canvas selection events to ViewModel
@@ -93,17 +93,20 @@ public partial class WorkspacePage : ContentPage
         };
     }
 
-    private async Task SaveCircuitImageAsync(string? path)
+    private async Task SaveCircuitImageAsync(string? path, string view = "recentre")
     {
         try
         {
             byte[] png = await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 var (width, height) = GetCaptureDimensions();
-                return MainWorkspace.SchematicCanvas.CaptureRecenteredPng(width, height);
+                bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
+                return useScreen
+                    ? MainWorkspace.SchematicCanvas.CaptureCurrentViewPng(width, height)
+                    : MainWorkspace.SchematicCanvas.CaptureRecenteredPng(width, height);
             });
             await SchematicCaptureService.SavePngAsync(png, path);
-            _vm.StatusText = $"Circuit image saved{(string.IsNullOrWhiteSpace(path) ? string.Empty : $" to {path}")}";
+            _vm.StatusText = $"Circuit image saved ({view} view){(string.IsNullOrWhiteSpace(path) ? string.Empty : $" to {path}")}";
         }
         catch (Exception exception)
         {
@@ -111,13 +114,14 @@ public partial class WorkspacePage : ContentPage
         }
     }
 
-    private async Task StartVideoRecordingAsync(string? path, int frameRate, string format)
+    private async Task StartVideoRecordingAsync(string? path, int frameRate, string format, string view = "recentre")
     {
         try
         {
             if (_videoRecorder != null)
                 throw new InvalidOperationException("A circuit video recording is already active.");
 
+            bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
             var (width, height) = await MainThread.InvokeOnMainThreadAsync(() => GetCaptureDimensions(format));
             _videoRecorder = new SchematicVideoRecorder(
                 width,
@@ -125,11 +129,13 @@ public partial class WorkspacePage : ContentPage
                 frameRate,
                 format,
                 path,
-                () => MainThread.InvokeOnMainThreadAsync(
-                    () => MainWorkspace.SchematicCanvas.CaptureRecenteredFrame(width, height))
+                () => MainThread.InvokeOnMainThreadAsync(() =>
+                    useScreen
+                        ? MainWorkspace.SchematicCanvas.CaptureCurrentViewFrame(width, height)
+                        : MainWorkspace.SchematicCanvas.CaptureRecenteredFrame(width, height))
                     .GetAwaiter().GetResult());
             _vm.SetVideoRecordingState(true, frameRate, format);
-            _vm.StatusText = $"Recording recentered circuit view as {format} at {frameRate} fps";
+            _vm.StatusText = $"Recording {view} circuit view as {format} at {frameRate} fps";
         }
         catch (Exception exception)
         {

@@ -23,13 +23,15 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
     {
         _width = width;
         _height = height;
-        var format = MediaFormat.CreateVideoFormat(MediaFormat.MimeVideoAvc, width, height);
-        format.SetInteger(MediaFormat.KeyColorFormat, (int)MediaCodecInfo.CodecCapabilities.ColorFormatSurface);
+        const string videoMimeType = "video/avc";
+        const int colorFormatSurface = 0x7F000789;
+        var format = MediaFormat.CreateVideoFormat(videoMimeType, width, height);
+        format.SetInteger(MediaFormat.KeyColorFormat, colorFormatSurface);
         format.SetInteger(MediaFormat.KeyBitRate, Math.Max(1_000_000, width * height * 5));
         format.SetInteger(MediaFormat.KeyFrameRate, frameRate);
         format.SetInteger(MediaFormat.KeyIFrameInterval, 1);
 
-        _codec = MediaCodec.CreateEncoderByType(MediaFormat.MimeVideoAvc);
+        _codec = MediaCodec.CreateEncoderByType(videoMimeType);
         _muxer = new MediaMuxer(outputPath, MuxerOutputType.Mpeg4);
         _codec.Configure(format, null, null, MediaCodecConfigFlags.Encode);
         _inputSurface = _codec.CreateInputSurface();
@@ -45,11 +47,13 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
         if (bitmap == null)
             throw new InvalidOperationException("SkiaSharp produced an image that Android could not decode.");
 
-        Canvas canvas = _inputSurface.LockCanvas(null);
+        Android.Graphics.Canvas? canvas = _inputSurface.LockCanvas(null);
+        if (canvas == null)
+            throw new InvalidOperationException("Android could not lock the encoder input surface.");
         try
         {
-            canvas.DrawColor(Color.Black);
-            canvas.DrawBitmap(bitmap, null, new Rect(0, 0, _width, _height), null);
+            canvas.DrawColor(Android.Graphics.Color.Black);
+            canvas.DrawBitmap(bitmap, null, new Android.Graphics.Rect(0, 0, _width, _height), null);
         }
         finally
         {
@@ -96,10 +100,10 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
                     _muxer.WriteSampleData(_videoTrack, outputBuffer, _bufferInfo);
                 }
 
-                outputEnded = (_bufferInfo.Flags & (int)MediaCodecBufferFlags.EndOfStream) != 0;
+                outputEnded = (_bufferInfo.Flags & MediaCodecBufferFlags.EndOfStream) != 0;
                 _codec.ReleaseOutputBuffer(outputIndex, false);
             }
-            else if (outputIndex == MediaCodec.InfoOutputFormatChanged)
+            else if (outputIndex == (int)MediaCodecInfoState.OutputFormatChanged)
             {
                 if (_muxerStarted)
                     throw new InvalidOperationException("Android reported multiple MP4 output formats.");
@@ -107,7 +111,7 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
                 _muxer.Start();
                 _muxerStarted = true;
             }
-            else if (outputIndex == MediaCodec.InfoTryAgainLater && !endOfStream)
+            else if (outputIndex == (int)MediaCodecInfoState.TryAgainLater && !endOfStream)
             {
                 return;
             }

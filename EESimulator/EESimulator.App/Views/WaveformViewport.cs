@@ -376,27 +376,40 @@ public class WaveformViewport : GraphicsView, IDrawable
             }
         }
 
+        // ── Brighter vertical origin axis (left plot edge) ───────────────────
         canvas.StrokeColor = Color.FromArgb("#385B45");
         canvas.StrokeSize = 1.2f;
         canvas.DrawLine(plotLeft, plotTop, plotLeft, plotBottom);
 
-        canvas.FontColor = Color.FromArgb("#8B949E");
-        canvas.FontSize = 8;
-        for (int division = 0; division <= numX; division += 2)
+        // ── Horizontal origin line through Y=0 (brighter, clearly visible) ───
+        // This shows where the signal crosses zero — important for AC/oscillating
+        // signals that may not reach zero (e.g. biased BJT collector voltage).
+        for (int lane = 0; lane < (hasVoltage && hasCurrent ? 2 : 1); lane++)
         {
-            float x = plotLeft + division * divisionWidth;
-            canvas.DrawString($"{division * timePerDivision:G4}s", x - 24, h - bottomPad + 4, 48, 12,
-                HorizontalAlignment.Center, VerticalAlignment.Center);
+            float laneTop = plotTop + lane * laneHeight;
+            float zeroY = laneTop + laneHeight / 2f;
+            canvas.StrokeColor = Color.FromArgb("#2EA043");   // bright green origin line
+            canvas.StrokeSize = 1.6f;
+            canvas.DrawLine(plotLeft, zeroY, plotRight, zeroY);
         }
 
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 8;
-        canvas.DrawString($"X {timePerDivision:G4}s/div · Y {magnitudePerDivision:G4} { (hasVoltage && hasCurrent ? "units" : hasCurrent ? "A" : "V")}/div",
+        canvas.DrawString($"X {timePerDivision:G4}s/div · Y {magnitudePerDivision:G4} {(hasVoltage && hasCurrent ? "units" : hasCurrent ? "A" : "V")}/div",
             plotLeft + 4, 2, Math.Max(0, w - plotLeft - 8), 16,
             HorizontalAlignment.Left, VerticalAlignment.Center);
 
         double globalMinTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Min();
         double globalMaxTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Max();
+
+        // ── Scrolling time window ─────────────────────────────────────────────
+        // The right edge of the visible plot is always anchored to the latest
+        // sample time (like a real oscilloscope scrolling forward). Earlier
+        // samples scroll off the left edge so the graph never squishes.
+        // If data is shorter than the visible window, we still start from t=0
+        // so the trace begins at the left and grows rightward naturally.
+        double visibleStart = Math.Max(0, globalMaxTime - visibleDuration);
+        double visibleEnd   = visibleStart + visibleDuration;
 
         canvas.SaveState();
         canvas.ClipRectangle(plotLeft, plotTop, plotWidth, plotHeight);
@@ -409,13 +422,34 @@ public class WaveformViewport : GraphicsView, IDrawable
             float zeroY = laneTop + laneHeight / 2f;
             canvas.StrokeColor = TraceColors[colorIndex % TraceColors.Length];
             canvas.StrokeSize = 1.8f;
-            for (int index = 0; index < count - 1; index++)
+
+            bool penDown = false;
+            float prevX = 0, prevY = 0;
+            for (int index = 0; index < count; index++)
             {
-                float x1 = plotLeft + (float)(trace.Times[index] / visibleDuration) * plotWidth;
-                float y1 = zeroY - (float)(trace.Values[index] / magnitudePerDivision) * divisionHeight;
-                float x2 = plotLeft + (float)(trace.Times[index + 1] / visibleDuration) * plotWidth;
-                float y2 = zeroY - (float)(trace.Values[index + 1] / magnitudePerDivision) * divisionHeight;
-                canvas.DrawLine(x1, y1, x2, y2);
+                double t = trace.Times[index];
+                // Skip samples outside the visible window (with 1-sample look-behind
+                // for clean entry at the left edge).
+                if (t < visibleStart - (visibleDuration / plotWidth))
+                {
+                    penDown = false;
+                    continue;
+                }
+                if (t > visibleEnd) break;
+
+                float px = plotLeft + (float)((t - visibleStart) / visibleDuration) * plotWidth;
+                float py = zeroY - (float)(trace.Values[index] / magnitudePerDivision) * divisionHeight;
+
+                if (!penDown)
+                {
+                    prevX = px;
+                    prevY = py;
+                    penDown = true;
+                    continue;
+                }
+                canvas.DrawLine(prevX, prevY, px, py);
+                prevX = px;
+                prevY = py;
             }
 
             if (colorIndex < 5)
@@ -435,10 +469,24 @@ public class WaveformViewport : GraphicsView, IDrawable
             canvas.StrokeSize = 1;
             canvas.DrawLine(plotLeft, plotTop + laneHeight, plotRight, plotTop + laneHeight);
         }
+
+        // ── Bottom status bar ─────────────────────────────────────────────────
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 10;
-        canvas.DrawString($"{comp.Reference} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s · visible {visibleDuration:G4} s",
+        canvas.DrawString(
+            $"{comp.Reference} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s · window {visibleDuration:G4} s",
             8, h - 17, w - 16, 14, HorizontalAlignment.Left, VerticalAlignment.Center);
+
+        // ── X axis time labels (absolute times of visible grid lines) ─────────
+        canvas.FontColor = Color.FromArgb("#8B949E");
+        canvas.FontSize = 8;
+        for (int division = 0; division <= numX; division += 2)
+        {
+            double t = visibleStart + division * timePerDivision;
+            float x = plotLeft + division * divisionWidth;
+            canvas.DrawString($"{t:G4}s", x - 24, h - bottomPad + 4, 48, 12,
+                HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
     }
 
     private static double traceTimeRange(System.Collections.Generic.List<(WaveformSignal Signal, System.Collections.Generic.IReadOnlyList<double> Times, System.Collections.Generic.IReadOnlyList<double> Values)> traces) =>

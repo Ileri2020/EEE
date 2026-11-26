@@ -474,15 +474,22 @@ public partial class EEWorkspaceViewModel
                     return $"[ok] saved project as {ProjectName} ({asFmt})";
 
                 case "save_circuit_image":
-                    PythonApi.SaveCircuitImage(args.Length > 0 ? Unquote(args[0]) : null);
-                    return "[ok] circuit image export requested";
+                {
+                    string? imgPath = args.Length > 0 ? Unquote(args[0]) : null;
+                    string imgView = namedArguments.TryGetValue("view", out var iv) ? Unquote(iv) : "recentre";
+                    PythonApi.SaveCircuitImage(imgPath, imgView);
+                    return $"[ok] circuit image export requested ({imgView} view)";
+                }
 
                 case "start_video_recording":
-                    PythonApi.StartVideoRecording(
-                        args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) ? Unquote(args[0]) : null,
-                        args.Length > 1 ? checked((int)ParseD(args[1])) : 5,
-                        args.Length > 2 ? Unquote(args[2]) : "gif");
-                    return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps";
+                {
+                    string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) ? Unquote(args[0]) : null;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 5;
+                    string vidFmt = args.Length > 2 ? Unquote(args[2]) : "gif";
+                    string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
+                    PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView);
+                    return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps ({vidView} view)";
+                }
 
                 case "stop_video_recording":
                     PythonApi.StopVideoRecording();

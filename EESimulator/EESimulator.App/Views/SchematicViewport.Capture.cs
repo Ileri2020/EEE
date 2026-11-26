@@ -8,6 +8,8 @@ public sealed record SchematicCapturedFrame(byte[] Png, byte[] RgbPixels);
 
 public partial class SchematicViewport
 {
+    // ── Recentred capture (all components visible, like sidebar Recentre button) ──
+
     public byte[] CaptureRecenteredPng(int width, int height)
     {
         using var export = CreateRecenteredExport(width, height);
@@ -38,9 +40,22 @@ public partial class SchematicViewport
         return new SchematicCapturedFrame(pngStream.ToArray(), pixels);
     }
 
-    public byte[] CaptureRecenteredRgb(int width, int height)
+    // ── Current-view capture (exactly what the user sees on screen) ──────────
+
+    public byte[] CaptureCurrentViewPng(int width, int height)
     {
-        using var export = CreateRecenteredExport(width, height);
+        using var export = CreateCurrentViewExport(width, height);
+        using var stream = new MemoryStream();
+        export.WriteToStream(stream);
+        return stream.ToArray();
+    }
+
+    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height)
+    {
+        using var export = CreateCurrentViewExport(width, height);
+        using var pngStream = new MemoryStream();
+        export.WriteToStream(pngStream);
+
         SKBitmap bitmap = export.Bitmap;
         var pixels = new byte[width * height * 3];
         int offset = 0;
@@ -54,8 +69,10 @@ public partial class SchematicViewport
                 pixels[offset++] = color.Blue;
             }
         }
-        return pixels;
+        return new SchematicCapturedFrame(pngStream.ToArray(), pixels);
     }
+
+    // ── Internal helpers ──────────────────────────────────────────────────────
 
     private SkiaBitmapExportContext CreateRecenteredExport(int width, int height)
     {
@@ -103,6 +120,57 @@ public partial class SchematicViewport
         _panY = height / 2f - ((minY + maxY) / 2f) * zoom;
         _zoom = zoom;
         IsSimulationPlaying = false;
+        try
+        {
+            Draw(export.Canvas, new RectF(0, 0, width, height));
+        }
+        catch
+        {
+            export.Dispose();
+            throw;
+        }
+        finally
+        {
+            _panX = oldPanX;
+            _panY = oldPanY;
+            _zoom = oldZoom;
+            IsSimulationPlaying = oldPlaying;
+        }
+        return export;
+    }
+
+    /// <summary>
+    /// Captures the schematic at exactly the user's current pan/zoom —
+    /// the same viewport rectangle they are looking at right now.
+    /// </summary>
+    private SkiaBitmapExportContext CreateCurrentViewExport(int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+            throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
+
+        bool oldPlaying = IsSimulationPlaying;
+        var export = new SkiaBitmapExportContext(width, height, 1f, 96, transparent: false);
+
+        // Scale the current logical viewport (_panX/_panY/_zoom computed for the
+        // live canvas size) to the requested export size while preserving the same
+        // visible centre and apparent zoom density.
+        float scaleX = width  / MathF.Max(1f, (float)Width);
+        float scaleY = height / MathF.Max(1f, (float)Height);
+        float scale  = MathF.Min(scaleX, scaleY);
+
+        float oldPanX = _panX;
+        float oldPanY = _panY;
+        float oldZoom = _zoom;
+        IsSimulationPlaying = false;
+
+        // Centre the same world-space centre in the export canvas.
+        float worldCentreX = (Width  / 2f - _panX) / _zoom;
+        float worldCentreY = (Height / 2f - _panY) / _zoom;
+        float exportZoom   = _zoom * scale;
+        _panX = width  / 2f - worldCentreX * exportZoom;
+        _panY = height / 2f - worldCentreY * exportZoom;
+        _zoom = exportZoom;
+
         try
         {
             Draw(export.Canvas, new RectF(0, 0, width, height));

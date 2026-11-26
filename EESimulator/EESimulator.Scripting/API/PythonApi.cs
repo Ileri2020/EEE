@@ -49,8 +49,8 @@ public class PythonApi
     public event Action<string>? OnComponentCopied;
     public event Action<string?>? OnSaveRequested;
     public event Action<string, string>? OnSaveAsRequested;
-    public event Action<string?>? OnCircuitImageSaveRequested;
-    public event Action<string?, int, string>? OnVideoRecordingStartRequested;
+    public event Action<string?, string>? OnCircuitImageSaveRequested;
+    public event Action<string?, int, string, string>? OnVideoRecordingStartRequested;
     public event Action? OnVideoRecordingStopRequested;
 
     public bool IsVideoRecording { get; private set; }
@@ -1092,10 +1092,10 @@ public class PythonApi
         OnSaveAsRequested?.Invoke(filePath, format);
     }
 
-    public void SaveCircuitImage(string? filePath = null) =>
-        OnCircuitImageSaveRequested?.Invoke(filePath);
+    public void SaveCircuitImage(string? filePath = null, string view = "recentre") =>
+        OnCircuitImageSaveRequested?.Invoke(filePath, view);
 
-    public void StartVideoRecording(string? filePath = null, int frameRate = 5, string format = "gif")
+    public void StartVideoRecording(string? filePath = null, int frameRate = 5, string format = "gif", string view = "recentre")
     {
         if (frameRate is < 1 or > 15)
             throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
@@ -1105,7 +1105,7 @@ public class PythonApi
         VideoFrameRate = frameRate;
         VideoFormat = format.ToUpperInvariant();
         IsVideoRecording = true;
-        OnVideoRecordingStartRequested?.Invoke(filePath, frameRate, VideoFormat);
+        OnVideoRecordingStartRequested?.Invoke(filePath, frameRate, VideoFormat, view.ToLowerInvariant() == "screen" ? "screen" : "recentre");
     }
 
     public void StopVideoRecording()
