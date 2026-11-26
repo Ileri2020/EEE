@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-25 -30 50 60" width="50" height="60">
+  <!-- Terminal connections -->
+  <line x1="0" y1="-26" x2="0" y2="-13" stroke="#58A6FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="0" y1="13" x2="0" y2="26" stroke="#58A6FF" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Terminal pin dots -->
+  <circle cx="0" cy="-26" r="2.5" fill="#58A6FF"/>
+  <circle cx="0" cy="26" r="2.5" fill="#58A6FF"/>
+
+  <!-- Cradle / Mount U-bracket -->
+  <path d="M-11 -3 A11 11 0 0 0 11 -3" fill="none" stroke="#58A6FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="0" y1="8" x2="0" y2="13" stroke="#58A6FF" stroke-width="2"/>
+
+  <!-- Microphone capsule body -->
+  <rect x="-7" y="-13" width="14" height="17" rx="7" ry="7" fill="#161B22" stroke="#58A6FF" stroke-width="2"/>
+
+  <!-- Microphone grille lines -->
+  <line x1="-4" y1="-8" x2="4" y2="-8" stroke="#79C0FF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="-4" y1="-4" x2="4" y2="-4" stroke="#79C0FF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="-3" y1="0" x2="3" y2="0" stroke="#79C0FF" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Incoming sound acoustic waves -->
+  <path d="M-15 -7 A7 7 0 0 0 -15 1" fill="none" stroke="#56D364" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M-19 -10 A11 11 0 0 0 -19 4" fill="none" stroke="#56D364" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Polarity markers -->
+  <text x="3" y="-15" font-size="7" fill="#58A6FF" font-family="sans-serif" font-weight="bold">+</text>
+  <text x="3" y="21" font-size="8" fill="#58A6FF" font-family="sans-serif" font-weight="bold">-</text>
+</svg>

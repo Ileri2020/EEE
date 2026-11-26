@@ -956,6 +956,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
         new ComponentPaletteItem("Inductor",      "L",   "H",  "#D2A8FF", "Electrical",  "Inductor",              "inductor.svg"),
         new ComponentPaletteItem("VoltageSource", "V",   "V",  "#56D364", "Electrical",  "Voltage source",        "voltagesource.svg"),
         new ComponentPaletteItem("ACSource",      "VAC", "V", "#56D364", "Electrical",  "Single-phase AC source", "acsource.svg"),
+        new ComponentPaletteItem("Microphone",    "🎤",  "MIC", "#58A6FF", "Electrical", "Audio / MP3 Signal Input", "microphone.svg"),
         new ComponentPaletteItem("CurrentSource", "I",   "A",  "#56D364", "Electrical",  "Current source",        "currentsource.svg"),
         new ComponentPaletteItem("Power",         "VCC", "+V", "#56D364", "Electrical",  "Positive Supply Rail (+VCC)", "power.svg"),
         new ComponentPaletteItem("PullResistor",  "RP",  "PULL","#E3B341", "Electrical",  "Pull-Up / Pull-Down Resistor", "pullresistor.svg"),
@@ -1226,6 +1227,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
             new ComponentPaletteItem("TTY", "▣", "TTY", "#56D364", "I/O", "Serial text terminal", "tty.svg"),
             new ComponentPaletteItem("Video", "▧", "VID", "#56D364", "I/O", "Pixel framebuffer", "video.svg"),
             new ComponentPaletteItem("RealTimeClock", "◷", "RTC", "#56D364", "I/O", "Wall-clock time source", "realtimeclock.svg"),
+            new ComponentPaletteItem("Microphone", "🎤", "MIC", "#58A6FF", "I/O", "Audio / MP3 Signal Input", "microphone.svg"),
         }),
         new ComponentPaletteGroup("🗂 Schematic", new[]
         {

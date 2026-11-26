@@ -144,6 +144,9 @@ class CircuitRef:
     def add_voltage_source(self, name, dc=5.0, **kwargs):
         return add_voltage_source(name=name, dc=dc, **kwargs)
 
+    def add_microphone(self, name, audio_file=None, bandwidth=20000.0, amplitude=1.0, **kwargs):
+        return add_microphone(name=name, audio_file=audio_file, bandwidth=bandwidth, amplitude=amplitude, **kwargs)
+
 
 def clear_circuit():
     _call("eesim.clear_circuit()")
@@ -238,6 +241,23 @@ def add_wire(name, direction="horizontal", length=40.0, **kwargs):
 def add_voltage_source(name, dc=5.0, **kwargs):
     kwargs["param"] = dc
     return add_component("voltagesource", name, **kwargs)
+
+
+def add_microphone(name, audio_file=None, bandwidth=20000.0, amplitude=1.0, **kwargs):
+    comp = add_component("Microphone", name, **kwargs)
+    set_component_property(name, "SignalBandwidth", bandwidth)
+    set_component_property(name, "Amplitude", amplitude)
+    if audio_file:
+        set_custom_property(name, "AudioFilePath", audio_file)
+    return comp
+
+
+def set_microphone_audio(name, audio_file):
+    set_custom_property(name, "AudioFilePath", audio_file)
+
+
+def set_microphone_bandwidth(name, bandwidth):
+    set_component_property(name, "SignalBandwidth", bandwidth)
 
 
 def remove_connection(from_component, from_pin, to_component, to_pin):

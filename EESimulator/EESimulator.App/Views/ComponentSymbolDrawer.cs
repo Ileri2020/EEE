@@ -21,6 +21,7 @@ public static partial class ComponentSymbolDrawer
             case "Inductor":       DrawInductor(canvas); break;
             case "VoltageSource":  DrawVoltageSource(canvas); break;
             case "ACSource":       DrawACSource(canvas); break;
+            case "Microphone":     DrawMicrophone(canvas); break;
             case "CurrentSource":  DrawCurrentSource(canvas); break;
             case "Ground":         DrawGround(canvas); break;
             case "Diode":          DrawDiode(canvas); break;
@@ -385,6 +386,39 @@ public static partial class ComponentSymbolDrawer
                 waveform.LineTo(x, y);
         }
         canvas.DrawPath(waveform);
+    }
+
+    public static void DrawMicrophone(ICanvas canvas)
+    {
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+
+        // Terminal connections
+        canvas.DrawLine(0, -20, 0, -12);
+        canvas.DrawLine(0, 12, 0, 20);
+
+        // Microphone capsule body
+        canvas.FillColor = Color.FromArgb("#161B22");
+        canvas.FillRoundedRectangle(-7, -12, 14, 16, 7);
+        canvas.DrawRoundedRectangle(-7, -12, 14, 16, 7);
+
+        // Microphone grille lines
+        canvas.StrokeColor = Color.FromArgb("#79C0FF");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawLine(-4, -7, 4, -7);
+        canvas.DrawLine(-4, -3, 4, -3);
+
+        // Cradle U-bracket
+        canvas.StrokeColor = Color.FromArgb("#58A6FF");
+        canvas.StrokeSize = 2f;
+        canvas.DrawArc(-11, -7, 22, 16, 0, -180, false, false);
+        canvas.DrawLine(0, 9, 0, 12);
+
+        // Sound waves
+        canvas.StrokeColor = Color.FromArgb("#56D364");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawArc(-17, -9, 8, 12, 90, 180, false, false);
+        canvas.DrawArc(-21, -12, 12, 18, 90, 180, false, false);
     }
 
     public static void DrawGround(ICanvas canvas)

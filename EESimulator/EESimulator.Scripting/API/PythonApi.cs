@@ -590,6 +590,24 @@ public class PythonApi
         SetComponentProperty(name, "Direction", direction);
     }
 
+    public void AddMicrophone(string name, string? audioFile = null, double bandwidth = 20000.0, double amplitude = 1.0, double x = 0, double y = 0)
+    {
+        AddComponent("electrical.microphone", name, x, y, 0);
+        SetProperty(name, "SignalBandwidth", bandwidth);
+        SetProperty(name, "Amplitude", amplitude);
+        if (!string.IsNullOrWhiteSpace(audioFile))
+            SetCustomProperty(name, "AudioFilePath", audioFile);
+    }
+
+    public void AddMicrophoneAtGrid(string name, string? audioFile = null, double bandwidth = 20000.0, double amplitude = 1.0, int row = 1, int col = 1)
+    {
+        AddComponentAtGrid("electrical.microphone", name, row, col, 0);
+        SetProperty(name, "SignalBandwidth", bandwidth);
+        SetProperty(name, "Amplitude", amplitude);
+        if (!string.IsNullOrWhiteSpace(audioFile))
+            SetCustomProperty(name, "AudioFilePath", audioFile);
+    }
+
     public void Connect(string fromComponent, string fromPin, string toComponent, string toPin, double resistance = 0.0, IReadOnlyList<Point2D>? waypoints = null)
     {
         var cmd = new ConnectNodesCommand(_circuit, fromComponent, fromPin, toComponent, toPin, routingPoints: waypoints)

@@ -149,6 +149,14 @@ public static class ComponentRegistry
             d.DefaultParameters[nameof(ACSourceComponent.SineFrequency)] = 50.0;
         });
 
+        Register<MicrophoneComponent>(MicrophoneComponent.StableType, "Microphone", "Electrical", "MIC", d =>
+        {
+            d.Description = "Audio and MP3 microphone transducer with configurable bandwidth";
+            d.DefaultParameters["Voltage"] = 0.0;
+            d.DefaultParameters["SignalBandwidth"] = 20000.0;
+            d.DefaultParameters["Amplitude"] = 1.0;
+        });
+
         Register<CurrentSourceNode>("electrical.currentsource", "CurrentSource", "Electrical", "I", d =>
         {
             d.Description = "Independent DC/AC current source";
@@ -920,5 +928,8 @@ public static class ComponentRegistry
         RegisterAlias("prng", "electronics.random");
         RegisterAlias("general.node", "general.junction");
         RegisterAlias("node", "general.junction");
+        RegisterAlias("microphone", "electrical.microphone");
+        RegisterAlias("audio.microphone", "electrical.microphone");
+        RegisterAlias("mic", "electrical.microphone");
     }
 }

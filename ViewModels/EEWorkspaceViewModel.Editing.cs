@@ -589,6 +589,8 @@ public partial class EEWorkspaceViewModel
             "Capacitor"      => "C",
             "Inductor"       => "L",
             "VoltageSource"  => "V",
+            "ACSource"       => "VAC",
+            "Microphone" or "MIC" => "MIC",
             "CurrentSource"  => "I",
             "Ground"         => "GND",
             "Diode"          => "D",

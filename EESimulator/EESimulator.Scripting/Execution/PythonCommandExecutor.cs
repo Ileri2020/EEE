@@ -359,9 +359,9 @@ public class PythonCommandExecutor
             return;
         }
 
-        // Macro helpers: add_resistor, add_capacitor, add_inductor, add_ground, add_node, add_wire
+        // Macro helpers: add_resistor, add_capacitor, add_inductor, add_ground, add_node, add_wire, add_voltage_source, add_microphone
         var macroMatch = Regex.Match(line,
-            @"(?:circuit|eesim)\.(add_resistor|add_capacitor|add_inductor|add_ground|add_node|add_wire)\s*\(\s*""((?:\\.|[^""\\])*)""(?<args>[^)]*)\)",
+            @"(?:circuit|eesim)\.(add_resistor|add_capacitor|add_inductor|add_ground|add_node|add_wire|add_voltage_source|add_microphone)\s*\(\s*""((?:\\.|[^""\\])*)""(?<args>[^)]*)\)",
             RegexOptions.IgnoreCase);
         if (macroMatch.Success)
         {
@@ -408,6 +408,25 @@ public class PythonCommandExecutor
                     string dir = dirMatch.Success ? dirMatch.Groups[1].Value : "horizontal";
                     if (hasGrid) _api.AddWireAtGrid(name, dir, r, c);
                     else _api.AddWire(name, 0, 0, dir);
+                    break;
+                case "add_voltage_source":
+                    double dc = val > 0 ? val : 5.0;
+                    if (hasGrid) _api.AddComponentAtGrid("voltagesource", name, r, c, dc);
+                    else _api.AddComponent("voltagesource", name, 0, 0, dc);
+                    break;
+                case "add_microphone":
+                    double bw = 20000.0;
+                    double amp = 1.0;
+                    string? audioFile = null;
+                    var bwMatch = Regex.Match(argsStr, @"\bbandwidth\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)", RegexOptions.IgnoreCase);
+                    if (bwMatch.Success) bw = double.Parse(bwMatch.Groups[1].Value, CultureInfo.InvariantCulture);
+                    var ampMatch = Regex.Match(argsStr, @"\bamplitude\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)", RegexOptions.IgnoreCase);
+                    if (ampMatch.Success) amp = double.Parse(ampMatch.Groups[1].Value, CultureInfo.InvariantCulture);
+                    var fileMatch = Regex.Match(argsStr, @"\baudio_file\s*=\s*[""']([^""']+)[""']", RegexOptions.IgnoreCase);
+                    if (fileMatch.Success) audioFile = fileMatch.Groups[1].Value;
+
+                    if (hasGrid) _api.AddMicrophoneAtGrid(name, audioFile, bw, amp, r, c);
+                    else _api.AddMicrophone(name, audioFile, bw, amp);
                     break;
             }
             return;
