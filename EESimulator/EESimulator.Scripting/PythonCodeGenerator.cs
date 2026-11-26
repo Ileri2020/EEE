@@ -93,6 +93,7 @@ public class PythonCodeGenerator
         {
             "Id", "Parent", "Children", "Pins", "Name", "Reference", "Description",
             "Position", "X", "Y", "Rotation", "ScaleX", "ScaleY", "CustomProperties",
+            "Orientation",
             "ElectricalParameters", "WaveformTime", "WaveformVoltage", "WaveformCurrent",
             "LivePinVoltages", "WaveformNodeVoltages", "WaveformPinCurrents",
             "LogicalRow", "LogicalColumn", "IsHigh", "IsOn"

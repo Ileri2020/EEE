@@ -189,6 +189,28 @@ def simulate(analysis="OperatingPoint", stop_time=None, step_time=None):
     _call(f"eesim.simulate({', '.join(arguments)})")
 
 
+def save_circuit_image(path=None):
+    argument = "" if path is None else _quoted(path)
+    _call(f"eesim.save_circuit_image({argument})")
+
+
+def start_video_recording(path=None, frame_rate=5, format="gif"):
+    if isinstance(frame_rate, bool) or not isinstance(frame_rate, int):
+        raise TypeError("frame_rate must be an integer.")
+    argument = _quoted(path or "")
+    if format.lower() not in ("gif", "mp4"):
+        raise ValueError("format must be 'gif' or 'mp4'.")
+    _call(f"eesim.start_video_recording({argument}, {frame_rate}, {_quoted(format)})")
+
+
+def stop_video_recording():
+    _call("eesim.stop_video_recording()")
+
+
+def is_video_recording():
+    return _call("eesim.is_video_recording()") == "True"
+
+
 def read_pin_voltage(name, pin):
     return _call(f"eesim.read_pin_voltage({_quoted(name)}, {_quoted(pin)})")
 

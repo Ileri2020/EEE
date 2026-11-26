@@ -114,6 +114,15 @@
 
                                 <!-- Name / Reference -->
                                 <VerticalStackLayout Spacing="4">
+                                    <Label Text="ORIENTATION"
+                                           TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
+                                    <Picker ItemsSource="{Binding EditOrientationOptions}"
+                                            SelectedItem="{Binding EditOrientation, Mode=TwoWay}"
+                                            BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>
+                                </VerticalStackLayout>
+
+                                <!-- Name / Reference -->
+                                <VerticalStackLayout Spacing="4">
                                     <Label Text="COMPONENT NAME / REFERENCE"
                                            TextColor="#8B949E" FontSize="10" FontAttributes="Bold" CharacterSpacing="1"/>
                                     <Entry Text="{Binding EditName}" BackgroundColor="#0D1117" TextColor="#C9D1D9" FontSize="13"/>

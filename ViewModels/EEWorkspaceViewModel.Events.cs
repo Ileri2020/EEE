@@ -261,6 +261,12 @@ public partial class EEWorkspaceViewModel
         RefreshGroundGroupOptions();
         RefreshPowerSystemProperties(comp);
         EditName = comp.Reference;
+        EditOrientationOptions.Clear();
+        foreach (string orientation in comp.Pins.Count == 2
+                     ? new[] { "Horizontal", "Vertical" }
+                     : new[] { "Up", "Right", "Down", "Left" })
+            EditOrientationOptions.Add(orientation);
+        EditOrientation = comp.Orientation;
         EditGroundGroup = comp is GroundComponent ground ? ground.GroundGroup : GroundComponent.DefaultGroundGroup;
         EditType = comp.ComponentType;
         EditShowLiveProbe = comp.ShowLiveProbe;

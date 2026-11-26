@@ -7,7 +7,7 @@ using EESimulator.Core.Models;
 
 namespace EESimulator.App.Views;
 
-/// <summary>Creates orthogonal schematic paths that avoid component bodies.</summary>
+/// <summary>Creates short schematic paths that avoid component bodies.</summary>
 internal static class SchematicWireRouter
 {
     private const float GridStep = 10f;
@@ -78,6 +78,8 @@ internal static class SchematicWireRouter
         var sourceLeadObstacles = GetObstacles(allComponents, fromComponent);
         var routeObstacles = GetObstacles(allComponents, fromComponent, toComponent);
         var targetLeadObstacles = GetObstacles(allComponents, toComponent);
+        if (IsRouteClear(new[] { start, end }, routeObstacles, priorPaths))
+            return new List<PointF> { start, end };
 
         var path = CombinePaths(
             FindOrthogonalPath(start, startLead, sourceLeadObstacles),
@@ -85,7 +87,7 @@ internal static class SchematicWireRouter
             FindOrthogonalPath(endLead, end, targetLeadObstacles));
 
         if (path.Count >= 2)
-            return path;
+            return ShortenRoute(path, routeObstacles, priorPaths);
 
         // Fallback 1: Allow lane-sharing with prior paths
         path = CombinePaths(
@@ -94,12 +96,12 @@ internal static class SchematicWireRouter
             FindOrthogonalPath(endLead, end, targetLeadObstacles));
 
         if (path.Count >= 2)
-            return path;
+            return ShortenRoute(path, routeObstacles, Array.Empty<List<PointF>>());
 
         // Fallback 2: Direct connection without leads
         path = FindOrthogonalPath(start, end, routeObstacles);
         if (path.Count >= 2)
-            return path;
+            return ShortenRoute(path, routeObstacles, Array.Empty<List<PointF>>());
 
         // Fallback 3: Guaranteed orthogonal elbow route so wire connections are never dropped or hidden
         float midX = (start.X + end.X) / 2f;
@@ -127,19 +129,21 @@ internal static class SchematicWireRouter
         var start = GetPinWorldPosition(wire, startPin);
         var end = GetPinWorldPosition(wire, endPin);
         priorPaths ??= Array.Empty<List<PointF>>();
+        var wireObstacles = GetObstacles(allComponents, wire);
+        if (IsRouteClear(new[] { start, end }, wireObstacles, priorPaths))
+            return new List<PointF> { start, end };
+
         var startDirection = GetPinOutwardDirection(wire, startPin, end);
         var endDirection = GetPinOutwardDirection(wire, endPin, start);
         var startLead = new PointF(start.X + startDirection.X * PinLeadLength, start.Y + startDirection.Y * PinLeadLength);
         var endLead = new PointF(end.X + endDirection.X * PinLeadLength, end.Y + endDirection.Y * PinLeadLength);
-        var wireObstacles = GetObstacles(allComponents, wire);
-
         var path = CombinePaths(
             FindOrthogonalPath(start, startLead, wireObstacles),
             FindOrthogonalPath(startLead, endLead, wireObstacles, priorPaths),
             FindOrthogonalPath(endLead, end, wireObstacles));
 
         if (path.Count >= 2)
-            return path;
+            return ShortenRoute(path, wireObstacles, priorPaths);
 
         path = CombinePaths(
             FindOrthogonalPath(start, startLead, wireObstacles),
@@ -147,11 +151,11 @@ internal static class SchematicWireRouter
             FindOrthogonalPath(endLead, end, wireObstacles));
 
         if (path.Count >= 2)
-            return path;
+            return ShortenRoute(path, wireObstacles, Array.Empty<List<PointF>>());
 
         path = FindOrthogonalPath(start, end, wireObstacles);
         if (path.Count >= 2)
-            return path;
+            return ShortenRoute(path, wireObstacles, Array.Empty<List<PointF>>());
 
         float midX = (start.X + end.X) / 2f;
         return Simplify(new List<PointF> { start, new(midX, start.Y), new(midX, end.Y), end });
@@ -329,6 +333,10 @@ internal static class SchematicWireRouter
         IReadOnlyList<List<PointF>>? priorPaths = null)
     {
         priorPaths ??= Array.Empty<List<PointF>>();
+        var directPath = new List<PointF> { start, end };
+        if (IsRouteClear(directPath, obstacles, priorPaths))
+            return directPath;
+
         var horizontalFirst = new List<PointF> { start, new(end.X, start.Y), end };
         var verticalFirst = new List<PointF> { start, new(start.X, end.Y), end };
         bool horizontalFirstClear = IsRouteClear(horizontalFirst, obstacles, priorPaths);
@@ -393,7 +401,10 @@ internal static class SchematicWireRouter
                 var completePath = new List<PointF> { start };
                 completePath.AddRange(reversed);
                 completePath.Add(end);
-                return EnsureOrthogonal(Simplify(completePath), obstacles, priorPaths);
+                return ShortenRoute(
+                    EnsureOrthogonal(Simplify(completePath), obstacles, priorPaths),
+                    obstacles,
+                    priorPaths);
             }
 
             foreach (var direction in directions)
@@ -435,7 +446,68 @@ internal static class SchematicWireRouter
             float bottom = Math.Max(start.Y, end.Y);
             return obstacles.Any(o => start.X > o.Left && start.X < o.Right && bottom > o.Top && top < o.Bottom);
         }
+        return SegmentIntersectsObstacle(start, end, obstacles);
+    }
+
+    private static bool SegmentIntersectsObstacle(PointF start, PointF end, List<Obstacle> obstacles)
+    {
+        float dx = end.X - start.X;
+        float dy = end.Y - start.Y;
+        foreach (Obstacle obstacle in obstacles)
+        {
+            float tMinimum = 0;
+            float tMaximum = 1;
+            if (!Clip(-dx, start.X - obstacle.Left, ref tMinimum, ref tMaximum) ||
+                !Clip(dx, obstacle.Right - start.X, ref tMinimum, ref tMaximum) ||
+                !Clip(-dy, start.Y - obstacle.Top, ref tMinimum, ref tMaximum) ||
+                !Clip(dy, obstacle.Bottom - start.Y, ref tMinimum, ref tMaximum))
+                continue;
+
+            if (tMinimum < tMaximum && tMaximum > 0.001f && tMinimum < 0.999f)
+                return true;
+        }
+        return false;
+    }
+
+    private static bool Clip(float denominator, float numerator, ref float minimum, ref float maximum)
+    {
+        if (MathF.Abs(denominator) < 0.0001f)
+            return numerator >= 0;
+
+        float amount = numerator / denominator;
+        if (denominator < 0)
+        {
+            if (amount > maximum) return false;
+            minimum = Math.Max(minimum, amount);
+        }
+        else
+        {
+            if (amount < minimum) return false;
+            maximum = Math.Min(maximum, amount);
+        }
         return true;
+    }
+
+    private static List<PointF> ShortenRoute(
+        IReadOnlyList<PointF> points,
+        List<Obstacle> obstacles,
+        IReadOnlyList<List<PointF>> priorPaths)
+    {
+        if (points.Count <= 2)
+            return points.ToList();
+
+        var shortened = new List<PointF> { points[0] };
+        int current = 0;
+        while (current < points.Count - 1)
+        {
+            int next = points.Count - 1;
+            while (next > current + 1 &&
+                   !IsRouteClear(new[] { points[current], points[next] }, obstacles, priorPaths))
+                next--;
+            shortened.Add(points[next]);
+            current = next;
+        }
+        return Simplify(shortened);
     }
 
     private static List<PointF> EnsureOrthogonal(
@@ -497,11 +569,6 @@ internal static class SchematicWireRouter
     {
         bool horizontal = MathF.Abs(start.Y - end.Y) < 0.01f;
         bool vertical = MathF.Abs(start.X - end.X) < 0.01f;
-        if (!horizontal && !vertical) return false;
-
-        float currentMin = horizontal ? Math.Min(start.X, end.X) : Math.Min(start.Y, end.Y);
-        float currentMax = horizontal ? Math.Max(start.X, end.X) : Math.Max(start.Y, end.Y);
-        float lane = horizontal ? start.Y : start.X;
 
         foreach (List<PointF> priorPath in priorPaths)
         {
@@ -511,6 +578,16 @@ internal static class SchematicWireRouter
                 PointF priorEnd = priorPath[index + 1];
                 bool priorHorizontal = MathF.Abs(priorStart.Y - priorEnd.Y) < 0.01f;
                 bool priorVertical = MathF.Abs(priorStart.X - priorEnd.X) < 0.01f;
+                if (!SharesEndpoint(start, end, priorStart, priorEnd) &&
+                    SegmentsIntersect(start, end, priorStart, priorEnd))
+                    return true;
+
+                if (!horizontal && !vertical)
+                    continue;
+
+                float currentMin = horizontal ? Math.Min(start.X, end.X) : Math.Min(start.Y, end.Y);
+                float currentMax = horizontal ? Math.Max(start.X, end.X) : Math.Max(start.Y, end.Y);
+                float lane = horizontal ? start.Y : start.X;
                 if (horizontal && priorHorizontal && MathF.Abs(lane - priorStart.Y) < WireLaneClearance)
                 {
                     float priorMin = Math.Min(priorStart.X, priorEnd.X);
@@ -529,6 +606,39 @@ internal static class SchematicWireRouter
         }
         return false;
     }
+
+    private static bool SharesEndpoint(PointF firstStart, PointF firstEnd, PointF secondStart, PointF secondEnd) =>
+        PointsEqual(firstStart, secondStart) || PointsEqual(firstStart, secondEnd) ||
+        PointsEqual(firstEnd, secondStart) || PointsEqual(firstEnd, secondEnd);
+
+    private static bool PointsEqual(PointF first, PointF second) =>
+        MathF.Abs(first.X - second.X) < 0.01f && MathF.Abs(first.Y - second.Y) < 0.01f;
+
+    private static bool SegmentsIntersect(PointF firstStart, PointF firstEnd, PointF secondStart, PointF secondEnd)
+    {
+        float firstOrientation = Cross(firstStart, firstEnd, secondStart);
+        float secondOrientation = Cross(firstStart, firstEnd, secondEnd);
+        float thirdOrientation = Cross(secondStart, secondEnd, firstStart);
+        float fourthOrientation = Cross(secondStart, secondEnd, firstEnd);
+
+        if (((firstOrientation > 0 && secondOrientation < 0) || (firstOrientation < 0 && secondOrientation > 0)) &&
+            ((thirdOrientation > 0 && fourthOrientation < 0) || (thirdOrientation < 0 && fourthOrientation > 0)))
+            return true;
+
+        return (MathF.Abs(firstOrientation) < 0.01f && PointOnSegment(secondStart, firstStart, firstEnd)) ||
+            (MathF.Abs(secondOrientation) < 0.01f && PointOnSegment(secondEnd, firstStart, firstEnd)) ||
+            (MathF.Abs(thirdOrientation) < 0.01f && PointOnSegment(firstStart, secondStart, secondEnd)) ||
+            (MathF.Abs(fourthOrientation) < 0.01f && PointOnSegment(firstEnd, secondStart, secondEnd));
+    }
+
+    private static float Cross(PointF start, PointF end, PointF point) =>
+        (end.X - start.X) * (point.Y - start.Y) - (end.Y - start.Y) * (point.X - start.X);
+
+    private static bool PointOnSegment(PointF point, PointF start, PointF end) =>
+        point.X >= Math.Min(start.X, end.X) - 0.01f &&
+        point.X <= Math.Max(start.X, end.X) + 0.01f &&
+        point.Y >= Math.Min(start.Y, end.Y) - 0.01f &&
+        point.Y <= Math.Max(start.Y, end.Y) + 0.01f;
 
     private static int Manhattan(GridPoint a, GridPoint b) => Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
     private static GridPoint ToGrid(PointF point) => new((int)MathF.Round(point.X / GridStep), (int)MathF.Round(point.Y / GridStep));

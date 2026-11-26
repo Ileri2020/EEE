@@ -564,6 +564,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
     }
 
     [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
+    [ObservableProperty] public partial string EditOrientation { get; set; } = string.Empty;
+    public ObservableCollection<string> EditOrientationOptions { get; } = new();
     [ObservableProperty] public partial string EditGroundGroup { get; set; } = GroundComponent.DefaultGroundGroup;
     [ObservableProperty] public partial double EditBreakingCurrent { get; set; } = 1.0;
     [ObservableProperty] public partial bool IsDescriptionSidebarVisible { get; set; } = false;
@@ -834,6 +836,38 @@ public partial class EEWorkspaceViewModel : ObservableObject
     // Waveform Drawer state
     [ObservableProperty]
     public partial bool IsWaveformDrawerOpen { get; set; } = false;
+
+    [ObservableProperty]
+    public partial double GraphTimePerGrid { get; set; } = 0.01;
+
+    [ObservableProperty]
+    public partial double GraphMagnitudePerGrid { get; set; } = 1.0;
+
+    [ObservableProperty]
+    public partial bool IsWaveformGridDialogVisible { get; set; }
+
+    [ObservableProperty]
+    public partial string WaveformTimePerGridInput { get; set; } = "0.01";
+
+    [ObservableProperty]
+    public partial string WaveformMagnitudePerGridInput { get; set; } = "1";
+
+    [ObservableProperty]
+    public partial bool IsVideoRecording { get; set; }
+
+    [ObservableProperty]
+    public partial int VideoFrameRate { get; set; } = 5;
+
+    public ObservableCollection<string> VideoFormats { get; } = new() { "GIF", "MP4" };
+    public ObservableCollection<int> VideoFrameRates { get; } = new(Enumerable.Range(1, 15));
+
+    [ObservableProperty]
+    public partial string SelectedVideoFormat { get; set; } = "GIF";
+
+    public string VideoRecordingButtonText => IsVideoRecording ? "⏹" : "⏺";
+
+    partial void OnIsVideoRecordingChanged(bool value) =>
+        OnPropertyChanged(nameof(VideoRecordingButtonText));
 
     [ObservableProperty]
     public partial ComponentNode? WaveformComponent { get; set; }
@@ -1150,6 +1184,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     /// <summary>Raised when the circuit changes so the canvas can Invalidate immediately.</summary>
     public event Action? CircuitChanged;
+    public event Action<string?>? CircuitImageSaveRequested;
+    public event Action<string?, int, string>? VideoRecordingStartRequested;
+    public event Action? VideoRecordingStopRequested;
     public event Action? AnimationFrameRequested;
     public event Action? ViewportRecenterRequested;
     public event Action<float>? ViewportZoomRequested;
@@ -1306,6 +1343,19 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi.OnRedoRequested += () => Redo();
         PythonApi.OnProjectNameChanged += name => ProjectName = name;
         PythonApi.OnWaveformDrawerToggleRequested += () => ToggleWaveformDrawer();
+        PythonApi.OnCircuitImageSaveRequested += path => CircuitImageSaveRequested?.Invoke(path);
+        PythonApi.OnVideoRecordingStartRequested += (path, frameRate, format) =>
+        {
+            IsVideoRecording = true;
+            VideoFrameRate = frameRate;
+            SelectedVideoFormat = format;
+            VideoRecordingStartRequested?.Invoke(path, frameRate, format);
+        };
+        PythonApi.OnVideoRecordingStopRequested += () =>
+        {
+            IsVideoRecording = false;
+            VideoRecordingStopRequested?.Invoke();
+        };
         PythonApi.OnViewToggleRequested += () => ToggleViewport();
         PythonApi.OnComponentRotateRequested += (name, deg) => CircuitChanged?.Invoke();
         PythonApi.OnComponentStretchRequested += (name, sx, sy) => CircuitChanged?.Invoke();

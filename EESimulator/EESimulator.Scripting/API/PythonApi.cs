@@ -49,6 +49,13 @@ public class PythonApi
     public event Action<string>? OnComponentCopied;
     public event Action<string?>? OnSaveRequested;
     public event Action<string, string>? OnSaveAsRequested;
+    public event Action<string?>? OnCircuitImageSaveRequested;
+    public event Action<string?, int, string>? OnVideoRecordingStartRequested;
+    public event Action? OnVideoRecordingStopRequested;
+
+    public bool IsVideoRecording { get; private set; }
+    public int VideoFrameRate { get; private set; } = 5;
+    public string VideoFormat { get; private set; } = "GIF";
 
     public PythonApi(CommandManager commandManager, CircuitNode circuit, SimulationManager? simulationManager = null, UIRootNode? uiRoot = null)
     {
@@ -1084,6 +1091,31 @@ public class PythonApi
     {
         OnSaveAsRequested?.Invoke(filePath, format);
     }
+
+    public void SaveCircuitImage(string? filePath = null) =>
+        OnCircuitImageSaveRequested?.Invoke(filePath);
+
+    public void StartVideoRecording(string? filePath = null, int frameRate = 5, string format = "gif")
+    {
+        if (frameRate is < 1 or > 15)
+            throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
+        if (!format.Equals("gif", StringComparison.OrdinalIgnoreCase) &&
+            !format.Equals("mp4", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Video format must be GIF or MP4.", nameof(format));
+        VideoFrameRate = frameRate;
+        VideoFormat = format.ToUpperInvariant();
+        IsVideoRecording = true;
+        OnVideoRecordingStartRequested?.Invoke(filePath, frameRate, VideoFormat);
+    }
+
+    public void StopVideoRecording()
+    {
+        IsVideoRecording = false;
+        OnVideoRecordingStopRequested?.Invoke();
+    }
+
+    public void SetVideoRecordingState(bool isRecording) =>
+        IsVideoRecording = isRecording;
 
     public void ToggleWaveformDrawer()
     {

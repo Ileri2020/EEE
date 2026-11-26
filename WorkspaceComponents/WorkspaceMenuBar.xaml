@@ -52,6 +52,27 @@
                     <Button Text="📈" Style="{StaticResource IconBtn}"
                             Command="{Binding ToggleWaveformDrawerCommand}"
                             ToolTipProperties.Text="Waveform / Oscilloscope"/>
+                    <Button Text="🖼" Style="{StaticResource IconBtn}"
+                            Command="{Binding SaveCircuitImageCommand}"
+                            ToolTipProperties.Text="Save a recentered circuit image"/>
+                    <Picker ItemsSource="{Binding VideoFormats}"
+                            SelectedItem="{Binding SelectedVideoFormat}"
+                            WidthRequest="76"
+                            FontSize="10"
+                            TextColor="#C9D1D9"
+                            BackgroundColor="#0D1117"
+                            IsEnabled="{Binding IsVideoRecording, Converter={StaticResource InvertedBoolConverter}}"/>
+                    <Picker ItemsSource="{Binding VideoFrameRates}"
+                            SelectedItem="{Binding VideoFrameRate}"
+                            WidthRequest="58"
+                            FontSize="10"
+                            TextColor="#C9D1D9"
+                            BackgroundColor="#0D1117"
+                            IsEnabled="{Binding IsVideoRecording, Converter={StaticResource InvertedBoolConverter}}"/>
+                    <Button Text="{Binding VideoRecordingButtonText}" Style="{StaticResource IconBtn}"
+                            TextColor="#F85149"
+                            Command="{Binding ToggleVideoRecordingCommand}"
+                            ToolTipProperties.Text="Start/stop recentered GIF or MP4 recording (frame rate: adjacent picker)"/>
                     <!-- Sim setup -->
                     <Button Text="⚡" Style="{StaticResource IconBtn}"
                             TextColor="#E3B341"

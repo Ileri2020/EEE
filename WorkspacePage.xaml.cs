@@ -1,18 +1,26 @@
 using EEE.ViewModels;
+using EEE.Services;
 using EESimulator.Core.Models;
 using EESimulator.Core.Components.Electrical;
+using Microsoft.Maui.ApplicationModel;
+using System;
+using System.Threading.Tasks;
 
 namespace EEE;
 
 public partial class WorkspacePage : ContentPage
 {
     private readonly EEWorkspaceViewModel _vm;
+    private SchematicVideoRecorder? _videoRecorder;
 
     public WorkspacePage(EEWorkspaceViewModel vm)
     {
         _vm = vm;
         InitializeComponent();
         BindingContext = vm;
+        vm.CircuitImageSaveRequested += path => _ = SaveCircuitImageAsync(path);
+        vm.VideoRecordingStartRequested += (path, frameRate, format) => _ = StartVideoRecordingAsync(path, frameRate, format);
+        vm.VideoRecordingStopRequested += () => _ = StopVideoRecordingAsync();
 
         // Wire canvas selection events to ViewModel
         MainWorkspace.SchematicCanvas.ComponentSelected += (_, comp) =>
@@ -83,5 +91,87 @@ public partial class WorkspacePage : ContentPage
                 MainWorkspace.SchematicCanvas.SetActiveTool(vm.ActiveTool);
             }
         };
+    }
+
+    private async Task SaveCircuitImageAsync(string? path)
+    {
+        try
+        {
+            byte[] png = await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                var (width, height) = GetCaptureDimensions();
+                return MainWorkspace.SchematicCanvas.CaptureRecenteredPng(width, height);
+            });
+            await SchematicCaptureService.SavePngAsync(png, path);
+            _vm.StatusText = $"Circuit image saved{(string.IsNullOrWhiteSpace(path) ? string.Empty : $" to {path}")}";
+        }
+        catch (Exception exception)
+        {
+            _vm.StatusText = $"Circuit image export failed: {exception.Message}";
+        }
+    }
+
+    private async Task StartVideoRecordingAsync(string? path, int frameRate, string format)
+    {
+        try
+        {
+            if (_videoRecorder != null)
+                throw new InvalidOperationException("A circuit video recording is already active.");
+
+            var (width, height) = await MainThread.InvokeOnMainThreadAsync(() => GetCaptureDimensions(format));
+            _videoRecorder = new SchematicVideoRecorder(
+                width,
+                height,
+                frameRate,
+                format,
+                path,
+                () => MainThread.InvokeOnMainThreadAsync(
+                    () => MainWorkspace.SchematicCanvas.CaptureRecenteredFrame(width, height))
+                    .GetAwaiter().GetResult());
+            _vm.SetVideoRecordingState(true, frameRate, format);
+            _vm.StatusText = $"Recording recentered circuit view as {format} at {frameRate} fps";
+        }
+        catch (Exception exception)
+        {
+            _vm.SetVideoRecordingState(false, frameRate, format);
+            _vm.StatusText = $"{format} recording could not start: {exception.Message}";
+        }
+    }
+
+    private async Task StopVideoRecordingAsync()
+    {
+        var recorder = _videoRecorder;
+        _videoRecorder = null;
+        if (recorder == null)
+        {
+            _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
+            return;
+        }
+
+        try
+        {
+            await recorder.StopAsync();
+            _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
+            _vm.StatusText = $"Circuit {_vm.SelectedVideoFormat} recording saved";
+        }
+        catch (Exception exception)
+        {
+            _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
+            _vm.StatusText = $"{_vm.SelectedVideoFormat} recording failed: {exception.Message}";
+        }
+    }
+
+    private (int Width, int Height) GetCaptureDimensions(string format = "GIF")
+    {
+        int width = (int)Math.Round(MainWorkspace.SchematicCanvas.Width);
+        int height = (int)Math.Round(MainWorkspace.SchematicCanvas.Height);
+        if (width <= 0 || height <= 0)
+            throw new InvalidOperationException("The schematic viewport is not currently laid out.");
+        if (format.Equals("MP4", StringComparison.OrdinalIgnoreCase))
+        {
+            width = Math.Max(2, width & ~1);
+            height = Math.Max(2, height & ~1);
+        }
+        return (width, height);
     }
 }

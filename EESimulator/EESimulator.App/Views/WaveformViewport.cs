@@ -51,6 +51,28 @@ public class WaveformViewport : GraphicsView, IDrawable
         set => SetValue(SignalsProperty, value);
     }
 
+    public static readonly BindableProperty TimePerGridProperty =
+        BindableProperty.Create(nameof(TimePerGrid), typeof(double), typeof(WaveformViewport), 0.1d,
+            validateValue: (_, value) => value is double number && double.IsFinite(number) && number > 0,
+            propertyChanged: (b, _, _) => ((WaveformViewport)b).Invalidate());
+
+    public double TimePerGrid
+    {
+        get => (double)GetValue(TimePerGridProperty);
+        set => SetValue(TimePerGridProperty, value);
+    }
+
+    public static readonly BindableProperty MagnitudePerGridProperty =
+        BindableProperty.Create(nameof(MagnitudePerGrid), typeof(double), typeof(WaveformViewport), 1.0d,
+            validateValue: (_, value) => value is double number && double.IsFinite(number) && number > 0,
+            propertyChanged: (b, _, _) => ((WaveformViewport)b).Invalidate());
+
+    public double MagnitudePerGrid
+    {
+        get => (double)GetValue(MagnitudePerGridProperty);
+        set => SetValue(MagnitudePerGridProperty, value);
+    }
+
     private static readonly Color[] TraceColors =
     {
         Color.FromArgb("#56D364"), Color.FromArgb("#79C0FF"), Color.FromArgb("#FF7B72"),
@@ -261,27 +283,8 @@ public class WaveformViewport : GraphicsView, IDrawable
         canvas.FillColor = Color.FromArgb("#0A0E14");
         canvas.FillRectangle(0, 0, w, h);
 
-        // 2. Grid lines (10 horizontal, 8 vertical divisions)
-        canvas.StrokeColor = Color.FromArgb("#14261C");
-        canvas.StrokeSize = 1f;
-
         const int numX = 10;
         const int numY = 8;
-        float dx = w / numX;
-        float dy = h / numY;
-
-        for (int i = 1; i < numX; i++)
-            canvas.DrawLine(i * dx, 0, i * dx, h);
-
-        for (int j = 1; j < numY; j++)
-            canvas.DrawLine(0, j * dy, w, j * dy);
-
-        // Center crosshair (dotted/dashed feel)
-        canvas.StrokeColor = Color.FromArgb("#1F3B2C");
-        canvas.StrokeSize = 1.2f;
-        canvas.DrawLine(w / 2f, 0, w / 2f, h);
-        canvas.DrawLine(0, h / 2f, w, h / 2f);
-
         var comp = MonitoredComponent;
         var traces = (Signals ?? new ObservableCollection<WaveformSignal>())
             .Where(signal => signal.IsSelected)
@@ -323,73 +326,95 @@ public class WaveformViewport : GraphicsView, IDrawable
 
         bool hasVoltage = traces.Any(trace => trace.Signal.Kind != WaveformSignalKind.ComponentCurrent);
         bool hasCurrent = traces.Any(trace => trace.Signal.Kind == WaveformSignalKind.ComponentCurrent);
+        const float leftPad = 48f;
+        const float rightPad = 8f;
+        const float topPad = 24f;
+        const float bottomPad = 22f;
+        float plotLeft = leftPad;
+        float plotRight = Math.Max(plotLeft + 1, w - rightPad);
+        float plotTop = topPad;
+        float plotBottom = Math.Max(plotTop + 1, h - bottomPad);
+        float plotWidth = plotRight - plotLeft;
+        float plotHeight = plotBottom - plotTop;
+        float laneHeight = hasVoltage && hasCurrent ? plotHeight / 2f : plotHeight;
+        float divisionWidth = plotWidth / numX;
+        float divisionHeight = laneHeight / numY;
+        double timePerDivision = TimePerGrid;
+        double magnitudePerDivision = MagnitudePerGrid;
+        double visibleDuration = timePerDivision * numX;
 
-        static (double Min, double Span) ComputeScale(System.Collections.Generic.IEnumerable<(WaveformSignal Signal, System.Collections.Generic.IReadOnlyList<double> Times, System.Collections.Generic.IReadOnlyList<double> Values)> traceList, bool isCurrent)
+        canvas.StrokeColor = Color.FromArgb("#14261C");
+        canvas.StrokeSize = 1f;
+        for (int i = 0; i <= numX; i++)
         {
-            double min = double.MaxValue;
-            double max = double.MinValue;
-            bool found = false;
-
-            foreach (var trace in traceList)
-            {
-                bool match = (trace.Signal.Kind == WaveformSignalKind.ComponentCurrent) == isCurrent;
-                if (!match) continue;
-
-                var vals = trace.Values;
-                for (int i = 0; i < vals.Count; i++)
-                {
-                    double v = vals[i];
-                    if (v < min) min = v;
-                    if (v > max) max = v;
-                    found = true;
-                }
-            }
-
-            if (!found) return (0, 1);
-            double span = max - min;
-            if (span < 1e-15)
-            {
-                min -= 0.5;
-                span = 1.0;
-            }
-            return (min, span);
+            float x = plotLeft + i * divisionWidth;
+            canvas.DrawLine(x, plotTop, x, plotBottom);
         }
 
-        var voltageScale = ComputeScale(traces, false);
-        var currentScale = ComputeScale(traces, true);
-        float topPad = 34f;
-        float botPad = 20f;
-        float plotH = h - topPad - botPad;
-        float laneHeight = hasVoltage && hasCurrent ? plotH / 2f : plotH;
-
-        double globalMinTime = double.MaxValue;
-        double globalMaxTime = double.MinValue;
-        foreach (var trace in traces)
+        for (int lane = 0; lane < (hasVoltage && hasCurrent ? 2 : 1); lane++)
         {
-            if (trace.Times.Count > 0)
+            float laneTop = plotTop + lane * laneHeight;
+            float zeroY = laneTop + laneHeight / 2f;
+            for (int division = 0; division <= numY; division++)
             {
-                if (trace.Times[0] < globalMinTime) globalMinTime = trace.Times[0];
-                if (trace.Times[^1] > globalMaxTime) globalMaxTime = trace.Times[^1];
+                float y = laneTop + division * divisionHeight;
+                canvas.DrawLine(plotLeft, y, plotRight, y);
+            }
+
+            canvas.StrokeColor = Color.FromArgb("#1F3B2C");
+            canvas.StrokeSize = 1.2f;
+            canvas.DrawLine(plotLeft, zeroY, plotRight, zeroY);
+
+            canvas.FontColor = Color.FromArgb("#8B949E");
+            canvas.FontSize = 8;
+            for (int division = 0; division <= numY; division += 2)
+            {
+                double value = (numY / 2.0 - division) * magnitudePerDivision;
+                float y = laneTop + division * divisionHeight - 6;
+                canvas.DrawString($"{value:G4}", 1, y, leftPad - 5, 12,
+                    HorizontalAlignment.Right, VerticalAlignment.Center);
             }
         }
-        double timeSpan = Math.Max(globalMaxTime - globalMinTime, 1e-6);
 
+        canvas.StrokeColor = Color.FromArgb("#385B45");
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawLine(plotLeft, plotTop, plotLeft, plotBottom);
+
+        canvas.FontColor = Color.FromArgb("#8B949E");
+        canvas.FontSize = 8;
+        for (int division = 0; division <= numX; division += 2)
+        {
+            float x = plotLeft + division * divisionWidth;
+            canvas.DrawString($"{division * timePerDivision:G4}s", x - 24, h - bottomPad + 4, 48, 12,
+                HorizontalAlignment.Center, VerticalAlignment.Center);
+        }
+
+        canvas.FontColor = Color.FromArgb("#8B949E");
+        canvas.FontSize = 8;
+        canvas.DrawString($"X {timePerDivision:G4}s/div · Y {magnitudePerDivision:G4} { (hasVoltage && hasCurrent ? "units" : hasCurrent ? "A" : "V")}/div",
+            plotLeft + 4, 2, Math.Max(0, w - plotLeft - 8), 16,
+            HorizontalAlignment.Left, VerticalAlignment.Center);
+
+        double globalMinTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Min();
+        double globalMaxTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Max();
+
+        canvas.SaveState();
+        canvas.ClipRectangle(plotLeft, plotTop, plotWidth, plotHeight);
         int colorIndex = 0;
         foreach (var trace in traces)
         {
             int count = Math.Min(trace.Times.Count, trace.Values.Count);
             bool current = trace.Signal.Kind == WaveformSignalKind.ComponentCurrent;
-            var scale = current ? currentScale : voltageScale;
-            float laneTop = hasVoltage && hasCurrent && current ? topPad + laneHeight : topPad;
-            float currentLaneHeight = hasVoltage && hasCurrent ? laneHeight : plotH;
+            float laneTop = hasVoltage && hasCurrent && current ? plotTop + laneHeight : plotTop;
+            float zeroY = laneTop + laneHeight / 2f;
             canvas.StrokeColor = TraceColors[colorIndex % TraceColors.Length];
             canvas.StrokeSize = 1.8f;
             for (int index = 0; index < count - 1; index++)
             {
-                float x1 = (float)((trace.Times[index] - globalMinTime) / timeSpan) * w;
-                float y1 = laneTop + currentLaneHeight - (float)((trace.Values[index] - scale.Min) / scale.Span) * currentLaneHeight;
-                float x2 = (float)((trace.Times[index + 1] - globalMinTime) / timeSpan) * w;
-                float y2 = laneTop + currentLaneHeight - (float)((trace.Values[index + 1] - scale.Min) / scale.Span) * currentLaneHeight;
+                float x1 = plotLeft + (float)(trace.Times[index] / visibleDuration) * plotWidth;
+                float y1 = zeroY - (float)(trace.Values[index] / magnitudePerDivision) * divisionHeight;
+                float x2 = plotLeft + (float)(trace.Times[index + 1] / visibleDuration) * plotWidth;
+                float y2 = zeroY - (float)(trace.Values[index + 1] / magnitudePerDivision) * divisionHeight;
                 canvas.DrawLine(x1, y1, x2, y2);
             }
 
@@ -402,16 +427,17 @@ public class WaveformViewport : GraphicsView, IDrawable
             }
             colorIndex++;
         }
+        canvas.RestoreState();
 
         if (hasVoltage && hasCurrent)
         {
             canvas.StrokeColor = Color.FromArgb("#30363D");
             canvas.StrokeSize = 1;
-            canvas.DrawLine(0, topPad + laneHeight, w, topPad + laneHeight);
+            canvas.DrawLine(plotLeft, plotTop + laneHeight, plotRight, plotTop + laneHeight);
         }
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 10;
-        canvas.DrawString($"{comp.Reference} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s (Δ {timeSpan:G4} s)",
+        canvas.DrawString($"{comp.Reference} · {traces.Count} trace(s) · {globalMinTime:G4} s → {globalMaxTime:G4} s · visible {visibleDuration:G4} s",
             8, h - 17, w - 16, 14, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 

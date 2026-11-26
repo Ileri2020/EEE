@@ -217,30 +217,30 @@
                 <!-- ─── Waveform Drawer Overlay ─────────────────────────────── -->
                 <Grid IsVisible="{Binding IsWaveformDrawerOpen}"
                       VerticalOptions="End"
-                      HeightRequest="230"
+                      HeightRequest="270"
                       BackgroundColor="#0A0E14"
-                      RowDefinitions="36,*">
+                      RowDefinitions="Auto,*">
 
                     <!-- Drawer Header -->
                     <Grid Grid.Row="0"
                           BackgroundColor="#161B22"
-                          ColumnDefinitions="Auto,*,Auto"
-                          Padding="12,0">
+                          RowDefinitions="Auto,Auto"
+                          Padding="8,4">
 
-                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
-                            <Label Text="📈 Oscilloscope / Waveforms"
-                                   TextColor="#58A6FF"
-                                   FontAttributes="Bold"
-                                   FontSize="12"
-                                   VerticalOptions="Center"/>
-                            <Label Text="{Binding WaveformComponent.Reference, StringFormat='[{0}]'}"
-                                   TextColor="#56D364"
-                                   FontSize="11"
-                                   FontAttributes="Bold"
-                                   VerticalOptions="Center"/>
-                        </HorizontalStackLayout>
-
-                        <HorizontalStackLayout Grid.Column="2" Spacing="4" VerticalOptions="Center">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                            <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                <Label Text="📈 Waveforms"
+                                       TextColor="#58A6FF"
+                                       FontAttributes="Bold"
+                                       FontSize="12"
+                                       VerticalOptions="Center"/>
+                                <Label Text="{Binding WaveformComponent.Reference, StringFormat='[{0}]'}"
+                                       TextColor="#56D364"
+                                       FontSize="11"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
                             <Button Text="Simulate"
                                     Style="{StaticResource ToolBtn}"
                                     FontSize="11"
@@ -253,6 +253,33 @@
                                     Padding="6"
                                     Command="{Binding CloseWaveformDrawerCommand}"
                                     ToolTipProperties.Text="Close Waveform Drawer"/>
+                            </HorizontalStackLayout>
+                        </Grid>
+                        <HorizontalStackLayout Grid.Row="1" Spacing="3" HorizontalOptions="End">
+                            <Label Text="X"
+                                   TextColor="#8B949E"
+                                   FontSize="10"
+                                   VerticalOptions="Center"/>
+                            <Button Text="−" Style="{StaticResource IconBtn}" FontSize="11" Padding="5,2"
+                                    Command="{Binding ZoomWaveformTimeOutCommand}"
+                                    ToolTipProperties.Text="Show more time per grid division"/>
+                            <Button Text="+" Style="{StaticResource IconBtn}" FontSize="11" Padding="5,2"
+                                    Command="{Binding ZoomWaveformTimeInCommand}"
+                                    ToolTipProperties.Text="Show less time per grid division"/>
+                            <Label Text="Y"
+                                   TextColor="#8B949E"
+                                   FontSize="10"
+                                   VerticalOptions="Center"
+                                   Margin="6,0,0,0"/>
+                            <Button Text="−" Style="{StaticResource IconBtn}" FontSize="11" Padding="5,2"
+                                    Command="{Binding ZoomWaveformMagnitudeOutCommand}"
+                                    ToolTipProperties.Text="Show more magnitude per grid division"/>
+                            <Button Text="+" Style="{StaticResource IconBtn}" FontSize="11" Padding="5,2"
+                                    Command="{Binding ZoomWaveformMagnitudeInCommand}"
+                                    ToolTipProperties.Text="Show less magnitude per grid division"/>
+                            <Button Text="Grid…" Style="{StaticResource ToolBtn}" FontSize="10" Padding="6,2"
+                                    Command="{Binding OpenWaveformGridDialogCommand}"
+                                    ToolTipProperties.Text="Set waveform time and magnitude per grid division"/>
                         </HorizontalStackLayout>
                     </Grid>
 
@@ -262,6 +289,8 @@
                                             MonitoredComponent="{Binding WaveformComponent}"
                                             SimulationSnapshot="{Binding GraphSimulationSnapshot}"
                                             Signals="{Binding WaveformSignals}"
+                                            TimePerGrid="{Binding GraphTimePerGrid}"
+                                            MagnitudePerGrid="{Binding GraphMagnitudePerGrid}"
                                             HorizontalOptions="Fill"
                                             VerticalOptions="Fill"/>
                 </Grid>
@@ -314,6 +343,65 @@
                             <Grid Grid.Row="3" Padding="14,10" BackgroundColor="#1C2128" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                 <Button Grid.Column="1" Text="Cancel" Style="{StaticResource ToolBtn}" Command="{Binding CancelWaveformTraceSelectionCommand}"/>
                                 <Button Grid.Column="2" Text="Add selected graphs" Style="{StaticResource AccentBtn}" Command="{Binding ConfirmWaveformTraceSelectionCommand}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsWaveformGridDialogVisible}"
+                      ZIndex="280"
+                      BackgroundColor="#AA000000"
+                      HorizontalOptions="Fill"
+                      VerticalOptions="Fill">
+                    <Border MaximumWidthRequest="420"
+                            Margin="18"
+                            Padding="0"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center"
+                            BackgroundColor="#161B22"
+                            Stroke="#30363D"
+                            StrokeThickness="1">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                            <Label Grid.Row="0"
+                                   Text="Waveform grid resolution"
+                                   TextColor="#58A6FF"
+                                   FontAttributes="Bold"
+                                   FontSize="14"
+                                   Padding="16,14"/>
+                            <Grid Grid.Row="1" Padding="16,6" ColumnDefinitions="*,2*">
+                                <Label Text="Time per X division (s)"
+                                       TextColor="#C9D1D9"
+                                       FontSize="12"
+                                       VerticalOptions="Center"/>
+                                <Entry Grid.Column="1"
+                                       Text="{Binding WaveformTimePerGridInput}"
+                                       Keyboard="Numeric"
+                                       Placeholder="0.01"
+                                       TextColor="#C9D1D9"
+                                       BackgroundColor="#0D1117"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Padding="16,6" ColumnDefinitions="*,2*">
+                                <Label Text="Magnitude per Y division"
+                                       TextColor="#C9D1D9"
+                                       FontSize="12"
+                                       VerticalOptions="Center"/>
+                                <Entry Grid.Column="1"
+                                       Text="{Binding WaveformMagnitudePerGridInput}"
+                                       Keyboard="Numeric"
+                                       Placeholder="1"
+                                       TextColor="#C9D1D9"
+                                       BackgroundColor="#0D1117"/>
+                            </Grid>
+                            <Grid Grid.Row="3" Padding="14,12" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Button Grid.Column="1"
+                                        Text="Cancel"
+                                        Style="{StaticResource ToolBtn}"
+                                        Command="{Binding CloseWaveformGridDialogCommand}"/>
+                                <Button Grid.Column="2"
+                                        Text="Apply"
+                                        Style="{StaticResource AccentBtn}"
+                                        Command="{Binding ApplyWaveformGridSettingsCommand}"/>
                             </Grid>
                         </Grid>
                     </Border>

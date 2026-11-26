@@ -473,6 +473,24 @@ public partial class EEWorkspaceViewModel
                     ProjectName = System.IO.Path.GetFileName(asPath);
                     return $"[ok] saved project as {ProjectName} ({asFmt})";
 
+                case "save_circuit_image":
+                    PythonApi.SaveCircuitImage(args.Length > 0 ? Unquote(args[0]) : null);
+                    return "[ok] circuit image export requested";
+
+                case "start_video_recording":
+                    PythonApi.StartVideoRecording(
+                        args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) ? Unquote(args[0]) : null,
+                        args.Length > 1 ? checked((int)ParseD(args[1])) : 5,
+                        args.Length > 2 ? Unquote(args[2]) : "gif");
+                    return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps";
+
+                case "stop_video_recording":
+                    PythonApi.StopVideoRecording();
+                    return "[ok] GIF recording stop requested";
+
+                case "is_video_recording":
+                    return PythonApi.IsVideoRecording ? "True" : "False";
+
 
 
                 case "add_single_phase_transmission_line" when args.Length >= 1:

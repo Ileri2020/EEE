@@ -78,6 +78,51 @@ public abstract class ComponentNode : RootNode
 
     public double Rotation { get; set; }
 
+    public string Orientation
+    {
+        get
+        {
+            double angle = GetOrientationPinAngle() + Rotation;
+            if (Pins.Count == 2)
+                return IsNearVertical(angle) ? "Vertical" : "Horizontal";
+
+            return NormalizeAngle(angle) switch
+            {
+                0 => "Right",
+                90 => "Down",
+                180 => "Left",
+                _ => "Up"
+            };
+        }
+        set
+        {
+            string requested = value?.Trim() ?? string.Empty;
+            double targetAngle;
+            if (Pins.Count == 2)
+            {
+                targetAngle = requested.Equals("Vertical", StringComparison.OrdinalIgnoreCase) ? 90
+                    : requested.Equals("Horizontal", StringComparison.OrdinalIgnoreCase) ? 0
+                    : throw new ArgumentOutOfRangeException(nameof(value), value, "Two-terminal components use Horizontal or Vertical orientation.");
+            }
+            else
+            {
+                targetAngle = requested.ToUpperInvariant() switch
+                {
+                    "RIGHT" => 0,
+                    "DOWN" => 90,
+                    "LEFT" => 180,
+                    "UP" => 270,
+                    _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Directional components use Up, Right, Down, or Left orientation.")
+                };
+            }
+
+            double currentAngle = GetOrientationPinAngle() + Rotation;
+            Rotation = NormalizeAngle(Rotation + targetAngle - currentAngle);
+            NotifyModified(nameof(Rotation));
+            NotifyModified(nameof(Orientation));
+        }
+    }
+
     public double ScaleX { get; set; } = 1.0;
     public double ScaleY { get; set; } = 1.0;
 
@@ -86,6 +131,47 @@ public abstract class ComponentNode : RootNode
     public List<ComponentPin> Pins { get; private set; } = new();
 
     public Dictionary<string, double> ElectricalParameters { get; set; } = new();
+
+    private double GetOrientationPinAngle()
+    {
+        ComponentPin? firstPin;
+        ComponentPin? secondPin = null;
+        if (Pins.Count == 2)
+        {
+            firstPin = Pins[0];
+            secondPin = Pins[1];
+        }
+        else
+        {
+            firstPin = Pins.FirstOrDefault(pin =>
+                pin.Id.Equals("out", StringComparison.OrdinalIgnoreCase) ||
+                pin.Id.Equals("output", StringComparison.OrdinalIgnoreCase) ||
+                pin.Id.Equals("y", StringComparison.OrdinalIgnoreCase) ||
+                pin.Id.Equals("q", StringComparison.OrdinalIgnoreCase) ||
+                pin.Id.Equals("positive", StringComparison.OrdinalIgnoreCase) ||
+                pin.Id.Equals("gnd", StringComparison.OrdinalIgnoreCase))
+                ?? Pins.OrderByDescending(pin => pin.RelativeX * pin.RelativeX + pin.RelativeY * pin.RelativeY).FirstOrDefault();
+        }
+
+        if (firstPin == null)
+            return 0;
+
+        double x = secondPin == null ? firstPin.RelativeX : secondPin.RelativeX - firstPin.RelativeX;
+        double y = secondPin == null ? firstPin.RelativeY : secondPin.RelativeY - firstPin.RelativeY;
+        return Math.Atan2(y, x) * 180.0 / Math.PI;
+    }
+
+    private static bool IsNearVertical(double angle)
+    {
+        double normalized = NormalizeAngle(angle) % 180;
+        return normalized >= 45 && normalized < 135;
+    }
+
+    private static double NormalizeAngle(double angle)
+    {
+        double normalized = angle % 360;
+        return normalized < 0 ? normalized + 360 : normalized;
+    }
 
     // Live probe and waveform monitoring states
     public bool ShowLiveProbe { get; set; } = false;

@@ -793,9 +793,11 @@ public sealed class BundledExampleCircuitTests
 
         Assert.NotEmpty(values);
         Assert.True(values.Length <= probe.MaxReadings);
-        Assert.InRange(values.Min(), 0.0, 12.0);
+        Assert.InRange(values.Min(), 8.0, 11.0);
         Assert.InRange(values.Max(), 8.0, 12.5);
-        Assert.True(values.All(v => v >= 0.0), "Full-wave rectifier output must remain strictly non-negative.");
+        Assert.InRange(values.Average(), 9.0, 11.5);
+        Assert.True(values.Max() - values.Min() <= 3.0,
+            "The filter capacitor should keep the full-wave rectifier output close to DC.");
     }
 
     [Fact]

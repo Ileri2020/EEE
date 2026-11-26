@@ -18,6 +18,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
 using System;
+using System.Globalization;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
@@ -168,6 +169,8 @@ public partial class EEWorkspaceViewModel
 
         EditingComponent.CustomProperties["Description"] = EditDescription;
         EditingComponent.BreakingCurrent = Math.Max(EditBreakingCurrent, 0.0);
+        if (EditOrientationOptions.Contains(EditOrientation, StringComparer.OrdinalIgnoreCase))
+            EditingComponent.Orientation = EditOrientation;
 
         if (EditingComponent is ResistorComponent r)
         {
@@ -510,6 +513,67 @@ public partial class EEWorkspaceViewModel
 
     [RelayCommand]
     private void CloseWaveformDrawer() => IsWaveformDrawerOpen = false;
+
+    [RelayCommand]
+    private void ZoomWaveformTimeIn() => GraphTimePerGrid = Math.Max(1e-12, GraphTimePerGrid / 1.25);
+
+    [RelayCommand]
+    private void ZoomWaveformTimeOut() => GraphTimePerGrid = Math.Min(1e12, GraphTimePerGrid * 1.25);
+
+    [RelayCommand]
+    private void ZoomWaveformMagnitudeIn() => GraphMagnitudePerGrid = Math.Max(1e-12, GraphMagnitudePerGrid / 1.25);
+
+    [RelayCommand]
+    private void ZoomWaveformMagnitudeOut() => GraphMagnitudePerGrid = Math.Min(1e12, GraphMagnitudePerGrid * 1.25);
+
+    [RelayCommand]
+    private void OpenWaveformGridDialog()
+    {
+        WaveformTimePerGridInput = GraphTimePerGrid.ToString("G", CultureInfo.InvariantCulture);
+        WaveformMagnitudePerGridInput = GraphMagnitudePerGrid.ToString("G", CultureInfo.InvariantCulture);
+        IsWaveformGridDialogVisible = true;
+    }
+
+    [RelayCommand]
+    private void ApplyWaveformGridSettings()
+    {
+        if (!double.TryParse(WaveformTimePerGridInput, NumberStyles.Float, CultureInfo.InvariantCulture, out double timePerGrid) ||
+            !double.IsFinite(timePerGrid) || timePerGrid <= 0 ||
+            !double.TryParse(WaveformMagnitudePerGridInput, NumberStyles.Float, CultureInfo.InvariantCulture, out double magnitudePerGrid) ||
+            !double.IsFinite(magnitudePerGrid) || magnitudePerGrid <= 0)
+        {
+            StatusText = "Grid resolution must use positive finite numbers (for example 0.01 and 1).";
+            return;
+        }
+
+        GraphTimePerGrid = timePerGrid;
+        GraphMagnitudePerGrid = magnitudePerGrid;
+        IsWaveformGridDialogVisible = false;
+        StatusText = $"Waveform grid set to {timePerGrid:G} s/div and {magnitudePerGrid:G} units/div";
+    }
+
+    [RelayCommand]
+    private void CloseWaveformGridDialog() => IsWaveformGridDialogVisible = false;
+
+    [RelayCommand]
+    private void SaveCircuitImage() => PythonApi.SaveCircuitImage();
+
+    [RelayCommand]
+    private void ToggleVideoRecording()
+    {
+        if (IsVideoRecording)
+            PythonApi.StopVideoRecording();
+        else
+            PythonApi.StartVideoRecording(frameRate: VideoFrameRate, format: SelectedVideoFormat);
+    }
+
+    public void SetVideoRecordingState(bool isRecording, int frameRate, string format)
+    {
+        IsVideoRecording = isRecording;
+        VideoFrameRate = frameRate;
+        SelectedVideoFormat = format;
+        PythonApi.SetVideoRecordingState(isRecording);
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     private string GetNextReference(string type)
