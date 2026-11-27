@@ -135,15 +135,24 @@ public partial class WorkspacePage : ContentPage
             if (_videoRecorder != null)
                 throw new InvalidOperationException("A circuit video recording is already active.");
 
+            bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
+            bool isGif = format.Equals("GIF", StringComparison.OrdinalIgnoreCase);
+            var viewport = MainWorkspace.SchematicCanvas;
+
             // ── Force schematic-only view when triggered from Python script ───
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 _vm.IsAnalyticsViewActive = false;
                 _vm.IsScriptViewActive = false;
+                viewport.InvalidateWireGeometryCache();
+                if (!useScreen)
+                    viewport.FitToScreen();
+                viewport.Invalidate();
             });
 
-            bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
-            bool isGif = format.Equals("GIF", StringComparison.OrdinalIgnoreCase);
+            // Let the layout and wire-router invalidation paint before the first
+            // frame is captured; recording may be requested immediately after a script builds a circuit.
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
 
             // Grab dimensions on the main thread (we may already be there, but be safe).
             var dimensions = MainThread.IsMainThread
@@ -152,7 +161,6 @@ public partial class WorkspacePage : ContentPage
                     GetCaptureDimensions(format, (float)MainWorkspace.SchematicCanvas.Width, (float)MainWorkspace.SchematicCanvas.Height));
 
             string destinationPath = ResolveCapturePath(path, "." + format.ToLowerInvariant());
-            var viewport = MainWorkspace.SchematicCanvas;
 
             // Create recorder (encoding-only — no capture task inside).
             _videoRecorder = new SchematicVideoRecorder(

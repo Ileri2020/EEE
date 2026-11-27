@@ -1309,7 +1309,13 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi   = new PythonApi(CommandManager, Circuit, _simManager, UI);
         _pythonCommandExecutor = new PythonCommandExecutor(PythonApi);
         _pythonScriptEngine = new ManagedPythonScriptEngine(
-            new ManagedPythonScriptBridge(DispatchScriptApiCall));
+            new ManagedPythonScriptBridge(script =>
+                Microsoft.Maui.ApplicationModel.MainThread.IsMainThread
+                    ? DispatchScriptApiCall(script)
+                    : Microsoft.Maui.ApplicationModel.MainThread
+                        .InvokeOnMainThreadAsync(() => DispatchScriptApiCall(script))
+                        .GetAwaiter()
+                        .GetResult());
         _sync       = new ScriptSynchronizer(CommandManager, Circuit);
 
         // Register default UI nodes under RootNode hierarchy

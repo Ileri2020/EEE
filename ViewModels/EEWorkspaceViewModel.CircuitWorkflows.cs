@@ -717,7 +717,16 @@ public partial class EEWorkspaceViewModel
                 ScriptText,
                 "workspace.py",
                 new[] { pythonModuleDirectory },
-                output => ConsoleOutput += output);
+                output =>
+                {
+                    if (Microsoft.Maui.ApplicationModel.MainThread.IsMainThread)
+                        ConsoleOutput += output;
+                    else
+                        Microsoft.Maui.ApplicationModel.MainThread
+                            .InvokeOnMainThreadAsync(() => ConsoleOutput += output)
+                            .GetAwaiter()
+                            .GetResult();
+                });
             bool scriptHadErrors = _scriptExecutionHadErrors;
 
             ApplyLogicalSchematicLayout();

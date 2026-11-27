@@ -782,6 +782,24 @@ public partial class EEWorkspaceViewModel
                     PythonApi.OpenSidebars();
                     return "[ok] sidebars opened";
 
+                case "recenter_viewport" or "center_viewport" or "recenter":
+                    ApplyLogicalSchematicLayout();
+                    CircuitChanged?.Invoke();
+                    RecenterViewport();
+                    return "Centered viewport on circuit";
+
+                case "fit_to_screen" or "fit_viewport":
+                    ApplyLogicalSchematicLayout();
+                    CircuitChanged?.Invoke();
+                    FitToScreen();
+                    return "Fitted circuit to viewport";
+
+                case "apply_layout" or "auto_layout" or "layout":
+                    ApplyLogicalSchematicLayout();
+                    CircuitChanged?.Invoke();
+                    FitToScreen();
+                    return "[ok] logical schematic layout applied";
+
                 case "toggle_sidebar" or "toggle_component_sidebar" or "toggle_right_sidebar":
                     bool? reqVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var vb) ? vb : null) : null;
                     PythonApi.ToggleComponentSidebar(reqVis);
@@ -914,8 +932,12 @@ public partial class EEWorkspaceViewModel
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
                     int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
                     string vidFmt = args.Length > 2 ? Unquote(args[2]) : "mp4";
-                    string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
+                    string vidView = namedArguments.TryGetValue("view", out var vv)
+                        ? Unquote(vv)
+                        : args.Length > 3 ? Unquote(args[3]) : "recentre";
                     double? vidDuration = namedArguments.TryGetValue("duration", out var vd) ? (double?)ParseD(vd) : null;
+                    ApplyLogicalSchematicLayout();
+                    CircuitChanged?.Invoke();
                     PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView, vidDuration);
                     string durInfo = vidDuration.HasValue ? $", auto-stops at {vidDuration:F1}s" : "";
                     return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo})";
@@ -929,8 +951,12 @@ public partial class EEWorkspaceViewModel
                 {
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
                     int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
-                    string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
+                    string vidView = namedArguments.TryGetValue("view", out var vv)
+                        ? Unquote(vv)
+                        : args.Length > 2 ? Unquote(args[2]) : "recentre";
                     double? gifDuration = namedArguments.TryGetValue("duration", out var gd) ? (double?)ParseD(gd) : null;
+                    ApplyLogicalSchematicLayout();
+                    CircuitChanged?.Invoke();
                     PythonApi.StartVideoRecording(vidPath, vidFps, "GIF", vidView, gifDuration);
                     string durInfo = gifDuration.HasValue ? $", auto-stops at {gifDuration:F1}s" : "";
                     return $"[ok] GIF recording started at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo})";

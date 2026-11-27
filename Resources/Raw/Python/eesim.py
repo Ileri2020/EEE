@@ -267,6 +267,10 @@ class CircuitRef:
     def step_simulation(self): return step_simulation()
     def close_sidebars(self): return close_sidebars()
     def open_sidebars(self): return open_sidebars()
+    def recenter_viewport(self): return recenter_viewport()
+    def fit_to_screen(self): return fit_to_screen()
+    def apply_layout(self): return apply_layout()
+    def auto_layout(self): return auto_layout()
     def open_graph_drawer(self): return open_graph_drawer()
     def close_graph_drawer(self): return close_graph_drawer()
     def toggle_graph_drawer(self): return toggle_graph_drawer()
@@ -833,6 +837,22 @@ def hide_sidebars():
 def open_sidebars():
     """Open standard left and right sidebars."""
     _call("eesim.open_sidebars()")
+
+def recenter_viewport():
+    """Center the live schematic viewport on the circuit without changing zoom."""
+    _call("eesim.recenter_viewport()")
+
+def fit_to_screen():
+    """Fit the complete circuit inside the live schematic viewport."""
+    _call("eesim.fit_to_screen()")
+
+def apply_layout():
+    """Apply logical grid placement and wire routing to the circuit and fit to viewport."""
+    _call("eesim.apply_layout()")
+
+def auto_layout():
+    """Alias for apply_layout."""
+    apply_layout()
 
 def show_sidebars():
     open_sidebars()

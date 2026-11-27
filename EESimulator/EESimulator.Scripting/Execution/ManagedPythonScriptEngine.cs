@@ -128,8 +128,7 @@ public sealed class ManagedPythonScriptEngine
     public Task ExecuteAsync(string script, string scriptName, IEnumerable<string>? additionalSearchPaths = null,
         Action<string>? onOutput = null)
     {
-        Execute(script, scriptName, additionalSearchPaths, onOutput);
-        return Task.CompletedTask;
+        return Task.Run(() => Execute(script, scriptName, additionalSearchPaths, onOutput));
     }
 }
 #endif
