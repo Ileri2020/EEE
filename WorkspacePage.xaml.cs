@@ -19,6 +19,9 @@ public partial class WorkspacePage : ContentPage
     // needs InvokeOnMainThreadAsync (which would block background threads and
     // starve pan/gesture handling).
     private Microsoft.Maui.Dispatching.IDispatcherTimer? _captureTimer;
+    private Microsoft.Maui.Dispatching.IDispatcherTimer? _progressTimer;
+    private System.Diagnostics.Stopwatch? _recordingStopwatch;
+    private double? _recordingDuration;
     private readonly SemaphoreSlim _recordingLifecycle = new(1, 1);
 
     public WorkspacePage(EEWorkspaceViewModel vm)
@@ -27,7 +30,7 @@ public partial class WorkspacePage : ContentPage
         InitializeComponent();
         BindingContext = vm;
         vm.CircuitImageSaveRequested += (path, view) => _ = SaveCircuitImageAsync(path, view);
-        vm.VideoRecordingStartRequested += (path, frameRate, format, view) => _ = StartVideoRecordingAsync(path, frameRate, format, view);
+        vm.VideoRecordingStartRequested += (path, frameRate, format, view, duration) => _ = StartVideoRecordingAsync(path, frameRate, format, view, duration);
         vm.VideoRecordingStopRequested += () => _ = StopVideoRecordingAsync();
 
         // Wire canvas selection events to ViewModel
@@ -124,13 +127,20 @@ public partial class WorkspacePage : ContentPage
         }
     }
 
-    private async Task StartVideoRecordingAsync(string? path, int frameRate, string format, string view = "recentre")
+    private async Task StartVideoRecordingAsync(string? path, int frameRate, string format, string view = "recentre", double? duration = null)
     {
         await _recordingLifecycle.WaitAsync();
         try
         {
             if (_videoRecorder != null)
                 throw new InvalidOperationException("A circuit video recording is already active.");
+
+            // ── Force schematic-only view when triggered from Python script ───
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                _vm.IsAnalyticsViewActive = false;
+                _vm.IsScriptViewActive = false;
+            });
 
             bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
             bool isGif = format.Equals("GIF", StringComparison.OrdinalIgnoreCase);
@@ -152,25 +162,38 @@ public partial class WorkspacePage : ContentPage
                 format,
                 destinationPath);
 
+            // ── Duration + progress tracking ──────────────────────────────────
+            _recordingDuration = duration;
+            _recordingStopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             // ── UI-side capture timer ─────────────────────────────────────────
             // This timer fires on the main thread at exactly 1000/fps ms intervals.
-            // Because it runs on the main thread, it never needs InvokeOnMainThreadAsync
-            // — the render completes synchronously in the same dispatch slot, then
-            // control returns immediately so gestures and pan events are not starved.
             var recorder = _videoRecorder;
-            int maxFrames = frameRate * 600; // 10-minute cap
+            int maxFrames = duration.HasValue
+                ? (int)Math.Ceiling(duration.Value * frameRate) + frameRate  // cap at duration + 1s buffer
+                : frameRate * 600; // default 10-minute cap
             _captureTimer = Dispatcher.CreateTimer();
             _captureTimer.Interval = TimeSpan.FromMilliseconds(1000d / frameRate);
             _captureTimer.IsRepeating = true;
             _captureTimer.Tick += (_, _) =>
             {
+                // Auto-stop when duration reached.
+                if (_recordingDuration.HasValue && _recordingStopwatch != null &&
+                    _recordingStopwatch.Elapsed.TotalSeconds >= _recordingDuration.Value)
+                {
+                    _captureTimer?.Stop();
+                    _progressTimer?.Stop();
+                    _ = StopVideoRecordingAsync();
+                    return;
+                }
                 // Skip frame if user is interacting so gestures get full priority.
                 if (viewport.IsUserInteracting)
                     return;
-                // Stop automatically at the 10-minute cap or if the recorder stopped.
+                // Stop automatically at the frame cap or if the recorder stopped.
                 if (recorder.IsStopped || recorder.FrameCount >= maxFrames)
                 {
                     _captureTimer?.Stop();
+                    _progressTimer?.Stop();
                     return;
                 }
                 // Render a frame synchronously on this main-thread tick — fast, non-blocking.
@@ -195,10 +218,25 @@ public partial class WorkspacePage : ContentPage
                 }
             };
             _captureTimer.Start();
+
+            // ── Console progress timer (1 Hz) ─────────────────────────────────
+            _progressTimer = Dispatcher.CreateTimer();
+            _progressTimer.Interval = TimeSpan.FromSeconds(1);
+            _progressTimer.IsRepeating = true;
+            _progressTimer.Tick += (_, _) =>
+            {
+                if (_recordingStopwatch == null || recorder.IsStopped) return;
+                double elapsed = _recordingStopwatch.Elapsed.TotalSeconds;
+                string durPart = _recordingDuration.HasValue ? $" / {_recordingDuration:F1}s" : "";
+                _vm.ConsoleOutput += $"\n● REC {elapsed:F1}s{durPart} — {recorder.FrameCount} frames";
+            };
+            _progressTimer.Start();
             // ─────────────────────────────────────────────────────────────────
 
             _vm.SetVideoRecordingState(true, frameRate, format);
-            _vm.StatusText = $"Recording {view} circuit view as {format} at {frameRate} fps to {destinationPath}";
+            string durInfo = duration.HasValue ? $", auto-stops at {duration:F1}s" : "";
+            _vm.StatusText = $"Recording {view} circuit view as {format} at {frameRate} fps to {destinationPath}{durInfo}";
+            _vm.ConsoleOutput += $"\n● REC started — {format} {frameRate} fps{durInfo}\n● Output: {destinationPath}";
         }
         catch (Exception exception)
         {
@@ -216,10 +254,18 @@ public partial class WorkspacePage : ContentPage
         await _recordingLifecycle.WaitAsync();
         try
         {
-            // Stop the UI-side capture timer first so no more frames are submitted.
+            // Stop the UI-side capture timer and progress timer first so no more frames are submitted.
             var timer = _captureTimer;
             _captureTimer = null;
             timer?.Stop();
+
+            var progressTimer = _progressTimer;
+            _progressTimer = null;
+            progressTimer?.Stop();
+
+            _recordingStopwatch?.Stop();
+            _recordingStopwatch = null;
+            _recordingDuration = null;
 
             var recorder = _videoRecorder;
             _videoRecorder = null;
@@ -233,6 +279,7 @@ public partial class WorkspacePage : ContentPage
             // thread so we don't block the UI during the final file-write / FileSaver dialog.
             await Task.Run(async () => await recorder.StopAsync());
             _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
+            _vm.ConsoleOutput += $"\n● REC stopped — {recorder.FrameCount} frames saved";
             _vm.StatusText = $"Circuit {_vm.SelectedVideoFormat} recording saved";
         }
         catch (Exception exception)

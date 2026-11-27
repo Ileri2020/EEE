@@ -2,6 +2,7 @@
 
 import builtins
 import json
+import math
 import socket
 
 _protocol_output = None
@@ -160,6 +161,30 @@ class CircuitRef:
     def add_microphone(self, name, audio_file=None, bandwidth=20000.0, amplitude=1.0, **kwargs):
         return add_microphone(name=name, audio_file=audio_file, bandwidth=bandwidth, amplitude=amplitude, **kwargs)
 
+    def set_component_property(self, name, prop, value):
+        return set_component_property(name, prop, value)
+
+    def set_logic(self, name, value):
+        return set_logic(name, value)
+
+    def press_button(self, name, pressed=True):
+        return press_button(name, pressed)
+
+    def set_dip_switch(self, name, value):
+        return set_dip_switch(name, value)
+
+    def set_joystick(self, name, x, y, pressed=False):
+        return set_joystick(name, x, y, pressed)
+
+    def send_keyboard_key(self, name, character_code):
+        return send_keyboard_key(name, character_code)
+
+    def schedule_input(self, delay_seconds, name, prop, value):
+        return schedule_input(delay_seconds, name, prop, value)
+
+    def clear_scheduled_inputs(self):
+        return clear_scheduled_inputs()
+
     def play_simulation(self): return play_simulation()
     def pause_simulation(self): return pause_simulation()
     def stop_simulation(self): return stop_simulation()
@@ -247,22 +272,109 @@ def set_logic(name, value):
     _call(f"eesim.set_logic({_quoted(name)}, {str(value).lower()})")
 
 
+def press_button(name, pressed=True):
+    if not isinstance(pressed, bool):
+        raise TypeError("press_button expects a bool for pressed.")
+    _call(f"eesim.press_button({_quoted(name)}, {str(pressed).lower()})")
+
+
+def set_dip_switch(name, value):
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError("set_dip_switch expects an integer bitmask.")
+    _call(f"eesim.set_dip_switch({_quoted(name)}, {_number(value)})")
+
+
+def set_joystick(name, x, y, pressed=False):
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in (x, y)):
+        raise TypeError("set_joystick expects integer x and y values.")
+    if not isinstance(pressed, bool):
+        raise TypeError("set_joystick expects a bool for pressed.")
+    _call(
+        f"eesim.set_joystick({_quoted(name)}, {_number(x)}, {_number(y)}, "
+        f"{str(pressed).lower()})"
+    )
+
+
+def send_keyboard_key(name, character_code):
+    if isinstance(character_code, bool) or not isinstance(character_code, int):
+        raise TypeError("send_keyboard_key expects an integer character code.")
+    _call(f"eesim.send_keyboard_key({_quoted(name)}, {_number(character_code)})")
+
+
+def schedule_input(delay_seconds, name, prop, value):
+    """Set an input property after delay_seconds of simulation playback.
+
+    Schedule calls made before playback starts are relative to its configured start
+    time; calls made during playback are relative to the current simulation time.
+
+    Example:
+        schedule_input(2, "A", "Value", 4)
+        schedule_input(9, "A", "Value", 7)
+        play_simulation()
+    """
+    if isinstance(delay_seconds, bool) or not isinstance(delay_seconds, (int, float)):
+        raise TypeError("schedule_input expects a numeric delay in seconds.")
+    if not math.isfinite(delay_seconds) or delay_seconds < 0:
+        raise ValueError("schedule_input delay_seconds must be finite and non-negative.")
+    if not isinstance(name, str) or not name.strip():
+        raise TypeError("schedule_input expects a component name.")
+    if not isinstance(prop, str) or not prop.strip():
+        raise TypeError("schedule_input expects a property name.")
+    if isinstance(value, (dict, list, tuple)) or value is None:
+        raise TypeError("Scheduled input values must be booleans, numbers, or strings.")
+    try:
+        serialized_value = json.dumps(value, ensure_ascii=False, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("Scheduled input values must be booleans, finite numbers, or strings.") from exc
+    _call(
+        f"eesim.schedule_input({_number(delay_seconds)}, {_quoted(name)}, "
+        f"{_quoted(prop)}, {serialized_value})"
+    )
+
+
+def clear_scheduled_inputs():
+    """Cancel all input changes that have not yet been applied."""
+    _call("eesim.clear_scheduled_inputs()")
+
+
 def set_memory_word(name, address, value):
     _call(f"eesim.set_memory_word({_quoted(name)}, {_number(address)}, {_number(value)})")
 
 
 def connect(*args, **kwargs):
+    """Connect two component pins.
+
+    Two-arg form:  connect("VCC.positive", "R1.pin1")
+    Four-arg form: connect("VCC", "positive", "R1", "pin1")
+    Both accept:   waypoints=[(row, col), ...], resistance=float
+    """
     if len(args) == 2:
-        endpoints = args
+        # Two-arg dot notation: "Comp.pin" strings
+        from_str = str(args[0]).strip('"').strip("'")
+        to_str = str(args[1]).strip('"').strip("'")
+        from_parts = from_str.split(".", 1)
+        to_parts = to_str.split(".", 1)
+        from_comp = from_parts[0]
+        from_pin = from_parts[1] if len(from_parts) > 1 else "pin1"
+        to_comp = to_parts[0]
+        to_pin = to_parts[1] if len(to_parts) > 1 else "pin1"
         resistance = kwargs.get("resistance")
     elif len(args) == 3 and isinstance(args[2], (int, float)):
-        endpoints = args[:2]
+        from_str = str(args[0]).strip('"').strip("'")
+        to_str = str(args[1]).strip('"').strip("'")
+        from_parts = from_str.split(".", 1)
+        to_parts = to_str.split(".", 1)
+        from_comp = from_parts[0]
+        from_pin = from_parts[1] if len(from_parts) > 1 else "pin1"
+        to_comp = to_parts[0]
+        to_pin = to_parts[1] if len(to_parts) > 1 else "pin1"
         resistance = args[2]
     elif len(args) in (4, 5):
-        endpoints = (f"{args[0]}.{args[1]}", f"{args[2]}.{args[3]}")
+        from_comp, from_pin, to_comp, to_pin = str(args[0]), str(args[1]), str(args[2]), str(args[3])
         resistance = args[4] if len(args) == 5 else kwargs.get("resistance")
     else:
-        raise TypeError("connect expects two endpoint names or component/pin pairs.")
+        raise TypeError("connect expects two endpoint strings or four component/pin args.")
+
     suffix = f", {_number(resistance)}" if resistance is not None else ""
 
     extra_parts = []
@@ -274,7 +386,9 @@ def connect(*args, **kwargs):
         extra_parts.append(f"exit_direction={_quoted(kwargs['exit_direction'])}")
 
     extra_suffix = (", " + ", ".join(extra_parts)) if extra_parts else ""
-    _call(f"eesim.connect({_quoted(endpoints[0])}, {_quoted(endpoints[1])}{suffix}{extra_suffix})")
+    # Always send four separate quoted args so the parser never confuses
+    # component names that happen to contain dots.
+    _call(f"eesim.connect({_quoted(from_comp)}, {_quoted(from_pin)}, {_quoted(to_comp)}, {_quoted(to_pin)}{suffix}{extra_suffix})")
 
 
 def add_resistor(name, resistance=1000.0, **kwargs):
@@ -362,21 +476,24 @@ def save_circuit_image(path=None):
     _call(f"eesim.save_circuit_image({argument})")
 
 
-def start_video_recording(path=None, frame_rate=10, format="mp4", view="recentre"):
-    """Start video recording of the simulation viewport.
-    
+def start_video_recording(path=None, frame_rate=10, format="mp4", view="recentre", duration=None):
+    """Start video recording of the schematic viewport.
+
     Args:
         path: Optional output file path (e.g. "circuit_sim.mp4").
         frame_rate: Recording frame rate (1-15 fps, default 10).
         format: "mp4" or "gif" (default "mp4").
         view: "recentre" to auto-fit circuit or "screen" for exact current camera.
+        duration: Optional max recording duration in seconds. Recording stops
+                  automatically when reached and shows elapsed time in the terminal.
     """
     if isinstance(frame_rate, bool) or not isinstance(frame_rate, int):
         raise TypeError("frame_rate must be an integer.")
     if format.lower() not in ("gif", "mp4"):
         raise ValueError("format must be 'gif' or 'mp4'.")
     path_arg = "null" if path is None else _quoted(path)
-    _call(f"eesim.start_video_recording({path_arg}, {frame_rate}, {_quoted(format)}, {_quoted(view)})")
+    dur_arg = f", duration={_number(float(duration))}" if duration is not None else ""
+    _call(f"eesim.start_video_recording({path_arg}, {frame_rate}, {_quoted(format)}, {_quoted(view)}{dur_arg})")
 
 
 def stop_video_recording():
@@ -384,9 +501,9 @@ def stop_video_recording():
     _call("eesim.stop_video_recording()")
 
 
-def start_gif_recording(path=None, frame_rate=10, view="recentre"):
-    """Start GIF recording of the simulation viewport."""
-    start_video_recording(path=path, frame_rate=frame_rate, format="gif", view=view)
+def start_gif_recording(path=None, frame_rate=10, view="recentre", duration=None):
+    """Start GIF recording of the schematic viewport."""
+    start_video_recording(path=path, frame_rate=frame_rate, format="gif", view=view, duration=duration)
 
 
 def stop_gif_recording():

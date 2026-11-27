@@ -54,7 +54,7 @@ public class PythonApi
     public event Action<string?>? OnSaveRequested;
     public event Action<string, string>? OnSaveAsRequested;
     public event Action<string?, string>? OnCircuitImageSaveRequested;
-    public event Action<string?, int, string, string>? OnVideoRecordingStartRequested;
+    public event Action<string?, int, string, string, double?>? OnVideoRecordingStartRequested;
     public event Action? OnVideoRecordingStopRequested;
     public event Action<bool>? OnWaveformDrawerVisibilityRequested;
     public event Action? OnCloseSidebarsRequested;
@@ -747,33 +747,48 @@ public class PythonApi
 
     public void PressButton(string componentName, bool pressed = true)
     {
-        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.ButtonComponent button)
-            button.IsPressed = pressed;
+        var button = RequireInputComponent<EESimulator.Core.Components.Electronics.ButtonComponent>(
+            componentName, "button");
+        button.IsPressed = pressed;
     }
 
     public void SetDipSwitch(string componentName, long value)
     {
-        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.DipSwitchComponent dip)
-            dip.Value = value & ((1L << dip.PoleCount) - 1);
+        var dip = RequireInputComponent<EESimulator.Core.Components.Electronics.DipSwitchComponent>(
+            componentName, "DIP switch");
+        dip.Value = value & ((1L << dip.PoleCount) - 1);
     }
 
     public void SetJoystick(string componentName, int x, int y, bool pressed = false)
     {
-        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.JoystickComponent joystick)
-        {
-            joystick.XValue = x;
-            joystick.YValue = y;
-            joystick.Pressed = pressed;
-        }
+        var joystick = RequireInputComponent<EESimulator.Core.Components.Electronics.JoystickComponent>(
+            componentName, "joystick");
+        joystick.XValue = x;
+        joystick.YValue = y;
+        joystick.Pressed = pressed;
+        joystick.NotifyModified(nameof(joystick.XValue));
+        joystick.NotifyModified(nameof(joystick.YValue));
+        joystick.NotifyModified(nameof(joystick.Pressed));
     }
 
     public void SendKeyboardKey(string componentName, int characterCode)
     {
-        if (_circuit.FindChild<ComponentNode>(componentName) is EESimulator.Core.Components.Electronics.KeyboardComponent keyboard)
-        {
-            keyboard.Data = Math.Clamp(characterCode, 0, 255);
-            keyboard.DataReady = true;
-        }
+        var keyboard = RequireInputComponent<EESimulator.Core.Components.Electronics.KeyboardComponent>(
+            componentName, "keyboard");
+        keyboard.Data = Math.Clamp(characterCode, 0, 255);
+        keyboard.DataReady = true;
+        keyboard.NotifyModified(nameof(keyboard.Data));
+        keyboard.NotifyModified(nameof(keyboard.DataReady));
+    }
+
+    private T RequireInputComponent<T>(string componentName, string inputName)
+        where T : ComponentNode
+    {
+        var component = _circuit.FindChild<ComponentNode>(componentName)
+            ?? throw new KeyNotFoundException($"Component '{componentName}' was not found.");
+        return component as T
+            ?? throw new ArgumentException(
+                $"Component '{componentName}' is not a {inputName}.", nameof(componentName));
     }
 
     public void SetCustomProperty(string componentName, string propertyName, object value)
@@ -1212,7 +1227,7 @@ public class PythonApi
     public void SaveCircuitImage(string? filePath = null, string view = "recentre") =>
         OnCircuitImageSaveRequested?.Invoke(filePath, view);
 
-    public void StartVideoRecording(string? filePath = null, int frameRate = 5, string format = "gif", string view = "recentre")
+    public void StartVideoRecording(string? filePath = null, int frameRate = 5, string format = "gif", string view = "recentre", double? duration = null)
     {
         if (frameRate is < 1 or > 15)
             throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
@@ -1222,7 +1237,7 @@ public class PythonApi
         VideoFrameRate = frameRate;
         VideoFormat = format.ToUpperInvariant();
         IsVideoRecording = true;
-        OnVideoRecordingStartRequested?.Invoke(filePath, frameRate, VideoFormat, view.ToLowerInvariant() == "screen" ? "screen" : "recentre");
+        OnVideoRecordingStartRequested?.Invoke(filePath, frameRate, VideoFormat, view.ToLowerInvariant() == "screen" ? "screen" : "recentre", duration);
     }
 
     public void StopVideoRecording()

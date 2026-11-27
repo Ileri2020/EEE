@@ -18,6 +18,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,19 @@ using System.Threading.Tasks;
 namespace EEE.ViewModels;
 public partial class EEWorkspaceViewModel
 {
+    private sealed record ScheduledSimulationInput(
+        double TimeSeconds,
+        long Sequence,
+        string ComponentName,
+        string PropertyName,
+        object? Value);
+
+    private readonly object _scheduledInputLock = new();
+    private readonly List<ScheduledSimulationInput> _scheduledSimulationInputs = new();
+    private long _scheduledInputSequence;
+    private bool _scheduledInputBoundaryPending;
+    private double _lastPlaybackSolvedTimeSeconds;
+
     private List<ComponentNode> FindConnectedCircuitIsland(ComponentNode selected)
     {
         var components = Circuit.Components.ToList();
@@ -206,6 +220,7 @@ public partial class EEWorkspaceViewModel
                 _solverTimeSeconds = Preferences.Default.Get("Settings.SimulationStartTimeSeconds", 0.0);
                 _deviceTimeSeconds = _solverTimeSeconds * GetConfiguredDeviceTimeScale();
             }
+            _lastPlaybackSolvedTimeSeconds = _solverTimeSeconds;
             if (_animTimer == null)
             {
                 _animTimer = Application.Current?.Dispatcher?.CreateTimer() ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
@@ -217,13 +232,31 @@ public partial class EEWorkspaceViewModel
                     {
                         if (IsSimulationPlaying)
                         {
+                            if (_scheduledInputBoundaryPending)
+                                return;
+
                             double solverDelta = _animTimer.Interval.TotalSeconds;
+                            double nextInputTime = GetNextScheduledInputTime();
+                            bool reachesScheduledInput = double.IsFinite(nextInputTime) &&
+                                nextInputTime <= _solverTimeSeconds + solverDelta;
+                            if (reachesScheduledInput)
+                            {
+                                solverDelta = Math.Max(0, nextInputTime - _solverTimeSeconds);
+                                _scheduledInputBoundaryPending = true;
+                            }
+
                             _pendingSolverElapsedTimeSeconds += solverDelta;
                             _solverTimeSeconds += solverDelta;
                             double scale = GetConfiguredDeviceTimeScale();
                             _deviceTimeSeconds += solverDelta * scale;
                             ElectricityAnimPhase = (ElectricityAnimPhase + 0.05f) % 1.0f;
                             AnimationFrameRequested?.Invoke();
+                            if (reachesScheduledInput)
+                            {
+                                if (!IsSimulating && !_playbackSolveRunning)
+                                    _ = RefreshPlaybackSimulationAsync();
+                                return;
+                            }
                             if (!IsSimulating && !_playbackSolveRunning &&
                                 DateTime.UtcNow - _lastPlaybackSolveUtc >= SimulationPerformanceProfile.Current.SolveInterval)
                                 _ = RefreshPlaybackSimulationAsync();
@@ -233,7 +266,8 @@ public partial class EEWorkspaceViewModel
             }
             _animTimer?.Start();
             StatusText = "▶ Simulation Running: Electricity flowing along circuits";
-            _ = SimulateAsync();
+            if (_scheduledInputBoundaryPending)
+                _ = RefreshPlaybackSimulationAsync();
         }
 
         else
@@ -255,6 +289,7 @@ public partial class EEWorkspaceViewModel
         _playbackSolveRunning = true;
         IsSimulating = true;
         _lastPlaybackSolveUtc = DateTime.UtcNow;
+        bool segmentCompleted = false;
         try
         {
             var settings = BuildSimulationSettings();
@@ -273,6 +308,8 @@ public partial class EEWorkspaceViewModel
                 Math.Max(settings.StopTime - settings.StartTime, 0.02) / 50.0);
             settings.CaptureAllWaveforms = true;
             var (results, snapshot) = await _simWorker.ExecuteAsync(Circuit, settings);
+            segmentCompleted = true;
+            _lastPlaybackSolvedTimeSeconds = settings.StopTime;
             CurrentSimulationSnapshot = snapshot;
             if (DateTime.UtcNow - _lastPlaybackConsoleUpdateUtc >= TimeSpan.FromSeconds(1))
             {
@@ -292,6 +329,18 @@ public partial class EEWorkspaceViewModel
         {
             _playbackSolveRunning = false;
             IsSimulating = false;
+            if (_scheduledInputBoundaryPending)
+            {
+                if (_lastPlaybackSolvedTimeSeconds >= _solverTimeSeconds - 1e-9)
+                {
+                    _scheduledInputBoundaryPending = false;
+                    ApplyDueScheduledInputs(_solverTimeSeconds);
+                }
+                else if (IsSimulationPlaying && segmentCompleted)
+                {
+                    _simulationRefreshRequested = true;
+                }
+            }
             if (_simulationRefreshRequested)
             {
                 _simulationRefreshRequested = false;

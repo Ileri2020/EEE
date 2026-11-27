@@ -500,6 +500,41 @@ public partial class EEWorkspaceViewModel
                     PythonApi.SetLogic(Unquote(args[0]), lState);
                     return $"[ok] logic component {Unquote(args[0])} set to {lState}";
 
+                case "press_button" or "set_button" when args.Length >= 2:
+                    PythonApi.PressButton(Unquote(args[0]), ParseB(args[1]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] button {Unquote(args[0])} set to {ParseB(args[1])}";
+
+                case "set_dip_switch" when args.Length >= 2:
+                    PythonApi.SetDipSwitch(Unquote(args[0]), ParseScriptLong(args[1]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] DIP switch {Unquote(args[0])} set";
+
+                case "set_joystick" when args.Length >= 3:
+                    PythonApi.SetJoystick(
+                        Unquote(args[0]),
+                        checked((int)ParseScriptLong(args[1])),
+                        checked((int)ParseScriptLong(args[2])),
+                        args.Length > 3 && ParseB(args[3]));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] joystick {Unquote(args[0])} set";
+
+                case "send_keyboard_key" when args.Length >= 2:
+                    PythonApi.SendKeyboardKey(Unquote(args[0]), checked((int)ParseScriptLong(args[1])));
+                    CircuitChanged?.Invoke();
+                    return $"[ok] keyboard input sent to {Unquote(args[0])}";
+
+                case "schedule_input" when args.Length >= 4:
+                    return ScheduleInputFromScript(
+                        ParseFiniteScriptNumber(args[0], "delay_seconds"),
+                        Unquote(args[1]),
+                        Unquote(args[2]),
+                        ParseScriptValue(args[3]));
+
+                case "clear_scheduled_inputs":
+                    ClearScheduledInputs();
+                    return "[ok] scheduled inputs cleared";
+
                 case "set_logic_levels" when args.Length >= 3:
                     PythonApi.SetLogicLevels(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
                     return $"[ok] logic levels on {Unquote(args[0])} set to High={args[1]}V, Low={args[2]}V";
@@ -679,8 +714,10 @@ public partial class EEWorkspaceViewModel
                     int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
                     string vidFmt = args.Length > 2 ? Unquote(args[2]) : "mp4";
                     string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
-                    PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView);
-                    return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps ({vidView} view)";
+                    double? vidDuration = namedArguments.TryGetValue("duration", out var vd) ? (double?)ParseD(vd) : null;
+                    PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView, vidDuration);
+                    string durInfo = vidDuration.HasValue ? $", auto-stops at {vidDuration:F1}s" : "";
+                    return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo})";
                 }
 
                 case "stop_video_recording" or "stop_recording":
@@ -692,8 +729,10 @@ public partial class EEWorkspaceViewModel
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
                     int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
                     string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
-                    PythonApi.StartVideoRecording(vidPath, vidFps, "GIF", vidView);
-                    return $"[ok] GIF recording started at {PythonApi.VideoFrameRate} fps ({vidView} view)";
+                    double? gifDuration = namedArguments.TryGetValue("duration", out var gd) ? (double?)ParseD(gd) : null;
+                    PythonApi.StartVideoRecording(vidPath, vidFps, "GIF", vidView, gifDuration);
+                    string durInfo = gifDuration.HasValue ? $", auto-stops at {gifDuration:F1}s" : "";
+                    return $"[ok] GIF recording started at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo})";
                 }
 
                 case "stop_gif_recording":
@@ -969,6 +1008,183 @@ public partial class EEWorkspaceViewModel
         return false;
     }
 
+    private string ScheduleInputFromScript(
+        double delaySeconds,
+        string componentName,
+        string propertyName,
+        object? value)
+    {
+        if (!double.IsFinite(delaySeconds) || delaySeconds < 0)
+            throw new ArgumentOutOfRangeException(nameof(delaySeconds), "Input delay must be finite and non-negative.");
+        if (string.IsNullOrWhiteSpace(componentName))
+            throw new ArgumentException("A component name is required.", nameof(componentName));
+        if (string.IsNullOrWhiteSpace(propertyName))
+            throw new ArgumentException("A property name is required.", nameof(propertyName));
+
+        var component = Circuit.FindChild<ComponentNode>(componentName)
+            ?? throw new KeyNotFoundException($"Component '{componentName}' was not found.");
+        ValidateScheduledInputProperty(component, propertyName, value);
+
+        double configuredStart = Math.Max(
+            0, Preferences.Default.Get("Settings.SimulationStartTimeSeconds", 0.0));
+        double playbackStart = _solverTimeSeconds > configuredStart
+            ? _solverTimeSeconds
+            : configuredStart;
+        double eventTime = playbackStart + delaySeconds;
+        if (!double.IsFinite(eventTime))
+            throw new ArgumentOutOfRangeException(nameof(delaySeconds), "Scheduled input time is outside the supported numeric range.");
+
+        if (delaySeconds == 0)
+        {
+            if (IsSimulationPlaying && _scheduledInputBoundaryPending)
+                throw new InvalidOperationException("Cannot schedule an immediate input while a simulation-time event is being applied.");
+            PythonApi.SetComponentProperty(componentName, propertyName, value);
+            CircuitChanged?.Invoke();
+            return $"[ok] input {componentName}.{propertyName} applied immediately";
+        }
+
+        lock (_scheduledInputLock)
+        {
+            var scheduled = new ScheduledSimulationInput(
+                eventTime, _scheduledInputSequence++, componentName, propertyName, value);
+            _scheduledSimulationInputs.Add(scheduled);
+            _scheduledSimulationInputs.Sort(static (left, right) =>
+            {
+                int timeOrder = left.TimeSeconds.CompareTo(right.TimeSeconds);
+                return timeOrder != 0 ? timeOrder : left.Sequence.CompareTo(right.Sequence);
+            });
+        }
+
+        return $"[ok] input {componentName}.{propertyName} scheduled for simulation time {eventTime.ToString("G", CultureInfo.InvariantCulture)}s";
+    }
+
+    private static void ValidateScheduledInputProperty(ComponentNode component, string propertyName, object? value)
+    {
+        var property = component.GetType().GetProperty(
+            propertyName,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+        if (property?.SetMethod?.IsPublic == true &&
+            property.GetIndexParameters().Length == 0 &&
+            property.Name is not nameof(ComponentNode.Position) and
+                not nameof(ComponentNode.X) and not nameof(ComponentNode.Y) and
+                not nameof(ComponentNode.Rotation) and not nameof(ComponentNode.ScaleX) and
+                not nameof(ComponentNode.ScaleY) and not nameof(ComponentNode.CustomProperties) and
+                not nameof(ComponentNode.ElectricalParameters))
+        {
+            Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            if (value is null)
+            {
+                if (targetType.IsValueType)
+                    throw new ArgumentException($"Property '{property.Name}' does not accept null.");
+                return;
+            }
+
+            if (targetType.IsInstanceOfType(value))
+                return;
+            if (targetType.IsEnum && value is string enumText)
+            {
+                Enum.Parse(targetType, enumText, true);
+                return;
+            }
+
+            Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+            return;
+        }
+
+        if (component.ElectricalParameters.ContainsKey(propertyName))
+        {
+            if (value is null || !double.TryParse(
+                    Convert.ToString(value, CultureInfo.InvariantCulture),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _))
+                throw new ArgumentException($"Electrical parameter '{propertyName}' requires a numeric value.");
+            return;
+        }
+
+        if (component.CustomProperties.ContainsKey(propertyName) && value is not null)
+            return;
+
+        throw new InvalidOperationException(
+            $"'{propertyName}' is not an editable property on {component.ComponentType}.");
+    }
+
+    private double GetNextScheduledInputTime()
+    {
+        lock (_scheduledInputLock)
+            return _scheduledSimulationInputs.Count == 0
+                ? double.PositiveInfinity
+                : _scheduledSimulationInputs[0].TimeSeconds;
+    }
+
+    private void ApplyDueScheduledInputs(double timeSeconds)
+    {
+        List<ScheduledSimulationInput> dueInputs;
+        lock (_scheduledInputLock)
+        {
+            int dueCount = 0;
+            while (dueCount < _scheduledSimulationInputs.Count &&
+                   _scheduledSimulationInputs[dueCount].TimeSeconds <= timeSeconds + 1e-9)
+                dueCount++;
+            dueInputs = _scheduledSimulationInputs.GetRange(0, dueCount);
+            _scheduledSimulationInputs.RemoveRange(0, dueCount);
+        }
+
+        foreach (ScheduledSimulationInput scheduled in dueInputs)
+        {
+            try
+            {
+                PythonApi.SetComponentProperty(
+                    scheduled.ComponentName, scheduled.PropertyName, scheduled.Value);
+                if (scheduled.TimeSeconds < timeSeconds - 1e-9)
+                {
+                    ConsoleOutput +=
+                        $"Scheduled input for {scheduled.ComponentName}.{scheduled.PropertyName} " +
+                        $"was applied late at {timeSeconds.ToString("G", CultureInfo.InvariantCulture)}s.\n";
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleOutput +=
+                    $"Scheduled input failed at {scheduled.TimeSeconds.ToString("G", CultureInfo.InvariantCulture)}s " +
+                    $"({scheduled.ComponentName}.{scheduled.PropertyName}): {ex.Message}\n";
+            }
+        }
+
+        if (dueInputs.Count > 0)
+            CircuitChanged?.Invoke();
+    }
+
+    private void ClearScheduledInputs()
+    {
+        lock (_scheduledInputLock)
+            _scheduledSimulationInputs.Clear();
+        _scheduledInputBoundaryPending = false;
+    }
+
+    private static double ParseFiniteScriptNumber(string raw, string argumentName)
+    {
+        if (!double.TryParse(
+                Unquote(raw),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out double value) ||
+            !double.IsFinite(value))
+            throw new ArgumentException($"'{argumentName}' must be a finite number.");
+        return value;
+    }
+
+    private static long ParseScriptLong(string raw)
+    {
+        if (!long.TryParse(
+                Unquote(raw),
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out long value))
+            throw new ArgumentException("Expected an integer value.");
+        return value;
+    }
+
     private void StepSimulationOnce()
     {
         double step = Math.Max(SimTransientStepTime, 1e-6);
@@ -1205,6 +1421,44 @@ public partial class EEWorkspaceViewModel
     private void ApplyLogicalSchematicLayout()
     {
         LogicalGridLayoutResult layout = PythonApi.ApplyLogicalGridLayout();
+
+        // Re-resolve any connection routing points that were stored as grid-cell world
+        // coordinates BEFORE the physical layout was applied.  After ApplyLogicalGridLayout
+        // the component positions are authoritative; we recompute the routing points from
+        // the now-known cell centers so that the wire router has correct intermediate coords.
+        foreach (var connection in Circuit.Connections)
+        {
+            if (connection.RoutingPoints.Count == 0) continue;
+
+            bool anySmall = connection.RoutingPoints.Any(p =>
+                p.X < 60 && p.Y < 60 && p.X >= 1 && p.Y >= 1);
+            if (!anySmall) continue; // already in world coords — skip
+
+            // All points in this connection were grid-cell references; re-resolve them.
+            var resolved = new List<EESimulator.Core.Models.Point2D>(connection.RoutingPoints.Count);
+            foreach (var pt in connection.RoutingPoints)
+            {
+                // If the value looks like a grid cell coord (small positive int), convert it
+                // using the now-valid layout. Otherwise keep the raw value.
+                if (pt.X >= 1 && pt.X < 60 && pt.Y >= 1 && pt.Y < 60)
+                {
+                    int row = (int)Math.Round(pt.Y);
+                    int col = (int)Math.Round(pt.X);
+                    // Check if a component sits exactly at this cell; prefer its centre.
+                    var compAtCell = layout.Placements.FirstOrDefault(p =>
+                        p.Component.LogicalRow == row && p.Component.LogicalColumn == col);
+                    resolved.Add(compAtCell.Component != null
+                        ? new EESimulator.Core.Models.Point2D(compAtCell.X, compAtCell.Y)
+                        : layout.GetCellCenter(row, col));
+                }
+                else
+                {
+                    resolved.Add(pt);
+                }
+            }
+            connection.RoutingPoints.Clear();
+            connection.RoutingPoints.AddRange(resolved);
+        }
 
         if (layout.UnresolvedCollisions.Count == 0) return;
         string examples = string.Join(", ", layout.UnresolvedCollisions.Take(3)
