@@ -113,9 +113,10 @@ public partial class WorkspacePage : ContentPage
             {
                 var (width, height) = GetCaptureDimensions();
                 bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
+                var waveformDrawer = _vm.IsWaveformDrawerOpen ? MainWorkspace.WaveformCanvas : null;
                 return useScreen
-                    ? MainWorkspace.SchematicCanvas.CaptureCurrentViewPng(width, height)
-                    : MainWorkspace.SchematicCanvas.CaptureRecenteredPng(width, height);
+                    ? MainWorkspace.SchematicCanvas.CaptureCurrentViewPng(width, height, waveformDrawer)
+                    : MainWorkspace.SchematicCanvas.CaptureRecenteredPng(width, height, waveformDrawer);
             });
             string destinationPath = ResolveCapturePath(path, ".png");
             await SchematicCaptureService.SavePngAsync(png, destinationPath);
@@ -207,14 +208,17 @@ public partial class WorkspacePage : ContentPage
                 // Render a frame synchronously on this main-thread tick — fast, non-blocking.
                 try
                 {
+                    var waveformDrawer = _vm.IsWaveformDrawerOpen ? MainWorkspace.WaveformCanvas : null;
                     var frame = useScreen
                         ? viewport.CaptureCurrentViewFrame(
                             dimensions.Width, dimensions.Height,
                             dimensions.ViewportWidth, dimensions.ViewportHeight,
-                            includePng: !isGif)
+                            includePng: !isGif,
+                            waveformDrawer: waveformDrawer)
                         : viewport.CaptureRecenteredFrame(
                             dimensions.Width, dimensions.Height,
-                            includePng: !isGif);
+                            includePng: !isGif,
+                            waveformDrawer: waveformDrawer);
                     // Push the pixel data to the encoding channel (non-blocking, drops
                     // oldest if the encoder cannot keep up — far better than blocking pan).
                     recorder.TryAddFrame(frame);

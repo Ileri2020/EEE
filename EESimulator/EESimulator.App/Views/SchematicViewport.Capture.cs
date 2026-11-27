@@ -10,17 +10,17 @@ public partial class SchematicViewport
 {
     // ── Recentred capture (all components visible, like sidebar Recentre button) ──
 
-    public byte[] CaptureRecenteredPng(int width, int height)
+    public byte[] CaptureRecenteredPng(int width, int height, WaveformViewport? waveformDrawer = null)
     {
-        using var export = CreateRecenteredExport(width, height, includeAnimation: false);
+        using var export = CreateRecenteredExport(width, height, includeAnimation: false, waveformDrawer);
         using var stream = new MemoryStream();
         export.WriteToStream(stream);
         return stream.ToArray();
     }
 
-    public SchematicCapturedFrame CaptureRecenteredFrame(int width, int height, bool includePng = true)
+    public SchematicCapturedFrame CaptureRecenteredFrame(int width, int height, bool includePng = true, WaveformViewport? waveformDrawer = null)
     {
-        using var export = CreateRecenteredExport(width, height, includeAnimation: true);
+        using var export = CreateRecenteredExport(width, height, includeAnimation: true, waveformDrawer);
         byte[] pngData = Array.Empty<byte>();
         if (includePng)
         {
@@ -35,20 +35,20 @@ public partial class SchematicViewport
 
     // ── Current-view capture (exactly what the user sees on screen) ──────────
 
-    public byte[] CaptureCurrentViewPng(int width, int height)
+    public byte[] CaptureCurrentViewPng(int width, int height, WaveformViewport? waveformDrawer = null)
     {
-        using var export = CreateCurrentViewExport(width, height, (float)Width, (float)Height, includeAnimation: false);
+        using var export = CreateCurrentViewExport(width, height, (float)Width, (float)Height, includeAnimation: false, waveformDrawer);
         using var stream = new MemoryStream();
         export.WriteToStream(stream);
         return stream.ToArray();
     }
 
-    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height, bool includePng = true)
-        => CaptureCurrentViewFrame(width, height, (float)Width, (float)Height, includePng);
+    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height, bool includePng = true, WaveformViewport? waveformDrawer = null)
+        => CaptureCurrentViewFrame(width, height, (float)Width, (float)Height, includePng, waveformDrawer);
 
-    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height, float viewportWidth, float viewportHeight, bool includePng = true)
+    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height, float viewportWidth, float viewportHeight, bool includePng = true, WaveformViewport? waveformDrawer = null)
     {
-        using var export = CreateCurrentViewExport(width, height, viewportWidth, viewportHeight, includeAnimation: true);
+        using var export = CreateCurrentViewExport(width, height, viewportWidth, viewportHeight, includeAnimation: true, waveformDrawer);
         byte[] pngData = Array.Empty<byte>();
         if (includePng)
         {
@@ -98,10 +98,13 @@ public partial class SchematicViewport
 
     // ── Internal helpers ──────────────────────────────────────────────────────
 
-    private SkiaBitmapExportContext CreateRecenteredExport(int width, int height, bool includeAnimation)
+    private SkiaBitmapExportContext CreateRecenteredExport(int width, int height, bool includeAnimation, WaveformViewport? waveformDrawer = null)
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
+
+        float drawerHeight = waveformDrawer != null ? Math.Min(height * 0.40f, 260f) : 0f;
+        float schematicHeight = height - drawerHeight;
 
         var components = Circuit?.FindChildren<EESimulator.Core.Models.ComponentNode>()
             .Where(component => component is not EESimulator.Core.Components.General.WireComponent)
@@ -111,8 +114,10 @@ public partial class SchematicViewport
             var emptyExport = new SkiaBitmapExportContext(width, height, 1f, 96, transparent: false);
             try
             {
-                DrawWithCamera(emptyExport.Canvas, new RectF(0, 0, width, height),
-                    width / 2f, height / 2f, 1f, false);
+                DrawWithCamera(emptyExport.Canvas, new RectF(0, 0, width, schematicHeight),
+                    width / 2f, schematicHeight / 2f, 1f, false);
+                if (waveformDrawer != null)
+                    RenderWaveformDrawerOverlay(emptyExport.Canvas, width, height, schematicHeight, drawerHeight, waveformDrawer);
             }
             catch
             {
@@ -146,14 +151,16 @@ public partial class SchematicViewport
         float contentHeight = MathF.Max(maxY - minY, 1f);
         float zoom = MathF.Min(
             MathF.Max(width - 2 * padding, 1f) / contentWidth,
-            MathF.Max(height - 2 * padding, 1f) / contentHeight);
+            MathF.Max(schematicHeight - 2 * padding, 1f) / contentHeight);
         var export = new SkiaBitmapExportContext(width, height, 1f, 96, transparent: false);
         float panX = width / 2f - ((minX + maxX) / 2f) * zoom;
-        float panY = height / 2f - ((minY + maxY) / 2f) * zoom;
+        float panY = schematicHeight / 2f - ((minY + maxY) / 2f) * zoom;
         try
         {
-            DrawWithCamera(export.Canvas, new RectF(0, 0, width, height),
+            DrawWithCamera(export.Canvas, new RectF(0, 0, width, schematicHeight),
                 panX, panY, zoom, includeAnimation && IsSimulationPlaying);
+            if (waveformDrawer != null)
+                RenderWaveformDrawerOverlay(export.Canvas, width, height, schematicHeight, drawerHeight, waveformDrawer);
         }
         catch
         {
@@ -172,10 +179,14 @@ public partial class SchematicViewport
         int height,
         float viewportWidth,
         float viewportHeight,
-        bool includeAnimation)
+        bool includeAnimation,
+        WaveformViewport? waveformDrawer = null)
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
+
+        float drawerHeight = waveformDrawer != null ? Math.Min(height * 0.40f, 260f) : 0f;
+        float schematicHeight = height - drawerHeight;
 
         var export = new SkiaBitmapExportContext(width, height, 1f, 96, transparent: false);
 
@@ -183,7 +194,7 @@ public partial class SchematicViewport
         // live canvas size) to the requested export size while preserving the same
         // visible centre and apparent zoom density.
         float scaleX = width / MathF.Max(1f, viewportWidth);
-        float scaleY = height / MathF.Max(1f, viewportHeight);
+        float scaleY = schematicHeight / MathF.Max(1f, viewportHeight);
         float scale  = MathF.Min(scaleX, scaleY);
 
         // Centre the same world-space centre in the export canvas.
@@ -194,12 +205,14 @@ public partial class SchematicViewport
         float worldCentreY = (viewportHeight / 2f - panY) / zoom;
         float exportZoom = zoom * scale;
         float exportPanX = width / 2f - worldCentreX * exportZoom;
-        float exportPanY = height / 2f - worldCentreY * exportZoom;
+        float exportPanY = schematicHeight / 2f - worldCentreY * exportZoom;
 
         try
         {
-            DrawWithCamera(export.Canvas, new RectF(0, 0, width, height),
+            DrawWithCamera(export.Canvas, new RectF(0, 0, width, schematicHeight),
                 exportPanX, exportPanY, exportZoom, includeAnimation && IsSimulationPlaying);
+            if (waveformDrawer != null)
+                RenderWaveformDrawerOverlay(export.Canvas, width, height, schematicHeight, drawerHeight, waveformDrawer);
         }
         catch
         {
@@ -207,5 +220,39 @@ public partial class SchematicViewport
             throw;
         }
         return export;
+    }
+
+    private static void RenderWaveformDrawerOverlay(ICanvas canvas, int width, int height, float schematicHeight, float drawerHeight, WaveformViewport waveformDrawer)
+    {
+        canvas.SaveState();
+        try
+        {
+            float drawerTop = schematicHeight;
+            // Oscilloscope dark background
+            canvas.FillColor = Color.FromArgb("#0A0E14");
+            canvas.FillRectangle(0, drawerTop, width, drawerHeight);
+
+            // Header bar
+            const float headerH = 24f;
+            canvas.FillColor = Color.FromArgb("#161B22");
+            canvas.FillRectangle(0, drawerTop, width, headerH);
+
+            canvas.StrokeColor = Color.FromArgb("#30363D");
+            canvas.StrokeSize = 1;
+            canvas.DrawLine(0, drawerTop, width, drawerTop);
+            canvas.DrawLine(0, drawerTop + headerH, width, drawerTop + headerH);
+
+            canvas.FontColor = Color.FromArgb("#58A6FF");
+            canvas.FontSize = 11;
+            canvas.DrawString("📈 Waveforms (Oscilloscope)", 12, drawerTop + 4, width - 24, 16, HorizontalAlignment.Left, VerticalAlignment.Center);
+
+            // Oscilloscope plot area
+            canvas.Translate(0, drawerTop + headerH);
+            waveformDrawer.Draw(canvas, new RectF(0, 0, width, drawerHeight - headerH));
+        }
+        finally
+        {
+            canvas.RestoreState();
+        }
     }
 }
