@@ -167,17 +167,92 @@ class CircuitRef:
     def set_logic(self, name, value):
         return set_logic(name, value)
 
+    def toggle_logic(self, name):
+        return toggle_logic(name)
+
+    def set_logic_levels(self, name, high_voltage, low_voltage):
+        return set_logic_levels(name, high_voltage, low_voltage)
+
+    def set_logic_bus(self, names, value, lsb_first=False):
+        return set_logic_bus(names, value, lsb_first)
+
+    def set_binary_inputs(self, names, value, lsb_first=False):
+        return set_binary_inputs(names, value, lsb_first)
+
     def press_button(self, name, pressed=True):
         return press_button(name, pressed)
+
+    def release_button(self, name):
+        return release_button(name)
+
+    def pulse_button(self, name, duration=0.1):
+        return pulse_button(name, duration)
 
     def set_dip_switch(self, name, value):
         return set_dip_switch(name, value)
 
+    def set_dip_switch_pole(self, name, pole_index, state):
+        return set_dip_switch_pole(name, pole_index, state)
+
     def set_joystick(self, name, x, y, pressed=False):
         return set_joystick(name, x, y, pressed)
 
+    def set_joystick_position(self, name, x, y):
+        return set_joystick_position(name, x, y)
+
+    def press_joystick(self, name, pressed=True):
+        return press_joystick(name, pressed)
+
     def send_keyboard_key(self, name, character_code):
         return send_keyboard_key(name, character_code)
+
+    def keyboard_press(self, name, key):
+        return keyboard_press(name, key)
+
+    def keyboard_type_text(self, name, text, delay=0.1):
+        return keyboard_type_text(name, text, delay)
+
+    def set_constant(self, name, value, bit_width=None, high_voltage=None, low_voltage=None):
+        return set_constant(name, value, bit_width, high_voltage, low_voltage)
+
+    def set_voltage_switch(self, name, threshold=None, hysteresis=None, ron=None, roff=None):
+        return set_voltage_switch(name, threshold, hysteresis, ron, roff)
+
+    def set_current_switch(self, name, threshold=None, hysteresis=None, ron=None, roff=None, controlling_source=None):
+        return set_current_switch(name, threshold, hysteresis, ron, roff, controlling_source)
+
+    def set_relay(self, name, pull_in=None, dropout=None, coil_r=None, contact_r=None, open_r=None):
+        return set_relay(name, pull_in, dropout, coil_r, contact_r, open_r)
+
+    def set_microphone_audio(self, name, file_path, amplitude=None, bandwidth=None, offset=None):
+        return set_microphone_audio(name, file_path, amplitude, bandwidth, offset)
+
+    def set_dc_signal(self, name, voltage):
+        return set_dc_signal(name, voltage)
+
+    def set_sine_signal(self, name, amplitude, frequency, offset=0.0, phase=0.0, delay=0.0, theta=0.0):
+        return set_sine_signal(name, amplitude, frequency, offset, phase, delay, theta)
+
+    def set_pulse_signal(self, name, v_low, v_high, period, width, delay=0.0, rise_time=1e-6, fall_time=1e-6):
+        return set_pulse_signal(name, v_low, v_high, period, width, delay, rise_time, fall_time)
+
+    def set_step_signal(self, name, v_initial, v_step, delay=0.0):
+        return set_step_signal(name, v_initial, v_step, delay)
+
+    def set_ramp_signal(self, name, v_start, v_peak, duration, delay=0.0, period=None):
+        return set_ramp_signal(name, v_start, v_peak, duration, delay, period)
+
+    def set_triangle_signal(self, name, v_low, v_high, period, delay=0.0):
+        return set_triangle_signal(name, v_low, v_high, period, delay)
+
+    def set_pwl_signal(self, name, points):
+        return set_pwl_signal(name, points)
+
+    def set_ac_source(self, name, voltage, frequency, waveform="Sine", offset=0.0, phase=0.0):
+        return set_ac_source(name, voltage, frequency, waveform, offset, phase)
+
+    def set_clock_signal(self, name, frequency, duty_cycle=0.5, high_voltage=5.0, low_voltage=0.0):
+        return set_clock_signal(name, frequency, duty_cycle, high_voltage, low_voltage)
 
     def schedule_input(self, delay_seconds, name, prop, value):
         return schedule_input(delay_seconds, name, prop, value)
@@ -272,16 +347,61 @@ def set_logic(name, value):
     _call(f"eesim.set_logic({_quoted(name)}, {str(value).lower()})")
 
 
+def toggle_logic(name):
+    """Toggle digital logic level between 0 and 1."""
+    _call(f"eesim.toggle_logic({_quoted(name)})")
+
+
+def set_logic_levels(name, high_voltage, low_voltage):
+    """Set custom voltage thresholds for Logic 1 and Logic 0."""
+    _call(f"eesim.set_logic_levels({_quoted(name)}, {_number(high_voltage)}, {_number(low_voltage)})")
+
+
+def set_logic_bus(names, value, lsb_first=False):
+    """Set an integer value across multiple digital logic inputs (e.g. for adders, buses).
+    
+    Example:
+        set_logic_bus(['A3', 'A2', 'A1', 'A0'], 2)  # A=2 (0010)
+        set_logic_bus(['A3', 'A2', 'A1', 'A0'], 5)  # A=5 (0101)
+    """
+    val = int(value)
+    name_list = list(names) if lsb_first else list(reversed(names))
+    for bit, bit_name in enumerate(name_list):
+        set_logic(bit_name, bool((val >> bit) & 1))
+
+
+def set_binary_inputs(names, value, lsb_first=False):
+    """Alias for set_logic_bus."""
+    set_logic_bus(names, value, lsb_first)
+
+
 def press_button(name, pressed=True):
     if not isinstance(pressed, bool):
         raise TypeError("press_button expects a bool for pressed.")
     _call(f"eesim.press_button({_quoted(name)}, {str(pressed).lower()})")
 
 
+def release_button(name):
+    """Release a momentary push button."""
+    press_button(name, False)
+
+
+def pulse_button(name, duration=0.1):
+    """Momentarily press a push button and release after duration seconds."""
+    press_button(name, True)
+    wait(duration)
+    press_button(name, False)
+
+
 def set_dip_switch(name, value):
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError("set_dip_switch expects an integer bitmask.")
     _call(f"eesim.set_dip_switch({_quoted(name)}, {_number(value)})")
+
+
+def set_dip_switch_pole(name, pole_index, state):
+    """Set a specific pole (bit index 0-based) on a DIP switch bank."""
+    _call(f"eesim.set_dip_switch_pole({_quoted(name)}, {_number(pole_index)}, {str(bool(state)).lower()})")
 
 
 def set_joystick(name, x, y, pressed=False):
@@ -295,10 +415,159 @@ def set_joystick(name, x, y, pressed=False):
     )
 
 
+def set_joystick_position(name, x, y):
+    """Set 2-axis joystick X and Y coordinates (0 to 255, center 128)."""
+    set_joystick(name, x, y, pressed=False)
+
+
+def press_joystick(name, pressed=True):
+    """Press or release joystick center push button."""
+    _call(f"eesim.set_component_property({_quoted(name)}, 'Pressed', {str(bool(pressed)).lower()})")
+
+
 def send_keyboard_key(name, character_code):
     if isinstance(character_code, bool) or not isinstance(character_code, int):
         raise TypeError("send_keyboard_key expects an integer character code.")
     _call(f"eesim.send_keyboard_key({_quoted(name)}, {_number(character_code)})")
+
+
+def keyboard_press(name, key):
+    """Send an ASCII character (e.g. 'A') or integer code (e.g. 65) to keyboard buffer."""
+    code = ord(key) if isinstance(key, str) and len(key) == 1 else int(key)
+    send_keyboard_key(name, code)
+
+
+def keyboard_type_text(name, text, delay=0.1):
+    """Type a string of characters into the ASCII keyboard with inter-character delay."""
+    for ch in str(text):
+        keyboard_press(name, ch)
+        if delay > 0:
+            wait(delay)
+
+
+def set_constant(name, value, bit_width=None, high_voltage=None, low_voltage=None):
+    """Configure a wired Logic Constant source."""
+    named = {}
+    if bit_width is not None: named["bit_width"] = int(bit_width)
+    if high_voltage is not None: named["high_voltage"] = float(high_voltage)
+    if low_voltage is not None: named["low_voltage"] = float(low_voltage)
+    extra = ", " + ", ".join(f"{k}={v}" for k, v in named.items()) if named else ""
+    _call(f"eesim.set_constant({_quoted(name)}, {_number(value)}{extra})")
+
+
+def set_voltage_switch(name, threshold=None, hysteresis=None, ron=None, roff=None):
+    """Configure a Voltage-Controlled Switch (S)."""
+    named = {}
+    if threshold is not None: named["threshold"] = float(threshold)
+    if hysteresis is not None: named["hysteresis"] = float(hysteresis)
+    if ron is not None: named["ron"] = float(ron)
+    if roff is not None: named["roff"] = float(roff)
+    extra = ", " + ", ".join(f"{k}={v}" for k, v in named.items()) if named else ""
+    _call(f"eesim.set_voltage_switch({_quoted(name)}{extra})")
+
+
+def set_current_switch(name, threshold=None, hysteresis=None, ron=None, roff=None, controlling_source=None):
+    """Configure a Current-Controlled Switch (W)."""
+    named = {}
+    if threshold is not None: named["threshold"] = float(threshold)
+    if hysteresis is not None: named["hysteresis"] = float(hysteresis)
+    if ron is not None: named["ron"] = float(ron)
+    if roff is not None: named["roff"] = float(roff)
+    if controlling_source is not None: named["controlling_source"] = _quoted(controlling_source)
+    extra = ", " + ", ".join(f"{k}={v}" for k, v in named.items()) if named else ""
+    _call(f"eesim.set_current_switch({_quoted(name)}{extra})")
+
+
+def set_relay(name, pull_in=None, dropout=None, coil_r=None, contact_r=None, open_r=None):
+    """Configure an Electromechanical Relay."""
+    named = {}
+    if pull_in is not None: named["pull_in_voltage"] = float(pull_in)
+    if dropout is not None: named["dropout_voltage"] = float(dropout)
+    if coil_r is not None: named["coil_resistance"] = float(coil_r)
+    if contact_r is not None: named["contact_resistance"] = float(contact_r)
+    if open_r is not None: named["open_resistance"] = float(open_r)
+    extra = ", " + ", ".join(f"{k}={v}" for k, v in named.items()) if named else ""
+    _call(f"eesim.set_relay({_quoted(name)}{extra})")
+
+
+def set_microphone_audio(name, file_path, amplitude=None, bandwidth=None, offset=None):
+    """Load an MP3 or WAV audio track into a Microphone input transducer."""
+    named = {}
+    if amplitude is not None: named["amplitude"] = float(amplitude)
+    if bandwidth is not None: named["bandwidth"] = float(bandwidth)
+    if offset is not None: named["offset"] = float(offset)
+    extra = ", " + ", ".join(f"{k}={v}" for k, v in named.items()) if named else ""
+    _call(f"eesim.set_microphone_audio({_quoted(name)}, {_quoted(file_path)}{extra})")
+
+
+# ============================================================
+# Dynamic Signal Generation APIs (VoltageSource & ACSource / Clock)
+# ============================================================
+def set_dc_signal(name, voltage):
+    """Set voltage source to steady DC voltage."""
+    _call(f"eesim.set_dc_signal({_quoted(name)}, {_number(voltage)})")
+
+
+def set_sine_signal(name, amplitude, frequency, offset=0.0, phase=0.0, delay=0.0, theta=0.0):
+    """Set voltage source to Sinusoidal AC wave."""
+    _call(
+        f"eesim.set_sine_signal({_quoted(name)}, {_number(amplitude)}, {_number(frequency)}, "
+        f"offset={_number(offset)}, phase={_number(phase)}, delay={_number(delay)}, theta={_number(theta)})"
+    )
+
+
+def set_pulse_signal(name, v_low, v_high, period, width, delay=0.0, rise_time=1e-6, fall_time=1e-6):
+    """Set voltage source to periodic Pulse / Square / Clock train."""
+    _call(
+        f"eesim.set_pulse_signal({_quoted(name)}, {_number(v_low)}, {_number(v_high)}, "
+        f"{_number(period)}, {_number(width)}, delay={_number(delay)}, "
+        f"rise_time={_number(rise_time)}, fall_time={_number(fall_time)})"
+    )
+
+
+def set_step_signal(name, v_initial, v_step, delay=0.0):
+    """Generate a Unit Step voltage transition at delay seconds."""
+    _call(f"eesim.set_step_signal({_quoted(name)}, {_number(v_initial)}, {_number(v_step)}, {_number(delay)})")
+
+
+def set_ramp_signal(name, v_start, v_peak, duration, delay=0.0, period=None):
+    """Generate a continuous linear Ramp / Sawtooth signal rising over duration seconds."""
+    per_arg = f", {_number(period)}" if period is not None else ""
+    _call(f"eesim.set_ramp_signal({_quoted(name)}, {_number(v_start)}, {_number(v_peak)}, {_number(duration)}, {_number(delay)}{per_arg})")
+
+
+def set_triangle_signal(name, v_low, v_high, period, delay=0.0):
+    """Generate a symmetric Triangular waveform."""
+    _call(f"eesim.set_triangle_signal({_quoted(name)}, {_number(v_low)}, {_number(v_high)}, {_number(period)}, {_number(delay)})")
+
+
+def set_pwl_signal(name, points):
+    """Set an arbitrary Piecewise Linear (PWL) waveform.
+    
+    points can be a string formatted as 't1,v1; t2,v2' or a list of (time, voltage) tuples:
+    Example: [(0, 0), (0.001, 5), (0.002, 0), (0.003, 5)]
+    """
+    if isinstance(points, (list, tuple)):
+        pwl_str = "; ".join(f"{pt[0]},{pt[1]}" for pt in points)
+    else:
+        pwl_str = str(points)
+    _call(f"eesim.set_pwl_signal({_quoted(name)}, {_quoted(pwl_str)})")
+
+
+def set_ac_source(name, voltage, frequency, waveform="Sine", offset=0.0, phase=0.0):
+    """Configure Dedicated AC Voltage Source."""
+    _call(
+        f"eesim.set_ac_source({_quoted(name)}, {_number(voltage)}, {_number(frequency)}, "
+        f"waveform={_quoted(waveform)}, offset={_number(offset)}, phase={_number(phase)})"
+    )
+
+
+def set_clock_signal(name, frequency, duty_cycle=0.5, high_voltage=5.0, low_voltage=0.0):
+    """Configure digital Clock Generator pulses."""
+    _call(
+        f"eesim.set_clock_signal({_quoted(name)}, {_number(frequency)}, "
+        f"duty_cycle={_number(duty_cycle)}, high_voltage={_number(high_voltage)}, low_voltage={_number(low_voltage)})"
+    )
 
 
 def schedule_input(delay_seconds, name, prop, value):

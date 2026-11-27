@@ -1378,6 +1378,8 @@ public partial class EEWorkspaceViewModel : ObservableObject
             CanUndo    = CommandManager.CanUndo;
             CanRedo    = CommandManager.CanRedo;
             StatusText = $"✓ {e.Command.Description}";
+            CircuitChanged?.Invoke();
+            RequestSimulationRefresh();
         };
         CommandManager.CommandUndone += (_, _2) =>
         {
@@ -1507,7 +1509,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi.OnViewToggleRequested += () => ToggleViewport();
         PythonApi.OnComponentRotateRequested += (name, deg) => CircuitChanged?.Invoke();
         PythonApi.OnComponentStretchRequested += (name, sx, sy) => CircuitChanged?.Invoke();
-        PythonApi.OnLogicToggled += (name) => CircuitChanged?.Invoke();
+        PythonApi.OnLogicToggled += (name) =>
+        {
+            CircuitChanged?.Invoke();
+            RequestSimulationRefresh();
+        };
         PythonApi.OnDescriptionSidebarToggled += () => ToggleDescriptionSidebar();
         PythonApi.OnComponentDeleted += (name) => CircuitChanged?.Invoke();
         PythonApi.OnConnectionDeleted += () =>

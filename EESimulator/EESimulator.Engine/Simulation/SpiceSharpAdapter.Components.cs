@@ -1132,6 +1132,57 @@ public partial class SpiceSharpAdapter
                         break;
                     }
 
+                    case ButtonComponent btn:
+                    {
+                        string outNode = GetPinNode(btn, "out", 0);
+                        double vLevel = btn.IsPressed ? 5.0 : 0.0;
+                        var vsrc = new SpiceSharp.Components.VoltageSource(btn.Name, outNode, "0", vLevel);
+                        spiceCircuit.Add(vsrc);
+                        break;
+                    }
+
+                    case DipSwitchComponent dip:
+                    {
+                        for (int bit = 0; bit < dip.PoleCount; bit++)
+                        {
+                            string pinNode = GetPinNode(dip, $"Q{bit}", bit);
+                            double vLevel = ((dip.Value >> bit) & 1) != 0 ? 5.0 : 0.0;
+                            var vsrc = new SpiceSharp.Components.VoltageSource($"{dip.Name}_q{bit}", pinNode, "0", vLevel);
+                            spiceCircuit.Add(vsrc);
+                        }
+                        break;
+                    }
+
+                    case JoystickComponent joy:
+                    {
+                        for (int bit = 0; bit < 8; bit++)
+                        {
+                            string xNode = GetPinNode(joy, $"x{bit}", bit);
+                            double vx = ((joy.XValue >> bit) & 1) != 0 ? 5.0 : 0.0;
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{joy.Name}_x{bit}", xNode, "0", vx));
+
+                            string yNode = GetPinNode(joy, $"y{bit}", 8 + bit);
+                            double vy = ((joy.YValue >> bit) & 1) != 0 ? 5.0 : 0.0;
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{joy.Name}_y{bit}", yNode, "0", vy));
+                        }
+                        string btnNode = GetPinNode(joy, "button", 16);
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{joy.Name}_btn", btnNode, "0", joy.Pressed ? 5.0 : 0.0));
+                        break;
+                    }
+
+                    case KeyboardComponent kbd:
+                    {
+                        for (int bit = 0; bit < 8; bit++)
+                        {
+                            string dNode = GetPinNode(kbd, $"D{bit}", bit);
+                            double v = ((kbd.Data >> bit) & 1) != 0 ? 5.0 : 0.0;
+                            spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{kbd.Name}_d{bit}", dNode, "0", v));
+                        }
+                        string valNode = GetPinNode(kbd, "valid", 8);
+                        spiceCircuit.Add(new SpiceSharp.Components.VoltageSource($"{kbd.Name}_valid", valNode, "0", kbd.DataReady ? 5.0 : 0.0));
+                        break;
+                    }
+
                     case DoNotConnectComponent dnc:
                     {
                         string pinNode = GetPinNode(dnc, "pin", 0);

@@ -6,6 +6,9 @@ using System.Reflection;
 using EESimulator.Commands;
 using EESimulator.Commands.Commands;
 using EESimulator.Core.Components;
+using EESimulator.Core.Components.Base;
+using EESimulator.Core.Components.Electrical;
+using EESimulator.Core.Components.Electronics;
 using EESimulator.Core.Models;
 using EESimulator.Core.UI;
 using EESimulator.Engine;
@@ -779,6 +782,167 @@ public class PythonApi
         keyboard.DataReady = true;
         keyboard.NotifyModified(nameof(keyboard.Data));
         keyboard.NotifyModified(nameof(keyboard.DataReady));
+    }
+
+    public void SetDipSwitchPole(string componentName, int poleIndex, bool state)
+    {
+        var dip = RequireInputComponent<DipSwitchComponent>(componentName, "DIP switch");
+        if (poleIndex < 0 || poleIndex >= dip.PoleCount)
+            throw new ArgumentOutOfRangeException(nameof(poleIndex), $"Pole index must be between 0 and {dip.PoleCount - 1}.");
+        long mask = 1L << poleIndex;
+        dip.Value = state ? (dip.Value | mask) : (dip.Value & ~mask);
+        dip.NotifyModified(nameof(dip.Value));
+    }
+
+    public void SetLogicBus(IEnumerable<string> componentNames, long value)
+    {
+        int bit = 0;
+        foreach (var name in componentNames)
+        {
+            bool bitState = ((value >> bit) & 1) == 1;
+            SetLogic(name, bitState);
+            bit++;
+        }
+    }
+
+    public void SetConstant(string componentName, long value, int? bitWidth = null, double? highVoltage = null, double? lowVoltage = null)
+    {
+        var cst = RequireInputComponent<ConstantComponent>(componentName, "Constant");
+        cst.Value = value;
+        if (bitWidth.HasValue) cst.BitWidth = bitWidth.Value;
+        if (highVoltage.HasValue) cst.VoltageHigh = highVoltage.Value;
+        if (lowVoltage.HasValue) cst.VoltageLow = lowVoltage.Value;
+        cst.NotifyModified(nameof(cst.Value));
+    }
+
+    public void SetVoltageSwitch(string componentName, double? threshold = null, double? hysteresis = null, double? ron = null, double? roff = null)
+    {
+        var sw = RequireInputComponent<VoltageSwitchComponent>(componentName, "Voltage Switch");
+        if (threshold.HasValue) sw.Threshold = threshold.Value;
+        if (hysteresis.HasValue) sw.Hysteresis = hysteresis.Value;
+        if (ron.HasValue) sw.ResistanceOn = ron.Value;
+        if (roff.HasValue) sw.ResistanceOff = roff.Value;
+        sw.NotifyModified(nameof(sw.Threshold));
+    }
+
+    public void SetCurrentSwitch(string componentName, double? threshold = null, double? hysteresis = null, double? ron = null, double? roff = null, string? controllingSource = null)
+    {
+        var sw = RequireInputComponent<CurrentSwitchComponent>(componentName, "Current Switch");
+        if (threshold.HasValue) sw.Threshold = threshold.Value;
+        if (hysteresis.HasValue) sw.Hysteresis = hysteresis.Value;
+        if (ron.HasValue) sw.ResistanceOn = ron.Value;
+        if (roff.HasValue) sw.ResistanceOff = roff.Value;
+        if (controllingSource != null) sw.ControllingSource = controllingSource;
+        sw.NotifyModified(nameof(sw.Threshold));
+    }
+
+    public void SetRelay(string componentName, double? pullInVoltage = null, double? dropoutVoltage = null, double? coilResistance = null, double? contactResistance = null, double? openResistance = null)
+    {
+        var relay = RequireInputComponent<RelayComponent>(componentName, "Relay");
+        if (pullInVoltage.HasValue) relay.PullInVoltage = pullInVoltage.Value;
+        if (dropoutVoltage.HasValue) relay.DropoutVoltage = dropoutVoltage.Value;
+        if (coilResistance.HasValue) relay.CoilResistance = coilResistance.Value;
+        if (contactResistance.HasValue) relay.ContactResistance = contactResistance.Value;
+        if (openResistance.HasValue) relay.OpenResistance = openResistance.Value;
+        relay.ValidateConfiguration();
+        relay.NotifyModified(nameof(relay.PullInVoltage));
+    }
+
+    public void SetMicrophoneAudio(string componentName, string audioFilePath, double? amplitude = null, double? bandwidth = null, double? offset = null)
+    {
+        var mic = RequireInputComponent<MicrophoneComponent>(componentName, "Microphone");
+        if (amplitude.HasValue) mic.Amplitude = amplitude.Value;
+        if (bandwidth.HasValue) mic.SignalBandwidth = bandwidth.Value;
+        if (offset.HasValue) mic.Offset = offset.Value;
+        if (!string.IsNullOrEmpty(audioFilePath)) mic.AudioFilePath = audioFilePath;
+        mic.NotifyModified(nameof(mic.AudioFilePath));
+    }
+
+    // ── Signal Generation (Voltage Source, AC Source, Clock) ────────────────
+    public void SetDcSignal(string componentName, double voltage)
+    {
+        var vs = RequireInputComponent<VoltageSourceComponent>(componentName, "Voltage Source");
+        vs.WaveformType = "DC";
+        vs.Voltage = voltage;
+        vs.NotifyModified(nameof(vs.Voltage));
+        vs.NotifyModified(nameof(vs.WaveformType));
+    }
+
+    public void SetSineSignal(string componentName, double amplitude, double frequency, double offset = 0.0, double phase = 0.0, double delay = 0.0, double theta = 0.0)
+    {
+        var vs = RequireInputComponent<VoltageSourceComponent>(componentName, "Voltage Source");
+        vs.WaveformType = "Sine";
+        vs.SineAmplitude = amplitude;
+        vs.SineFrequency = frequency;
+        vs.SineOffset = offset;
+        vs.SinePhase = phase;
+        vs.SineDelay = delay;
+        vs.SineTheta = theta;
+        vs.NotifyModified(nameof(vs.SineAmplitude));
+        vs.NotifyModified(nameof(vs.WaveformType));
+    }
+
+    public void SetPulseSignal(string componentName, double initial, double pulsed, double period, double width, double delay = 0.0, double riseTime = 1e-6, double fallTime = 1e-6)
+    {
+        var vs = RequireInputComponent<VoltageSourceComponent>(componentName, "Voltage Source");
+        vs.WaveformType = "Pulse";
+        vs.PulseInitial = initial;
+        vs.PulsePulsed = pulsed;
+        vs.PulsePeriod = period;
+        vs.PulseWidth = width;
+        vs.PulseDelay = delay;
+        vs.PulseRiseTime = riseTime;
+        vs.PulseFallTime = fallTime;
+        vs.NotifyModified(nameof(vs.PulsePulsed));
+        vs.NotifyModified(nameof(vs.WaveformType));
+    }
+
+    public void SetStepSignal(string componentName, double initial, double stepValue, double delay = 0.0)
+    {
+        SetPulseSignal(componentName, initial, stepValue, period: 1000.0, width: 999.0, delay: delay, riseTime: 1e-9, fallTime: 1e-9);
+    }
+
+    public void SetRampSignal(string componentName, double startVoltage, double peakVoltage, double duration, double delay = 0.0, double? period = null)
+    {
+        double rampPeriod = period ?? (duration * 2);
+        SetPulseSignal(componentName, initial: startVoltage, pulsed: peakVoltage, period: rampPeriod, width: 0.0, delay: delay, riseTime: duration, fallTime: 1e-9);
+    }
+
+    public void SetTriangleSignal(string componentName, double lowVoltage, double highVoltage, double period, double delay = 0.0)
+    {
+        double half = period / 2.0;
+        SetPulseSignal(componentName, initial: lowVoltage, pulsed: highVoltage, period: period, width: 0.0, delay: delay, riseTime: half, fallTime: half);
+    }
+
+    public void SetPwlSignal(string componentName, string pwlPoints)
+    {
+        var vs = RequireInputComponent<VoltageSourceComponent>(componentName, "Voltage Source");
+        vs.WaveformType = "Pwl";
+        vs.PwlPoints = pwlPoints;
+        vs.NotifyModified(nameof(vs.PwlPoints));
+        vs.NotifyModified(nameof(vs.WaveformType));
+    }
+
+    public void SetAcSource(string componentName, double voltageRms, double frequency, string waveform = "Sine", double offset = 0.0, double phase = 0.0)
+    {
+        var ac = RequireInputComponent<ACSourceComponent>(componentName, "AC Source");
+        ac.WaveformType = waveform;
+        ac.Voltage = voltageRms;
+        ac.Frequency = frequency;
+        ac.Offset = offset;
+        ac.PhaseDegrees = phase;
+        ac.NotifyModified(nameof(ac.Voltage));
+        ac.NotifyModified(nameof(ac.WaveformType));
+    }
+
+    public void SetClockSignal(string componentName, double frequency, double dutyCycle = 0.5, double highVoltage = 5.0, double lowVoltage = 0.0)
+    {
+        var clk = RequireInputComponent<ClockComponent>(componentName, "Clock");
+        clk.Frequency = frequency;
+        clk.DutyCycle = dutyCycle;
+        clk.HighVoltage = highVoltage;
+        clk.LowVoltage = lowVoltage;
+        clk.NotifyModified(nameof(clk.Frequency));
     }
 
     private T RequireInputComponent<T>(string componentName, string inputName)

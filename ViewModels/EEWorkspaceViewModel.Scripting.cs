@@ -259,16 +259,20 @@ public partial class EEWorkspaceViewModel
 
                 case "set_property" when args.Length >= 3:
                     PythonApi.SetProperty(Unquote(args[0]), Unquote(args[1]), ParseD(args[2]));
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return "[ok] property set";
 
                 case "set_component_property" when args.Length >= 3:
                     PythonApi.SetComponentProperty(Unquote(args[0]), Unquote(args[1]), ParseScriptValue(args[2]));
                     CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return "[ok] component property set";
 
                 case "set_custom_property" when args.Length >= 3:
                     PythonApi.SetCustomProperty(Unquote(args[0]), Unquote(args[1]), ParseScriptValue(args[2]));
                     CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return "[ok] custom property set";
 
                 case "set_memory_word" when args.Length >= 3:
@@ -503,12 +507,207 @@ public partial class EEWorkspaceViewModel
                 case "press_button" or "set_button" when args.Length >= 2:
                     PythonApi.PressButton(Unquote(args[0]), ParseB(args[1]));
                     CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return $"[ok] button {Unquote(args[0])} set to {ParseB(args[1])}";
 
                 case "set_dip_switch" when args.Length >= 2:
                     PythonApi.SetDipSwitch(Unquote(args[0]), ParseScriptLong(args[1]));
                     CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return $"[ok] DIP switch {Unquote(args[0])} set";
+
+                case "set_dip_switch_pole" when args.Length >= 3:
+                    PythonApi.SetDipSwitchPole(Unquote(args[0]), checked((int)ParseScriptLong(args[1])), ParseB(args[2]));
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] DIP switch {Unquote(args[0])} pole {args[1]} set to {args[2]}";
+
+                case "set_logic_bus" or "set_binary_inputs" when args.Length >= 2:
+                {
+                    string rawNames = Unquote(args[0]);
+                    var names = rawNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    long busVal = ParseScriptLong(args[1]);
+                    PythonApi.SetLogicBus(names, busVal);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] logic bus [{rawNames}] set to {busVal}";
+                }
+
+                case "set_constant" when args.Length >= 2:
+                {
+                    var n = ParseNamedArgs(args);
+                    long cVal = ParseScriptLong(args[1]);
+                    int? bW = n.TryGetValue("bit_width", out var sbw) ? (int?)ParseD(sbw) : (args.Length > 2 ? (int?)ParseD(args[2]) : null);
+                    double? vH = n.TryGetValue("high_voltage", out var svh) ? (double?)ParseD(svh) : (args.Length > 3 ? (double?)ParseD(args[3]) : null);
+                    double? vL = n.TryGetValue("low_voltage", out var svl) ? (double?)ParseD(svl) : (args.Length > 4 ? (double?)ParseD(args[4]) : null);
+                    PythonApi.SetConstant(Unquote(args[0]), cVal, bW, vH, vL);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] constant {Unquote(args[0])} set to {cVal}";
+                }
+
+                case "set_voltage_switch" when args.Length >= 1:
+                {
+                    var n = ParseNamedArgs(args);
+                    double? th = n.TryGetValue("threshold", out var st) ? (double?)ParseD(st) : (args.Length > 1 ? (double?)ParseD(args[1]) : null);
+                    double? hy = n.TryGetValue("hysteresis", out var sh) ? (double?)ParseD(sh) : (args.Length > 2 ? (double?)ParseD(args[2]) : null);
+                    double? ron = n.TryGetValue("ron", out var sr) ? (double?)ParseD(sr) : (args.Length > 3 ? (double?)ParseD(args[3]) : null);
+                    double? roff = n.TryGetValue("roff", out var srf) ? (double?)ParseD(srf) : (args.Length > 4 ? (double?)ParseD(args[4]) : null);
+                    PythonApi.SetVoltageSwitch(Unquote(args[0]), th, hy, ron, roff);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] voltage switch {Unquote(args[0])} configured";
+                }
+
+                case "set_current_switch" when args.Length >= 1:
+                {
+                    var n = ParseNamedArgs(args);
+                    double? th = n.TryGetValue("threshold", out var st) ? (double?)ParseD(st) : (args.Length > 1 ? (double?)ParseD(args[1]) : null);
+                    double? hy = n.TryGetValue("hysteresis", out var sh) ? (double?)ParseD(sh) : (args.Length > 2 ? (double?)ParseD(args[2]) : null);
+                    double? ron = n.TryGetValue("ron", out var sr) ? (double?)ParseD(sr) : (args.Length > 3 ? (double?)ParseD(args[3]) : null);
+                    double? roff = n.TryGetValue("roff", out var srf) ? (double?)ParseD(srf) : (args.Length > 4 ? (double?)ParseD(args[4]) : null);
+                    string? cs = n.TryGetValue("controlling_source", out var sc) ? Unquote(sc) : (args.Length > 5 ? Unquote(args[5]) : null);
+                    PythonApi.SetCurrentSwitch(Unquote(args[0]), th, hy, ron, roff, cs);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] current switch {Unquote(args[0])} configured";
+                }
+
+                case "set_relay" when args.Length >= 1:
+                {
+                    var n = ParseNamedArgs(args);
+                    double? vpi = n.TryGetValue("pull_in_voltage", out var sp) ? (double?)ParseD(sp) : (args.Length > 1 ? (double?)ParseD(args[1]) : null);
+                    double? vdo = n.TryGetValue("dropout_voltage", out var sd) ? (double?)ParseD(sd) : (args.Length > 2 ? (double?)ParseD(args[2]) : null);
+                    double? cr = n.TryGetValue("coil_resistance", out var scr) ? (double?)ParseD(scr) : (args.Length > 3 ? (double?)ParseD(args[3]) : null);
+                    double? conr = n.TryGetValue("contact_resistance", out var scn) ? (double?)ParseD(scn) : (args.Length > 4 ? (double?)ParseD(args[4]) : null);
+                    double? or_ = n.TryGetValue("open_resistance", out var sor) ? (double?)ParseD(sor) : (args.Length > 5 ? (double?)ParseD(args[5]) : null);
+                    PythonApi.SetRelay(Unquote(args[0]), vpi, vdo, cr, conr, or_);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] relay {Unquote(args[0])} configured";
+                }
+
+                case "set_microphone_audio" or "set_microphone" when args.Length >= 2:
+                {
+                    var n = ParseNamedArgs(args);
+                    string filePath = Unquote(args[1]);
+                    double? amp = n.TryGetValue("amplitude", out var sa) ? (double?)ParseD(sa) : (args.Length > 2 ? (double?)ParseD(args[2]) : null);
+                    double? bw = n.TryGetValue("bandwidth", out var sb) ? (double?)ParseD(sb) : (args.Length > 3 ? (double?)ParseD(args[3]) : null);
+                    double? off = n.TryGetValue("offset", out var so) ? (double?)ParseD(so) : (args.Length > 4 ? (double?)ParseD(args[4]) : null);
+                    PythonApi.SetMicrophoneAudio(Unquote(args[0]), filePath, amp, bw, off);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] microphone {Unquote(args[0])} audio configured";
+                }
+
+                case "set_dc_signal" when args.Length >= 2:
+                    PythonApi.SetDcSignal(Unquote(args[0]), ParseD(args[1]));
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] DC signal on {Unquote(args[0])} set to {args[1]}V";
+
+                case "set_sine_signal" when args.Length >= 3:
+                {
+                    var n = ParseNamedArgs(args);
+                    double amp = ParseD(args[1]);
+                    double freq = ParseD(args[2]);
+                    double off = n.TryGetValue("offset", out var so) ? ParseD(so) : (args.Length > 3 ? ParseD(args[3]) : 0.0);
+                    double ph = n.TryGetValue("phase", out var sp) ? ParseD(sp) : (args.Length > 4 ? ParseD(args[4]) : 0.0);
+                    double dl = n.TryGetValue("delay", out var sd) ? ParseD(sd) : (args.Length > 5 ? ParseD(args[5]) : 0.0);
+                    double th = n.TryGetValue("theta", out var st) ? ParseD(st) : (args.Length > 6 ? ParseD(args[6]) : 0.0);
+                    PythonApi.SetSineSignal(Unquote(args[0]), amp, freq, off, ph, dl, th);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] sine signal on {Unquote(args[0])} set to {amp}V @ {freq}Hz";
+                }
+
+                case "set_pulse_signal" when args.Length >= 5:
+                {
+                    var n = ParseNamedArgs(args);
+                    double vLow = ParseD(args[1]);
+                    double vHigh = ParseD(args[2]);
+                    double per = ParseD(args[3]);
+                    double wid = ParseD(args[4]);
+                    double dl = n.TryGetValue("delay", out var sd) ? ParseD(sd) : (args.Length > 5 ? ParseD(args[5]) : 0.0);
+                    double tr = n.TryGetValue("rise_time", out var sr) ? ParseD(sr) : (args.Length > 6 ? ParseD(args[6]) : 1e-6);
+                    double tf = n.TryGetValue("fall_time", out var sf) ? ParseD(sf) : (args.Length > 7 ? ParseD(args[7]) : 1e-6);
+                    PythonApi.SetPulseSignal(Unquote(args[0]), vLow, vHigh, per, wid, dl, tr, tf);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] pulse signal on {Unquote(args[0])} set: [{vLow}V -> {vHigh}V, T={per}s]";
+                }
+
+                case "set_step_signal" when args.Length >= 3:
+                {
+                    double vInit = ParseD(args[1]);
+                    double vStep = ParseD(args[2]);
+                    double dl = args.Length > 3 ? ParseD(args[3]) : 0.0;
+                    PythonApi.SetStepSignal(Unquote(args[0]), vInit, vStep, dl);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] step signal on {Unquote(args[0])} set: {vInit}V -> {vStep}V at t={dl}s";
+                }
+
+                case "set_ramp_signal" when args.Length >= 4:
+                {
+                    double vStart = ParseD(args[1]);
+                    double vPeak = ParseD(args[2]);
+                    double dur = ParseD(args[3]);
+                    double dl = args.Length > 4 ? ParseD(args[4]) : 0.0;
+                    double? per = args.Length > 5 ? (double?)ParseD(args[5]) : null;
+                    PythonApi.SetRampSignal(Unquote(args[0]), vStart, vPeak, dur, dl, per);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] ramp signal on {Unquote(args[0])} set: {vStart}V -> {vPeak}V over {dur}s";
+                }
+
+                case "set_triangle_signal" when args.Length >= 4:
+                {
+                    double vLow = ParseD(args[1]);
+                    double vHigh = ParseD(args[2]);
+                    double per = ParseD(args[3]);
+                    double dl = args.Length > 4 ? ParseD(args[4]) : 0.0;
+                    PythonApi.SetTriangleSignal(Unquote(args[0]), vLow, vHigh, per, dl);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] triangle signal on {Unquote(args[0])} set: [{vLow}V <-> {vHigh}V, T={per}s]";
+                }
+
+                case "set_pwl_signal" when args.Length >= 2:
+                {
+                    string pwl = Unquote(args[1]);
+                    PythonApi.SetPwlSignal(Unquote(args[0]), pwl);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] PWL signal on {Unquote(args[0])} configured";
+                }
+
+                case "set_ac_source" when args.Length >= 3:
+                {
+                    var n = ParseNamedArgs(args);
+                    double vRms = ParseD(args[1]);
+                    double freq = ParseD(args[2]);
+                    string wf = n.TryGetValue("waveform", out var swf) ? Unquote(swf) : (args.Length > 3 ? Unquote(args[3]) : "Sine");
+                    double off = n.TryGetValue("offset", out var so) ? ParseD(so) : (args.Length > 4 ? ParseD(args[4]) : 0.0);
+                    double ph = n.TryGetValue("phase", out var sp) ? ParseD(sp) : (args.Length > 5 ? ParseD(args[5]) : 0.0);
+                    PythonApi.SetAcSource(Unquote(args[0]), vRms, freq, wf, off, ph);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] AC source {Unquote(args[0])} set to {vRms}V RMS @ {freq}Hz ({wf})";
+                }
+
+                case "set_clock_signal" when args.Length >= 2:
+                {
+                    var n = ParseNamedArgs(args);
+                    double freq = ParseD(args[1]);
+                    double duty = n.TryGetValue("duty_cycle", out var sd) ? ParseD(sd) : (args.Length > 2 ? ParseD(args[2]) : 0.5);
+                    double vH = n.TryGetValue("high_voltage", out var svh) ? ParseD(svh) : (args.Length > 3 ? ParseD(args[3]) : 5.0);
+                    double vL = n.TryGetValue("low_voltage", out var svl) ? ParseD(svl) : (args.Length > 4 ? ParseD(args[4]) : 0.0);
+                    PythonApi.SetClockSignal(Unquote(args[0]), freq, duty, vH, vL);
+                    CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
+                    return $"[ok] clock signal on {Unquote(args[0])} set to {freq}Hz (duty {duty:P0})";
+                }
 
                 case "set_joystick" when args.Length >= 3:
                     PythonApi.SetJoystick(
@@ -517,11 +716,13 @@ public partial class EEWorkspaceViewModel
                         checked((int)ParseScriptLong(args[2])),
                         args.Length > 3 && ParseB(args[3]));
                     CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return $"[ok] joystick {Unquote(args[0])} set";
 
                 case "send_keyboard_key" when args.Length >= 2:
                     PythonApi.SendKeyboardKey(Unquote(args[0]), checked((int)ParseScriptLong(args[1])));
                     CircuitChanged?.Invoke();
+                    RequestSimulationRefresh();
                     return $"[ok] keyboard input sent to {Unquote(args[0])}";
 
                 case "schedule_input" when args.Length >= 4:
