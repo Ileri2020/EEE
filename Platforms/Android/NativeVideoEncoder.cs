@@ -27,7 +27,7 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
         const int colorFormatSurface = 0x7F000789;
         var format = MediaFormat.CreateVideoFormat(videoMimeType, width, height);
         format.SetInteger(MediaFormat.KeyColorFormat, colorFormatSurface);
-        format.SetInteger(MediaFormat.KeyBitRate, Math.Max(1_000_000, width * height * 5));
+        format.SetInteger(MediaFormat.KeyBitRate, Math.Max(1_000_000, width * height * 5 * frameRate / 15));
         format.SetInteger(MediaFormat.KeyFrameRate, frameRate);
         format.SetInteger(MediaFormat.KeyIFrameInterval, 1);
 

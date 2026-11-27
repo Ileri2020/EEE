@@ -265,6 +265,7 @@ public partial class EEWorkspaceViewModel
 
                 case "set_component_property" when args.Length >= 3:
                     PythonApi.SetComponentProperty(Unquote(args[0]), Unquote(args[1]), ParseScriptValue(args[2]));
+                    SyncEnabledWaveformSignals();
                     CircuitChanged?.Invoke();
                     RequestSimulationRefresh();
                     return "[ok] component property set";
@@ -755,6 +756,7 @@ public partial class EEWorkspaceViewModel
                     return $"[ok] component {Unquote(args[0])} stretched to scale ({args[1]}, {args[2]})";
 
                 case "play" or "play_simulation" or "simulation_play" or "start_simulation" or "start":
+                    SyncEnabledWaveformSignals();
                     PythonApi.PlaySimulation();
                     return "[ok] simulation playback started";
 
@@ -847,7 +849,15 @@ public partial class EEWorkspaceViewModel
                     return $"[ok] sidebar '{Unquote(args[0])}' set to {sVis}";
 
                 case "open_graph_drawer" or "open_waveform_drawer":
+                    IsWaveformDrawerOpen = true;
+                    SyncEnabledWaveformSignals();
                     PythonApi.OpenWaveformDrawer();
+                    IsAnalyticsViewActive = false;
+                    IsScriptViewActive = false;
+                    UI.Workspace.SetViewport("Schematic");
+                    OnPropertyChanged(nameof(IsSchematicViewActive));
+                    OnPropertyChanged(nameof(IsScriptViewActive));
+                    CircuitChanged?.Invoke();
                     return "[ok] graph drawer opened";
 
                 case "close_graph_drawer" or "close_waveform_drawer":
@@ -930,13 +940,19 @@ public partial class EEWorkspaceViewModel
                 case "start_video_recording":
                 {
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
-                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 30;
                     string vidFmt = args.Length > 2 ? Unquote(args[2]) : "mp4";
                     string vidView = namedArguments.TryGetValue("view", out var vv)
                         ? Unquote(vv)
                         : args.Length > 3 ? Unquote(args[3]) : "recentre";
                     double? vidDuration = namedArguments.TryGetValue("duration", out var vd) ? (double?)ParseD(vd) : null;
                     ApplyLogicalSchematicLayout();
+                    SyncEnabledWaveformSignals();
+                    IsAnalyticsViewActive = false;
+                    IsScriptViewActive = false;
+                    UI.Workspace.SetViewport("Schematic");
+                    OnPropertyChanged(nameof(IsSchematicViewActive));
+                    OnPropertyChanged(nameof(IsScriptViewActive));
                     CircuitChanged?.Invoke();
                     PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView, vidDuration);
                     string durInfo = vidDuration.HasValue ? $", auto-stops at {vidDuration:F1}s" : "";
@@ -950,12 +966,18 @@ public partial class EEWorkspaceViewModel
                 case "start_gif_recording":
                 {
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
-                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 30;
                     string vidView = namedArguments.TryGetValue("view", out var vv)
                         ? Unquote(vv)
                         : args.Length > 2 ? Unquote(args[2]) : "recentre";
                     double? gifDuration = namedArguments.TryGetValue("duration", out var gd) ? (double?)ParseD(gd) : null;
                     ApplyLogicalSchematicLayout();
+                    SyncEnabledWaveformSignals();
+                    IsAnalyticsViewActive = false;
+                    IsScriptViewActive = false;
+                    UI.Workspace.SetViewport("Schematic");
+                    OnPropertyChanged(nameof(IsSchematicViewActive));
+                    OnPropertyChanged(nameof(IsScriptViewActive));
                     CircuitChanged?.Invoke();
                     PythonApi.StartVideoRecording(vidPath, vidFps, "GIF", vidView, gifDuration);
                     string durInfo = gifDuration.HasValue ? $", auto-stops at {gifDuration:F1}s" : "";

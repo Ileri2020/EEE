@@ -69,7 +69,7 @@ public class PythonApi
     public string SubtitleText { get; private set; } = string.Empty;
 
     public bool IsVideoRecording { get; private set; }
-    public int VideoFrameRate { get; private set; } = 5;
+    public int VideoFrameRate { get; private set; } = 30;
     public string VideoFormat { get; private set; } = "GIF";
 
     public PythonApi(CommandManager commandManager, CircuitNode circuit, SimulationManager? simulationManager = null, UIRootNode? uiRoot = null)
@@ -1391,10 +1391,10 @@ public class PythonApi
     public void SaveCircuitImage(string? filePath = null, string view = "recentre") =>
         OnCircuitImageSaveRequested?.Invoke(filePath, view);
 
-    public void StartVideoRecording(string? filePath = null, int frameRate = 5, string format = "gif", string view = "recentre", double? duration = null)
+    public void StartVideoRecording(string? filePath = null, int frameRate = 30, string format = "gif", string view = "recentre", double? duration = null)
     {
-        if (frameRate is < 1 or > 15)
-            throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
+        if (frameRate is < 1 or > 30)
+            throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 30 fps.");
         if (!format.Equals("gif", StringComparison.OrdinalIgnoreCase) &&
             !format.Equals("mp4", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Video format must be GIF or MP4.", nameof(format));

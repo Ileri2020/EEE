@@ -113,10 +113,16 @@ public class WaveformViewport : GraphicsView, IDrawable
         }
     }
 
-    private bool UpdateRollingBuffers(SimulationSnapshot snapshot)
+    public bool EnsureBuffersUpdated(SimulationSnapshot? snapshot)
+    {
+        if (snapshot == null) return false;
+        return UpdateRollingBuffers(snapshot);
+    }
+
+    public bool UpdateRollingBuffers(SimulationSnapshot snapshot)
     {
         if (Signals == null || Signals.Count == 0) return false;
-        int maxPoints = Math.Max(SimulationPerformanceProfile.Current.MaxWaveformPoints, 128);
+        int maxPoints = Math.Max(SimulationPerformanceProfile.Current.MaxWaveformPoints, 2048);
         bool anyBufferUpdated = false;
 
         foreach (var signal in Signals.Where(s => s.IsSelected))
@@ -141,7 +147,10 @@ public class WaveformViewport : GraphicsView, IDrawable
 
                 if (waveform.Times.Count >= 2 && values.Count >= 2)
                 {
-                    if (buffer.Times.Count == 0 || waveform.Times[0] <= buffer.Times[^1] - 0.001)
+                    bool restarted = buffer.Times.Count > 0 &&
+                        waveform.Times[^1] < buffer.Times[^1] - 0.05 &&
+                        waveform.Times[0] < 0.05;
+                    if (buffer.Times.Count == 0 || restarted)
                     {
                         // New transient run or sweep reset
                         buffer.Times.Clear();
@@ -298,6 +307,12 @@ public class WaveformViewport : GraphicsView, IDrawable
         float h = dirtyRect.Height;
 
         if (w <= 0 || h <= 0) return;
+
+        // Ensure rolling buffers are populated with latest snapshot data
+        if (SimulationSnapshot != null)
+        {
+            UpdateRollingBuffers(SimulationSnapshot);
+        }
 
         // 1. Oscilloscope dark background
         canvas.FillColor = Color.FromArgb("#0A0E14");

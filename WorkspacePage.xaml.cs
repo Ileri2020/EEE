@@ -208,6 +208,26 @@ public partial class WorkspacePage : ContentPage
                 // Render a frame synchronously on this main-thread tick — fast, non-blocking.
                 try
                 {
+                    if (_vm.IsWaveformDrawerOpen)
+                    {
+                        if (_vm.WaveformSignals.Count == 0)
+                        {
+                            _vm.SyncEnabledWaveformSignals();
+                        }
+                        var waveformCanvas = MainWorkspace.WaveformCanvas;
+                        if (waveformCanvas != null)
+                        {
+                            if (waveformCanvas.Signals != _vm.WaveformSignals)
+                                waveformCanvas.Signals = _vm.WaveformSignals;
+                            var snapshot = _vm.GraphSimulationSnapshot ?? _vm.CurrentSimulationSnapshot;
+                            if (snapshot != null)
+                            {
+                                waveformCanvas.SimulationSnapshot = snapshot;
+                                waveformCanvas.EnsureBuffersUpdated(snapshot);
+                            }
+                        }
+                    }
+
                     var waveformDrawer = _vm.IsWaveformDrawerOpen ? MainWorkspace.WaveformCanvas : null;
                     var frame = useScreen
                         ? viewport.CaptureCurrentViewFrame(
@@ -215,12 +235,14 @@ public partial class WorkspacePage : ContentPage
                             dimensions.ViewportWidth, dimensions.ViewportHeight,
                             includePng: !isGif,
                             waveformDrawer: waveformDrawer,
-                            subtitleTextOverride: _vm.SubtitleText)
+                            subtitleTextOverride: _vm.SubtitleText,
+                            includeRgbPixels: isGif)
                         : viewport.CaptureRecenteredFrame(
                             dimensions.Width, dimensions.Height,
                             includePng: !isGif,
                             waveformDrawer: waveformDrawer,
-                            subtitleTextOverride: _vm.SubtitleText);
+                            subtitleTextOverride: _vm.SubtitleText,
+                            includeRgbPixels: isGif);
                     // Push the pixel data to the encoding channel (non-blocking, drops
                     // oldest if the encoder cannot keep up — far better than blocking pan).
                     recorder.TryAddFrame(frame);

@@ -9,19 +9,20 @@ internal sealed class AnimatedGifWriter : IDisposable
     private readonly BinaryWriter _writer;
     private readonly int _width;
     private readonly int _height;
-    private readonly int _frameDelay;
+    private readonly int _frameRate;
+    private long _frameIndex;
     private bool _completed;
 
     public AnimatedGifWriter(Stream stream, int width, int height, int frameRate)
     {
         if (width is < 1 or > ushort.MaxValue || height is < 1 or > ushort.MaxValue)
             throw new ArgumentOutOfRangeException(nameof(width), "GIF dimensions must be between 1 and 65535 pixels.");
-        if (frameRate is < 1 or > 15)
-            throw new ArgumentOutOfRangeException(nameof(frameRate), "GIF frame rate must be between 1 and 15 fps.");
+        if (frameRate is < 1 or > 30)
+            throw new ArgumentOutOfRangeException(nameof(frameRate), "GIF frame rate must be between 1 and 30 fps.");
 
         _width = width;
         _height = height;
-        _frameDelay = Math.Max(1, 100 / frameRate);
+        _frameRate = frameRate;
         _writer = new BinaryWriter(stream, System.Text.Encoding.ASCII, leaveOpen: true);
         WriteHeader();
     }
@@ -37,9 +38,12 @@ internal sealed class AnimatedGifWriter : IDisposable
         _writer.Write((byte)0xF9);
         _writer.Write((byte)4);
         _writer.Write((byte)0);
-        _writer.Write((ushort)_frameDelay);
+        long frameStart = (long)Math.Round(_frameIndex * 100d / _frameRate);
+        long frameEnd = (long)Math.Round((_frameIndex + 1) * 100d / _frameRate);
+        _writer.Write((ushort)Math.Max(1, frameEnd - frameStart));
         _writer.Write((byte)0);
         _writer.Write((byte)0);
+        _frameIndex++;
 
         _writer.Write((byte)0x2C);
         _writer.Write((ushort)0);

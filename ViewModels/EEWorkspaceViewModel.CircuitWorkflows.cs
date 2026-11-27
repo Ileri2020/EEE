@@ -304,13 +304,21 @@ public partial class EEWorkspaceViewModel
                 double waveformWindow = Math.Max(settings.StepTime * 2, 0.02);
                 settings.StartTime = Math.Max(0, settings.StopTime - waveformWindow);
             }
-            settings.StepTime = Math.Max(settings.StepTime,
-                Math.Max(settings.StopTime - settings.StartTime, 0.02) / 50.0);
             settings.CaptureAllWaveforms = true;
             var (results, snapshot) = await _simWorker.ExecuteAsync(Circuit, settings);
             segmentCompleted = true;
             _lastPlaybackSolvedTimeSeconds = settings.StopTime;
             CurrentSimulationSnapshot = snapshot;
+            if (IsWaveformDrawerOpen)
+            {
+                EnsureSettingsCached();
+                var now = DateTime.UtcNow;
+                if (IsVideoRecording || now - _lastGraphRefreshUtc >= TimeSpan.FromMilliseconds(1000.0 / _cachedGraphRefreshHz))
+                {
+                    GraphSimulationSnapshot = snapshot;
+                    _lastGraphRefreshUtc = now;
+                }
+            }
             if (DateTime.UtcNow - _lastPlaybackConsoleUpdateUtc >= TimeSpan.FromSeconds(1))
             {
                 // Show scalar results + only real-time-flagged probe arrays during live playback.

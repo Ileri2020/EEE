@@ -23,7 +23,8 @@ public partial class SchematicViewport
         int height,
         bool includePng = true,
         WaveformViewport? waveformDrawer = null,
-        string? subtitleTextOverride = null)
+        string? subtitleTextOverride = null,
+        bool includeRgbPixels = true)
     {
         using var export = CreateRecenteredExport(width, height, includeAnimation: true, waveformDrawer, subtitleTextOverride);
         byte[] pngData = Array.Empty<byte>();
@@ -34,7 +35,7 @@ public partial class SchematicViewport
             pngData = pngStream.ToArray();
         }
 
-        byte[] pixels = ExtractRgbPixels(export.Bitmap, width, height);
+        byte[] pixels = includeRgbPixels ? ExtractRgbPixels(export.Bitmap, width, height) : Array.Empty<byte>();
         return new SchematicCapturedFrame(pngData, pixels);
     }
 
@@ -53,8 +54,9 @@ public partial class SchematicViewport
         int height,
         bool includePng = true,
         WaveformViewport? waveformDrawer = null,
-        string? subtitleTextOverride = null)
-        => CaptureCurrentViewFrame(width, height, (float)Width, (float)Height, includePng, waveformDrawer, subtitleTextOverride);
+        string? subtitleTextOverride = null,
+        bool includeRgbPixels = true)
+        => CaptureCurrentViewFrame(width, height, (float)Width, (float)Height, includePng, waveformDrawer, subtitleTextOverride, includeRgbPixels);
 
     public SchematicCapturedFrame CaptureCurrentViewFrame(
         int width,
@@ -63,7 +65,8 @@ public partial class SchematicViewport
         float viewportHeight,
         bool includePng = true,
         WaveformViewport? waveformDrawer = null,
-        string? subtitleTextOverride = null)
+        string? subtitleTextOverride = null,
+        bool includeRgbPixels = true)
     {
         using var export = CreateCurrentViewExport(width, height, viewportWidth, viewportHeight, includeAnimation: true, waveformDrawer, subtitleTextOverride);
         byte[] pngData = Array.Empty<byte>();
@@ -74,7 +77,7 @@ public partial class SchematicViewport
             pngData = pngStream.ToArray();
         }
 
-        byte[] pixels = ExtractRgbPixels(export.Bitmap, width, height);
+        byte[] pixels = includeRgbPixels ? ExtractRgbPixels(export.Bitmap, width, height) : Array.Empty<byte>();
         return new SchematicCapturedFrame(pngData, pixels);
     }
 
@@ -125,7 +128,7 @@ public partial class SchematicViewport
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
 
-        float drawerHeight = waveformDrawer != null ? Math.Min(height * 0.40f, 260f) : 0f;
+        float drawerHeight = waveformDrawer != null ? Math.Clamp(height * 0.38f, 180f, height * 0.45f) : 0f;
         float schematicHeight = height - drawerHeight;
 
         var components = Circuit?.FindChildren<EESimulator.Core.Models.ComponentNode>()
@@ -208,7 +211,7 @@ public partial class SchematicViewport
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
 
-        float drawerHeight = waveformDrawer != null ? Math.Min(height * 0.40f, 260f) : 0f;
+        float drawerHeight = waveformDrawer != null ? Math.Clamp(height * 0.38f, 180f, height * 0.45f) : 0f;
         float schematicHeight = height - drawerHeight;
 
         var export = new SkiaBitmapExportContext(width, height, 1f, 96, transparent: false);

@@ -111,8 +111,8 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
         string format,
         string? destinationPath)
     {
-        if (frameRate is < 1 or > 15)
-            throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
+        if (frameRate is < 1 or > 30)
+            throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 30 fps.");
         _format = format.Equals("GIF", StringComparison.OrdinalIgnoreCase) ? "gif" :
             format.Equals("MP4", StringComparison.OrdinalIgnoreCase) ? "mp4" :
             throw new ArgumentException("Video format must be GIF or MP4.", nameof(format));

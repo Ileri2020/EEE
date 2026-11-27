@@ -1000,7 +1000,7 @@ public partial class EEWorkspaceViewModel
         OnPropertyChanged(nameof(WaveformGraphSummary));
     }
 
-    private void SyncEnabledWaveformSignals()
+    public void SyncEnabledWaveformSignals()
     {
         var components = Circuit.Components;
         var componentIds = components.Select(component => component.Id).ToHashSet();

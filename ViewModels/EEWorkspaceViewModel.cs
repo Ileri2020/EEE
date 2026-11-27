@@ -919,10 +919,10 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsVideoRecording { get; set; }
 
     [ObservableProperty]
-    public partial int VideoFrameRate { get; set; } = 5;
+    public partial int VideoFrameRate { get; set; } = 30;
 
     public ObservableCollection<string> VideoFormats { get; } = new() { "GIF", "MP4" };
-    public ObservableCollection<int> VideoFrameRates { get; } = new(Enumerable.Range(1, 15));
+    public ObservableCollection<int> VideoFrameRates { get; } = new(new[] { 5, 10, 15, 20, 24, 30 });
 
     [ObservableProperty]
     public partial string SelectedVideoFormat { get; set; } = "GIF";

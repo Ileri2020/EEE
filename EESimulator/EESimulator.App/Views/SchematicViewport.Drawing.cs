@@ -1173,33 +1173,33 @@ public partial class SchematicViewport
         if (string.IsNullOrWhiteSpace(subtitleText)) return;
 
         string text = subtitleText.Trim();
-        float fontSize = Math.Clamp(dirtyRect.Height * 0.032f, 12f, 18f);
-        canvas.FontSize = fontSize;
+        float fontSize = Math.Clamp(dirtyRect.Height * 0.032f, 13f, 20f);
         canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
+        canvas.FontSize = fontSize;
 
-        float paddingX = 14f;
-        float paddingY = 7f;
-        float maxBoxWidth = Math.Max(dirtyRect.Width - 40f, 60f);
-        float approxCharWidth = fontSize * 0.58f;
+        float paddingX = 18f;
+        float paddingY = 8f;
+        float maxBoxWidth = Math.Max(dirtyRect.Width - 32f, 80f);
+        float approxCharWidth = fontSize * 0.72f;
         float textWidth = Math.Min(text.Length * approxCharWidth, maxBoxWidth - 2 * paddingX);
-        float boxWidth = textWidth + 2 * paddingX;
-        float boxHeight = fontSize + 2 * paddingY + 2f;
+        float boxWidth = Math.Min(textWidth + 2 * paddingX, maxBoxWidth);
+        float boxHeight = fontSize + 2 * paddingY + 6f;
 
         float boxX = (dirtyRect.Width - boxWidth) / 2f;
-        float boxY = dirtyRect.Bottom - boxHeight - 26f;
+        float boxY = dirtyRect.Bottom - boxHeight - 20f;
 
         // Background pill with dark translucency
-        canvas.FillColor = Color.FromRgba(13, 17, 23, 225);
+        canvas.FillColor = Color.FromRgba(13, 17, 23, 230);
         canvas.FillRoundedRectangle(boxX, boxY, boxWidth, boxHeight, 8f);
 
         // Electric cyan/blue subtle border
-        canvas.StrokeColor = Color.FromRgba(88, 166, 255, 180);
+        canvas.StrokeColor = Color.FromRgba(88, 166, 255, 200);
         canvas.StrokeSize = 1.2f;
         canvas.DrawRoundedRectangle(boxX, boxY, boxWidth, boxHeight, 8f);
 
-        // Subtitle text
+        // Subtitle text (centered with full box dimensions so Skia never clips or word-wraps)
         canvas.FontColor = Colors.White;
-        canvas.DrawString(text, boxX + paddingX, boxY + paddingY, textWidth, fontSize + 2f,
+        canvas.DrawString(text, boxX, boxY, boxWidth, boxHeight,
             HorizontalAlignment.Center, VerticalAlignment.Center);
     }
 }
