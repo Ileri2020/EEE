@@ -18,9 +18,14 @@ public partial class SchematicViewport
         return stream.ToArray();
     }
 
-    public SchematicCapturedFrame CaptureRecenteredFrame(int width, int height, bool includePng = true, WaveformViewport? waveformDrawer = null)
+    public SchematicCapturedFrame CaptureRecenteredFrame(
+        int width,
+        int height,
+        bool includePng = true,
+        WaveformViewport? waveformDrawer = null,
+        string? subtitleTextOverride = null)
     {
-        using var export = CreateRecenteredExport(width, height, includeAnimation: true, waveformDrawer);
+        using var export = CreateRecenteredExport(width, height, includeAnimation: true, waveformDrawer, subtitleTextOverride);
         byte[] pngData = Array.Empty<byte>();
         if (includePng)
         {
@@ -43,12 +48,24 @@ public partial class SchematicViewport
         return stream.ToArray();
     }
 
-    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height, bool includePng = true, WaveformViewport? waveformDrawer = null)
-        => CaptureCurrentViewFrame(width, height, (float)Width, (float)Height, includePng, waveformDrawer);
+    public SchematicCapturedFrame CaptureCurrentViewFrame(
+        int width,
+        int height,
+        bool includePng = true,
+        WaveformViewport? waveformDrawer = null,
+        string? subtitleTextOverride = null)
+        => CaptureCurrentViewFrame(width, height, (float)Width, (float)Height, includePng, waveformDrawer, subtitleTextOverride);
 
-    public SchematicCapturedFrame CaptureCurrentViewFrame(int width, int height, float viewportWidth, float viewportHeight, bool includePng = true, WaveformViewport? waveformDrawer = null)
+    public SchematicCapturedFrame CaptureCurrentViewFrame(
+        int width,
+        int height,
+        float viewportWidth,
+        float viewportHeight,
+        bool includePng = true,
+        WaveformViewport? waveformDrawer = null,
+        string? subtitleTextOverride = null)
     {
-        using var export = CreateCurrentViewExport(width, height, viewportWidth, viewportHeight, includeAnimation: true, waveformDrawer);
+        using var export = CreateCurrentViewExport(width, height, viewportWidth, viewportHeight, includeAnimation: true, waveformDrawer, subtitleTextOverride);
         byte[] pngData = Array.Empty<byte>();
         if (includePng)
         {
@@ -98,7 +115,12 @@ public partial class SchematicViewport
 
     // ── Internal helpers ──────────────────────────────────────────────────────
 
-    private SkiaBitmapExportContext CreateRecenteredExport(int width, int height, bool includeAnimation, WaveformViewport? waveformDrawer = null)
+    private SkiaBitmapExportContext CreateRecenteredExport(
+        int width,
+        int height,
+        bool includeAnimation,
+        WaveformViewport? waveformDrawer = null,
+        string? subtitleTextOverride = null)
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
@@ -115,7 +137,7 @@ public partial class SchematicViewport
             try
             {
                 DrawWithCamera(emptyExport.Canvas, new RectF(0, 0, width, schematicHeight),
-                    width / 2f, schematicHeight / 2f, 1f, false);
+                    width / 2f, schematicHeight / 2f, 1f, false, subtitleTextOverride);
                 if (waveformDrawer != null)
                     RenderWaveformDrawerOverlay(emptyExport.Canvas, width, height, schematicHeight, drawerHeight, waveformDrawer);
             }
@@ -158,7 +180,7 @@ public partial class SchematicViewport
         try
         {
             DrawWithCamera(export.Canvas, new RectF(0, 0, width, schematicHeight),
-                panX, panY, zoom, includeAnimation && IsSimulationPlaying);
+                panX, panY, zoom, includeAnimation && IsSimulationPlaying, subtitleTextOverride);
             if (waveformDrawer != null)
                 RenderWaveformDrawerOverlay(export.Canvas, width, height, schematicHeight, drawerHeight, waveformDrawer);
         }
@@ -180,7 +202,8 @@ public partial class SchematicViewport
         float viewportWidth,
         float viewportHeight,
         bool includeAnimation,
-        WaveformViewport? waveformDrawer = null)
+        WaveformViewport? waveformDrawer = null,
+        string? subtitleTextOverride = null)
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Capture dimensions must be positive.");
@@ -210,7 +233,7 @@ public partial class SchematicViewport
         try
         {
             DrawWithCamera(export.Canvas, new RectF(0, 0, width, schematicHeight),
-                exportPanX, exportPanY, exportZoom, includeAnimation && IsSimulationPlaying);
+                exportPanX, exportPanY, exportZoom, includeAnimation && IsSimulationPlaying, subtitleTextOverride);
             if (waveformDrawer != null)
                 RenderWaveformDrawerOverlay(export.Canvas, width, height, schematicHeight, drawerHeight, waveformDrawer);
         }

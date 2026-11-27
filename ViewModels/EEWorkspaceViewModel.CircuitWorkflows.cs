@@ -656,7 +656,8 @@ public partial class EEWorkspaceViewModel
         WaveformSignals.Clear();
         WaveformTraceCandidates.Clear();
         OnPropertyChanged(nameof(WaveformGraphSummary));
-        IsWaveformDrawerOpen = false;
+        if (resetScript)
+            IsWaveformDrawerOpen = false;
         ConsoleOutput = string.Empty;
         StatusText = resetScript ? "Circuit and script cleared" : "Circuit cleared by script";
         ProjectName = "Untitled.eesim";

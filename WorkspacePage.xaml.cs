@@ -214,11 +214,13 @@ public partial class WorkspacePage : ContentPage
                             dimensions.Width, dimensions.Height,
                             dimensions.ViewportWidth, dimensions.ViewportHeight,
                             includePng: !isGif,
-                            waveformDrawer: waveformDrawer)
+                            waveformDrawer: waveformDrawer,
+                            subtitleTextOverride: _vm.SubtitleText)
                         : viewport.CaptureRecenteredFrame(
                             dimensions.Width, dimensions.Height,
                             includePng: !isGif,
-                            waveformDrawer: waveformDrawer);
+                            waveformDrawer: waveformDrawer,
+                            subtitleTextOverride: _vm.SubtitleText);
                     // Push the pixel data to the encoding channel (non-blocking, drops
                     // oldest if the encoder cannot keep up — far better than blocking pan).
                     recorder.TryAddFrame(frame);

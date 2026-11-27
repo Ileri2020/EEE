@@ -48,7 +48,8 @@ public partial class SchematicViewport
         float panX,
         float panY,
         float zoom,
-        bool? simulationPlayingOverride = null)
+        bool? simulationPlayingOverride = null,
+        string? subtitleTextOverride = null)
     {
         canvas.SaveState();
         canvas.Translate(panX, panY);
@@ -68,7 +69,7 @@ public partial class SchematicViewport
 
         // Draw HUD in screen space (after RestoreState)
         DrawViewportLabel(canvas, dirtyRect);
-        DrawSubtitleOverlay(canvas, dirtyRect);
+        DrawSubtitleOverlay(canvas, dirtyRect, subtitleTextOverride);
     }
 
     private void DrawWireInProgress(ICanvas canvas)
@@ -1166,11 +1167,12 @@ public partial class SchematicViewport
         return false;
     }
 
-    private void DrawSubtitleOverlay(ICanvas canvas, RectF dirtyRect)
+    private void DrawSubtitleOverlay(ICanvas canvas, RectF dirtyRect, string? subtitleTextOverride = null)
     {
-        if (string.IsNullOrWhiteSpace(SubtitleText)) return;
+        string subtitleText = subtitleTextOverride ?? SubtitleText;
+        if (string.IsNullOrWhiteSpace(subtitleText)) return;
 
-        string text = SubtitleText.Trim();
+        string text = subtitleText.Trim();
         float fontSize = Math.Clamp(dirtyRect.Height * 0.032f, 12f, 18f);
         canvas.FontSize = fontSize;
         canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;

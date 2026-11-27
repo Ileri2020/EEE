@@ -1687,6 +1687,8 @@ public partial class EEWorkspaceViewModel
             connection.RoutingPoints.AddRange(resolved);
         }
 
+        SyncEnabledWaveformSignals();
+
         if (layout.UnresolvedCollisions.Count == 0) return;
         string examples = string.Join(", ", layout.UnresolvedCollisions.Take(3)
             .Select(collision => $"{collision.First.Reference}/{collision.Second.Reference}"));
