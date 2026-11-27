@@ -216,6 +216,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsSidebarVisible { get; set; } = true;
 
+    [ObservableProperty]
+    public partial bool IsLeftToolbarVisible { get; set; } = true;
+
+    public string LeftToolbarToggleText => IsLeftToolbarVisible ? "‹" : "›";
+
     public string MainSidebarToggleText => IsSidebarVisible ? "›" : "‹";
 
     public double MainSidebarTriggerTranslationX
@@ -238,6 +243,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(MainSidebarToggleText));
         OnPropertyChanged(nameof(MainSidebarTriggerTranslationX));
+    }
+
+    partial void OnIsLeftToolbarVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(LeftToolbarToggleText));
     }
 
     [ObservableProperty]
@@ -1364,6 +1374,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
             if (visible.HasValue) IsControlSidebarVisible = visible.Value;
             else ToggleControlSidebar();
             controlSidebar.Visible = IsControlSidebarVisible;
+        };
+
+        PythonApi.OnLeftToolbarToggled += (visible) =>
+        {
+            if (visible.HasValue) IsLeftToolbarVisible = visible.Value;
+            else ToggleLeftToolbar();
         };
 
         PythonApi.OnSidebarVisibilityChanged += (name, visible) =>

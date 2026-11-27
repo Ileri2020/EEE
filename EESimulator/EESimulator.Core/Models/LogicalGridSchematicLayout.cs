@@ -14,13 +14,46 @@ public sealed class LogicalGridLayoutResult
 {
     public IReadOnlyList<LogicalGridPlacement> Placements { get; }
     public IReadOnlyList<SchematicLayoutCollision> UnresolvedCollisions { get; }
+    public IReadOnlyDictionary<int, double> ColumnCenters { get; }
+    public IReadOnlyDictionary<int, double> RowCenters { get; }
 
     internal LogicalGridLayoutResult(
         IReadOnlyList<LogicalGridPlacement> placements,
-        IReadOnlyList<SchematicLayoutCollision> unresolvedCollisions)
+        IReadOnlyList<SchematicLayoutCollision> unresolvedCollisions,
+        IReadOnlyDictionary<int, double>? columnCenters = null,
+        IReadOnlyDictionary<int, double>? rowCenters = null)
     {
         Placements = placements;
         UnresolvedCollisions = unresolvedCollisions;
+        ColumnCenters = columnCenters ?? new Dictionary<int, double>();
+        RowCenters = rowCenters ?? new Dictionary<int, double>();
+    }
+
+    public Point2D GetCellCenter(int row, int col)
+    {
+        double x = GetCoordinate(col, ColumnCenters, 70.0, 96.0);
+        double y = GetCoordinate(row, RowCenters, 60.0, 80.0);
+        return new Point2D(x, y);
+    }
+
+    private static double GetCoordinate(int index, IReadOnlyDictionary<int, double> centers, double defaultSpan, double origin)
+    {
+        if (centers.TryGetValue(index, out double pos))
+            return pos;
+
+        if (centers.Count == 0)
+            return origin + Math.Max(0, index - 1) * defaultSpan;
+
+        var keys = centers.Keys.OrderBy(k => k).ToList();
+        if (index <= keys[0])
+            return centers[keys[0]] - (keys[0] - index) * defaultSpan;
+        if (index >= keys[^1])
+            return centers[keys[^1]] + (index - keys[^1]) * defaultSpan;
+
+        int lower = keys.Last(k => k < index);
+        int upper = keys.First(k => k > index);
+        double ratio = (double)(index - lower) / (upper - lower);
+        return centers[lower] + ratio * (centers[upper] - centers[lower]);
     }
 }
 
@@ -143,7 +176,7 @@ public static class LogicalGridSchematicLayout
             .ToList();
 
         var collisions = FindCollisions(positioned);
-        return new LogicalGridLayoutResult(placements, collisions);
+        return new LogicalGridLayoutResult(placements, collisions, columnCenters, rowCenters);
     }
 
     public static (double HalfWidth, double HalfHeight) GetVisualHalfExtents(ComponentNode component)

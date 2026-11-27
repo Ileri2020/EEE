@@ -602,7 +602,9 @@ public partial class SpiceSharpAdapter : ISimulationEngine
                     foreach (var pair in pairs)
                     {
                         var parts = pair.Split(new[] { ',', ':' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length == 2 && double.TryParse(parts[0], out double t) && double.TryParse(parts[1], out double v))
+                        if (parts.Length == 2 &&
+                            double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double t) &&
+                            double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v))
                         {
                             pts.Add(t);
                             pts.Add(v);

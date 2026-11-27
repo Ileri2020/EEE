@@ -178,6 +178,12 @@ public partial class EEWorkspaceViewModel
             IsSidebarVisible = false;
     }
 
+    [RelayCommand]
+    private void ToggleLeftToolbar()
+    {
+        IsLeftToolbarVisible = !IsLeftToolbarVisible;
+    }
+
     private Microsoft.Maui.Dispatching.IDispatcherTimer? _animTimer;
     private bool _playbackSolveRunning;
     private bool _simulationRefreshRequested;
@@ -527,7 +533,9 @@ public partial class EEWorkspaceViewModel
         "add_component", "add_ttl", "connect", "set_position", "set_property",
         "set_component_property", "rename_pin", "set_logic", "toggle_logic",
         "set_waveform", "set_live_probe", "fire_event", "toggle_event",
-        "rotate_component", "stretch_component", "simulate"
+        "rotate_component", "stretch_component", "simulate",
+        "add_node", "add_resistor", "add_capacitor", "add_inductor", "add_ground",
+        "add_wire", "add_voltage_source", "add_microphone", "toggle_left_toolbar"
     };
 
     private static string? ValidateAiScriptDraft(string script)

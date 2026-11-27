@@ -2,16 +2,42 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:EEE.ViewModels" xmlns:models="clr-namespace:EEE.Services" xmlns:core="clr-namespace:EESimulator.Core.Models" xmlns:views="clr-namespace:EESimulator.App.Views" xmlns:parts="clr-namespace:EEE.WorkspaceComponents" x:Class="EEE.WorkspaceComponents.WorkspaceMainLayout" x:DataType="vm:EEWorkspaceViewModel" BackgroundColor="Transparent">
     <ContentView.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="WorkspacePageResources.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></ContentView.Resources>
     <Grid Grid.Row="1"
-              ColumnDefinitions="{OnIdiom Phone='88,*', Default='88,Auto,*,Auto'}">
+              ColumnDefinitions="{OnIdiom Phone='Auto,*', Default='Auto,Auto,*,Auto'}">
 
             <!-- ─── Left toolbar ─────────────────────────────────────────── -->
-            <parts:WorkspaceLeftToolbar x:Name="LeftToolbar" Grid.Column="0" />
+            <parts:WorkspaceLeftToolbar x:Name="LeftToolbar" Grid.Column="0"
+                                        WidthRequest="88"
+                                        IsVisible="{Binding IsLeftToolbarVisible}" />
 
             <!-- ─── Column 1: Control Sidebar (Custom 3-letter action buttons) ───────── -->
             <parts:WorkspaceControlsSidebar Grid.Column="{OnIdiom Phone=1, Default=1}" ZIndex="25" IsVisible="{Binding IsControlSidebarVisible}" />
 
             <!-- ─── Center: Schematic OR Script viewport ──────────────────── -->
             <parts:WorkspaceCenterViewport x:Name="CenterView" Grid.Column="{OnIdiom Phone=1, Default=2}" />
+
+            <!-- ── Left-Edge Trigger: Left Toolbar Toggle Tab ─────────────── -->
+            <Border Grid.Column="{OnIdiom Phone=1, Default=2}"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1"
+                    Padding="3,6"
+                    ZIndex="50">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0,8,8,0"/>
+                </Border.StrokeShape>
+                <Button Text="{Binding LeftToolbarToggleText}"
+                        Style="{StaticResource IconBtn}"
+                        TextColor="#58A6FF"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        WidthRequest="28"
+                        HeightRequest="32"
+                        Padding="0"
+                        Command="{Binding ToggleLeftToolbarCommand}"
+                        ToolTipProperties.Text="Toggle left toolbar"/>
+            </Border>
 
             <!-- ─── Right panel: Component palette + Properties ────────────── -->
             <parts:WorkspaceComponentSidebar Grid.Column="{OnIdiom Phone=1, Default=3}" ZIndex="25" IsVisible="{Binding IsSidebarVisible}" />

@@ -79,6 +79,62 @@ public sealed class RemoteEeeApiClient
         return payload.ConvertAll(ToExample);
     }
 
+    public async Task<IReadOnlyList<RecommendedExampleScript>> GetRecommendedExampleScriptsAsync(string exampleKey)
+    {
+        EnsureConfigured();
+        if (string.IsNullOrWhiteSpace(exampleKey))
+            throw new ArgumentException("An example key is required.", nameof(exampleKey));
+
+        string path = $"api/examples/scripts?exampleKey={Uri.EscapeDataString(exampleKey.Trim())}";
+        using var response = await _httpClient.GetAsync(new Uri(new Uri(ApiBaseUrl + "/"), path));
+        await EnsureSuccessAsync(response);
+        var scripts = await response.Content.ReadFromJsonAsync<List<CommunityExampleScriptDto>>(JsonOptions)
+            ?? new List<CommunityExampleScriptDto>();
+        return scripts.ConvertAll(script => new RecommendedExampleScript
+        {
+            Id = script.Id,
+            Name = script.Name,
+            Script = script.Script,
+            OwnerName = script.OwnerName ?? "Community member",
+            CreatedAt = script.CreatedAt
+        });
+    }
+
+    public async Task<RecommendedExampleScript> SaveExampleScriptAsync(
+        string exampleKey,
+        string exampleTitle,
+        string name,
+        string script)
+    {
+        EnsureConfigured();
+        if (string.IsNullOrWhiteSpace(exampleKey))
+            throw new ArgumentException("An example key is required.", nameof(exampleKey));
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("A script name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(script))
+            throw new ArgumentException("The workspace script is empty.", nameof(script));
+
+        using var request = await CreateOptionalAuthPostAsync("api/examples/scripts", new SaveExampleScriptRequest
+        {
+            ExampleKey = exampleKey.Trim(),
+            ExampleTitle = exampleTitle.Trim(),
+            Name = name.Trim(),
+            Script = script
+        });
+        using var response = await _httpClient.SendAsync(request);
+        await EnsureSuccessAsync(response);
+        var saved = await response.Content.ReadFromJsonAsync<CommunityExampleScriptDto>(JsonOptions)
+            ?? throw new InvalidOperationException("The example scripts API returned an empty response.");
+        return new RecommendedExampleScript
+        {
+            Id = saved.Id,
+            Name = saved.Name,
+            Script = saved.Script,
+            OwnerName = saved.OwnerName ?? "Community member",
+            CreatedAt = saved.CreatedAt
+        };
+    }
+
     public async Task<CircuitExampleItem> PublishExampleAsync(CircuitNode circuit, string title, string category = "Community", string? icon = null)
     {
         ArgumentNullException.ThrowIfNull(circuit);
@@ -762,6 +818,22 @@ public sealed class RemoteEeeApiClient
         return request;
     }
 
+    private static async Task<HttpRequestMessage> CreateOptionalAuthPostAsync<T>(string relativePath, T body)
+    {
+        var token = await SecureStorage.Default.GetAsync(SecureAccessTokenKey);
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            new Uri(new Uri(ApiBaseUrl + "/"), relativePath))
+        {
+            Content = JsonContent.Create(body, options: JsonOptions)
+        };
+
+        if (!string.IsNullOrWhiteSpace(token))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        return request;
+    }
+
     private static async Task EnsureSuccessAsync(HttpResponseMessage response)
     {
         if (response.IsSuccessStatusCode) return;
@@ -781,6 +853,23 @@ public sealed class RemoteEeeApiClient
         public string? ComponentSummary { get; set; }
         public string? ContentJson { get; set; }
         public string? OwnerName { get; set; }
+    }
+
+    private sealed class CommunityExampleScriptDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Script { get; set; } = string.Empty;
+        public string? OwnerName { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    private sealed class SaveExampleScriptRequest
+    {
+        public string ExampleKey { get; set; } = string.Empty;
+        public string ExampleTitle { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Script { get; set; } = string.Empty;
     }
 
     private sealed class PublishExampleRequest

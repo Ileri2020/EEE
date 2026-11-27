@@ -101,12 +101,23 @@ class CircuitRef:
         if name is None:
             raise TypeError("add_component requires a component name.")
 
+        extra_kw = []
+        for k, v in kwargs.items():
+            if k in ("row", "col"): continue
+            if isinstance(v, bool):
+                extra_kw.append(f"{k}={'true' if v else 'false'}")
+            elif isinstance(v, (int, float)):
+                extra_kw.append(f"{k}={_number(v)}")
+            elif isinstance(v, str):
+                extra_kw.append(f"{k}={_quoted(v)}")
+        extra_suffix = (", " + ", ".join(extra_kw)) if extra_kw else ""
+
         if "row" in kwargs or "col" in kwargs:
             if "row" not in kwargs or "col" not in kwargs:
                 raise TypeError("Logical placement requires both row and col.")
             _call(
                 f"circuit.add_component({_quoted(comp_type)}, name={_quoted(name)}, "
-                f"row={_number(kwargs['row'])}, col={_number(kwargs['col'])})"
+                f"row={_number(kwargs['row'])}, col={_number(kwargs['col'])}{extra_suffix})"
             )
         elif "position" in kwargs:
             position = kwargs["position"]
@@ -114,7 +125,7 @@ class CircuitRef:
                 raise TypeError("position must contain x and y coordinates.")
             _call(
                 f"circuit.add_component({_quoted(comp_type)}, name={_quoted(name)}, "
-                f"position_x={_number(position[0])}, position_y={_number(position[1])}"
+                f"position_x={_number(position[0])}, position_y={_number(position[1])}{extra_suffix}"
             )
         else:
             raise TypeError("add_component requires either position or row and col.")
@@ -135,7 +146,9 @@ class CircuitRef:
     def add_ground(self, name="GND", **kwargs):
         return add_ground(name=name, **kwargs)
 
-    def add_node(self, name, **kwargs):
+    def add_node(self, name, row=None, col=None, **kwargs):
+        if row is not None: kwargs["row"] = row
+        if col is not None: kwargs["col"] = col
         return add_node(name=name, **kwargs)
 
     def add_wire(self, name, direction="horizontal", **kwargs):
@@ -189,10 +202,13 @@ def set_memory_word(name, address, value):
 def connect(*args, **kwargs):
     if len(args) == 2:
         endpoints = args
-        resistance = None
+        resistance = kwargs.get("resistance")
+    elif len(args) == 3 and isinstance(args[2], (int, float)):
+        endpoints = args[:2]
+        resistance = args[2]
     elif len(args) in (4, 5):
         endpoints = (f"{args[0]}.{args[1]}", f"{args[2]}.{args[3]}")
-        resistance = args[4] if len(args) == 5 else None
+        resistance = args[4] if len(args) == 5 else kwargs.get("resistance")
     else:
         raise TypeError("connect expects two endpoint names or component/pin pairs.")
     suffix = f", {_number(resistance)}" if resistance is not None else ""
@@ -211,16 +227,19 @@ def connect(*args, **kwargs):
 
 def add_resistor(name, resistance=1000.0, **kwargs):
     kwargs["param"] = resistance
+    kwargs["resistance"] = resistance
     return add_component("resistor", name, **kwargs)
 
 
 def add_capacitor(name, capacitance=1e-6, **kwargs):
     kwargs["param"] = capacitance
+    kwargs["capacitance"] = capacitance
     return add_component("capacitor", name, **kwargs)
 
 
 def add_inductor(name, inductance=1e-3, **kwargs):
     kwargs["param"] = inductance
+    kwargs["inductance"] = inductance
     return add_component("inductor", name, **kwargs)
 
 
@@ -228,7 +247,9 @@ def add_ground(name="GND", **kwargs):
     return add_component("ground", name, **kwargs)
 
 
-def add_node(name, **kwargs):
+def add_node(name, row=None, col=None, **kwargs):
+    if row is not None: kwargs["row"] = row
+    if col is not None: kwargs["col"] = col
     return add_component("general.node", name, **kwargs)
 
 

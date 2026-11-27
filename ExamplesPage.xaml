@@ -471,7 +471,12 @@
                                     </Border>
 
                                     <!-- Action Buttons Row -->
-                                    <Grid Grid.Row="4" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8" Margin="0,4,0,0">
+                                    <Grid Grid.Row="4"
+                                          RowDefinitions="Auto,Auto"
+                                          ColumnDefinitions="*,*,*"
+                                          ColumnSpacing="8"
+                                          RowSpacing="8"
+                                          Margin="0,4,0,0">
                                         <!-- Load into Workspace -->
                                         <Button Grid.Column="0"
                                                 Text="⚡ Load into Workspace"
@@ -494,6 +499,27 @@
                                                 TextColor="#E3B341"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=CopyPythonScriptCommand, x:DataType=vm:ExamplesViewModel}"
                                                 CommandParameter="{Binding .}"/>
+
+                                        <Grid Grid.Row="1"
+                                              Grid.ColumnSpan="3"
+                                              ColumnDefinitions="*,*"
+                                              ColumnSpacing="8">
+                                        <Button Grid.Column="0"
+                                                Text="☁ Save to DB"
+                                                Style="{StaticResource ToolBtn}"
+                                                TextColor="#79C0FF"
+                                                ToolTipProperties.Text="Save the current workspace Python script as an improvement for this example"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=SaveCurrentScriptForExampleCommand, x:DataType=vm:ExamplesViewModel}"
+                                                CommandParameter="{Binding .}"/>
+
+                                        <Button Grid.Column="1"
+                                                Text="📚 Recommendations"
+                                                Style="{StaticResource ToolBtn}"
+                                                TextColor="#D2A8FF"
+                                                ToolTipProperties.Text="Browse recommended improvement scripts for this example"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=ShowRecommendedScriptsCommand, x:DataType=vm:ExamplesViewModel}"
+                                                CommandParameter="{Binding .}"/>
+                                        </Grid>
                                     </Grid>
 
                                 </Grid>
@@ -501,6 +527,110 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsRecommendedScriptsDialogVisible}"
+              ZIndex="200"
+              BackgroundColor="#AA000000"
+              Padding="18">
+            <Border MaximumWidthRequest="620"
+                    MaximumHeightRequest="700"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    BackgroundColor="#161B22"
+                    Stroke="#30363D"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <Grid Grid.Row="0"
+                          Padding="16,12"
+                          BackgroundColor="#1C2128"
+                          ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Recommended improvement scripts"
+                                   TextColor="#D2A8FF"
+                                   FontAttributes="Bold"
+                                   FontSize="15"/>
+                            <Label Text="{Binding SelectedExampleForScripts.Title}"
+                                   TextColor="#8B949E"
+                                   FontSize="12"/>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="✕"
+                                Style="{StaticResource ToolBtn}"
+                                Command="{Binding CloseRecommendedScriptsDialogCommand}"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Padding="14,8" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <ActivityIndicator IsRunning="{Binding IsLoadingRecommendedScripts}"
+                                           IsVisible="{Binding IsLoadingRecommendedScripts}"
+                                           Color="#58A6FF"/>
+                        <Label Grid.Column="1"
+                               Text="{Binding RecommendedScriptsStatusMessage}"
+                               TextColor="#8B949E"
+                               FontSize="11"
+                               VerticalOptions="Center"/>
+                    </Grid>
+
+                    <CollectionView Grid.Row="2"
+                                    ItemsSource="{Binding RecommendedExampleScripts}"
+                                    SelectionMode="None"
+                                    Margin="12,4">
+                        <CollectionView.EmptyView>
+                            <Label Text="{Binding RecommendedScriptsStatusMessage}"
+                                   TextColor="#8B949E"
+                                   FontSize="12"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalTextAlignment="Center"
+                                   Padding="20"/>
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="8"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:RecommendedExampleScript">
+                                <Border BackgroundColor="#0D1117"
+                                        Stroke="#30363D"
+                                        StrokeThickness="1"
+                                        Padding="12,10">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <VerticalStackLayout Spacing="3">
+                                            <Label Text="{Binding Name}"
+                                                   TextColor="#C9D1D9"
+                                                   FontAttributes="Bold"
+                                                   FontSize="13"/>
+                                            <Label Text="{Binding OwnerName, StringFormat='Shared by {0}'}"
+                                                   TextColor="#79C0FF"
+                                                   FontSize="10"/>
+                                            <Label Text="{Binding CreatedAtLabel}"
+                                                   TextColor="#8B949E"
+                                                   FontSize="10"/>
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="1"
+                                                Text="Load to editor"
+                                                Style="{StaticResource AccentBtn}"
+                                                VerticalOptions="Center"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExamplesViewModel}}, Path=LoadRecommendedScriptCommand, x:DataType=vm:ExamplesViewModel}"
+                                                CommandParameter="{Binding .}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Label Grid.Row="3"
+                           Text="Scripts are loaded into the editor only; review them before choosing Run."
+                           TextColor="#8B949E"
+                           FontSize="10"
+                           Padding="14,8"/>
+                </Grid>
+            </Border>
+        </Grid>
 
     </Grid>
 </ContentPage>

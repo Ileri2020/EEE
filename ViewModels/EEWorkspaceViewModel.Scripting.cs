@@ -19,6 +19,7 @@ using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -132,11 +133,70 @@ public partial class EEWorkspaceViewModel
                         args.Length > 6 ? Unquote(args[6]) : "DC");
                     return $"[ok] current source {Unquote(args[0])} added";
 
-                case "connect" when args.Length >= 4:
-                    PythonApi.Connect(Unquote(args[0]), Unquote(args[1]),
-                        Unquote(args[2]), Unquote(args[3]),
-                        args.Length > 4 ? ParseD(args[4]) : 0.0);
+                case "connect":
+                {
+                    string fromComp, fromPin, toComp, toPin;
+                    double resistance = 0.0;
+                    if (args.Length >= 4 && !args[0].Contains('.') && !args[2].Contains('.'))
+                    {
+                        fromComp = Unquote(args[0]);
+                        fromPin = Unquote(args[1]);
+                        toComp = Unquote(args[2]);
+                        toPin = Unquote(args[3]);
+                        if (args.Length > 4 && double.TryParse(args[4], NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedResistance1))
+                            resistance = parsedResistance1;
+                    }
+                    else if (args.Length >= 2)
+                    {
+                        var fromParts = Unquote(args[0]).Split('.');
+                        var toParts = Unquote(args[1]).Split('.');
+                        fromComp = fromParts[0];
+                        fromPin = fromParts.Length > 1 ? fromParts[1] : "pin1";
+                        toComp = toParts[0];
+                        toPin = toParts.Length > 1 ? toParts[1] : "pin1";
+                        if (args.Length > 2 && double.TryParse(args[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedResistance2))
+                            resistance = parsedResistance2;
+                    }
+                    else
+                    {
+                        return "[error] connect expects component endpoints";
+                    }
+
+                    List<EESimulator.Core.Models.Point2D>? waypoints = null;
+                    var wpMatch = Regex.Match(line, @"waypoints\s*=\s*\[([^\]]*)\]", RegexOptions.IgnoreCase);
+                    if (wpMatch.Success)
+                    {
+                        var tupleMatches = Regex.Matches(wpMatch.Groups[1].Value, @"\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)");
+                        var layout = Circuit.Components.Any(c => c.HasLogicalPlacement)
+                            ? LogicalGridSchematicLayout.Calculate(Circuit)
+                            : null;
+
+                        var wpList = new List<EESimulator.Core.Models.Point2D>();
+                        foreach (Match tm in tupleMatches)
+                        {
+                            double a = double.Parse(tm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+                            double b = double.Parse(tm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+                            if (layout != null && a < 60 && b < 60 && a >= 1 && b >= 1)
+                            {
+                                var compAtCell = layout.Placements.FirstOrDefault(p =>
+                                    p.Component.LogicalRow == (int)Math.Round(a) && p.Component.LogicalColumn == (int)Math.Round(b));
+                                if (compAtCell.Component != null)
+                                {
+                                    wpList.Add(new EESimulator.Core.Models.Point2D(compAtCell.X, compAtCell.Y));
+                                    continue;
+                                }
+                                wpList.Add(layout.GetCellCenter((int)Math.Round(a), (int)Math.Round(b)));
+                                continue;
+                            }
+                            wpList.Add(new EESimulator.Core.Models.Point2D(a, b));
+                        }
+                        if (wpList.Count > 0) waypoints = wpList;
+                    }
+
+                    PythonApi.Connect(fromComp, fromPin, toComp, toPin, resistance, waypoints);
                     return "[ok] connected";
+                }
 
                 case "remove_connection" or "delete_connection" when args.Length >= 4:
                     PythonApi.DeleteConnection(
@@ -429,6 +489,11 @@ public partial class EEWorkspaceViewModel
                     bool? reqVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var vb) ? vb : null) : null;
                     PythonApi.ToggleComponentSidebar(reqVis);
                     return $"[ok] component sidebar is now {(IsSidebarVisible ? "visible" : "hidden")}";
+
+                case "toggle_left_toolbar" or "toggle_toolbar":
+                    bool? reqLeftVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var lvb) ? lvb : null) : null;
+                    PythonApi.ToggleLeftToolbar(reqLeftVis);
+                    return $"[ok] left toolbar is now {(IsLeftToolbarVisible ? "visible" : "hidden")}";
 
                 case "toggle_control_sidebar":
                     bool? reqCtrlVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var cvb) ? cvb : null) : null;
@@ -891,12 +956,12 @@ public partial class EEWorkspaceViewModel
                 quote = c;
                 cur.Append(c);
             }
-            else if (c == '(')
+            else if (c is '(' or '[' or '{')
             {
                 depth++;
                 cur.Append(c);
             }
-            else if (c == ')')
+            else if (c is ')' or ']' or '}')
             {
                 depth--;
                 cur.Append(c);

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using EESimulator.Commands;
 using EESimulator.Core.Components.Audio;
 using EESimulator.Core.Components.Electrical;
 using EESimulator.Core.Components.Registry;
@@ -134,24 +135,26 @@ public sealed class MicrophoneComponentTests
 
         var settings = new SimulationSettings
         {
-            Analysis = SimulationAnalysisType.Transient,
-            TransientStep = 1e-4,
-            TransientStop = 5e-3
+            StopTime = 1e-3,
+            StepTime = 1e-5,
+            CaptureAllWaveforms = true
         };
 
         var engine = new SpiceSharpAdapter();
         var results = engine.RunSimulation(circuit, settings);
 
-        Assert.True(results.Success);
-        Assert.True(results.TimePoints.Count > 0);
+        Assert.True(results.Success, results.Message);
+        Assert.NotEmpty(mic.WaveformTime);
+        Assert.Equal(mic.WaveformTime.Count, mic.WaveformVoltage.Count);
+        Assert.NotEmpty(resistor.WaveformTime);
     }
 
     [Fact]
     public void Python_api_creates_and_configures_microphone()
     {
         var circuit = new CircuitNode();
-        var cmdManager = new EESimulator.Core.History.CommandManager();
-        var api = new PythonApi(circuit, cmdManager);
+        var cmdManager = new CommandManager();
+        var api = new PythonApi(cmdManager, circuit);
 
         api.AddMicrophone("MIC_UUT", audioFile: "voice.mp3", bandwidth: 4000.0, amplitude: 0.75);
 
@@ -162,3 +165,4 @@ public sealed class MicrophoneComponentTests
         Assert.Equal("voice.mp3", comp.AudioFilePath);
     }
 }
+

@@ -47,6 +47,20 @@ public partial class ExamplesViewModel : ObservableObject
     [ObservableProperty]
     public partial string StatusMessage { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    public partial bool IsRecommendedScriptsDialogVisible { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsLoadingRecommendedScripts { get; set; }
+
+    [ObservableProperty]
+    public partial CircuitExampleItem? SelectedExampleForScripts { get; set; }
+
+    [ObservableProperty]
+    public partial string RecommendedScriptsStatusMessage { get; set; } = string.Empty;
+
+    public ObservableCollection<RecommendedExampleScript> RecommendedExampleScripts { get; } = new();
+
     public ExamplesViewModel(EEWorkspaceViewModel workspaceVm, RemoteEeeApiClient remoteApi)
     {
         _workspaceVm = workspaceVm ?? throw new ArgumentNullException(nameof(workspaceVm));
@@ -217,6 +231,96 @@ public partial class ExamplesViewModel : ObservableObject
             StatusMessage = $"Script error: {ex.Message}";
         }
     }
+
+    [RelayCommand]
+    public async Task SaveCurrentScriptForExampleAsync(CircuitExampleItem example)
+    {
+        if (example == null) return;
+        if (!_remoteApi.IsConfigured)
+        {
+            StatusMessage = "Configure the HCVP HTTPS API URL before saving a recommended script.";
+            return;
+        }
+
+        string script = _workspaceVm.ScriptText ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(script))
+        {
+            StatusMessage = "There is no Python script in the workspace to save.";
+            return;
+        }
+
+        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page == null) return;
+
+        string? name = await page.DisplayPromptAsync(
+            "Save script recommendation",
+            $"Name this improved Python script for '{example.Title}'.",
+            accept: "Save",
+            cancel: "Cancel",
+            initialValue: $"{example.Title} improved version",
+            maxLength: 80);
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        try
+        {
+            StatusMessage = $"Saving a script for {example.Title}…";
+            var saved = await _remoteApi.SaveExampleScriptAsync(
+                example.Id, example.Title, name.Trim(), script);
+            StatusMessage = $"Saved '{saved.Name}' as a recommendation for {example.Title}.";
+            await page.DisplayAlertAsync(
+                "Script saved",
+                $"'{saved.Name}' is now available in the recommended scripts for {example.Title}.",
+                "OK");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not save script recommendation: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task ShowRecommendedScriptsAsync(CircuitExampleItem example)
+    {
+        if (example == null) return;
+
+        SelectedExampleForScripts = example;
+        RecommendedExampleScripts.Clear();
+        RecommendedScriptsStatusMessage = "Loading recommended scripts…";
+        IsRecommendedScriptsDialogVisible = true;
+        IsLoadingRecommendedScripts = true;
+
+        try
+        {
+            var scripts = await _remoteApi.GetRecommendedExampleScriptsAsync(example.Id);
+            foreach (var script in scripts)
+                RecommendedExampleScripts.Add(script);
+            RecommendedScriptsStatusMessage = scripts.Count == 0
+                ? "No recommended scripts have been shared for this example yet."
+                : $"{scripts.Count} recommended script(s). Review one and load it into the script editor.";
+        }
+        catch (Exception ex)
+        {
+            RecommendedScriptsStatusMessage = $"Could not load recommended scripts: {ex.Message}";
+            StatusMessage = RecommendedScriptsStatusMessage;
+        }
+        finally
+        {
+            IsLoadingRecommendedScripts = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task LoadRecommendedScriptAsync(RecommendedExampleScript script)
+    {
+        if (script == null) return;
+
+        _workspaceVm.LoadScriptIntoWorkspace(script.Script, script.Name);
+        IsRecommendedScriptsDialogVisible = false;
+        await Shell.Current.GoToAsync("//workspace");
+    }
+
+    [RelayCommand]
+    public void CloseRecommendedScriptsDialog() => IsRecommendedScriptsDialogVisible = false;
 
     [RelayCommand]
     public async Task SaveAllPythonScriptsIndividually()

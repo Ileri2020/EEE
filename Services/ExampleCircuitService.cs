@@ -30,6 +30,16 @@ public class CircuitExampleItem
     public string OwnerName { get; set; } = string.Empty;
 }
 
+public sealed class RecommendedExampleScript
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Script { get; set; } = string.Empty;
+    public string OwnerName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string CreatedAtLabel => CreatedAt.ToLocalTime().ToString("g");
+}
+
 
 /// <summary>
 /// Service managing built-in example circuits exported with the application build.

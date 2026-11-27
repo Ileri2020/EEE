@@ -59,6 +59,17 @@ public class PythonCommandExecutor
 
     private void ExecuteLine(string line)
     {
+        // Strip leading variable assignment if present: e.g. "vcc = circuit.add_..." or "node_1 = ..."
+        int eqIdx = line.IndexOf('=');
+        if (eqIdx > 0 && !line[..eqIdx].Contains('(') && !line[..eqIdx].Contains('"') && !line[..eqIdx].Contains('\'') && !line[..eqIdx].Contains('['))
+        {
+            var varName = line[..eqIdx].Trim();
+            if (System.Text.RegularExpressions.Regex.IsMatch(varName, @"^[A-Za-z_]\w*$"))
+            {
+                line = line[(eqIdx + 1)..].Trim();
+            }
+        }
+
         var digitalReadMatch = Regex.Match(line,
             @"(?:\w+\s*=\s*)?(?:circuit|eesim)\.read_digital_output_state\s*\(\s*""([^""]+)""\s*,\s*""([^""]+)""\s*\)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -664,16 +675,17 @@ public class PythonCommandExecutor
             // If coordinates are small integers (grid coordinates e.g. row, col or x, y < 60) and layout exists
             if (layout != null && a < 60 && b < 60 && a >= 1 && b >= 1)
             {
-                // Find placement or cell center: row=a, col=b or col=a, row=b
                 var compAtCell = layout.Placements.FirstOrDefault(p =>
-                    (p.Component.LogicalRow == (int)a && p.Component.LogicalColumn == (int)b) ||
-                    (p.Component.LogicalRow == (int)b && p.Component.LogicalColumn == (int)a));
+                    p.Component.LogicalRow == (int)Math.Round(a) && p.Component.LogicalColumn == (int)Math.Round(b));
 
                 if (compAtCell.Component != null)
                 {
                     list.Add(new EESimulator.Core.Models.Point2D(compAtCell.X, compAtCell.Y));
                     continue;
                 }
+
+                list.Add(layout.GetCellCenter((int)Math.Round(a), (int)Math.Round(b)));
+                continue;
             }
 
             list.Add(new EESimulator.Core.Models.Point2D(a, b));

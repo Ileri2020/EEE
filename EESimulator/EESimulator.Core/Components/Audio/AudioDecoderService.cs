@@ -332,17 +332,22 @@ public static class AudioDecoderService
         if (pointsToTake <= 1) pointsToTake = Math.Min(samples.Length, 100);
 
         int step = Math.Max(1, pointsToTake / maxPoints);
-        var sb = new StringBuilder(pointsToTake * 16 / step);
+        var sb = new StringBuilder(pointsToTake * 20 / step);
 
         bool first = true;
+        double lastT = -1.0;
         for (int i = 0; i < pointsToTake; i += step)
         {
             double t = (double)i / sampleRate;
+            if (t <= lastT)
+                t = lastT + 1e-7;
+            lastT = t;
+
             double v = samples[i] * amplitude + offset;
             if (!first) sb.Append("; ");
-            sb.Append(t.ToString("0.######", CultureInfo.InvariantCulture));
+            sb.Append(t.ToString("G9", CultureInfo.InvariantCulture));
             sb.Append(',');
-            sb.Append(v.ToString("0.######", CultureInfo.InvariantCulture));
+            sb.Append(v.ToString("G9", CultureInfo.InvariantCulture));
             first = false;
         }
 

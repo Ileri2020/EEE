@@ -33,6 +33,7 @@ public class PythonApi
     public event Action<string>? OnActiveToolChanged;
     public event Action<bool?>? OnSidebarToggled;
     public event Action<bool?>? OnControlSidebarToggled;
+    public event Action<bool?>? OnLeftToolbarToggled;
     public event Action<string, bool>? OnSidebarVisibilityChanged;
     public event Action? OnSimulationPlayRequested;
     public event Action? OnSimulationPauseRequested;
@@ -1045,6 +1046,11 @@ public class PythonApi
             sb.Visible = visible ?? !sb.Visible;
         }
         OnControlSidebarToggled?.Invoke(visible);
+    }
+
+    public void ToggleLeftToolbar(bool? visible = null)
+    {
+        OnLeftToolbarToggled?.Invoke(visible);
     }
 
     public void SetSidebarVisible(string sidebarName, bool visible)

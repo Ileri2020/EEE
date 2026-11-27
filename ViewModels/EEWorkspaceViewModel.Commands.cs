@@ -235,6 +235,15 @@ public partial class EEWorkspaceViewModel
         CircuitChanged?.Invoke();
     }
 
+    public void LoadScriptIntoWorkspace(string script, string scriptName)
+    {
+        ScriptText = script ?? string.Empty;
+        IsAnalyticsViewActive = false;
+        IsScriptViewActive = true;
+        UI.Workspace.SetViewport("Script");
+        StatusText = $"Loaded recommended script: {scriptName}. Review it before running.";
+    }
+
 
     private void SetPanTool()
     {
