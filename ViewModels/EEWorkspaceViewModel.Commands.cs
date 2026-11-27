@@ -18,6 +18,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
@@ -230,9 +231,24 @@ public partial class EEWorkspaceViewModel
         // Notify the script synchronizer so the Python script view reflects the loaded circuit (§5.A)
         _sync.OnCircuitReplaced(Circuit, generatedScript);
         ScriptText = _sync.CurrentScript;
+        ResetAndSyncWaveformSignalsForCircuitChange();
 
         StatusText = $"Loaded circuit: {projectName}";
         CircuitChanged?.Invoke();
+    }
+
+    private void ResetAndSyncWaveformSignalsForCircuitChange()
+    {
+        WaveformSignals.Clear();
+        WaveformTraceCandidates.Clear();
+        WaveformComponent = null;
+        WaveformTracePickerComponent = null;
+        IsWaveformTracePickerVisible = false;
+        CurrentSimulationSnapshot = null;
+        ResetPendingUiSnapshots();
+        SyncEnabledWaveformSignals();
+        if (IsWaveformDrawerOpen && WaveformSignals.Any(signal => signal.IsSelected))
+            RequestSimulationRefresh();
     }
 
     public void LoadScriptIntoWorkspace(string script, string scriptName)
@@ -369,6 +385,7 @@ public partial class EEWorkspaceViewModel
             CommandManager.Clear();
             _sync.OnCircuitReplaced(Circuit);
             ScriptText = _sync.CurrentScript;
+            ResetAndSyncWaveformSignalsForCircuitChange();
 
 #if WINDOWS
             CurrentFilePath = file.FullPath;
@@ -918,6 +935,7 @@ public partial class EEWorkspaceViewModel
 
     private void EnableWaveformForComponent(ComponentNode component)
     {
+        bool drawerWasOpen = IsWaveformDrawerOpen;
         component.ShowWaveform = true;
         foreach (var source in WaveformTraceCandidates.Where(signal => signal.IsSelected).Select(signal => signal.Component).Distinct())
             source.ShowWaveform = true;
@@ -929,7 +947,8 @@ public partial class EEWorkspaceViewModel
         StatusText = $"Waveform enabled for {component.Reference}; graphing {WaveformGraphSummary}";
         OnPropertyChanged(nameof(WaveformGraphSummary));
         CircuitChanged?.Invoke();
-        RequestSimulationRefresh();
+        if (drawerWasOpen)
+            RequestSimulationRefresh();
     }
 
     [RelayCommand]
@@ -983,25 +1002,47 @@ public partial class EEWorkspaceViewModel
 
     private void SyncEnabledWaveformSignals()
     {
+        var components = Circuit.Components;
+        var componentIds = components.Select(component => component.Id).ToHashSet();
+        var connectedProbeIds = components
+            .OfType<ProbeComponent>()
+            .Where(IsProbeConnected)
+            .Select(probe => probe.Id)
+            .ToHashSet();
+
         foreach (var signal in WaveformSignals.Where(signal =>
-                     signal.Component is EESimulator.Core.Components.General.ProbeComponent &&
-                     !AreProbeWaveformsVisible).ToArray())
+                     !componentIds.Contains(signal.Component.Id) ||
+                     (signal.Component is ProbeComponent &&
+                      (!AreProbeWaveformsVisible || !connectedProbeIds.Contains(signal.Component.Id)))).ToArray())
             WaveformSignals.Remove(signal);
 
-        foreach (var component in Circuit.Components.Where(component =>
-                     component.ShowWaveform ||
-                     (AreProbeWaveformsVisible && component is EESimulator.Core.Components.General.ProbeComponent)))
+        foreach (var component in components.Where(component =>
+                     component is ProbeComponent
+                         ? AreProbeWaveformsVisible && connectedProbeIds.Contains(component.Id)
+                         : component.ShowWaveform))
         {
-            if (component is EESimulator.Core.Components.General.ProbeComponent &&
-                !AreProbeWaveformsVisible)
-                continue;
+            if (component is ProbeComponent probe)
+                probe.ShowWaveform = true;
             if (WaveformSignals.Any(signal => signal.Component.Id == component.Id))
                 continue;
             foreach (var signal in CreateWaveformSignals(component))
                 WaveformSignals.Add(signal);
         }
 
+        if (WaveformComponent == null || !componentIds.Contains(WaveformComponent.Id))
+            WaveformComponent = WaveformSignals.FirstOrDefault()?.Component;
+
         OnPropertyChanged(nameof(WaveformGraphSummary));
+    }
+
+    private bool IsProbeConnected(ProbeComponent probe)
+    {
+        var inputPin = probe.GetPin("in");
+        return inputPin != null && Circuit.Connections.Any(connection =>
+            (connection.FromComponentId == probe.Id &&
+             connection.FromPin.Equals(inputPin.Id, StringComparison.OrdinalIgnoreCase)) ||
+            (connection.ToComponentId == probe.Id &&
+             connection.ToPin.Equals(inputPin.Id, StringComparison.OrdinalIgnoreCase)));
     }
 
     [RelayCommand]

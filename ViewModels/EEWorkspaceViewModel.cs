@@ -875,6 +875,18 @@ public partial class EEWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsWaveformDrawerOpen { get; set; } = false;
 
+    partial void OnIsWaveformDrawerOpenChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        SyncEnabledWaveformSignals();
+        if (WaveformSignals.Any(signal =>
+                signal.IsSelected &&
+                CurrentSimulationSnapshot?.ComponentWaveforms.ContainsKey(signal.Component.Id) != true))
+            RequestSimulationRefresh();
+    }
+
     [ObservableProperty]
     public partial string SubtitleText { get; set; } = string.Empty;
 
@@ -953,6 +965,11 @@ public partial class EEWorkspaceViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(ProbeWaveformToggleText));
         SyncEnabledWaveformSignals();
+        if (value && IsWaveformDrawerOpen && WaveformSignals.Any(signal =>
+                signal.IsSelected &&
+                signal.Component is EESimulator.Core.Components.General.ProbeComponent &&
+                CurrentSimulationSnapshot?.ComponentWaveforms.ContainsKey(signal.Component.Id) != true))
+            RequestSimulationRefresh();
     }
 
     [ObservableProperty]
