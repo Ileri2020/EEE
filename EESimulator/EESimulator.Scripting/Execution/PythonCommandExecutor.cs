@@ -315,7 +315,7 @@ public class PythonCommandExecutor
         {
             string? filePath = startVideoMatch.Groups[1].Success ? startVideoMatch.Groups[1].Value
                 : startVideoMatch.Groups[2].Success ? startVideoMatch.Groups[2].Value : null;
-            int fps = startVideoMatch.Groups[3].Success ? int.Parse(startVideoMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 30;
+            int fps = startVideoMatch.Groups[3].Success ? int.Parse(startVideoMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 15;
             string format = startVideoMatch.Groups[4].Success ? startVideoMatch.Groups[4].Value
                 : startVideoMatch.Groups[5].Success ? startVideoMatch.Groups[5].Value : "MP4";
             string view = startVideoMatch.Groups[6].Success ? startVideoMatch.Groups[6].Value
@@ -337,7 +337,7 @@ public class PythonCommandExecutor
         {
             string? filePath = startGifMatch.Groups[1].Success ? startGifMatch.Groups[1].Value
                 : startGifMatch.Groups[2].Success ? startGifMatch.Groups[2].Value : null;
-            int fps = startGifMatch.Groups[3].Success ? int.Parse(startGifMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 30;
+            int fps = startGifMatch.Groups[3].Success ? int.Parse(startGifMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 15;
             string view = startGifMatch.Groups[4].Success ? startGifMatch.Groups[4].Value
                 : startGifMatch.Groups[5].Success ? startGifMatch.Groups[5].Value : "recentre";
             _api.StartVideoRecording(filePath, fps, "GIF", view, requireConfirmation: true);

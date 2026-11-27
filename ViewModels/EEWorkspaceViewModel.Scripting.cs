@@ -756,6 +756,11 @@ public partial class EEWorkspaceViewModel
                     return $"[ok] component {Unquote(args[0])} stretched to scale ({args[1]}, {args[2]})";
 
                 case "play" or "play_simulation" or "simulation_play" or "start_simulation" or "start":
+                    if (_scriptCircuitRefreshPending)
+                    {
+                        _scriptCircuitRefreshPending = false;
+                        CircuitChanged?.Invoke();
+                    }
                     SyncEnabledWaveformSignals();
                     PythonApi.PlaySimulation();
                     return "[ok] simulation playback started";
@@ -787,18 +792,21 @@ public partial class EEWorkspaceViewModel
                 case "recenter_viewport" or "center_viewport" or "recenter":
                     ApplyLogicalSchematicLayout();
                     CircuitChanged?.Invoke();
+                    _scriptCircuitRefreshPending = false;
                     RecenterViewport();
                     return "Centered viewport on circuit";
 
                 case "fit_to_screen" or "fit_viewport":
                     ApplyLogicalSchematicLayout();
                     CircuitChanged?.Invoke();
+                    _scriptCircuitRefreshPending = false;
                     FitToScreen();
                     return "Fitted circuit to viewport";
 
                 case "apply_layout" or "auto_layout" or "layout":
                     ApplyLogicalSchematicLayout();
                     CircuitChanged?.Invoke();
+                    _scriptCircuitRefreshPending = false;
                     FitToScreen();
                     return "[ok] logical schematic layout applied";
 
@@ -940,7 +948,7 @@ public partial class EEWorkspaceViewModel
                 case "start_video_recording":
                 {
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
-                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 30;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 15;
                     string vidFmt = args.Length > 2 ? Unquote(args[2]) : "mp4";
                     string vidView = namedArguments.TryGetValue("view", out var vv)
                         ? Unquote(vv)
@@ -953,6 +961,7 @@ public partial class EEWorkspaceViewModel
                     OnPropertyChanged(nameof(IsSchematicViewActive));
                     OnPropertyChanged(nameof(IsScriptViewActive));
                     CircuitChanged?.Invoke();
+                    _scriptCircuitRefreshPending = false;
                     PythonApi.StartVideoRecording(
                         vidPath, vidFps, vidFmt, vidView, vidDuration, requireConfirmation: true);
                     string durInfo = vidDuration.HasValue ? $", auto-stops at {vidDuration:F1}s" : "";
@@ -966,7 +975,7 @@ public partial class EEWorkspaceViewModel
                 case "start_gif_recording":
                 {
                     string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
-                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 30;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 15;
                     string vidView = namedArguments.TryGetValue("view", out var vv)
                         ? Unquote(vv)
                         : args.Length > 2 ? Unquote(args[2]) : "recentre";

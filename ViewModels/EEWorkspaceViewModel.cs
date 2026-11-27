@@ -919,7 +919,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsVideoRecording { get; set; }
 
     [ObservableProperty]
-    public partial int VideoFrameRate { get; set; } = 30;
+    public partial int VideoFrameRate { get; set; } = 15;
 
     public ObservableCollection<string> VideoFormats { get; } = new() { "GIF", "MP4" };
     public ObservableCollection<int> VideoFrameRates { get; } = new(new[] { 5, 10, 15, 20, 24, 30 });
@@ -1383,8 +1383,15 @@ public partial class EEWorkspaceViewModel : ObservableObject
         {
             CanUndo    = CommandManager.CanUndo;
             CanRedo    = CommandManager.CanRedo;
-            StatusText = $"✓ {e.Command.Description}";
-            CircuitChanged?.Invoke();
+            if (_isApplyingScript)
+            {
+                _scriptCircuitRefreshPending = true;
+            }
+            else
+            {
+                StatusText = $"✓ {e.Command.Description}";
+                CircuitChanged?.Invoke();
+            }
             RequestSimulationRefresh();
         };
         CommandManager.CommandUndone += (_, _2) =>

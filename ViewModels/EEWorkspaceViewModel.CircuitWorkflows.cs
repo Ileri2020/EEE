@@ -202,6 +202,7 @@ public partial class EEWorkspaceViewModel
     private bool _playbackSolveRunning;
     private bool _simulationRefreshRequested;
     private bool _isApplyingScript;
+    private bool _scriptCircuitRefreshPending;
     private bool _scriptExecutionHadErrors;
     private DateTime _lastPlaybackSolveUtc = DateTime.MinValue;
     private DateTime _lastPlaybackConsoleUpdateUtc = DateTime.MinValue;
@@ -716,6 +717,7 @@ public partial class EEWorkspaceViewModel
         }
 
         _isApplyingScript = true;
+        _scriptCircuitRefreshPending = false;
         try
         {
             StatusText    = "Running script…";
@@ -749,6 +751,7 @@ public partial class EEWorkspaceViewModel
                 OnPropertyChanged(nameof(IsSchematicViewActive));
                 OnPropertyChanged(nameof(IsScriptViewActive));
                 CircuitChanged?.Invoke();
+                _scriptCircuitRefreshPending = false;
             });
 
             var commandOutput = ConsoleOutput;
@@ -774,6 +777,8 @@ public partial class EEWorkspaceViewModel
         }
         catch (Exception ex)
         {
+            if (PythonApi.IsVideoRecording)
+                PythonApi.StopVideoRecording();
             ConsoleOutput += $"ERROR: {ex.Message}\n";
             StatusText = "Script error";
         }
@@ -782,6 +787,11 @@ public partial class EEWorkspaceViewModel
             IsSimulating = false;
             OnPropertyChanged(nameof(SelectedComponent));
             _isApplyingScript = false;
+            if (_scriptCircuitRefreshPending)
+            {
+                _scriptCircuitRefreshPending = false;
+                CircuitChanged?.Invoke();
+            }
             PublishUiSyncFrame();
             if (_simulationRefreshRequested)
             {

@@ -69,7 +69,7 @@ public class PythonApi
     public string SubtitleText { get; private set; } = string.Empty;
 
     public bool IsVideoRecording { get; private set; }
-    public int VideoFrameRate { get; private set; } = 30;
+    public int VideoFrameRate { get; private set; } = 15;
     public string VideoFormat { get; private set; } = "GIF";
 
     public PythonApi(CommandManager commandManager, CircuitNode circuit, SimulationManager? simulationManager = null, UIRootNode? uiRoot = null)
@@ -1393,7 +1393,7 @@ public class PythonApi
 
     public void StartVideoRecording(
         string? filePath = null,
-        int frameRate = 30,
+        int frameRate = 15,
         string format = "gif",
         string view = "recentre",
         double? duration = null,

@@ -3,6 +3,8 @@ using Android.Media;
 using Android.Views;
 using EEE.Services;
 using System;
+using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace EEE.Services;
@@ -17,6 +19,7 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
     private readonly int _height;
     private int _videoTrack = -1;
     private bool _muxerStarted;
+    private bool _muxerStopped;
     private bool _completed;
 
     public AndroidNativeVideoEncoder(int width, int height, int frameRate, string outputPath)
@@ -67,12 +70,41 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
     public Task CompleteAsync()
     {
         if (_completed) return Task.CompletedTask;
-        _codec.SignalEndOfInputStream();
-        DrainEncoder(endOfStream: true);
+
+        Exception? completionError = null;
+        try
+        {
+            _codec.SignalEndOfInputStream();
+            DrainEncoder(endOfStream: true);
+        }
+        catch (Exception exception)
+        {
+            completionError = exception;
+        }
+        finally
+        {
+            if (_muxerStarted && !_muxerStopped)
+            {
+                try
+                {
+                    _muxer.Stop();
+                    _muxerStopped = true;
+                }
+                catch (Exception exception)
+                {
+                    completionError = completionError == null
+                        ? exception
+                        : new AggregateException("The Android video encoder failed while draining and finalizing.", completionError, exception);
+                }
+            }
+
+            _completed = _muxerStopped;
+        }
+
+        if (completionError != null)
+            ExceptionDispatchInfo.Capture(completionError).Throw();
         if (!_muxerStarted)
             throw new InvalidOperationException("Android did not produce an MP4 video track.");
-        _muxer.Stop();
-        _completed = true;
         return Task.CompletedTask;
     }
 
@@ -87,8 +119,12 @@ internal sealed class AndroidNativeVideoEncoder : IPlatformVideoEncoder
     private void DrainEncoder(bool endOfStream)
     {
         bool outputEnded = false;
+        Stopwatch? endOfStreamTimer = endOfStream ? Stopwatch.StartNew() : null;
         while (!outputEnded)
         {
+            if (endOfStreamTimer != null && endOfStreamTimer.Elapsed >= TimeSpan.FromSeconds(10))
+                throw new TimeoutException("Android's MP4 encoder did not finish draining within 10 seconds.");
+
             int outputIndex = _codec.DequeueOutputBuffer(_bufferInfo, endOfStream ? 10_000 : 0);
             if (outputIndex >= 0)
             {
