@@ -71,6 +71,16 @@ public class WaveformViewport : GraphicsView, IDrawable
         set => SetValue(MagnitudePerGridProperty, value);
     }
 
+    public static readonly BindableProperty AutoScaleMagnitudeProperty =
+        BindableProperty.Create(nameof(AutoScaleMagnitude), typeof(bool), typeof(WaveformViewport), true,
+            propertyChanged: (b, _, _) => ((WaveformViewport)b).Invalidate());
+
+    public bool AutoScaleMagnitude
+    {
+        get => (bool)GetValue(AutoScaleMagnitudeProperty);
+        set => SetValue(AutoScaleMagnitudeProperty, value);
+    }
+
     private static readonly Color[] TraceColors =
     {
         Color.FromArgb("#56D364"), Color.FromArgb("#79C0FF"), Color.FromArgb("#FF7B72"),
@@ -350,8 +360,25 @@ public class WaveformViewport : GraphicsView, IDrawable
         float divisionWidth = plotWidth / numX;
         float divisionHeight = laneHeight / numY;
         double timePerDivision = TimePerGrid;
-        double magnitudePerDivision = MagnitudePerGrid;
         double visibleDuration = timePerDivision * numX;
+        double globalMinTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Min();
+        double globalMaxTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Max();
+        double visibleStart = Math.Max(0, globalMaxTime - visibleDuration);
+        double visibleEnd = visibleStart + visibleDuration;
+
+        double voltageMagnitudePerDivision = MagnitudePerGrid;
+        double currentMagnitudePerDivision = MagnitudePerGrid;
+        if (AutoScaleMagnitude)
+        {
+            if (hasVoltage)
+                voltageMagnitudePerDivision = GetAutoMagnitudePerDivision(traces, visibleStart, visibleEnd, current: false);
+            if (hasCurrent)
+                currentMagnitudePerDivision = GetAutoMagnitudePerDivision(traces, visibleStart, visibleEnd, current: true);
+
+            double displayedMagnitude = hasVoltage ? voltageMagnitudePerDivision : currentMagnitudePerDivision;
+            if (Math.Abs(MagnitudePerGrid - displayedMagnitude) > Math.Max(displayedMagnitude, 1.0) * 1e-9)
+                MagnitudePerGrid = displayedMagnitude;
+        }
 
         canvas.StrokeColor = Color.FromArgb("#14261C");
         canvas.StrokeSize = 1f;
@@ -365,6 +392,9 @@ public class WaveformViewport : GraphicsView, IDrawable
         {
             float laneTop = plotTop + lane * laneHeight;
             float zeroY = laneTop + laneHeight / 2f;
+            double laneMagnitudePerDivision = hasVoltage && hasCurrent && lane == 1
+                ? currentMagnitudePerDivision
+                : voltageMagnitudePerDivision;
             for (int division = 0; division <= numY; division++)
             {
                 float y = laneTop + division * divisionHeight;
@@ -379,7 +409,7 @@ public class WaveformViewport : GraphicsView, IDrawable
             canvas.FontSize = 8;
             for (int division = 0; division <= numY; division += 2)
             {
-                double value = (numY / 2.0 - division) * magnitudePerDivision;
+                double value = (numY / 2.0 - division) * laneMagnitudePerDivision;
                 float y = laneTop + division * divisionHeight - 6;
                 canvas.DrawString($"{value:G4}", 1, y, leftPad - 5, 12,
                     HorizontalAlignment.Right, VerticalAlignment.Center);
@@ -405,12 +435,12 @@ public class WaveformViewport : GraphicsView, IDrawable
 
         canvas.FontColor = Color.FromArgb("#8B949E");
         canvas.FontSize = 8;
-        canvas.DrawString($"X {timePerDivision:G4}s/div · Y {magnitudePerDivision:G4} {(hasVoltage && hasCurrent ? "units" : hasCurrent ? "A" : "V")}/div",
+        string yAxisLabel = hasVoltage && hasCurrent
+            ? $"Y {voltageMagnitudePerDivision:G4} V/div · {currentMagnitudePerDivision:G4} A/div"
+            : $"Y {(hasCurrent ? currentMagnitudePerDivision : voltageMagnitudePerDivision):G4} {(hasCurrent ? "A" : "V")}/div";
+        canvas.DrawString($"X {timePerDivision:G4}s/div · {yAxisLabel}",
             plotLeft + 4, 2, Math.Max(0, w - plotLeft - 8), 16,
             HorizontalAlignment.Left, VerticalAlignment.Center);
-
-        double globalMinTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Min();
-        double globalMaxTime = traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Max();
 
         // ── Scrolling time window ─────────────────────────────────────────────
         // The right edge of the visible plot is always anchored to the latest
@@ -418,9 +448,6 @@ public class WaveformViewport : GraphicsView, IDrawable
         // samples scroll off the left edge so the graph never squishes.
         // If data is shorter than the visible window, we still start from t=0
         // so the trace begins at the left and grows rightward naturally.
-        double visibleStart = Math.Max(0, globalMaxTime - visibleDuration);
-        double visibleEnd   = visibleStart + visibleDuration;
-
         canvas.SaveState();
         canvas.ClipRectangle(plotLeft, plotTop, plotWidth, plotHeight);
         int colorIndex = 0;
@@ -430,6 +457,9 @@ public class WaveformViewport : GraphicsView, IDrawable
             bool current = trace.Signal.Kind == WaveformSignalKind.ComponentCurrent;
             float laneTop = hasVoltage && hasCurrent && current ? plotTop + laneHeight : plotTop;
             float zeroY = laneTop + laneHeight / 2f;
+            double traceMagnitudePerDivision = current
+                ? currentMagnitudePerDivision
+                : voltageMagnitudePerDivision;
             canvas.StrokeColor = TraceColors[colorIndex % TraceColors.Length];
             canvas.StrokeSize = 1.8f;
 
@@ -448,7 +478,7 @@ public class WaveformViewport : GraphicsView, IDrawable
                 if (t > visibleEnd) break;
 
                 float px = plotLeft + (float)((t - visibleStart) / visibleDuration) * plotWidth;
-                float py = zeroY - (float)(trace.Values[index] / magnitudePerDivision) * divisionHeight;
+                float py = zeroY - (float)(trace.Values[index] / traceMagnitudePerDivision) * divisionHeight;
 
                 if (!penDown)
                 {
@@ -511,4 +541,34 @@ public class WaveformViewport : GraphicsView, IDrawable
 
     private static double traceTimeRange(System.Collections.Generic.List<(WaveformSignal Signal, System.Collections.Generic.IReadOnlyList<double> Times, System.Collections.Generic.IReadOnlyList<double> Values)> traces) =>
         traces.SelectMany(trace => trace.Times).DefaultIfEmpty(0).Max();
+
+    private static double GetAutoMagnitudePerDivision(
+        System.Collections.Generic.List<(WaveformSignal Signal, System.Collections.Generic.IReadOnlyList<double> Times, System.Collections.Generic.IReadOnlyList<double> Values)> traces,
+        double visibleStart,
+        double visibleEnd,
+        bool current)
+    {
+        double maxMagnitude = 0;
+        foreach (var trace in traces)
+        {
+            if ((trace.Signal.Kind == WaveformSignalKind.ComponentCurrent) != current)
+                continue;
+
+            int count = Math.Min(trace.Times.Count, trace.Values.Count);
+            for (int index = 0; index < count; index++)
+            {
+                double time = trace.Times[index];
+                double value = trace.Values[index];
+                if (time < visibleStart || time > visibleEnd || !double.IsFinite(value))
+                    continue;
+                maxMagnitude = Math.Max(maxMagnitude, Math.Abs(value));
+            }
+        }
+
+        if (maxMagnitude <= 0)
+            return 1.0;
+
+        const double edgeMargin = 0.2;
+        return (maxMagnitude + edgeMargin) / 4.0;
+    }
 }

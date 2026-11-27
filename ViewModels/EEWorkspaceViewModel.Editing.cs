@@ -526,10 +526,22 @@ public partial class EEWorkspaceViewModel
     private void ZoomWaveformTimeOut() => GraphTimePerGrid = Math.Min(1e12, GraphTimePerGrid * 1.25);
 
     [RelayCommand]
-    private void ZoomWaveformMagnitudeIn() => GraphMagnitudePerGrid = Math.Max(1e-12, GraphMagnitudePerGrid / 1.25);
+    private void ZoomWaveformMagnitudeIn()
+    {
+        IsWaveformAutoScaleEnabled = false;
+        GraphMagnitudePerGrid = Math.Max(1e-12, GraphMagnitudePerGrid / 1.25);
+    }
 
     [RelayCommand]
-    private void ZoomWaveformMagnitudeOut() => GraphMagnitudePerGrid = Math.Min(1e12, GraphMagnitudePerGrid * 1.25);
+    private void ZoomWaveformMagnitudeOut()
+    {
+        IsWaveformAutoScaleEnabled = false;
+        GraphMagnitudePerGrid = Math.Min(1e12, GraphMagnitudePerGrid * 1.25);
+    }
+
+    [RelayCommand]
+    private void ToggleWaveformAutoScale() =>
+        IsWaveformAutoScaleEnabled = !IsWaveformAutoScaleEnabled;
 
     [RelayCommand]
     private void OpenWaveformGridDialog()
@@ -553,6 +565,7 @@ public partial class EEWorkspaceViewModel
 
         GraphTimePerGrid = timePerGrid;
         GraphMagnitudePerGrid = magnitudePerGrid;
+        IsWaveformAutoScaleEnabled = false;
         IsWaveformGridDialogVisible = false;
         StatusText = $"Waveform grid set to {timePerGrid:G} s/div and {magnitudePerGrid:G} units/div";
     }

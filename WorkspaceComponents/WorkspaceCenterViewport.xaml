@@ -284,6 +284,15 @@
                             <Button Text="+" Style="{StaticResource IconBtn}" FontSize="11" Padding="5,2"
                                     Command="{Binding ZoomWaveformMagnitudeInCommand}"
                                     ToolTipProperties.Text="Show less magnitude per grid division"/>
+                            <Button Text="Auto Y" Style="{StaticResource ToolBtn}" FontSize="10" Padding="6,2"
+                                    Command="{Binding ToggleWaveformAutoScaleCommand}"
+                                    ToolTipProperties.Text="Automatically scale each magnitude axis to the visible signal peaks">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsWaveformAutoScaleEnabled}" Value="True">
+                                        <Setter Property="TextColor" Value="#56D364"/>
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                             <Button Text="Grid…" Style="{StaticResource ToolBtn}" FontSize="10" Padding="6,2"
                                     Command="{Binding OpenWaveformGridDialogCommand}"
                                     ToolTipProperties.Text="Set waveform time and magnitude per grid division"/>
@@ -297,7 +306,8 @@
                                             SimulationSnapshot="{Binding GraphSimulationSnapshot}"
                                             Signals="{Binding WaveformSignals}"
                                             TimePerGrid="{Binding GraphTimePerGrid}"
-                                            MagnitudePerGrid="{Binding GraphMagnitudePerGrid}"
+                                            MagnitudePerGrid="{Binding GraphMagnitudePerGrid, Mode=TwoWay}"
+                                            AutoScaleMagnitude="{Binding IsWaveformAutoScaleEnabled}"
                                             HorizontalOptions="Fill"
                                             VerticalOptions="Fill"/>
                 </Grid>

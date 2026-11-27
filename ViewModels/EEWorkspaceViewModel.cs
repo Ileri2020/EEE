@@ -892,6 +892,9 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial double GraphMagnitudePerGrid { get; set; } = 1.0;
 
     [ObservableProperty]
+    public partial bool IsWaveformAutoScaleEnabled { get; set; } = true;
+
+    [ObservableProperty]
     public partial bool IsWaveformGridDialogVisible { get; set; }
 
     [ObservableProperty]
