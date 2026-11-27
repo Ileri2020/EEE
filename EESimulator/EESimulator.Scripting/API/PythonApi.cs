@@ -56,6 +56,14 @@ public class PythonApi
     public event Action<string?, string>? OnCircuitImageSaveRequested;
     public event Action<string?, int, string, string>? OnVideoRecordingStartRequested;
     public event Action? OnVideoRecordingStopRequested;
+    public event Action<bool>? OnWaveformDrawerVisibilityRequested;
+    public event Action? OnCloseSidebarsRequested;
+    public event Action? OnOpenSidebarsRequested;
+    public event Action<string, object?>? OnWorkspaceSettingChanged;
+    public event Action? OnWorkspaceSettingsResetRequested;
+    public event Action<string>? OnSubtitleChanged;
+
+    public string SubtitleText { get; private set; } = string.Empty;
 
     public bool IsVideoRecording { get; private set; }
     public int VideoFrameRate { get; private set; } = 5;
@@ -1230,6 +1238,119 @@ public class PythonApi
     {
         UI.Workspace.ToggleWaveform();
         OnWaveformDrawerToggleRequested?.Invoke();
+    }
+
+    public void SetWaveformDrawerVisible(bool visible)
+    {
+        OnWaveformDrawerVisibilityRequested?.Invoke(visible);
+    }
+
+    public void OpenWaveformDrawer() => SetWaveformDrawerVisible(true);
+    public void CloseWaveformDrawer() => SetWaveformDrawerVisible(false);
+
+    public void CloseSidebars() => OnCloseSidebarsRequested?.Invoke();
+    public void OpenSidebars() => OnOpenSidebarsRequested?.Invoke();
+    public void SetLeftSidebarVisible(bool visible) => OnLeftToolbarToggled?.Invoke(visible);
+    public void SetRightSidebarVisible(bool visible) => OnSidebarToggled?.Invoke(visible);
+
+    public void SetSubtitle(string text)
+    {
+        SubtitleText = text ?? string.Empty;
+        OnSubtitleChanged?.Invoke(SubtitleText);
+    }
+
+    public void ClearSubtitle() => SetSubtitle(string.Empty);
+    public string GetSubtitle() => SubtitleText;
+
+    private readonly Dictionary<string, object> _workspaceSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["AutoRunSimulation"] = false,
+        ["DefaultCategory"] = "All",
+        ["ViewportRefreshHz"] = 30,
+        ["GraphRefreshHz"] = 20,
+        ["InteractionLoopHz"] = 60,
+        ["UiSnapshotDelayMs"] = 40,
+        ["VoltageChangeThreshold"] = 0.01,
+        ["CurrentChangeThreshold"] = 0.001,
+        ["ReactiveOscillationThreshold"] = 0.02,
+        ["RemoteApiBaseUrl"] = string.Empty,
+        ["EnableTimeScaling"] = false,
+        ["SimulationTimeAmount"] = 30.0,
+        ["SimulationTimeUnit"] = "seconds",
+        ["DeviceTimeAmount"] = 1.0,
+        ["DeviceTimeUnit"] = "hours",
+        ["SimulationTimeStepSeconds"] = 0.04,
+        ["AutomaticTimeStepSelection"] = true,
+        ["SimulationStartTimeSeconds"] = 0.0,
+        ["SimulationDurationSeconds"] = 60.0
+    };
+
+    public void SetWorkspaceSetting(string name, object? value)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        string key = NormalizeWorkspaceSettingKey(name);
+        if (value != null)
+            _workspaceSettings[key] = value;
+        OnWorkspaceSettingChanged?.Invoke(name, value);
+    }
+
+    public object? GetWorkspaceSetting(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        string key = NormalizeWorkspaceSettingKey(name);
+        return _workspaceSettings.TryGetValue(key, out var val) ? val : null;
+    }
+
+    public void ResetWorkspaceSettings()
+    {
+        _workspaceSettings["AutoRunSimulation"] = false;
+        _workspaceSettings["DefaultCategory"] = "All";
+        _workspaceSettings["ViewportRefreshHz"] = 30;
+        _workspaceSettings["GraphRefreshHz"] = 20;
+        _workspaceSettings["InteractionLoopHz"] = 60;
+        _workspaceSettings["UiSnapshotDelayMs"] = 40;
+        _workspaceSettings["VoltageChangeThreshold"] = 0.01;
+        _workspaceSettings["CurrentChangeThreshold"] = 0.001;
+        _workspaceSettings["ReactiveOscillationThreshold"] = 0.02;
+        _workspaceSettings["RemoteApiBaseUrl"] = string.Empty;
+        _workspaceSettings["EnableTimeScaling"] = false;
+        _workspaceSettings["SimulationTimeAmount"] = 30.0;
+        _workspaceSettings["SimulationTimeUnit"] = "seconds";
+        _workspaceSettings["DeviceTimeAmount"] = 1.0;
+        _workspaceSettings["DeviceTimeUnit"] = "hours";
+        _workspaceSettings["SimulationTimeStepSeconds"] = 0.04;
+        _workspaceSettings["AutomaticTimeStepSelection"] = true;
+        _workspaceSettings["SimulationStartTimeSeconds"] = 0.0;
+        _workspaceSettings["SimulationDurationSeconds"] = 60.0;
+        OnWorkspaceSettingsResetRequested?.Invoke();
+    }
+
+    private static string NormalizeWorkspaceSettingKey(string name)
+    {
+        string raw = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        return raw switch
+        {
+            "autorunsimulation" => "AutoRunSimulation",
+            "defaultcategory" or "defaultpalettecategory" or "palettecategory" => "DefaultCategory",
+            "viewportrefreshhz" => "ViewportRefreshHz",
+            "graphrefreshhz" => "GraphRefreshHz",
+            "interactionloophz" => "InteractionLoopHz",
+            "uisnapshotdelayms" => "UiSnapshotDelayMs",
+            "voltagedeltathreshold" or "voltagechangethreshold" => "VoltageChangeThreshold",
+            "currentdeltathreshold" or "currentchangethreshold" => "CurrentChangeThreshold",
+            "reactiveoscillationthreshold" => "ReactiveOscillationThreshold",
+            "hcvpapibaseurl" or "remoteapibaseurl" => "RemoteApiBaseUrl",
+            "enabletimescaling" or "timescalingenabled" => "EnableTimeScaling",
+            "simulationtime" or "simulationtimeamount" => "SimulationTimeAmount",
+            "simulationtimeunit" => "SimulationTimeUnit",
+            "devicetime" or "devicetimeamount" => "DeviceTimeAmount",
+            "devicetimeunit" => "DeviceTimeUnit",
+            "solverstep" or "simulationtimestepseconds" => "SimulationTimeStepSeconds",
+            "automatictimestepselection" => "AutomaticTimeStepSelection",
+            "starttime" or "simulationstarttimeseconds" => "SimulationStartTimeSeconds",
+            "duration" or "simulationdurationseconds" => "SimulationDurationSeconds",
+            _ => name
+        };
     }
 
     public void ToggleView()

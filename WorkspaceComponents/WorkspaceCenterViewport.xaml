@@ -8,6 +8,7 @@
                     Circuit="{Binding Circuit}"
                     SimulationSnapshot="{Binding ViewportSimulationSnapshot}"
                     LiveMeasurementsVisible="{Binding IsLiveMeasurementsVisible}"
+                    SubtitleText="{Binding SubtitleText}"
                     IsVisible="{Binding IsSchematicViewActive}"
                     HorizontalOptions="Fill"
                     VerticalOptions="Fill"/>

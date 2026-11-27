@@ -312,6 +312,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private double _cachedCurrentChangeThreshold = 0.001;
     private double _cachedReactiveOscillationThreshold = 0.02;
     private DateTime _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+    private readonly SettingsViewModel _settingsViewModel;
 
     private void EnsureSettingsCached()
     {
@@ -875,6 +876,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsWaveformDrawerOpen { get; set; } = false;
 
     [ObservableProperty]
+    public partial string SubtitleText { get; set; } = string.Empty;
+
+    partial void OnSubtitleTextChanged(string value)
+    {
+        CircuitChanged?.Invoke();
+    }
+
+    private object? _lastScriptResult;
+
+    [ObservableProperty]
     public partial double GraphTimePerGrid { get; set; } = 0.01;
 
     [ObservableProperty]
@@ -1264,8 +1275,14 @@ public partial class EEWorkspaceViewModel : ObservableObject
 
     // ── Constructor ──────────────────────────────────────────────────────────
     public EEWorkspaceViewModel(RemoteEeeApiClient remoteApi)
+        : this(remoteApi, new SettingsViewModel())
+    {
+    }
+
+    public EEWorkspaceViewModel(RemoteEeeApiClient remoteApi, SettingsViewModel settingsViewModel)
     {
         _remoteApi = remoteApi ?? throw new ArgumentNullException(nameof(remoteApi));
+        _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         IsAiPromptExpanded = true;
         _simManager = new SimulationManager();
         _simWorker  = new SimulationWorker(_simManager);
@@ -1407,6 +1424,16 @@ public partial class EEWorkspaceViewModel : ObservableObject
             if (IsSimulationPlaying) ToggleSimulationPlayback();
         };
 
+        PythonApi.OnSimulationPlayRequested += () =>
+        {
+            if (!IsSimulationPlaying) ToggleSimulationPlayback();
+        };
+
+        PythonApi.OnSimulationPauseRequested += () =>
+        {
+            if (IsSimulationPlaying) ToggleSimulationPlayback();
+        };
+
         PythonApi.OnSimulationToggleRequested += () => ToggleSimulationPlayback();
 
         PythonApi.OnSimulationStopRequested += () =>
@@ -1418,6 +1445,32 @@ public partial class EEWorkspaceViewModel : ObservableObject
         PythonApi.OnRedoRequested += () => Redo();
         PythonApi.OnProjectNameChanged += name => ProjectName = name;
         PythonApi.OnWaveformDrawerToggleRequested += () => ToggleWaveformDrawer();
+        PythonApi.OnWaveformDrawerVisibilityRequested += visible => IsWaveformDrawerOpen = visible;
+        PythonApi.OnCloseSidebarsRequested += () =>
+        {
+            IsLeftToolbarVisible = false;
+            IsControlSidebarVisible = false;
+            IsSidebarVisible = false;
+            IsDescriptionSidebarVisible = false;
+        };
+        PythonApi.OnOpenSidebarsRequested += () =>
+        {
+            IsLeftToolbarVisible = true;
+            IsSidebarVisible = true;
+        };
+        PythonApi.OnSubtitleChanged += text =>
+        {
+            SubtitleText = text ?? string.Empty;
+        };
+        PythonApi.OnWorkspaceSettingChanged += (name, value) =>
+        {
+            if (value != null)
+                SetWorkspaceSettingFromScript(name, value);
+        };
+        PythonApi.OnWorkspaceSettingsResetRequested += () =>
+        {
+            ResetWorkspaceSettingsFromScript();
+        };
         PythonApi.OnCircuitImageSaveRequested += (path, view) => CircuitImageSaveRequested?.Invoke(path, view);
         PythonApi.OnVideoRecordingStartRequested += (path, frameRate, format, view) =>
         {

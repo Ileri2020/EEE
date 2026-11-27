@@ -561,8 +561,9 @@ public partial class EEWorkspaceViewModel
     private Dictionary<string, object?> DispatchScriptApiCall(string script)
     {
         ConsoleOutput += $">>> {script}\n";
+        _lastScriptResult = null;
         string? result = DispatchApiCall(script);
-        object? value = result;
+        object? value = _lastScriptResult ?? result;
         bool failed = result is null ||
             result.StartsWith("[error]", StringComparison.OrdinalIgnoreCase);
         if (result?.StartsWith("[unknown", StringComparison.OrdinalIgnoreCase) == true)
@@ -742,15 +743,12 @@ public partial class EEWorkspaceViewModel
         bool scaleEnabled = Preferences.Default.Get("Settings.EnableTimeScaling", false);
         bool automaticStep = Preferences.Default.Get("Settings.AutomaticTimeStepSelection", true);
         double configuredStart = Preferences.Default.Get("Settings.SimulationStartTimeSeconds", 0.0);
-        // Default duration: 1 s instead of 60 s for fast-response simulations on mobile devices.
-        // Users who need longer runs adjust this in Settings. 60 s × 25 steps/s = 1500 SpiceSharp
-        // iterations, which is the main cause of the ~3-min initial solve on Android.
         double configuredDuration = Math.Max(Preferences.Default.Get("Settings.SimulationDurationSeconds", 1.0), 1e-6);
         double configuredStep = Math.Max(Preferences.Default.Get("Settings.SimulationTimeStepSeconds", 0.04), 1e-6);
-        double solverStart = scaleEnabled ? configuredStart : SimTransientStartTime;
+        double solverStart = scaleEnabled ? configuredStart : (SimTransientStartTime >= 0 ? SimTransientStartTime : configuredStart);
         double solverStop = scaleEnabled ? configuredStart + configuredDuration :
-            (SimTransientStopTime > SimTransientStartTime ? SimTransientStopTime : SimTransientStartTime + 0.01);
-        double solverStep = scaleEnabled ? configuredStep : (SimTransientStepTime > 0 ? SimTransientStepTime : 1e-5);
+            (SimTransientStopTime > solverStart ? SimTransientStopTime : solverStart + configuredDuration);
+        double solverStep = scaleEnabled ? configuredStep : (SimTransientStepTime > 0 ? SimTransientStepTime : configuredStep);
         // AutomaticTimeStep: cap at (window/200) so each adaptive solve is at most 200 SpiceSharp steps.
         // 200 is fast enough to feel real-time on mobile yet precise enough for most circuits.
         if (automaticStep)

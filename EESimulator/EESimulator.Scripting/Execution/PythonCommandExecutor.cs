@@ -152,6 +152,234 @@ public class PythonCommandExecutor
             return;
         }
 
+        var setWsSettingMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_workspace_setting\s*\(\s*""((?:\\.|[^""\\])*)""\s*,\s*(true|false|null|none|""(?:\\.|[^""\\])*""|'[^']*'|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setWsSettingMatch.Success)
+        {
+            string settingName = JsonSerializer.Deserialize<string>($"\"{setWsSettingMatch.Groups[1].Value}\"") ?? string.Empty;
+            string rawValue = setWsSettingMatch.Groups[2].Value;
+            object? value = rawValue.Equals("true", StringComparison.OrdinalIgnoreCase) ? true
+                : rawValue.Equals("false", StringComparison.OrdinalIgnoreCase) ? false
+                : rawValue.Equals("null", StringComparison.OrdinalIgnoreCase) || rawValue.Equals("none", StringComparison.OrdinalIgnoreCase) ? null
+                : rawValue.Length >= 2 && rawValue[0] == '"' ? JsonSerializer.Deserialize<string>(rawValue) ?? string.Empty
+                : rawValue.Length >= 2 && rawValue[0] == '\'' ? rawValue[1..^1]
+                : double.Parse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture);
+            _api.SetWorkspaceSetting(settingName, value);
+            return;
+        }
+
+        var getWsSettingMatch = Regex.Match(line,
+            @"(?:\w+\s*=\s*)?(?:circuit|eesim)\.get_workspace_setting\s*\(\s*""((?:\\.|[^""\\])*)""\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (getWsSettingMatch.Success)
+        {
+            string settingName = JsonSerializer.Deserialize<string>($"\"{getWsSettingMatch.Groups[1].Value}\"") ?? string.Empty;
+            LastResult = _api.GetWorkspaceSetting(settingName);
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:reset_workspace_settings|reset_settings_to_defaults)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.ResetWorkspaceSettings();
+            return;
+        }
+
+        var setSolverStepMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_solver_step\s*\(\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setSolverStepMatch.Success)
+        {
+            double step = double.Parse(setSolverStepMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            _api.SetWorkspaceSetting("solver_step", step);
+            return;
+        }
+
+        var setDurationMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_simulation_duration\s*\(\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setDurationMatch.Success)
+        {
+            double duration = double.Parse(setDurationMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            _api.SetWorkspaceSetting("duration", duration);
+            return;
+        }
+
+        var setStartTimeMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_simulation_start_time\s*\(\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setStartTimeMatch.Success)
+        {
+            double start = double.Parse(setStartTimeMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            _api.SetWorkspaceSetting("start_time", start);
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:play_simulation|play|start_simulation)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.PlaySimulation();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:pause_simulation|pause)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.PauseSimulation();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:stop_simulation|stop)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.StopSimulation();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.toggle_simulation\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.ToggleSimulationPlayback();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:close_sidebars|hide_sidebars)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.CloseSidebars();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:open_sidebars|show_sidebars)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.OpenSidebars();
+            return;
+        }
+
+        var setLeftSidebarMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_left_sidebar\s*\(\s*(true|false)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setLeftSidebarMatch.Success)
+        {
+            _api.SetLeftSidebarVisible(bool.Parse(setLeftSidebarMatch.Groups[1].Value));
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.toggle_left_sidebar\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.ToggleLeftToolbar();
+            return;
+        }
+
+        var setRightSidebarMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.set_right_sidebar\s*\(\s*(true|false)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setRightSidebarMatch.Success)
+        {
+            _api.SetRightSidebarVisible(bool.Parse(setRightSidebarMatch.Groups[1].Value));
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.toggle_right_sidebar\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.ToggleComponentSidebar();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:open_graph_drawer|open_waveform_drawer)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.OpenWaveformDrawer();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:close_graph_drawer|close_waveform_drawer)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.CloseWaveformDrawer();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.(?:toggle_graph_drawer|toggle_waveform_drawer)\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.ToggleWaveformDrawer();
+            return;
+        }
+
+        var setGraphDrawerMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.(?:set_graph_drawer|set_waveform_drawer)\s*\(\s*(true|false)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setGraphDrawerMatch.Success)
+        {
+            _api.SetWaveformDrawerVisible(bool.Parse(setGraphDrawerMatch.Groups[1].Value));
+            return;
+        }
+
+        var startVideoMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.start_video_recording\s*\(\s*(?:""((?:\\.|[^""\\])*)""|'([^']*)'|null|none)?(?:\s*,\s*(\d+))?(?:\s*,\s*""([^""]*)""|'([^']*)')?(?:\s*,\s*""([^""]*)""|'([^']*)')?\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (startVideoMatch.Success)
+        {
+            string? filePath = startVideoMatch.Groups[1].Success ? startVideoMatch.Groups[1].Value
+                : startVideoMatch.Groups[2].Success ? startVideoMatch.Groups[2].Value : null;
+            int fps = startVideoMatch.Groups[3].Success ? int.Parse(startVideoMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 10;
+            string format = startVideoMatch.Groups[4].Success ? startVideoMatch.Groups[4].Value
+                : startVideoMatch.Groups[5].Success ? startVideoMatch.Groups[5].Value : "MP4";
+            string view = startVideoMatch.Groups[6].Success ? startVideoMatch.Groups[6].Value
+                : startVideoMatch.Groups[7].Success ? startVideoMatch.Groups[7].Value : "recentre";
+            _api.StartVideoRecording(filePath, fps, format, view);
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.stop_video_recording\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.StopVideoRecording();
+            return;
+        }
+
+        var startGifMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.start_gif_recording\s*\(\s*(?:""((?:\\.|[^""\\])*)""|'([^']*)'|null|none)?(?:\s*,\s*(\d+))?(?:\s*,\s*""([^""]*)""|'([^']*)')?\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (startGifMatch.Success)
+        {
+            string? filePath = startGifMatch.Groups[1].Success ? startGifMatch.Groups[1].Value
+                : startGifMatch.Groups[2].Success ? startGifMatch.Groups[2].Value : null;
+            int fps = startGifMatch.Groups[3].Success ? int.Parse(startGifMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 10;
+            string view = startGifMatch.Groups[4].Success ? startGifMatch.Groups[4].Value
+                : startGifMatch.Groups[5].Success ? startGifMatch.Groups[5].Value : "recentre";
+            _api.StartVideoRecording(filePath, fps, "GIF", view);
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.stop_gif_recording\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.StopVideoRecording();
+            return;
+        }
+
+        var setSubtitleMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.(?:set_subtitle|edit_subtitle|subtitle)\s*\(\s*""((?:\\.|[^""\\])*)""\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (setSubtitleMatch.Success)
+        {
+            string text = JsonSerializer.Deserialize<string>($"\"{setSubtitleMatch.Groups[1].Value}\"") ?? string.Empty;
+            _api.SetSubtitle(text);
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:circuit|eesim)\.clear_subtitle\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            _api.ClearSubtitle();
+            return;
+        }
+
+        if (Regex.IsMatch(line, @"(?:\w+\s*=\s*)?(?:circuit|eesim)\.get_subtitle\s*\(\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            LastResult = _api.GetSubtitle();
+            return;
+        }
+
+        var waitMatch = Regex.Match(line,
+            @"(?:circuit|eesim)\.(?:wait|sleep)\s*\(\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (waitMatch.Success)
+        {
+            return;
+        }
+
         var gridSpacingMatch = Regex.Match(line,
             @"(?:circuit|eesim)\.set_logical_grid_spacing\s*\(\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);

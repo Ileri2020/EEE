@@ -68,6 +68,7 @@ public partial class SchematicViewport
 
         // Draw HUD in screen space (after RestoreState)
         DrawViewportLabel(canvas, dirtyRect);
+        DrawSubtitleOverlay(canvas, dirtyRect);
     }
 
     private void DrawWireInProgress(ICanvas canvas)
@@ -1165,8 +1166,38 @@ public partial class SchematicViewport
         return false;
     }
 
+    private void DrawSubtitleOverlay(ICanvas canvas, RectF dirtyRect)
+    {
+        if (string.IsNullOrWhiteSpace(SubtitleText)) return;
 
+        string text = SubtitleText.Trim();
+        float fontSize = Math.Clamp(dirtyRect.Height * 0.032f, 12f, 18f);
+        canvas.FontSize = fontSize;
+        canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
 
+        float paddingX = 14f;
+        float paddingY = 7f;
+        float maxBoxWidth = Math.Max(dirtyRect.Width - 40f, 60f);
+        float approxCharWidth = fontSize * 0.58f;
+        float textWidth = Math.Min(text.Length * approxCharWidth, maxBoxWidth - 2 * paddingX);
+        float boxWidth = textWidth + 2 * paddingX;
+        float boxHeight = fontSize + 2 * paddingY + 2f;
 
+        float boxX = (dirtyRect.Width - boxWidth) / 2f;
+        float boxY = dirtyRect.Bottom - boxHeight - 26f;
 
+        // Background pill with dark translucency
+        canvas.FillColor = Color.FromRgba(13, 17, 23, 225);
+        canvas.FillRoundedRectangle(boxX, boxY, boxWidth, boxHeight, 8f);
+
+        // Electric cyan/blue subtle border
+        canvas.StrokeColor = Color.FromRgba(88, 166, 255, 180);
+        canvas.StrokeSize = 1.2f;
+        canvas.DrawRoundedRectangle(boxX, boxY, boxWidth, boxHeight, 8f);
+
+        // Subtitle text
+        canvas.FontColor = Colors.White;
+        canvas.DrawString(text, boxX + paddingX, boxY + paddingY, textWidth, fontSize + 2f,
+            HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
 }

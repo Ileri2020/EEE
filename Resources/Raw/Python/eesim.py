@@ -160,6 +160,33 @@ class CircuitRef:
     def add_microphone(self, name, audio_file=None, bandwidth=20000.0, amplitude=1.0, **kwargs):
         return add_microphone(name=name, audio_file=audio_file, bandwidth=bandwidth, amplitude=amplitude, **kwargs)
 
+    def play_simulation(self): return play_simulation()
+    def pause_simulation(self): return pause_simulation()
+    def stop_simulation(self): return stop_simulation()
+    def toggle_simulation(self): return toggle_simulation()
+    def step_simulation(self): return step_simulation()
+    def close_sidebars(self): return close_sidebars()
+    def open_sidebars(self): return open_sidebars()
+    def open_graph_drawer(self): return open_graph_drawer()
+    def close_graph_drawer(self): return close_graph_drawer()
+    def toggle_graph_drawer(self): return toggle_graph_drawer()
+    def start_video_recording(self, *args, **kwargs): return start_video_recording(*args, **kwargs)
+    def stop_video_recording(self): return stop_video_recording()
+    def start_gif_recording(self, *args, **kwargs): return start_gif_recording(*args, **kwargs)
+    def stop_gif_recording(self): return stop_gif_recording()
+    def set_subtitle(self, text): return set_subtitle(text)
+    def edit_subtitle(self, text): return edit_subtitle(text)
+    def clear_subtitle(self): return clear_subtitle()
+    def get_subtitle(self): return get_subtitle()
+    def wait(self, seconds): return wait(seconds)
+    def sleep(self, seconds): return sleep(seconds)
+    def set_workspace_setting(self, name, value): return set_workspace_setting(name, value)
+    def get_workspace_setting(self, name): return get_workspace_setting(name)
+    def reset_workspace_settings(self): return reset_workspace_settings()
+    def set_solver_step(self, step): return set_solver_step(step)
+    def set_simulation_duration(self, duration): return set_simulation_duration(duration)
+    def set_simulation_start_time(self, start): return set_simulation_start_time(start)
+
 
 def clear_circuit():
     _call("eesim.clear_circuit()")
@@ -179,6 +206,31 @@ def add_component(comp_type, name, x=0, y=0, param=0, **kwargs):
 
 def set_component_property(name, prop, value):
     _call(f"eesim.set_component_property({_quoted(name)}, {_quoted(prop)}, {json.dumps(value, ensure_ascii=False)})")
+
+
+def set_workspace_setting(name, value):
+    """Set a saved Workspace setting.
+
+    Names include auto_run_simulation, default_palette_category,
+    viewport_refresh_hz, graph_refresh_hz, interaction_loop_hz,
+    ui_snapshot_delay_ms, voltage_delta_threshold,
+    current_delta_threshold, reactive_oscillation_threshold,
+    hcvp_api_base_url, enable_time_scaling, simulation_time_amount,
+    simulation_time_unit, device_time_amount, device_time_unit,
+    solver_step, automatic_time_step_selection, start_time, and duration.
+
+    For a 1 kHz transient, for example:
+        set_workspace_setting("solver_step", 0.00001)
+        set_workspace_setting("duration", 0.01)
+    """
+    if not isinstance(name, str) or not name.strip():
+        raise TypeError("set_workspace_setting expects a non-empty setting name.")
+    if not isinstance(value, (bool, int, float, str)):
+        raise TypeError("Workspace setting values must be booleans, numbers, or strings.")
+    _call(
+        f"eesim.set_workspace_setting({_quoted(name)}, "
+        f"{json.dumps(value, ensure_ascii=False, allow_nan=False)})"
+    )
 
 
 def set_logical_grid_spacing(row_spacing, column_spacing):
@@ -310,21 +362,220 @@ def save_circuit_image(path=None):
     _call(f"eesim.save_circuit_image({argument})")
 
 
-def start_video_recording(path=None, frame_rate=5, format="gif"):
+def start_video_recording(path=None, frame_rate=10, format="mp4", view="recentre"):
+    """Start video recording of the simulation viewport.
+    
+    Args:
+        path: Optional output file path (e.g. "circuit_sim.mp4").
+        frame_rate: Recording frame rate (1-15 fps, default 10).
+        format: "mp4" or "gif" (default "mp4").
+        view: "recentre" to auto-fit circuit or "screen" for exact current camera.
+    """
     if isinstance(frame_rate, bool) or not isinstance(frame_rate, int):
         raise TypeError("frame_rate must be an integer.")
-    argument = _quoted(path or "")
     if format.lower() not in ("gif", "mp4"):
         raise ValueError("format must be 'gif' or 'mp4'.")
-    _call(f"eesim.start_video_recording({argument}, {frame_rate}, {_quoted(format)})")
+    path_arg = "null" if path is None else _quoted(path)
+    _call(f"eesim.start_video_recording({path_arg}, {frame_rate}, {_quoted(format)}, {_quoted(view)})")
 
 
 def stop_video_recording():
+    """Stop active video or GIF recording and save the file."""
     _call("eesim.stop_video_recording()")
+
+
+def start_gif_recording(path=None, frame_rate=10, view="recentre"):
+    """Start GIF recording of the simulation viewport."""
+    start_video_recording(path=path, frame_rate=frame_rate, format="gif", view=view)
+
+
+def stop_gif_recording():
+    """Stop active GIF recording."""
+    stop_video_recording()
 
 
 def is_video_recording():
     return _call("eesim.is_video_recording()") == "True"
+
+
+# ============================================================
+# Simulation Playback & Control
+# ============================================================
+def play_simulation():
+    """Start or resume continuous simulation playback."""
+    _call("eesim.play_simulation()")
+
+def start_simulation():
+    play_simulation()
+
+def play():
+    play_simulation()
+
+def pause_simulation():
+    """Pause continuous simulation playback."""
+    _call("eesim.pause_simulation()")
+
+def pause():
+    pause_simulation()
+
+def stop_simulation():
+    """Stop continuous simulation playback."""
+    _call("eesim.stop_simulation()")
+
+def stop():
+    stop_simulation()
+
+def toggle_simulation():
+    """Toggle continuous simulation playback between playing and paused."""
+    _call("eesim.toggle_simulation()")
+
+def step_simulation():
+    """Advance the simulation by one step."""
+    _call("eesim.step_simulation()")
+
+
+# ============================================================
+# Viewport & Sidebar Controls (Max Viewport)
+# ============================================================
+def close_sidebars():
+    """Close both left and right sidebars to maximize schematic viewport."""
+    _call("eesim.close_sidebars()")
+
+def hide_sidebars():
+    close_sidebars()
+
+def open_sidebars():
+    """Open standard left and right sidebars."""
+    _call("eesim.open_sidebars()")
+
+def show_sidebars():
+    open_sidebars()
+
+def set_left_sidebar(visible=True):
+    """Set visibility of the left toolbar/sidebar."""
+    _call(f"eesim.set_left_sidebar({str(bool(visible)).lower()})")
+
+def set_right_sidebar(visible=True):
+    """Set visibility of the right component/description sidebar."""
+    _call(f"eesim.set_right_sidebar({str(bool(visible)).lower()})")
+
+def toggle_left_sidebar():
+    """Toggle visibility of the left toolbar."""
+    _call("eesim.toggle_left_sidebar()")
+
+def toggle_right_sidebar():
+    """Toggle visibility of the right component sidebar."""
+    _call("eesim.toggle_right_sidebar()")
+
+def open_left_sidebar():
+    set_left_sidebar(True)
+
+def close_left_sidebar():
+    set_left_sidebar(False)
+
+def open_right_sidebar():
+    set_right_sidebar(True)
+
+def close_right_sidebar():
+    set_right_sidebar(False)
+
+
+# ============================================================
+# Waveform / Graph Drawer
+# ============================================================
+def open_graph_drawer():
+    """Open the bottom waveform / graph drawer for probe inspection."""
+    _call("eesim.open_graph_drawer()")
+
+def close_graph_drawer():
+    """Close the bottom waveform / graph drawer."""
+    _call("eesim.close_graph_drawer()")
+
+def toggle_graph_drawer():
+    """Toggle the bottom waveform / graph drawer."""
+    _call("eesim.toggle_graph_drawer()")
+
+def set_graph_drawer(visible=True):
+    """Set visibility of the bottom waveform / graph drawer."""
+    _call(f"eesim.set_graph_drawer({str(bool(visible)).lower()})")
+
+open_waveform_drawer = open_graph_drawer
+close_waveform_drawer = close_graph_drawer
+toggle_waveform_drawer = toggle_graph_drawer
+set_waveform_drawer = set_graph_drawer
+
+
+# ============================================================
+# Timed Subtitles (Circuit Subtitles for Video)
+# ============================================================
+def set_subtitle(text):
+    """Display an on-screen subtitle pill under the circuit (recorded in video)."""
+    _call(f"eesim.set_subtitle({_quoted(text)})")
+
+def edit_subtitle(text):
+    """Edit current subtitle text while simulation or recording is running."""
+    set_subtitle(text)
+
+def subtitle(text):
+    set_subtitle(text)
+
+def clear_subtitle():
+    """Remove the on-screen subtitle pill."""
+    _call("eesim.clear_subtitle()")
+
+def get_subtitle():
+    """Get the current subtitle text."""
+    return _call("eesim.get_subtitle()")
+
+def wait(seconds):
+    """Wait for specified seconds (allows simulation & video recording to advance)."""
+    import time
+    time.sleep(float(seconds))
+    _call(f"eesim.wait({_number(seconds)})")
+
+def sleep(seconds):
+    wait(seconds)
+
+
+# ============================================================
+# Settings Page - Workspace & Workflow Settings API
+# ============================================================
+def get_workspace_setting(name):
+    """Get the current value of a Workspace setting."""
+    return _call(f"eesim.get_workspace_setting({_quoted(name)})")
+
+def reset_workspace_settings():
+    """Reset all Workspace settings to factory defaults."""
+    _call("eesim.reset_workspace_settings()")
+
+def reset_settings_to_defaults():
+    reset_workspace_settings()
+
+def set_solver_step(step_seconds):
+    """Set the numerical simulation solver step in seconds (e.g. 0.00001 for 10µs)."""
+    set_workspace_setting("solver_step", float(step_seconds))
+
+def set_simulation_duration(duration_seconds):
+    """Set total transient simulation duration in seconds (e.g. 0.01 for 10ms)."""
+    set_workspace_setting("duration", float(duration_seconds))
+
+def set_simulation_start_time(start_seconds):
+    """Set transient simulation start time in seconds."""
+    set_workspace_setting("start_time", float(start_seconds))
+
+def set_time_scaling(enabled=True, sim_amount=None, sim_unit=None, dev_amount=None, dev_unit=None):
+    """Configure simulation time scaling."""
+    set_workspace_setting("enable_time_scaling", bool(enabled))
+    if sim_amount is not None: set_workspace_setting("simulation_time", float(sim_amount))
+    if sim_unit is not None: set_workspace_setting("simulation_time_unit", str(sim_unit))
+    if dev_amount is not None: set_workspace_setting("device_time", float(dev_amount))
+    if dev_unit is not None: set_workspace_setting("device_time_unit", str(dev_unit))
+
+def set_auto_run_simulation(enabled=True):
+    set_workspace_setting("auto_run_simulation", bool(enabled))
+
+def set_automatic_time_step(enabled=True):
+    set_workspace_setting("automatic_time_step_selection", bool(enabled))
 
 
 def read_pin_voltage(name, pin):

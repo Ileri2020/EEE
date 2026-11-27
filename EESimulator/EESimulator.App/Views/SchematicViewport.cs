@@ -47,6 +47,16 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         set => SetValue(LiveMeasurementsVisibleProperty, value);
     }
 
+    public static readonly BindableProperty SubtitleTextProperty =
+        BindableProperty.Create(nameof(SubtitleText), typeof(string), typeof(SchematicViewport), string.Empty,
+            propertyChanged: (b, _, _) => ((SchematicViewport)b).Invalidate());
+
+    public string SubtitleText
+    {
+        get => (string)GetValue(SubtitleTextProperty);
+        set => SetValue(SubtitleTextProperty, value);
+    }
+
     /// <summary>Controls whether electricity movements (animated current dots) are rendered.</summary>
     public bool IsSimulationPlaying { get; set; } = false;
     public float ElectricityAnimPhase { get; set; } = 0.0f;

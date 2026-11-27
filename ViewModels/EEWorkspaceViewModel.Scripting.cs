@@ -67,6 +67,55 @@ public partial class EEWorkspaceViewModel
 
             switch (method)
             {
+                case "set_workspace_setting" when args.Length >= 2:
+                    return SetWorkspaceSettingFromScript(Unquote(args[0]), ParseScriptValue(args[1]));
+
+                case "get_workspace_setting" when args.Length >= 1:
+                {
+                    var val = GetWorkspaceSettingFromScript(Unquote(args[0]));
+                    _lastScriptResult = val;
+                    return $"[ok] {val}";
+                }
+
+                case "reset_workspace_settings" or "reset_settings_to_defaults" or "reset_to_defaults":
+                    return ResetWorkspaceSettingsFromScript();
+
+                case "set_solver_step" when args.Length >= 1:
+                    return SetWorkspaceSettingFromScript("solver_step", ParseD(args[0]));
+
+                case "set_simulation_duration" when args.Length >= 1:
+                    return SetWorkspaceSettingFromScript("duration", ParseD(args[0]));
+
+                case "set_simulation_start_time" when args.Length >= 1:
+                    return SetWorkspaceSettingFromScript("start_time", ParseD(args[0]));
+
+                case "set_auto_run_simulation" when args.Length >= 1:
+                    return SetWorkspaceSettingFromScript("auto_run_simulation", ParseB(args[0]));
+
+                case "set_automatic_time_step" or "set_automatic_time_step_selection" when args.Length >= 1:
+                    return SetWorkspaceSettingFromScript("automatic_time_step_selection", ParseB(args[0]));
+
+                case "set_subtitle" or "edit_subtitle" or "subtitle" when args.Length >= 1:
+                {
+                    string sub = Unquote(args[0]);
+                    SubtitleText = sub;
+                    CircuitChanged?.Invoke();
+                    return $"[ok] subtitle set to '{sub}'";
+                }
+
+                case "clear_subtitle":
+                    SubtitleText = string.Empty;
+                    CircuitChanged?.Invoke();
+                    return "[ok] subtitle cleared";
+
+                case "get_subtitle":
+                    _lastScriptResult = SubtitleText;
+                    return $"[ok] {SubtitleText}";
+
+                case "wait" or "sleep" when args.Length >= 1:
+                    double waitSec = ParseD(args[0]);
+                    return $"[ok] wait {waitSec}s";
+
                 case "new_circuit" when args.Length >= 1:
                     ClearCircuitForScript(resetScript: false);
                     Circuit.Title = Unquote(args[0]);
@@ -469,31 +518,69 @@ public partial class EEWorkspaceViewModel
                     PythonApi.StretchComponent(Unquote(args[0]), ParseD(args[1]), ParseD(args[2]));
                     return $"[ok] component {Unquote(args[0])} stretched to scale ({args[1]}, {args[2]})";
 
-                case "play" or "simulation_play":
+                case "play" or "play_simulation" or "simulation_play" or "start_simulation" or "start":
                     PythonApi.PlaySimulation();
                     return "[ok] simulation playback started";
 
-                case "pause" or "simulation_pause":
+                case "pause" or "pause_simulation" or "simulation_pause":
                     PythonApi.PauseSimulation();
                     return "[ok] simulation playback paused";
 
-                case "play_pause" or "simulation_toggle":
+                case "play_pause" or "simulation_toggle" or "toggle_simulation":
                     PythonApi.ToggleSimulationPlayback();
                     return "[ok] simulation playback toggled";
 
-                case "stop" or "simulation_stop":
+                case "stop" or "stop_simulation" or "simulation_stop":
                     PythonApi.StopSimulation();
                     return "[ok] simulation playback stopped";
 
-                case "toggle_sidebar" or "toggle_component_sidebar":
+                case "step" or "step_simulation":
+                    StepSimulationOnce();
+                    return "[ok] simulation stepped";
+
+                case "close_sidebars" or "hide_sidebars":
+                    PythonApi.CloseSidebars();
+                    return "[ok] all sidebars closed for maximum viewport";
+
+                case "open_sidebars" or "show_sidebars":
+                    PythonApi.OpenSidebars();
+                    return "[ok] sidebars opened";
+
+                case "toggle_sidebar" or "toggle_component_sidebar" or "toggle_right_sidebar":
                     bool? reqVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var vb) ? vb : null) : null;
                     PythonApi.ToggleComponentSidebar(reqVis);
-                    return $"[ok] component sidebar is now {(IsSidebarVisible ? "visible" : "hidden")}";
+                    return $"[ok] right sidebar is now {(IsSidebarVisible ? "visible" : "hidden")}";
 
-                case "toggle_left_toolbar" or "toggle_toolbar":
+                case "toggle_left_toolbar" or "toggle_toolbar" or "toggle_left_sidebar":
                     bool? reqLeftVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var lvb) ? lvb : null) : null;
                     PythonApi.ToggleLeftToolbar(reqLeftVis);
-                    return $"[ok] left toolbar is now {(IsLeftToolbarVisible ? "visible" : "hidden")}";
+                    return $"[ok] left sidebar is now {(IsLeftToolbarVisible ? "visible" : "hidden")}";
+
+                case "open_left_sidebar" or "show_left_sidebar":
+                    PythonApi.SetLeftSidebarVisible(true);
+                    return "[ok] left sidebar opened";
+
+                case "close_left_sidebar" or "hide_left_sidebar":
+                    PythonApi.SetLeftSidebarVisible(false);
+                    return "[ok] left sidebar closed";
+
+                case "set_left_sidebar" when args.Length >= 1:
+                    bool leftVis = ParseB(args[0]);
+                    PythonApi.SetLeftSidebarVisible(leftVis);
+                    return $"[ok] left sidebar is now {(leftVis ? "visible" : "hidden")}";
+
+                case "open_right_sidebar" or "show_right_sidebar":
+                    PythonApi.SetRightSidebarVisible(true);
+                    return "[ok] right sidebar opened";
+
+                case "close_right_sidebar" or "hide_right_sidebar":
+                    PythonApi.SetRightSidebarVisible(false);
+                    return "[ok] right sidebar closed";
+
+                case "set_right_sidebar" when args.Length >= 1:
+                    bool rightVis = ParseB(args[0]);
+                    PythonApi.SetRightSidebarVisible(rightVis);
+                    return $"[ok] right sidebar is now {(rightVis ? "visible" : "hidden")}";
 
                 case "toggle_control_sidebar":
                     bool? reqCtrlVis = args.Length > 0 ? (bool.TryParse(Unquote(args[0]), out var cvb) ? cvb : null) : null;
@@ -504,6 +591,26 @@ public partial class EEWorkspaceViewModel
                     bool sVis = bool.TryParse(Unquote(args[1]), out var sbv) && sbv;
                     PythonApi.SetSidebarVisible(Unquote(args[0]), sVis);
                     return $"[ok] sidebar '{Unquote(args[0])}' set to {sVis}";
+
+                case "open_graph_drawer" or "open_waveform_drawer":
+                    PythonApi.OpenWaveformDrawer();
+                    return "[ok] graph drawer opened";
+
+                case "close_graph_drawer" or "close_waveform_drawer":
+                    PythonApi.CloseWaveformDrawer();
+                    return "[ok] graph drawer closed";
+
+                case "toggle_graph_drawer" or "toggle_waveform_drawer":
+                    if (args.Length > 0 && bool.TryParse(Unquote(args[0]), out var tgv))
+                        PythonApi.SetWaveformDrawerVisible(tgv);
+                    else
+                        PythonApi.ToggleWaveformDrawer();
+                    return $"[ok] graph drawer is now {(IsWaveformDrawerOpen ? "open" : "closed")}";
+
+                case "set_graph_drawer" or "set_waveform_drawer" when args.Length >= 1:
+                    bool gVis = ParseB(args[0]);
+                    PythonApi.SetWaveformDrawerVisible(gVis);
+                    return $"[ok] graph drawer is now {(gVis ? "open" : "closed")}";
 
                 case "undo":
                     PythonApi.Undo();
@@ -568,15 +675,28 @@ public partial class EEWorkspaceViewModel
 
                 case "start_video_recording":
                 {
-                    string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) ? Unquote(args[0]) : null;
-                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 5;
-                    string vidFmt = args.Length > 2 ? Unquote(args[2]) : "gif";
+                    string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
+                    string vidFmt = args.Length > 2 ? Unquote(args[2]) : "mp4";
                     string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
                     PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView);
                     return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps ({vidView} view)";
                 }
 
-                case "stop_video_recording":
+                case "stop_video_recording" or "stop_recording":
+                    PythonApi.StopVideoRecording();
+                    return "[ok] video recording stop requested";
+
+                case "start_gif_recording":
+                {
+                    string? vidPath = args.Length > 0 && !string.IsNullOrWhiteSpace(Unquote(args[0])) && !string.Equals(Unquote(args[0]), "null", StringComparison.OrdinalIgnoreCase) && !string.Equals(Unquote(args[0]), "none", StringComparison.OrdinalIgnoreCase) ? Unquote(args[0]) : null;
+                    int vidFps = args.Length > 1 ? checked((int)ParseD(args[1])) : 10;
+                    string vidView = namedArguments.TryGetValue("view", out var vv) ? Unquote(vv) : "recentre";
+                    PythonApi.StartVideoRecording(vidPath, vidFps, "GIF", vidView);
+                    return $"[ok] GIF recording started at {PythonApi.VideoFrameRate} fps ({vidView} view)";
+                }
+
+                case "stop_gif_recording":
                     PythonApi.StopVideoRecording();
                     return "[ok] GIF recording stop requested";
 
@@ -681,6 +801,242 @@ public partial class EEWorkspaceViewModel
         {
             return $"[error] {ex.Message}";
         }
+    }
+
+    private string SetWorkspaceSettingFromScript(string name, object value)
+    {
+        string key = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        switch (key)
+        {
+            case "autorunsimulation":
+                _settingsViewModel.AutoRunSimulation = RequireWorkspaceSettingBoolean(name, value);
+                break;
+            case "defaultcategory":
+            case "defaultpalettecategory":
+            case "palettecategory":
+            {
+                string category = RequireWorkspaceSettingString(name, value);
+                string? availableCategory = _settingsViewModel.AvailableCategories
+                    .FirstOrDefault(candidate => candidate.Equals(category, StringComparison.OrdinalIgnoreCase));
+                if (availableCategory == null)
+                    throw new ArgumentException($"Unsupported palette category '{category}'.");
+                _settingsViewModel.DefaultCategory = availableCategory;
+                break;
+            }
+            case "viewportrefreshhz":
+                _settingsViewModel.ViewportRefreshHz = RequireWorkspaceSettingInteger(name, value, 1, 120);
+                _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+                break;
+            case "graphrefreshhz":
+                _settingsViewModel.GraphRefreshHz = RequireWorkspaceSettingInteger(name, value, 1, 120);
+                _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+                break;
+            case "interactionloophz":
+                _settingsViewModel.InteractionLoopHz = RequireWorkspaceSettingInteger(name, value, 15, 120);
+                break;
+            case "uisnapshotdelayms":
+                _settingsViewModel.UiSnapshotDelayMs = RequireWorkspaceSettingInteger(name, value, 0, 1000);
+                _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+                break;
+            case "voltagedeltathreshold":
+            case "voltagechangethreshold":
+                _settingsViewModel.VoltageChangeThreshold = RequireWorkspaceSettingNumber(name, value, 0);
+                _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+                break;
+            case "currentdeltathreshold":
+            case "currentchangethreshold":
+                _settingsViewModel.CurrentChangeThreshold = RequireWorkspaceSettingNumber(name, value, 0);
+                _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+                break;
+            case "reactiveoscillationthreshold":
+                _settingsViewModel.ReactiveOscillationThreshold = RequireWorkspaceSettingNumber(name, value, 0);
+                _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+                break;
+            case "hcvpapibaseurl":
+            case "remoteapibaseurl":
+                _settingsViewModel.RemoteApiBaseUrl = RequireWorkspaceApiBaseUrl(name, value);
+                break;
+            case "enabletimescaling":
+            case "timescalingenabled":
+                _settingsViewModel.EnableTimeScaling = RequireWorkspaceSettingBoolean(name, value);
+                break;
+            case "simulationtime":
+            case "simulationtimeamount":
+                _settingsViewModel.SimulationTimeAmount = RequireWorkspaceSettingNumber(name, value, 1e-9);
+                break;
+            case "simulationtimeunit":
+                _settingsViewModel.SimulationTimeUnit = RequireWorkspaceTimeUnit(name, value);
+                break;
+            case "devicetime":
+            case "devicetimeamount":
+                _settingsViewModel.DeviceTimeAmount = RequireWorkspaceSettingNumber(name, value, 1e-9);
+                break;
+            case "devicetimeunit":
+                _settingsViewModel.DeviceTimeUnit = RequireWorkspaceTimeUnit(name, value);
+                break;
+            case "solverstep":
+            case "simulationtimestepseconds":
+                double stepVal = RequireWorkspaceSettingNumber(name, value, 1e-6);
+                _settingsViewModel.SimulationTimeStepSeconds = stepVal;
+                SimTransientStepTime = stepVal;
+                break;
+            case "automatictimestepselection":
+                _settingsViewModel.AutomaticTimeStepSelection = RequireWorkspaceSettingBoolean(name, value);
+                break;
+            case "starttime":
+            case "simulationstarttimeseconds":
+                double startVal = RequireWorkspaceSettingNumber(name, value, 0);
+                _settingsViewModel.SimulationStartTimeSeconds = startVal;
+                SimTransientStartTime = startVal;
+                SimTransientStopTime = startVal + _settingsViewModel.SimulationDurationSeconds;
+                break;
+            case "duration":
+            case "simulationdurationseconds":
+                double durVal = RequireWorkspaceSettingNumber(name, value, 1e-6);
+                _settingsViewModel.SimulationDurationSeconds = durVal;
+                SimTransientStopTime = SimTransientStartTime + durVal;
+                break;
+            default:
+                throw new ArgumentException(
+                    $"Unknown Workspace setting '{name}'. Use a Workspace setting name such as 'solver_step' or 'duration'.");
+        }
+
+        return $"[ok] workspace setting '{name}' updated";
+    }
+
+    private object GetWorkspaceSettingFromScript(string name)
+    {
+        string key = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        return key switch
+        {
+            "autorunsimulation" => _settingsViewModel.AutoRunSimulation,
+            "defaultcategory" or "defaultpalettecategory" or "palettecategory" => _settingsViewModel.DefaultCategory,
+            "viewportrefreshhz" => _settingsViewModel.ViewportRefreshHz,
+            "graphrefreshhz" => _settingsViewModel.GraphRefreshHz,
+            "interactionloophz" => _settingsViewModel.InteractionLoopHz,
+            "uisnapshotdelayms" => _settingsViewModel.UiSnapshotDelayMs,
+            "voltagedeltathreshold" or "voltagechangethreshold" => _settingsViewModel.VoltageChangeThreshold,
+            "currentdeltathreshold" or "currentchangethreshold" => _settingsViewModel.CurrentChangeThreshold,
+            "reactiveoscillationthreshold" => _settingsViewModel.ReactiveOscillationThreshold,
+            "hcvpapibaseurl" or "remoteapibaseurl" => _settingsViewModel.RemoteApiBaseUrl,
+            "enabletimescaling" or "timescalingenabled" => _settingsViewModel.EnableTimeScaling,
+            "simulationtime" or "simulationtimeamount" => _settingsViewModel.SimulationTimeAmount,
+            "simulationtimeunit" => _settingsViewModel.SimulationTimeUnit,
+            "devicetime" or "devicetimeamount" => _settingsViewModel.DeviceTimeAmount,
+            "devicetimeunit" => _settingsViewModel.DeviceTimeUnit,
+            "solverstep" or "simulationtimestepseconds" => _settingsViewModel.SimulationTimeStepSeconds,
+            "automatictimestepselection" => _settingsViewModel.AutomaticTimeStepSelection,
+            "starttime" or "simulationstarttimeseconds" => _settingsViewModel.SimulationStartTimeSeconds,
+            "duration" or "simulationdurationseconds" => _settingsViewModel.SimulationDurationSeconds,
+            "timescalingratio" => _settingsViewModel.TimeScalingRatio,
+            _ => throw new ArgumentException($"Unknown Workspace setting '{name}'.")
+        };
+    }
+
+    private string ResetWorkspaceSettingsFromScript()
+    {
+        _settingsViewModel.AutoRunSimulation = false;
+        _settingsViewModel.DefaultCategory = "All";
+        _settingsViewModel.ViewportRefreshHz = 30;
+        _settingsViewModel.GraphRefreshHz = 20;
+        _settingsViewModel.InteractionLoopHz = 60;
+        _settingsViewModel.UiSnapshotDelayMs = 40;
+        _settingsViewModel.VoltageChangeThreshold = 0.01;
+        _settingsViewModel.CurrentChangeThreshold = 0.001;
+        _settingsViewModel.ReactiveOscillationThreshold = 0.02;
+        _settingsViewModel.RemoteApiBaseUrl = string.Empty;
+        _settingsViewModel.EnableTimeScaling = false;
+        _settingsViewModel.SimulationTimeAmount = 30.0;
+        _settingsViewModel.SimulationTimeUnit = "seconds";
+        _settingsViewModel.DeviceTimeAmount = 1.0;
+        _settingsViewModel.DeviceTimeUnit = "hours";
+        _settingsViewModel.SimulationTimeStepSeconds = 0.04;
+        _settingsViewModel.AutomaticTimeStepSelection = true;
+        _settingsViewModel.SimulationStartTimeSeconds = 0.0;
+        _settingsViewModel.SimulationDurationSeconds = 60.0;
+        _lastSettingsCacheRefreshUtc = DateTime.MinValue;
+        SimTransientStepTime = 0.04;
+        SimTransientStopTime = 60.0;
+        SimTransientStartTime = 0.0;
+        return "[ok] workspace settings reset to defaults";
+    }
+
+    private static bool ParseB(string s)
+    {
+        string raw = Unquote(s).Trim();
+        if (bool.TryParse(raw, out var b)) return b;
+        if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)) return d > 0.5;
+        return false;
+    }
+
+    private void StepSimulationOnce()
+    {
+        double step = Math.Max(SimTransientStepTime, 1e-6);
+        PythonApi.AdvanceSimulation(step);
+        CircuitChanged?.Invoke();
+    }
+
+    private static bool RequireWorkspaceSettingBoolean(string name, object value) =>
+        value is bool boolean
+            ? boolean
+            : throw new ArgumentException($"Workspace setting '{name}' requires a boolean value.");
+
+    private static string RequireWorkspaceSettingString(string name, object value) =>
+        value is string text && !string.IsNullOrWhiteSpace(text)
+            ? text.Trim()
+            : throw new ArgumentException($"Workspace setting '{name}' requires a non-empty string.");
+
+    private static int RequireWorkspaceSettingInteger(string name, object value, int minimum, int maximum)
+    {
+        double number = RequireWorkspaceSettingNumber(name, value, minimum);
+        if (number != Math.Truncate(number) || number > maximum)
+            throw new ArgumentOutOfRangeException(name, $"Workspace setting '{name}' must be an integer from {minimum} to {maximum}.");
+        return (int)number;
+    }
+
+    private static double RequireWorkspaceSettingNumber(string name, object value, double minimum)
+    {
+        if (value is string || value is bool || value is not IConvertible)
+            throw new ArgumentException($"Workspace setting '{name}' requires a numeric value.");
+
+        double number;
+        try
+        {
+            number = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+        }
+        catch (Exception exception) when (exception is FormatException or InvalidCastException or OverflowException)
+        {
+            throw new ArgumentException($"Workspace setting '{name}' requires a numeric value.", exception);
+        }
+
+        if (!double.IsFinite(number) || number < minimum)
+            throw new ArgumentOutOfRangeException(name, $"Workspace setting '{name}' must be finite and at least {minimum}.");
+        return number;
+    }
+
+    private static string RequireWorkspaceTimeUnit(string name, object value)
+    {
+        string unit = RequireWorkspaceSettingString(name, value);
+        string? availableUnit = new[] { "seconds", "minutes", "hours", "days" }
+            .FirstOrDefault(candidate => candidate.Equals(unit, StringComparison.OrdinalIgnoreCase));
+        return availableUnit
+            ?? throw new ArgumentException($"Workspace setting '{name}' must be seconds, minutes, hours, or days.");
+    }
+
+    private static string RequireWorkspaceApiBaseUrl(string name, object value)
+    {
+        string baseUrl = RequireWorkspaceSettingString(name, value);
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+            throw new ArgumentException($"Workspace setting '{name}' must be an absolute HTTPS URL.");
+
+        bool allowed = uri.Scheme == Uri.UriSchemeHttps;
+#if DEBUG
+        allowed |= uri.Scheme == Uri.UriSchemeHttp &&
+            (uri.IsLoopback || string.Equals(uri.Host, "10.0.2.2", StringComparison.OrdinalIgnoreCase));
+#endif
+        return allowed
+            ? baseUrl
+            : throw new ArgumentException($"Workspace setting '{name}' must use HTTPS.");
     }
 
     private string AddScriptComponentWithCoordinates(string method, Dictionary<string, string> named, bool logicalPlacement)
