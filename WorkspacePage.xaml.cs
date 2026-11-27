@@ -15,6 +15,10 @@ public partial class WorkspacePage : ContentPage
 {
     private readonly EEWorkspaceViewModel _vm;
     private SchematicVideoRecorder? _videoRecorder;
+    // UI-side capture timer: fires on the main thread so frame rendering never
+    // needs InvokeOnMainThreadAsync (which would block background threads and
+    // starve pan/gesture handling).
+    private Microsoft.Maui.Dispatching.IDispatcherTimer? _captureTimer;
     private readonly SemaphoreSlim _recordingLifecycle = new(1, 1);
 
     public WorkspacePage(EEWorkspaceViewModel vm)
@@ -69,7 +73,8 @@ public partial class WorkspacePage : ContentPage
             {
                 MainWorkspace.SchematicCanvas.IsSimulationPlaying = vm.IsSimulationPlaying;
                 MainWorkspace.SchematicCanvas.ElectricityAnimPhase = vm.ElectricityAnimPhase;
-                MainWorkspace.SchematicCanvas.Invalidate();
+                if (!MainWorkspace.SchematicCanvas.IsUserInteracting)
+                    MainWorkspace.SchematicCanvas.Invalidate();
                 if (vm.IsDescriptionSidebarVisible)
                     MainWorkspace.SelectedComponentIcon.Invalidate();
             });
@@ -129,34 +134,68 @@ public partial class WorkspacePage : ContentPage
 
             bool useScreen = view.Equals("screen", StringComparison.OrdinalIgnoreCase);
             bool isGif = format.Equals("GIF", StringComparison.OrdinalIgnoreCase);
-            var dimensions = await MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                var (width, height) = GetCaptureDimensions(format);
-                return (Width: width, Height: height,
-                    ViewportWidth: (float)MainWorkspace.SchematicCanvas.Width,
-                    ViewportHeight: (float)MainWorkspace.SchematicCanvas.Height);
-            });
+
+            // Grab dimensions on the main thread (we may already be there, but be safe).
+            var dimensions = MainThread.IsMainThread
+                ? GetCaptureDimensions(format, (float)MainWorkspace.SchematicCanvas.Width, (float)MainWorkspace.SchematicCanvas.Height)
+                : await MainThread.InvokeOnMainThreadAsync(() =>
+                    GetCaptureDimensions(format, (float)MainWorkspace.SchematicCanvas.Width, (float)MainWorkspace.SchematicCanvas.Height));
+
             string destinationPath = ResolveCapturePath(path, "." + format.ToLowerInvariant());
             var viewport = MainWorkspace.SchematicCanvas;
 
-            Func<Task<EESimulator.App.Views.SchematicCapturedFrame>> captureFrameAsync = () =>
-                MainThread.InvokeOnMainThreadAsync(() =>
-                    useScreen
+            // Create recorder (encoding-only — no capture task inside).
+            _videoRecorder = new SchematicVideoRecorder(
+                dimensions.Width,
+                dimensions.Height,
+                frameRate,
+                format,
+                destinationPath);
+
+            // ── UI-side capture timer ─────────────────────────────────────────
+            // This timer fires on the main thread at exactly 1000/fps ms intervals.
+            // Because it runs on the main thread, it never needs InvokeOnMainThreadAsync
+            // — the render completes synchronously in the same dispatch slot, then
+            // control returns immediately so gestures and pan events are not starved.
+            var recorder = _videoRecorder;
+            int maxFrames = frameRate * 600; // 10-minute cap
+            _captureTimer = Dispatcher.CreateTimer();
+            _captureTimer.Interval = TimeSpan.FromMilliseconds(1000d / frameRate);
+            _captureTimer.IsRepeating = true;
+            _captureTimer.Tick += (_, _) =>
+            {
+                // Skip frame if user is interacting so gestures get full priority.
+                if (viewport.IsUserInteracting)
+                    return;
+                // Stop automatically at the 10-minute cap or if the recorder stopped.
+                if (recorder.IsStopped || recorder.FrameCount >= maxFrames)
+                {
+                    _captureTimer?.Stop();
+                    return;
+                }
+                // Render a frame synchronously on this main-thread tick — fast, non-blocking.
+                try
+                {
+                    var frame = useScreen
                         ? viewport.CaptureCurrentViewFrame(
                             dimensions.Width, dimensions.Height,
                             dimensions.ViewportWidth, dimensions.ViewportHeight,
                             includePng: !isGif)
                         : viewport.CaptureRecenteredFrame(
                             dimensions.Width, dimensions.Height,
-                            includePng: !isGif));
-
-            _videoRecorder = new SchematicVideoRecorder(
-                dimensions.Width,
-                dimensions.Height,
-                frameRate,
-                format,
-                destinationPath,
-                captureFrameAsync);
+                            includePng: !isGif);
+                    // Push the pixel data to the encoding channel (non-blocking, drops
+                    // oldest if the encoder cannot keep up — far better than blocking pan).
+                    recorder.TryAddFrame(frame);
+                }
+                catch
+                {
+                    // Silently swallow individual frame errors so a single bad frame
+                    // does not abort the whole recording session.
+                }
+            };
+            _captureTimer.Start();
+            // ─────────────────────────────────────────────────────────────────
 
             _vm.SetVideoRecordingState(true, frameRate, format);
             _vm.StatusText = $"Recording {view} circuit view as {format} at {frameRate} fps to {destinationPath}";
@@ -177,6 +216,11 @@ public partial class WorkspacePage : ContentPage
         await _recordingLifecycle.WaitAsync();
         try
         {
+            // Stop the UI-side capture timer first so no more frames are submitted.
+            var timer = _captureTimer;
+            _captureTimer = null;
+            timer?.Stop();
+
             var recorder = _videoRecorder;
             _videoRecorder = null;
             if (recorder == null)
@@ -185,6 +229,8 @@ public partial class WorkspacePage : ContentPage
                 return;
             }
 
+            // StopAsync signals the encoding channel and flushes — run on a background
+            // thread so we don't block the UI during the final file-write / FileSaver dialog.
             await Task.Run(async () => await recorder.StopAsync());
             _vm.SetVideoRecordingState(false, _vm.VideoFrameRate, _vm.SelectedVideoFormat);
             _vm.StatusText = $"Circuit {_vm.SelectedVideoFormat} recording saved";
@@ -226,6 +272,21 @@ public partial class WorkspacePage : ContentPage
     {
         int width = (int)Math.Round(MainWorkspace.SchematicCanvas.Width);
         int height = (int)Math.Round(MainWorkspace.SchematicCanvas.Height);
+        var d = GetCaptureDimensions(format, width, height);
+        return (d.Width, d.Height);
+    }
+
+    /// <summary>
+    /// Overload that accepts the raw canvas dimensions directly — safe to call
+    /// from any context once the values have been read on the main thread.
+    /// Returns clamped pixel dimensions AND the original viewport size for
+    /// current-view scaling calculations.
+    /// </summary>
+    private static (int Width, int Height, float ViewportWidth, float ViewportHeight)
+        GetCaptureDimensions(string format, float viewportWidth, float viewportHeight)
+    {
+        int width  = (int)Math.Round(viewportWidth);
+        int height = (int)Math.Round(viewportHeight);
         if (width <= 0 || height <= 0)
         {
             width = 800;
@@ -265,9 +326,9 @@ public partial class WorkspacePage : ContentPage
                     height = maxDim;
                 }
             }
-            width = Math.Max(2, width & ~1);
+            width  = Math.Max(2, width  & ~1);
             height = Math.Max(2, height & ~1);
         }
-        return (width, height);
+        return (width, height, viewportWidth, viewportHeight);
     }
 }

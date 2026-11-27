@@ -153,7 +153,7 @@ internal sealed class AnimatedGifWriter : IDisposable
                 if (nextCode < 4096)
                 {
                     dictionary[key] = nextCode++;
-                    if (nextCode == (1 << codeSize) && codeSize < 12)
+                    if (nextCode > (1 << codeSize) && codeSize < 12)
                         codeSize++;
                 }
                 else

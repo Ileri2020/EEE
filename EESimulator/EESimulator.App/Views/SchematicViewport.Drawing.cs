@@ -30,6 +30,7 @@ public partial class SchematicViewport
     }
 
     private readonly List<CachedWireRoute> _cachedWireRoutes = new();
+    private readonly List<(PointF Point, Color Color)> _cachedJunctionDots = new();
     private bool _isWireGeometryDirty = true;
     private int _cachedCircuitChildCount = -1;
 
@@ -140,6 +141,7 @@ public partial class SchematicViewport
         if (Circuit == null)
         {
             _cachedWireRoutes.Clear();
+            _cachedJunctionDots.Clear();
             _isWireGeometryDirty = false;
             return;
         }
@@ -182,6 +184,8 @@ public partial class SchematicViewport
             _cachedWireRoutes.Add(route);
             allPriorPaths.Add(path);
         }
+
+        RebuildCachedJunctionDots();
     }
 
     private static CachedWireRoute BuildCachedRoute(
@@ -405,6 +409,21 @@ public partial class SchematicViewport
 
     private void DrawAutomaticJunctionDots(ICanvas canvas)
     {
+        if (_cachedJunctionDots.Count == 0) return;
+
+        foreach (var (pt, color) in _cachedJunctionDots)
+        {
+            canvas.FillColor = color;
+            canvas.FillCircle(pt.X, pt.Y, 4.0f);
+            canvas.StrokeColor = Colors.White;
+            canvas.StrokeSize = 1.0f;
+            canvas.DrawCircle(pt.X, pt.Y, 4.0f);
+        }
+    }
+
+    private void RebuildCachedJunctionDots()
+    {
+        _cachedJunctionDots.Clear();
         if (_cachedWireRoutes.Count == 0) return;
 
         var endpoints = new List<(PointF Point, Color Color)>();
@@ -423,21 +442,24 @@ public partial class SchematicViewport
             }
         }
 
-        var junctionDots = new Dictionary<(int X, int Y), Color>();
+        var junctionDots = new Dictionary<(int X, int Y), (PointF Point, Color Color)>();
 
         // 1. T-Junction: An endpoint of one wire lies strictly on a segment of another wire
         foreach (var (pt, color) in endpoints)
         {
             foreach (var seg in allSegments)
             {
-                float dStart = MathF.Sqrt(MathF.Pow(pt.X - seg.Start.X, 2) + MathF.Pow(pt.Y - seg.Start.Y, 2));
-                float dEnd = MathF.Sqrt(MathF.Pow(pt.X - seg.End.X, 2) + MathF.Pow(pt.Y - seg.End.Y, 2));
-                if (dStart < 3f || dEnd < 3f) continue;
+                float dx1 = pt.X - seg.Start.X;
+                float dy1 = pt.Y - seg.Start.Y;
+                if (dx1 * dx1 + dy1 * dy1 < 9f) continue;
+                float dx2 = pt.X - seg.End.X;
+                float dy2 = pt.Y - seg.End.Y;
+                if (dx2 * dx2 + dy2 * dy2 < 9f) continue;
 
                 if (PointNearSegment(pt, seg.Start, seg.End, 2.0f))
                 {
                     var key = ((int)MathF.Round(pt.X), (int)MathF.Round(pt.Y));
-                    junctionDots[key] = color;
+                    junctionDots[key] = (pt, color);
                 }
             }
         }
@@ -450,17 +472,13 @@ public partial class SchematicViewport
             {
                 var first = group.First();
                 var key = ((int)MathF.Round(first.Point.X), (int)MathF.Round(first.Point.Y));
-                junctionDots[key] = first.Color;
+                junctionDots[key] = (first.Point, first.Color);
             }
         }
 
-        foreach (var (coord, color) in junctionDots)
+        foreach (var item in junctionDots.Values)
         {
-            canvas.FillColor = color;
-            canvas.FillCircle(coord.X, coord.Y, 4.0f);
-            canvas.StrokeColor = Colors.White;
-            canvas.StrokeSize = 1.0f;
-            canvas.DrawCircle(coord.X, coord.Y, 4.0f);
+            _cachedJunctionDots.Add(item);
         }
     }
 

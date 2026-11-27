@@ -82,31 +82,37 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
 {
     private readonly string? _destinationPath;
     private readonly string _workingPath;
-    private readonly int _frameRate;
     private readonly string _format;
-    private readonly Func<Task<EESimulator.App.Views.SchematicCapturedFrame>> _captureFrameAsync;
     private readonly FileStream? _stream;
     private readonly AnimatedGifWriter? _gifWriter;
     private readonly IPlatformVideoEncoder? _platformEncoder;
-    private readonly CancellationTokenSource _cancellation = new();
     private readonly Channel<EESimulator.App.Views.SchematicCapturedFrame> _frameChannel;
-    private readonly Task _captureTask;
     private readonly Task _encodingTask;
     private int _frameCount;
     private bool _stopped;
     private Exception? _recordingException;
+
+    /// <summary>
+    /// How many frames have been submitted so far. The UI-side capture timer
+    /// checks this to enforce the 10-minute (600-second) maximum.
+    /// </summary>
+    public int FrameCount => _frameCount;
+
+    /// <summary>
+    /// Whether the recorder has been stopped or finished.
+    /// The UI-side capture timer polls this to know when to stop ticking.
+    /// </summary>
+    public bool IsStopped => _stopped;
 
     public SchematicVideoRecorder(
         int width,
         int height,
         int frameRate,
         string format,
-        string? destinationPath,
-        Func<Task<EESimulator.App.Views.SchematicCapturedFrame>> captureFrameAsync)
+        string? destinationPath)
     {
-        _frameRate = frameRate is >= 1 and <= 15
-            ? frameRate
-            : throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
+        if (frameRate is < 1 or > 15)
+            throw new ArgumentOutOfRangeException(nameof(frameRate), "Recording frame rate must be between 1 and 15 fps.");
         _format = format.Equals("GIF", StringComparison.OrdinalIgnoreCase) ? "gif" :
             format.Equals("MP4", StringComparison.OrdinalIgnoreCase) ? "mp4" :
             throw new ArgumentException("Video format must be GIF or MP4.", nameof(format));
@@ -121,7 +127,6 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
             if (!string.IsNullOrEmpty(directory))
                 Directory.CreateDirectory(directory);
         }
-        _captureFrameAsync = captureFrameAsync ?? throw new ArgumentNullException(nameof(captureFrameAsync));
 
         if (_format == "gif")
         {
@@ -134,51 +139,41 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
             _platformEncoder = PlatformVideoEncoder.Create(width, height, frameRate, _workingPath);
         }
 
+        // Use a larger channel so the UI-side timer can keep submitting frames
+        // without stalling even if the encoder is momentarily busy.
         _frameChannel = Channel.CreateBounded<EESimulator.App.Views.SchematicCapturedFrame>(
-            new BoundedChannelOptions(10)
+            new BoundedChannelOptions(16)
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleReader = true,
-                SingleWriter = true
+                // Multiple writers allowed: UI timer + any fallback paths
+                SingleWriter = false
             });
 
         _encodingTask = Task.Run(ProcessFramesAsync);
-        _captureTask = Task.Run(CaptureFramesLoopAsync);
+        // No background capture task — frames are pushed by the UI-side
+        // IDispatcherTimer in WorkspacePage, which runs on the main thread and
+        // therefore never blocks gesture handling with InvokeOnMainThreadAsync.
     }
 
-    public SchematicVideoRecorder(
-        int width,
-        int height,
-        int frameRate,
-        string format,
-        string? destinationPath,
-        Func<EESimulator.App.Views.SchematicCapturedFrame> captureFrame)
-        : this(width, height, frameRate, format, destinationPath, () => Task.FromResult(captureFrame()))
+    /// <summary>
+    /// Called by the UI-side capture timer (on the main thread) to push a rendered frame
+    /// into the encoding pipeline. Non-blocking: drops the frame if the encoder is backlogged.
+    /// </summary>
+    public void TryAddFrame(EESimulator.App.Views.SchematicCapturedFrame frame)
     {
+        if (!_stopped)
+            _frameChannel.Writer.TryWrite(frame);
     }
 
     public async Task StopAsync()
     {
         if (_stopped) return;
         _stopped = true;
-        _cancellation.Cancel();
         try
         {
-            try
-            {
-                await _captureTask;
-            }
-            catch (OperationCanceledException) { }
-            catch { }
-
             _frameChannel.Writer.TryComplete();
-
-            try
-            {
-                await _encodingTask;
-            }
-            catch (OperationCanceledException) { }
-            catch { }
+            await _encodingTask;
 
             if (_gifWriter != null)
                 _gifWriter.Dispose();
@@ -208,7 +203,6 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
         }
         finally
         {
-            _cancellation.Dispose();
             if (_destinationPath == null && File.Exists(_workingPath))
                 File.Delete(_workingPath);
             _platformEncoder?.Dispose();
@@ -221,43 +215,12 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
             await StopAsync();
     }
 
-    private async Task CaptureFramesLoopAsync()
-    {
-        try
-        {
-            // Initial frame snapshot
-            var initial = await _captureFrameAsync();
-            _frameChannel.Writer.TryWrite(initial);
-
-            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(1000d / _frameRate));
-            while (await timer.WaitForNextTickAsync(_cancellation.Token))
-            {
-                if (_frameCount >= _frameRate * 600)
-                    break;
-
-                var frame = await _captureFrameAsync();
-                _frameChannel.Writer.TryWrite(frame);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            _recordingException = ex;
-        }
-        finally
-        {
-            _frameChannel.Writer.TryComplete();
-        }
-    }
-
     private async Task ProcessFramesAsync()
     {
         try
         {
             var reader = _frameChannel.Reader;
-            while (await reader.WaitToReadAsync(_cancellation.Token))
+            while (await reader.WaitToReadAsync())
             {
                 while (reader.TryRead(out var frame))
                 {
@@ -272,9 +235,6 @@ internal sealed class SchematicVideoRecorder : IAsyncDisposable
                     _frameCount++;
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
         }
         catch (Exception ex)
         {

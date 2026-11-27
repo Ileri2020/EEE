@@ -61,9 +61,8 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     private const float GridSize = 20f;
     private int _structureRefreshPending;
 
-    // ── Interaction redraw loop ──────────────────────────────────────────────
-    private volatile bool _interactionDirty;
-    private Microsoft.Maui.Dispatching.IDispatcherTimer? _interactionTimer;
+    // ── Interaction redraw ──────────────────────────────────────────────────
+    private bool _isPanGestureActive;
 
     /// <summary>
     /// Indicates whether the user is actively performing a touch/mouse gesture
@@ -71,14 +70,13 @@ public partial class SchematicViewport : GraphicsView, IDrawable
     /// Used to give high priority to interaction and avoid animation contention.
     /// </summary>
     public bool IsUserInteracting =>
-        _isBackgroundPanning || _isMovingComponent || _isPinching || _isStretchingComponent || _isDrawingWire;
+        _isPanGestureActive || _isBackgroundPanning || _isMovingComponent || _isPinching || _isStretchingComponent || _isDrawingWire;
 
     /// <summary>
-    /// Flags the viewport as needing an interaction redraw on the dedicated 60 Hz interaction loop.
+    /// Flags the viewport as needing an immediate interaction redraw.
     /// </summary>
     public void RequestInteractionRedraw()
     {
-        _interactionDirty = true;
         Invalidate();
     }
 
@@ -176,26 +174,6 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         pointerGesture.PointerMoved    += OnPointerMoved;
         pointerGesture.PointerReleased += OnPointerReleased;
         GestureRecognizers.Add(pointerGesture);
-
-        // Dedicated interaction loop timer: runs at configurable rate (default 16 ms = 60 Hz)
-        // so zoom, pan, and cursor operations never wait for solver calculation passes.
-        int intervalMs = SimulationPerformanceProfile.Current.InteractionLoopIntervalMs;
-        _interactionTimer = Application.Current?.Dispatcher?.CreateTimer()
-            ?? Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.CreateTimer();
-        if (_interactionTimer != null)
-        {
-            _interactionTimer.Interval = TimeSpan.FromMilliseconds(intervalMs > 0 ? intervalMs : 16);
-            _interactionTimer.IsRepeating = true;
-            _interactionTimer.Tick += (_, _) =>
-            {
-                if (_interactionDirty)
-                {
-                    _interactionDirty = false;
-                    Invalidate();
-                }
-            };
-            _interactionTimer.Start();
-        }
     }
 
     // ── Circuit change subscription ───────────────────────────────────────────────
@@ -363,6 +341,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
         switch (e.StatusType)
         {
             case GestureStatus.Started:
+                _isPanGestureActive = true;
                 _lastPanX = _panX;
                 _lastPanY = _panY;
                 _lastPanTotalX = 0;
@@ -380,12 +359,12 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                 }
 
                 // Detect background pan: starts when no component is under the touch point
-                // and we are not in Wire/Cut/Move tool modes (those need their own touch logic).\n                // On desktop, _isBackgroundPanning may already be set true by OnPointerPressed
+                // and we are not in Wire/Cut/Move tool modes (those need their own touch logic).
+                // On desktop, _isBackgroundPanning may already be set true by OnPointerPressed
                 // (which has the precise click coordinates for hit-testing). On mobile, the
                 // PanGestureRecognizer does not give us start coordinates, so we allow panning
                 // whenever no component drag is active and the tool isn't a wire/cut mode.
                 if (!_isMovingComponent &&
-                    !ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase) &&
                     !ActiveTool.Equals("Wire", StringComparison.OrdinalIgnoreCase) &&
                     !ActiveTool.Equals("Cut", StringComparison.OrdinalIgnoreCase) &&
                     !_isDrawingWire &&
@@ -406,7 +385,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
                     _pressedComp.X = _componentDragStartX + ((float)e.TotalX - _componentDragStartTotalX) / _zoom;
                     _pressedComp.Y = _componentDragStartY + ((float)e.TotalY - _componentDragStartTotalY) / _zoom;
                     _componentDragMoved = true;
-                    RequestInteractionRedraw();
+                    Invalidate();
                 }
                 else if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase) ||
                          _isBackgroundPanning)
@@ -417,13 +396,13 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 #if !WINDOWS
                     _panX = _lastPanX + (float)e.TotalX;
                     _panY = _lastPanY + (float)e.TotalY;
-                    RequestInteractionRedraw();
+                    Invalidate();
 #else
                     if (ActiveTool.Equals("Pan", StringComparison.OrdinalIgnoreCase))
                     {
                         _panX = _lastPanX + (float)e.TotalX;
                         _panY = _lastPanY + (float)e.TotalY;
-                        RequestInteractionRedraw();
+                        Invalidate();
                     }
                     // Background pan on Windows: handled by OnPointerMoved instead.
 #endif
@@ -434,6 +413,7 @@ public partial class SchematicViewport : GraphicsView, IDrawable
 
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
+                _isPanGestureActive = false;
                 _isBackgroundPanning = false;
                 FinishComponentDrag();
                 Invalidate();
