@@ -142,9 +142,13 @@ public class PythonCommandExecutor
                 ? double.Parse(simulateMatch.Groups[4].Value, NumberStyles.Float, CultureInfo.InvariantCulture)
                 : null;
             var results = _api.Simulate(analysisType, stopTime, stepTime);
-            if (!results.Success)
-                throw new InvalidOperationException($"Simulation failed: {results.Message}");
             LastResult = results;
+            // Surface failure as a warning message on the output but do not throw —
+            // scripts that run simulate() without checking its return value (e.g. test
+            // suites that just print PASSED afterwards) must not abort.  The UI layer
+            // can inspect LastResult.Success and LastResult.Message to show a warning.
+            if (!results.Success)
+                OnLog?.Invoke($"[WARN] Simulation failed: {results.Message}");
             return;
         }
 
