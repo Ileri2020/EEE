@@ -1315,7 +1315,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
                     : Microsoft.Maui.ApplicationModel.MainThread
                         .InvokeOnMainThreadAsync(() => DispatchScriptApiCall(script))
                         .GetAwaiter()
-                        .GetResult());
+                        .GetResult()));
         _sync       = new ScriptSynchronizer(CommandManager, Circuit);
 
         // Register default UI nodes under RootNode hierarchy
