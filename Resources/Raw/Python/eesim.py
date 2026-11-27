@@ -752,6 +752,8 @@ def save_circuit_image(path=None):
 def start_video_recording(path=None, frame_rate=10, format="mp4", view="recentre", duration=None):
     """Start video recording of the schematic viewport.
 
+    Script-initiated recording displays a confirmation prompt after the viewport is prepared.
+
     Args:
         path: Optional output file path (e.g. "circuit_sim.mp4").
         frame_rate: Recording frame rate (1-15 fps, default 10).

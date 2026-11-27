@@ -30,7 +30,9 @@ public partial class WorkspacePage : ContentPage
         InitializeComponent();
         BindingContext = vm;
         vm.CircuitImageSaveRequested += (path, view) => _ = SaveCircuitImageAsync(path, view);
-        vm.VideoRecordingStartRequested += (path, frameRate, format, view, duration) => _ = StartVideoRecordingAsync(path, frameRate, format, view, duration);
+        vm.VideoRecordingStartRequested += (path, frameRate, format, view, duration, requireConfirmation) =>
+            Dispatcher.Dispatch(async () =>
+                await StartVideoRecordingAsync(path, frameRate, format, view, duration, requireConfirmation));
         vm.VideoRecordingStopRequested += () => _ = StopVideoRecordingAsync();
 
         // Wire canvas selection events to ViewModel
@@ -128,7 +130,13 @@ public partial class WorkspacePage : ContentPage
         }
     }
 
-    private async Task StartVideoRecordingAsync(string? path, int frameRate, string format, string view = "recentre", double? duration = null)
+    private async Task StartVideoRecordingAsync(
+        string? path,
+        int frameRate,
+        string format,
+        string view = "recentre",
+        double? duration = null,
+        bool requireConfirmation = false)
     {
         await _recordingLifecycle.WaitAsync();
         try
@@ -153,7 +161,23 @@ public partial class WorkspacePage : ContentPage
 
             // Let the layout and wire-router invalidation paint before the first
             // frame is captured; recording may be requested immediately after a script builds a circuit.
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            await Task.Delay(TimeSpan.FromMilliseconds(250));
+
+            if (requireConfirmation)
+            {
+                bool confirmed = await MainThread.InvokeOnMainThreadAsync(
+                    () => DisplayAlert(
+                        "Start recording?",
+                        "The schematic is ready. Start capturing the schematic and waveform view now?",
+                        "Start",
+                        "Cancel"));
+                if (!confirmed)
+                {
+                    _vm.SetVideoRecordingState(false, frameRate, format);
+                    _vm.StatusText = "Recording cancelled";
+                    return;
+                }
+            }
 
             // Grab dimensions on the main thread (we may already be there, but be safe).
             var dimensions = MainThread.IsMainThread
@@ -203,6 +227,7 @@ public partial class WorkspacePage : ContentPage
                 {
                     _captureTimer?.Stop();
                     _progressTimer?.Stop();
+                    _ = StopVideoRecordingAsync();
                     return;
                 }
                 // Render a frame synchronously on this main-thread tick — fast, non-blocking.

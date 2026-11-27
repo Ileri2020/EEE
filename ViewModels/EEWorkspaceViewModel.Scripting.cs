@@ -946,7 +946,6 @@ public partial class EEWorkspaceViewModel
                         ? Unquote(vv)
                         : args.Length > 3 ? Unquote(args[3]) : "recentre";
                     double? vidDuration = namedArguments.TryGetValue("duration", out var vd) ? (double?)ParseD(vd) : null;
-                    ApplyLogicalSchematicLayout();
                     SyncEnabledWaveformSignals();
                     IsAnalyticsViewActive = false;
                     IsScriptViewActive = false;
@@ -954,9 +953,10 @@ public partial class EEWorkspaceViewModel
                     OnPropertyChanged(nameof(IsSchematicViewActive));
                     OnPropertyChanged(nameof(IsScriptViewActive));
                     CircuitChanged?.Invoke();
-                    PythonApi.StartVideoRecording(vidPath, vidFps, vidFmt, vidView, vidDuration);
+                    PythonApi.StartVideoRecording(
+                        vidPath, vidFps, vidFmt, vidView, vidDuration, requireConfirmation: true);
                     string durInfo = vidDuration.HasValue ? $", auto-stops at {vidDuration:F1}s" : "";
-                    return $"[ok] {PythonApi.VideoFormat} recording started at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo})";
+                    return $"[ok] {PythonApi.VideoFormat} recording requested at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo}); confirm in the app";
                 }
 
                 case "stop_video_recording" or "stop_recording":
@@ -971,7 +971,6 @@ public partial class EEWorkspaceViewModel
                         ? Unquote(vv)
                         : args.Length > 2 ? Unquote(args[2]) : "recentre";
                     double? gifDuration = namedArguments.TryGetValue("duration", out var gd) ? (double?)ParseD(gd) : null;
-                    ApplyLogicalSchematicLayout();
                     SyncEnabledWaveformSignals();
                     IsAnalyticsViewActive = false;
                     IsScriptViewActive = false;
@@ -979,9 +978,10 @@ public partial class EEWorkspaceViewModel
                     OnPropertyChanged(nameof(IsSchematicViewActive));
                     OnPropertyChanged(nameof(IsScriptViewActive));
                     CircuitChanged?.Invoke();
-                    PythonApi.StartVideoRecording(vidPath, vidFps, "GIF", vidView, gifDuration);
+                    PythonApi.StartVideoRecording(
+                        vidPath, vidFps, "GIF", vidView, gifDuration, requireConfirmation: true);
                     string durInfo = gifDuration.HasValue ? $", auto-stops at {gifDuration:F1}s" : "";
-                    return $"[ok] GIF recording started at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo})";
+                    return $"[ok] GIF recording requested at {PythonApi.VideoFrameRate} fps ({vidView} view{durInfo}); confirm in the app";
                 }
 
                 case "stop_gif_recording":

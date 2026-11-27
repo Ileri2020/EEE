@@ -394,7 +394,7 @@
                                 <Entry Grid.Column="1"
                                        Text="{Binding WaveformTimePerGridInput}"
                                        Keyboard="Numeric"
-                                       Placeholder="0.01"
+                                       Placeholder="0.001"
                                        TextColor="#C9D1D9"
                                        BackgroundColor="#0D1117"/>
                             </Grid>

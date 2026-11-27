@@ -50,7 +50,7 @@ public class WaveformViewport : GraphicsView, IDrawable
     }
 
     public static readonly BindableProperty TimePerGridProperty =
-        BindableProperty.Create(nameof(TimePerGrid), typeof(double), typeof(WaveformViewport), 0.1d,
+        BindableProperty.Create(nameof(TimePerGrid), typeof(double), typeof(WaveformViewport), 0.001d,
             validateValue: (_, value) => value is double number && double.IsFinite(number) && number > 0,
             propertyChanged: (b, _, _) => ((WaveformViewport)b).Invalidate());
 

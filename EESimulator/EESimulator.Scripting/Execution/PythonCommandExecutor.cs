@@ -320,7 +320,7 @@ public class PythonCommandExecutor
                 : startVideoMatch.Groups[5].Success ? startVideoMatch.Groups[5].Value : "MP4";
             string view = startVideoMatch.Groups[6].Success ? startVideoMatch.Groups[6].Value
                 : startVideoMatch.Groups[7].Success ? startVideoMatch.Groups[7].Value : "recentre";
-            _api.StartVideoRecording(filePath, fps, format, view);
+            _api.StartVideoRecording(filePath, fps, format, view, requireConfirmation: true);
             return;
         }
 
@@ -340,7 +340,7 @@ public class PythonCommandExecutor
             int fps = startGifMatch.Groups[3].Success ? int.Parse(startGifMatch.Groups[3].Value, CultureInfo.InvariantCulture) : 30;
             string view = startGifMatch.Groups[4].Success ? startGifMatch.Groups[4].Value
                 : startGifMatch.Groups[5].Success ? startGifMatch.Groups[5].Value : "recentre";
-            _api.StartVideoRecording(filePath, fps, "GIF", view);
+            _api.StartVideoRecording(filePath, fps, "GIF", view, requireConfirmation: true);
             return;
         }
 

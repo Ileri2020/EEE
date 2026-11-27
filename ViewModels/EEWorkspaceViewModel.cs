@@ -898,7 +898,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     private object? _lastScriptResult;
 
     [ObservableProperty]
-    public partial double GraphTimePerGrid { get; set; } = 0.01;
+    public partial double GraphTimePerGrid { get; set; } = 0.001;
 
     [ObservableProperty]
     public partial double GraphMagnitudePerGrid { get; set; } = 1.0;
@@ -910,7 +910,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     public partial bool IsWaveformGridDialogVisible { get; set; }
 
     [ObservableProperty]
-    public partial string WaveformTimePerGridInput { get; set; } = "0.01";
+    public partial string WaveformTimePerGridInput { get; set; } = "0.001";
 
     [ObservableProperty]
     public partial string WaveformMagnitudePerGridInput { get; set; } = "1";
@@ -1285,7 +1285,7 @@ public partial class EEWorkspaceViewModel : ObservableObject
     /// <summary>Raised when the circuit changes so the canvas can Invalidate immediately.</summary>
     public event Action? CircuitChanged;
     public event Action<string?, string>? CircuitImageSaveRequested;
-    public event Action<string?, int, string, string, double?>? VideoRecordingStartRequested;
+    public event Action<string?, int, string, string, double?, bool>? VideoRecordingStartRequested;
     public event Action? VideoRecordingStopRequested;
     public event Action? AnimationFrameRequested;
     public event Action? ViewportRecenterRequested;
@@ -1500,12 +1500,12 @@ public partial class EEWorkspaceViewModel : ObservableObject
             ResetWorkspaceSettingsFromScript();
         };
         PythonApi.OnCircuitImageSaveRequested += (path, view) => CircuitImageSaveRequested?.Invoke(path, view);
-        PythonApi.OnVideoRecordingStartRequested += (path, frameRate, format, view, duration) =>
+        PythonApi.OnVideoRecordingStartRequested += (path, frameRate, format, view, duration, requireConfirmation) =>
         {
             IsVideoRecording = true;
             VideoFrameRate = frameRate;
             SelectedVideoFormat = format;
-            VideoRecordingStartRequested?.Invoke(path, frameRate, format, view, duration);
+            VideoRecordingStartRequested?.Invoke(path, frameRate, format, view, duration, requireConfirmation);
         };
         PythonApi.OnVideoRecordingStopRequested += () =>
         {
